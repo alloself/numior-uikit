@@ -10,7 +10,7 @@ The model holds the period as a `{ start, end }` object, with each date a `YYYY-
 ## Installation
 
 ```ts install
-import { NuiDateRangePicker } from '@numior/vue';
+import { NuiDateRangePicker } from '@numior/kit';
 ```
 
 ## Usage

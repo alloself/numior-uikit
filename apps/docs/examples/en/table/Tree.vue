@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiTable, type NuiTableColumn, type TableNodeId } from '@numior/table';
+import { NuiTable, type NuiTableColumn, type TableNodeId } from '@numior/kit/table';
 import { categories, products, type Category } from '#demo/products';
 
 interface Section {

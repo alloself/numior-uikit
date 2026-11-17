@@ -10,7 +10,7 @@ Pass the nodes in `items` and the nested ones in `children`. The selected node c
 ## Installation
 
 ```ts install
-import { NuiTree } from '@numior/vue';
+import { NuiTree } from '@numior/kit';
 ```
 
 ## Usage

@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiPagination } from '@numior/vue';
+import { NuiPagination } from '@numior/kit';
 
 const page = ref(2);
 const hrefOf = (target: number): string => `#catalog-page-${target}`;

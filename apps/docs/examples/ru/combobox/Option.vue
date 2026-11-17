@@ -16,8 +16,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { plural } from '@numior/primitives';
-import { NuiCombobox } from '@numior/vue';
+import { NuiCombobox, plural } from '@numior/kit';
 import { customers, type Customer } from '#demo/customers';
 
 const customer = ref<Customer | null>(null);

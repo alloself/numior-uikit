@@ -15,7 +15,7 @@
 
 ```ts
 import { computed, useTemplateRef } from 'vue';
-import { useDirection } from '@numior/vue';
+import { useDirection } from '@numior/kit';
 
 const root = useTemplateRef<HTMLElement>('root');
 const direction = useDirection(root);

@@ -24,5 +24,5 @@ import {
   NuiCardFooter,
   NuiCardHeader,
   NuiCardTitle,
-} from '@numior/vue';
+} from '@numior/kit';
 </script>

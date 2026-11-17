@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiEditor } from '@numior/editor-vue';
+import { NuiEditor } from '@numior/kit/editor';
 
 const guide = ref(`
 <h2>Furniture care</h2>

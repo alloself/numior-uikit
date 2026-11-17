@@ -9,7 +9,7 @@ Pass the settings to the `createNuiConfig` plugin when you create the app:
 
 ```ts
 import { createApp } from 'vue';
-import { createNuiConfig } from '@numior/vue';
+import { createNuiConfig } from '@numior/kit';
 import App from './App.vue';
 
 createApp(App)
@@ -59,7 +59,7 @@ inside it. This way one part of a page gets its own language, icons or writing d
 <template><slot /></template>
 
 <script setup lang="ts">
-import { provideNuiConfig } from '@numior/vue';
+import { provideNuiConfig } from '@numior/kit';
 
 const { locale } = defineProps<{ locale: string }>();
 

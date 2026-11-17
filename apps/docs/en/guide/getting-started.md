@@ -4,60 +4,59 @@ Install and configure Numior UI in a Vue 3.5+ project.
 
 ## Installation
 
-Install the components and themes:
+Install Numior UI:
 
 ::: code-group
 
 ```sh [pnpm]
-pnpm add @numior/vue @numior/tokens
+pnpm add @numior/kit
 ```
 
 ```sh [npm]
-npm install @numior/vue @numior/tokens
+npm install @numior/kit
 ```
 
 ```sh [yarn]
-yarn add @numior/vue @numior/tokens
+yarn add @numior/kit
 ```
 
 ```sh [bun]
-bun add @numior/vue @numior/tokens
+bun add @numior/kit
 ```
 
 :::
 
-Forms and the Tailwind preset are installed separately: they are the `@numior/forms` and
-`@numior/tailwind` packages.
-All `@numior/*` packages ship under one version number, so install them at the same version.
+The modules are in the same package, each under its own subpath, such as `@numior/kit/table` or
+`@numior/kit/editor`. Modules your app does not import stay out of the bundle.
 
 ## Styles
 
 Load the styles in the entry point of your app:
 
 ```ts
-import '@numior/tokens/theme.css';
-import '@numior/tokens/base.css';
-import '@numior/vue/styles.css';
+import '@numior/kit/theme.css';
+import '@numior/kit/base.css';
+import '@numior/kit/styles.css';
 ```
 
 If your app builds its styles from a CSS file, load them there:
 
 ```css
-@import '@numior/tokens/theme.css';
-@import '@numior/tokens/base.css';
-@import '@numior/vue/styles.css';
+@import '@numior/kit/theme.css';
+@import '@numior/kit/base.css';
+@import '@numior/kit/styles.css';
 ```
 
 `theme.css` holds the colors, spacing and radii of the light and dark themes. `base.css` sets the
 page background, font and text color. `styles.css` contains the styles of every component.
 
 To load less, use the files of the components you need instead of `styles.css`, for example
-`@numior/vue/styles/button.css`. Composite components also need the files of their parts, so the
+`@numior/kit/styles/button.css`. Composite components also need the files of their parts, so the
 Installation section of each component page lists all of them.
 
 ## First component
 
-Import components from `@numior/vue` and use them in a template:
+Import components from `@numior/kit` and use them in a template:
 
 <Example name="guide/First" />
 
@@ -75,7 +74,7 @@ Install the `createNuiConfig` plugin to set the language of built-in labels such
 
 ```ts
 import { createApp } from 'vue';
-import { createNuiConfig } from '@numior/vue';
+import { createNuiConfig } from '@numior/kit';
 import App from './App.vue';
 
 createApp(App)

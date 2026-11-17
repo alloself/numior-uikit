@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiAccordion, NuiAccordionItem } from '@numior/vue';
+import { NuiAccordion, NuiAccordionItem } from '@numior/kit';
 
 const sections = ref(['delivery', 'payment']);
 </script>

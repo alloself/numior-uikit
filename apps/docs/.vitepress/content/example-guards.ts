@@ -7,28 +7,8 @@ import { FILLERS, GLOSSARY, META, NAME, NOT_NAMES } from './terms.ts';
 
 const STRING_RE = /'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\]|\\.)*)`/g;
 const IMPORT_RE = /import\s[^;]*?from\s+'[^']+';/g;
-const VUE_IMPORT_RE = /import\s+(?:type\s+)?\{([^}]*)\}\s+from\s+'@numior\/vue'/g;
-const REEXPORT_RE = /export\s+\{([^}]*)\}\s+from\s+'@numior\/primitives'/g;
 const DUMP_RE = />\s*([\p{Lu}][\p{L} ]{0,40}:)\s*\{\{/gu;
-const VALUE_NAME_RE = /^[a-z]/;
 const IDENTIFIER_RE = /^[a-z][\w-]*$/;
-
-const namesIn = (list: string): string[] =>
-  list.split(',').reduce<string[]>((names, raw) => {
-    const [name = ''] = raw.trim().split(/\s+as\s+/);
-
-    if (name !== '' && !name.startsWith('type ')) {
-      names.push(name);
-    }
-    return names;
-  }, []);
-
-export const misplacedExports = (vueIndex: string): Set<string> =>
-  new Set(
-    [...vueIndex.matchAll(REEXPORT_RE)]
-      .flatMap(([, list = '']) => namesIn(list))
-      .filter((name) => VALUE_NAME_RE.test(name)),
-  );
 
 const textsOfNode = (node: TemplateChildNode): string[] => {
   switch (node.type) {
@@ -71,11 +51,6 @@ const strangers = (texts: readonly string[], locale: ExampleLocale, known: Reado
     .flatMap((text) => namesOf(text, locale))
     .filter((name) => !known.has(name) && !NOT_NAMES.has(name));
 
-const misplacedImports = (source: string, misplaced: ReadonlySet<string>): string[] =>
-  [...source.matchAll(VUE_IMPORT_RE)]
-    .flatMap(([, list = '']) => namesIn(list))
-    .filter((name) => misplaced.has(name));
-
 export const exampleGuards = (
   file: string,
   locale: ExampleLocale,
@@ -103,11 +78,6 @@ export const exampleGuards = (
       rule: GuardRule.Names,
       file,
       text: `${text} is not in the shop data`,
-    })),
-    ...misplacedImports(source, context.misplaced).map((name) => ({
-      rule: GuardRule.Imports,
-      file,
-      text: `${name} is declared in @numior/primitives`,
     })),
   ];
 };

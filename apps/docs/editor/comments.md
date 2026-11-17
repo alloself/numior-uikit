@@ -47,9 +47,9 @@ import {
   NuiEditorCommentPopover,
   NuiEditorComments,
   useEditorComments,
-} from '@numior/collaboration/vue';
-import type { DocJSON } from '@numior/editor-core';
-import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
+} from '@numior/kit/collaboration/vue';
+import type { DocJSON } from '@numior/kit/editor-core';
+import { NuiEditor, type NuiEditorApi } from '@numior/kit/editor';
 
 const document = shallowRef<DocJSON>();
 const editor = useTemplateRef<{ editor: NuiEditorApi }>('editor');

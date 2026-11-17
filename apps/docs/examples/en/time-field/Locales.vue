@@ -8,7 +8,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiTimeField } from '@numior/vue';
+import { NuiTimeField } from '@numior/kit';
 
 const delivery = ref<string | null>('14:30');
 </script>

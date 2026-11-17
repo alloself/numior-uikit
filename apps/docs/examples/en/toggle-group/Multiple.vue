@@ -7,7 +7,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiToggleGroup } from '@numior/vue';
+import { NuiToggleGroup } from '@numior/kit';
 import { DELIVERIES, orders } from '#demo/orders';
 
 const deliveries = ref(['courier', 'pickup']);

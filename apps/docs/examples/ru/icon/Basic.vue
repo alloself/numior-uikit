@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiIcon, type IconAlias } from '@numior/vue';
+import { NuiIcon, type IconAlias } from '@numior/kit';
 
 const aliases: readonly IconAlias[] = [
   'check',

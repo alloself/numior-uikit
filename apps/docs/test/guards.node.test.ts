@@ -8,16 +8,12 @@ import {
   tautologyGuards,
   textEntriesOf,
 } from '../.vitepress/content/catalog-guards';
-import {
-  exampleGuards,
-  exampleTextsOf,
-  misplacedExports,
-  vocabularyOf,
-} from '../.vitepress/content/example-guards';
+import { exampleGuards, exampleTextsOf, vocabularyOf } from '../.vitepress/content/example-guards';
 import { GuardRule, type GuardProblem } from '../.vitepress/content/guard.types';
 import { collectGuardProblems } from '../.vitepress/content/guards';
 import { installGuards } from '../.vitepress/content/install-guards';
 import { kitCatalogGuards } from '../.vitepress/content/kit-catalog-guards';
+import { catalogPackageGuards, packageGuards } from '../.vitepress/content/package-guards';
 import { openingGuards, pageGuards } from '../.vitepress/content/page-guards';
 import type { DocsMap } from '../.vitepress/reference/reference.types';
 
@@ -62,12 +58,6 @@ const fence = (info: string, lines: readonly string[]): string =>
   [`\`\`\`${info}`, ...lines, '```'].join('\n');
 
 const SHOP = ["{ name: 'Пётр Волков', city: 'Москва' }", "{ name: 'Анна Титова' }"];
-
-const VUE_INDEX = [
-  "export { default as NuiButton } from './button/NuiButton.vue';",
-  "export { useToast, addDays, type ToastOptions, NuiOptionKind } from '@numior/primitives';",
-  "export type { Toast } from '@numior/primitives';",
-].join('\n');
 
 describe('guards of the component pages', () => {
   it('accept a one-line lead and captions said as one instruction', () => {
@@ -233,9 +223,9 @@ describe('guards of the component pages', () => {
 });
 
 describe('guards of the install blocks', () => {
-  const IMPORT = "import { NuiSelect } from '@numior/vue';";
-  const STYLE = "import '@numior/vue/styles/select.css';";
-  const STYLED: ReadonlySet<string> = new Set(['@numior/vue', '@numior/table', '@numior/charts']);
+  const IMPORT = "import { NuiSelect } from '@numior/kit';";
+  const STYLE = "import '@numior/kit/styles/select.css';";
+  const MODULES: readonly string[] = ['@numior/kit/table/', '@numior/kit/charts/'];
 
   it('accept a printed install block and a block of package styles alone', () => {
     const source = page('Выбор из списка.', [
@@ -245,10 +235,10 @@ describe('guards of the install blocks', () => {
       '',
       '## Стили',
       '',
-      fence('ts', ["import '@numior/vue/styles.css';"]),
+      fence('ts', ["import '@numior/kit/styles.css';"]),
     ]);
 
-    expect(installGuards('components/select.md', source, STYLED)).toEqual([]);
+    expect(installGuards('components/select.md', source, MODULES)).toEqual([]);
   });
 
   it('report stylesheets listed by hand and an install block that the build does not print', () => {
@@ -267,7 +257,7 @@ describe('guards of the install blocks', () => {
     ]);
 
     expect(
-      textsOf(installGuards('components/select.md', source, STYLED), GuardRule.Install),
+      textsOf(installGuards('components/select.md', source, MODULES), GuardRule.Install),
     ).toEqual([
       'an install block lists stylesheets by hand; the build prints them',
       'an install block imports kit components without `ts install`',
@@ -275,23 +265,45 @@ describe('guards of the install blocks', () => {
     ]);
   });
 
-  it('report an install command and stylesheets of a module written by hand', () => {
+  it('report stylesheets of a module written by hand', () => {
     const source = page('Таблица.', [
       '## Установка',
       '',
-      fence('sh', ['pnpm add @numior/vue @numior/tokens']),
+      fence('sh', ['pnpm add @numior/kit']),
       '',
-      fence('sh', ['pnpm add @numior/table']),
-      '',
-      fence('ts', ["import '@numior/vue/styles.css';", "import '@numior/charts/styles.css';"]),
-      '',
-      fence('sh', ['npm install @numior/primitives']),
+      fence('ts', ["import '@numior/kit/styles.css';", "import '@numior/kit/charts/styles.css';"]),
     ]);
 
-    expect(textsOf(installGuards('table/index.md', source, STYLED), GuardRule.Install)).toEqual([
-      'an install command of a kit module is written by hand; the `ts install:packages` block prints it',
+    expect(textsOf(installGuards('table/index.md', source, MODULES), GuardRule.Install)).toEqual([
       'stylesheets of a kit module are listed by hand; mark the block `ts install:packages`',
     ]);
+  });
+});
+
+describe('guards of the package names', () => {
+  it('report packages inside the kit named in pages, examples and catalog texts', () => {
+    const source = [
+      'Таблица из `@numior/kit/table` рисует фильтры компонентами `@numior/vue`.',
+      '',
+      fence('sh', ['pnpm add @numior/table @numior/kit', 'npx @numior/mcp']),
+      '',
+      fence('ts', ["import { NuiTable } from '@numior/table';"]),
+    ].join('\n');
+
+    expect(textsOf(packageGuards('table/index.md', source), GuardRule.Imports)).toEqual([
+      '@numior/vue is a package inside the kit; the docs name @numior/kit',
+      '@numior/table is a package inside the kit; the docs name @numior/kit',
+    ]);
+
+    expect(
+      catalogPackageGuards(
+        'api/table.ts',
+        [
+          "import type { DocsMap } from '@numior/vue';",
+          "export default { NuiTable: { ru: 'Таблица из `@numior/kit/table`.' } };",
+        ].join('\n'),
+      ),
+    ).toEqual([]);
   });
 });
 
@@ -348,7 +360,7 @@ describe('guards of the text catalogs', () => {
   it('keep inventories, contrasts and praise off the home page', () => {
     const ru = textEntriesOf('home-content.ts', 'ru', {
       title: 'Компоненты для Vue 3',
-      install: 'pnpm add @numior/vue',
+      install: 'pnpm add @numior/kit',
       thought: 'Мы собираем на нём свои продукты.',
       tagline: '53 компонента вместо сборки из разных библиотек, удобно и современно.',
     });
@@ -373,10 +385,7 @@ describe('guards of the text catalogs', () => {
 });
 
 describe('guards of the examples', () => {
-  const context = {
-    vocabulary: vocabularyOf(SHOP, 'ru'),
-    misplaced: misplacedExports(VUE_INDEX),
-  };
+  const context = { vocabulary: vocabularyOf(SHOP, 'ru') };
 
   it('read the visible texts of an example without its imports', () => {
     expect(
@@ -387,7 +396,7 @@ describe('guards of the examples', () => {
           '</template>',
           '',
           '<script setup lang="ts">',
-          "import { NuiButton } from '@numior/vue';",
+          "import { NuiButton } from '@numior/kit';",
           '',
           "const size = 'sm';",
           '</script>',
@@ -396,10 +405,9 @@ describe('guards of the examples', () => {
     ).toEqual(['Закрыть', 'Сохранить', 'sm']);
 
     expect([...context.vocabulary]).toEqual(['Пётр Волков', 'Анна Титова']);
-    expect([...context.misplaced]).toEqual(['useToast', 'addDays']);
   });
 
-  it('accept an example that speaks in shop data and imports from the declaring package', () => {
+  it('accept an example that speaks in shop data', () => {
     const source = [
       '<template>',
       '  <NuiSelect v-model="manager" :options="options" label="Менеджер заказа" />',
@@ -408,8 +416,7 @@ describe('guards of the examples', () => {
       '',
       '<script setup lang="ts">',
       "import { ref } from 'vue';",
-      "import { useToast } from '@numior/primitives';",
-      "import { NuiSelect } from '@numior/vue';",
+      "import { NuiSelect, useToast } from '@numior/kit';",
       '',
       "const manager = ref('Анна Титова');",
       'const toast = useToast();',
@@ -419,7 +426,7 @@ describe('guards of the examples', () => {
     expect(exampleGuards('examples/ru/select/Basic.vue', 'ru', source, context)).toEqual([]);
   });
 
-  it('report filler labels, dumps of state, unknown people and misplaced imports', () => {
+  it('report filler labels, dumps of state and unknown people', () => {
     const source = [
       '<template>',
       '  <NuiButton size="sm">Маленькая</NuiButton>',
@@ -429,7 +436,7 @@ describe('guards of the examples', () => {
       '</template>',
       '',
       '<script setup lang="ts">',
-      "import { NuiButton, NuiTab, useToast, type ToastOptions } from '@numior/vue';",
+      "import { NuiButton, NuiTab, useToast, type ToastOptions } from '@numior/kit';",
       '</script>',
     ].join('\n');
 
@@ -440,17 +447,13 @@ describe('guards of the examples', () => {
     expect(textsOf(problems, GuardRule.Dump)).toEqual(['Выбрано: {{ … }}']);
     expect(textsOf(problems, GuardRule.Names)).toEqual(['Иван Петров is not in the shop data']);
 
-    expect(textsOf(problems, GuardRule.Imports)).toEqual([
-      'useToast is declared in @numior/primitives',
-    ]);
-
     expect(
       textsOf(
         exampleGuards(
           'examples/en/tabs/Basic.vue',
           'en',
           '<template><NuiTab value="a">Item 1</NuiTab><p>Content by John Smith in New York</p></template>',
-          { vocabulary: new Set(), misplaced: new Set() },
+          { vocabulary: new Set() },
         ),
         GuardRule.Names,
       ),
@@ -471,7 +474,6 @@ describe('guards of the examples', () => {
 
     const problems = exampleGuards('examples/en/table/Merges.vue', 'en', source, {
       vocabulary: new Set(),
-      misplaced: new Set(),
     });
 
     expect(textsOf(problems, GuardRule.Glossary)).toEqual([

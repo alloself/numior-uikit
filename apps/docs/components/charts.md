@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install:packages
-import { NuiChart } from '@numior/charts';
+import { NuiChart } from '@numior/kit/charts';
 ```
 
 Цвета серий берутся из токенов `--nui-chart-1`…`--nui-chart-8`, поэтому графики перекрашиваются вместе с темой.
@@ -19,7 +19,7 @@ import { NuiChart } from '@numior/charts';
 Передайте в `spec` вид графика, категории и серии значений:
 
 ```ts
-import type { ChartSpec } from '@numior/charts';
+import type { ChartSpec } from '@numior/kit/charts';
 
 const revenue: ChartSpec = {
   kind: 'column',

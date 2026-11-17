@@ -10,8 +10,8 @@
 ## Установка
 
 ```ts install:packages
-import { NuiContent } from '@numior/content';
-import { fromHTML } from '@numior/editor-core';
+import { NuiContent } from '@numior/kit/content';
+import { fromHTML } from '@numior/kit/editor-core';
 ```
 
 Документ принимается в том виде, в каком его хранит редактор с `format="json"`. Перед выводом JSON
@@ -23,22 +23,22 @@ import { fromHTML } from '@numior/editor-core';
 
 <Example name="content/Views" />
 
-Таблица выводится так же, как в редакторе, с сортировкой и фильтрами автора. Для неё поставьте
-`@numior/table` и подключите `@numior/table/styles.css`.
+Таблица выводится так же, как в редакторе, с сортировкой и фильтрами автора. Для неё подключите
+`@numior/kit/table/styles.css`.
 
 Вид картинки открывает её на весь экран по клику. Видео выводится окном, если его сервис
 перечислен в `embeds`, а без вида встраивания остаётся ссылкой.
 
-Виды лежат в отдельных точках входа: `@numior/content/table`, `@numior/content/code` и
-`@numior/content/media`. Импортируйте только нужные, и код остальных на страницу не попадёт.
+Виды лежат в отдельных точках входа: `@numior/kit/content/table`, `@numior/kit/content/code` и
+`@numior/kit/content/media`. Импортируйте только нужные, и код остальных на страницу не попадёт.
 
 ## Из HTML в документ
 
 Прочитайте старые описания в HTML через `fromHTML`:
 
 ```ts
-import { contentSchema } from '@numior/content';
-import { fromHTML, toJSON } from '@numior/editor-core';
+import { contentSchema } from '@numior/kit/content';
+import { fromHTML, toJSON } from '@numior/kit/editor-core';
 
 const document = toJSON(fromHTML(contentSchema, product.descriptionHtml));
 ```
@@ -51,12 +51,12 @@ const document = toJSON(fromHTML(contentSchema, product.descriptionHtml));
 `<svg>`. Свои иконки передайте в `icons`: ключ — имя иконки, значение — компонент.
 
 ```ts
-import { renderContent } from '@numior/content';
+import { renderContent } from '@numior/kit/content';
 
 const html = await renderContent(doc, { size: 'lg' });
 ```
 
-Странице с этим HTML нужны стили контента и `@numior/vue/styles/icon.css`.
+Странице с этим HTML нужны стили контента и `@numior/kit/styles/icon.css`.
 
 ## API
 

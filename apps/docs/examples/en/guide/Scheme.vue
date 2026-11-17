@@ -22,8 +22,13 @@
 
 <script setup lang="ts">
 import { useTemplateRef } from 'vue';
-import { useColorScheme, type ColorScheme } from '@numior/primitives';
-import { NuiButton, NuiToggleGroup, type NuiToggleItem } from '@numior/vue';
+import {
+  NuiButton,
+  NuiToggleGroup,
+  useColorScheme,
+  type ColorScheme,
+  type NuiToggleItem,
+} from '@numior/kit';
 
 const root = useTemplateRef<HTMLElement>('root');
 const { scheme, resolved, set } = useColorScheme({ scope: root, initial: 'light' });

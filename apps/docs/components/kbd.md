@@ -10,7 +10,7 @@ Windows и Linux.
 ## Установка
 
 ```ts install
-import { NuiKbd } from '@numior/vue';
+import { NuiKbd } from '@numior/kit';
 ```
 
 ## Использование

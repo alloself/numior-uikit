@@ -15,9 +15,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { contentSchema } from '@numior/content';
-import { fromHTML, toJSON } from '@numior/editor-core';
-import { NuiEditor } from '@numior/editor-vue';
+import { contentSchema } from '@numior/kit/content';
+import { fromHTML, toJSON } from '@numior/kit/editor-core';
+import { NuiEditor } from '@numior/kit/editor';
 import { description } from '#demo/description';
 
 const document = ref(toJSON(fromHTML(contentSchema, description)));

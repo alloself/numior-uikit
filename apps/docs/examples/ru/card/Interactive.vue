@@ -27,7 +27,7 @@ import {
   NuiCardFooter,
   NuiCardHeader,
   NuiCardTitle,
-} from '@numior/vue';
+} from '@numior/kit';
 import { DELIVERIES, type Delivery } from '#demo/orders';
 
 const METHODS: readonly Delivery[] = ['courier', 'pickup', 'post'];

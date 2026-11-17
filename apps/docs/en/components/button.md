@@ -7,7 +7,7 @@ A button for actions on the page.
 ## Installation
 
 ```ts install
-import { NuiButton } from '@numior/vue';
+import { NuiButton } from '@numior/kit';
 ```
 
 ## Usage

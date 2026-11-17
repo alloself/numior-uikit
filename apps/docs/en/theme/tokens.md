@@ -4,7 +4,7 @@ description: Every Numior UI theme token with a sample and its value in the ligh
 
 # Tokens
 
-A Numior UI theme is a set of custom properties prefixed with `--nui-`. Here they all are, each with a sample, its name and its value from `@numior/tokens/theme.css`.
+A Numior UI theme is a set of custom properties prefixed with `--nui-`. Here they all are, each with a sample, its name and its value from `@numior/kit/theme.css`.
 
 To change the theme, declare a token again in your own CSS. The [Custom theme](/en/guide/custom-theme) guide walks through it.
 

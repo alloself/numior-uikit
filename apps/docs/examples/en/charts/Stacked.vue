@@ -8,9 +8,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { countBy, groupBy, sortBy, takeRight } from 'lodash-es';
-import { NuiChart, type ChartSpec, type ChartStacking } from '@numior/charts';
-import { startOfWeek } from '@numior/primitives';
-import { NuiToggleGroup, type NuiToggleItem } from '@numior/vue';
+import { NuiChart, type ChartSpec, type ChartStacking } from '@numior/kit/charts';
+import { NuiToggleGroup, startOfWeek, type NuiToggleItem } from '@numior/kit';
 import { ordersOf } from '#demo/many-orders';
 import { ORDER_STATUSES } from '#demo/orders';
 

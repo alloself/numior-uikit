@@ -8,5 +8,5 @@
 </template>
 
 <script setup lang="ts">
-import { NuiButton, NuiSeparator } from '@numior/vue';
+import { NuiButton, NuiSeparator } from '@numior/kit';
 </script>

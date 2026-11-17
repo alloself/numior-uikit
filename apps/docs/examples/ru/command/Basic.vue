@@ -15,7 +15,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Download, Settings } from '@lucide/vue';
-import { NuiCommand, NuiKbd, type NuiCommandSource } from '@numior/vue';
+import { NuiCommand, NuiKbd, type NuiCommandSource } from '@numior/kit';
 
 const last = ref('');
 

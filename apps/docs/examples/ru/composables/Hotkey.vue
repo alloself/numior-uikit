@@ -12,8 +12,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiInput, NuiKbd, NuiSwitch } from '@numior/vue';
-import { useHotkey } from '@numior/primitives';
+import { NuiInput, NuiKbd, NuiSwitch, useHotkey } from '@numior/kit';
 
 const count = ref(0);
 const enabled = ref(true);

@@ -10,7 +10,7 @@
 ## Установка
 
 ```ts install
-import { NuiIcon } from '@numior/vue';
+import { NuiIcon } from '@numior/kit';
 ```
 
 ## Использование
@@ -35,7 +35,7 @@ import { NuiIcon } from '@numior/vue';
 
 ```ts
 import { createApp } from 'vue';
-import { createNuiConfig, lazyIcon } from '@numior/vue';
+import { createNuiConfig, lazyIcon } from '@numior/kit';
 import CheckIcon from './icons/CheckIcon.vue';
 
 createApp(App)

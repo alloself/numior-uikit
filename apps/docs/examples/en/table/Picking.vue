@@ -34,7 +34,7 @@ import {
   type NuiTableEditEvent,
   type NuiTableRange,
   type NuiTableRect,
-} from '@numior/table';
+} from '@numior/kit/table';
 
 interface LastPick {
   readonly name: string;

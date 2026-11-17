@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiPopover } from '@numior/vue';
+import { NuiPopover } from '@numior/kit';
 ```
 
 ## Использование

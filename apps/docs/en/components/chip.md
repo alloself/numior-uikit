@@ -9,7 +9,7 @@ For a status or a count, use a [Badge](/en/components/badge).
 ## Installation
 
 ```ts install
-import { NuiChip } from '@numior/vue';
+import { NuiChip } from '@numior/kit';
 ```
 
 ## Usage

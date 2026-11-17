@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiInput, NuiPagination, NuiSelect, NuiSwitch, type NuiOption } from '@numior/vue';
+import { NuiInput, NuiPagination, NuiSelect, NuiSwitch, type NuiOption } from '@numior/kit';
 
 const name = ref('');
 const city = ref<string | null>('cairo');

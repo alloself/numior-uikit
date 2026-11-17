@@ -5,5 +5,5 @@
 </template>
 
 <script setup lang="ts">
-import { NuiChip } from '@numior/vue';
+import { NuiChip } from '@numior/kit';
 </script>

@@ -11,38 +11,14 @@ While a client is offline, its edits wait in a queue. Once it reconnects, the cl
 with the log, rebases the queue and sends it. Without a saved copy, the queue lives only in the
 memory of the tab.
 
-## Installation
-
-Install the package next to `@numior/collaboration`:
-
-::: code-group
-
-```sh [pnpm]
-pnpm add @numior/offline
-```
-
-```sh [npm]
-npm install @numior/offline
-```
-
-```sh [yarn]
-yarn add @numior/offline
-```
-
-```sh [bun]
-bun add @numior/offline
-```
-
-:::
-
 ## Keep edits in the browser
 
 Create a copy with `offlinePersistence` and pass it to `useCollabEditor` as `persistence`:
 
 ```ts
-import { useCollabEditor } from '@numior/collaboration/vue';
-import { contentSchema } from '@numior/content';
-import { offlinePersistence } from '@numior/offline';
+import { useCollabEditor } from '@numior/kit/collaboration/vue';
+import { contentSchema } from '@numior/kit/content';
+import { offlinePersistence } from '@numior/kit/offline';
 
 const persistence = offlinePersistence('oslo-chair', { schema: contentSchema });
 
@@ -84,7 +60,7 @@ and save nothing.
 
 ```ts
 import { ref } from 'vue';
-import type { OfflineCopy } from '@numior/offline';
+import type { OfflineCopy } from '@numior/kit/offline';
 
 const copy = ref<OfflineCopy>();
 

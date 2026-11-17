@@ -4,7 +4,7 @@ description: Все токены темы Numior UI с образцами и з�
 
 # Токены
 
-Тема Numior UI состоит из custom properties с префиксом `--nui-`. Здесь они все: образец, имя и значение из `@numior/tokens/theme.css`.
+Тема Numior UI состоит из custom properties с префиксом `--nui-`. Здесь они все: образец, имя и значение из `@numior/kit/theme.css`.
 
 Чтобы изменить тему, объявите токен заново в своём CSS. Порядок действий описан в руководстве [Своя тема](/guide/custom-theme).
 

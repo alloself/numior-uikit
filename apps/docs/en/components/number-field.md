@@ -10,7 +10,7 @@ model when the user leaves the field or presses Enter.
 ## Installation
 
 ```ts install
-import { NuiNumberField } from '@numior/vue';
+import { NuiNumberField } from '@numior/kit';
 ```
 
 ## Usage

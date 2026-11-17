@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiTextarea } from '@numior/vue';
+import { NuiTextarea } from '@numior/kit';
 
 const note = ref('');
 

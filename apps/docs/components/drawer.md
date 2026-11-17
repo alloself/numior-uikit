@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiDrawer } from '@numior/vue';
+import { NuiDrawer } from '@numior/kit';
 ```
 
 ## Использование

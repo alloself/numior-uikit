@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
+import { NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/kit';
 
 const tab = ref('items');
 </script>

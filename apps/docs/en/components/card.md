@@ -7,7 +7,7 @@ A frame around one thing on the screen, such as an order or a product.
 ## Installation
 
 ```ts install
-import { NuiCard, NuiCardContent, NuiCardHeader, NuiCardTitle } from '@numior/vue';
+import { NuiCard, NuiCardContent, NuiCardHeader, NuiCardTitle } from '@numior/kit';
 ```
 
 ## Usage
@@ -60,7 +60,7 @@ Add `loading`.
 <Example name="card/Loading" />
 
 Each placeholder takes the height of a text line, so the header keeps its height when the data
-arrives. The placeholders need `@numior/vue/styles/skeleton.css`.
+arrives. The placeholders need `@numior/kit/styles/skeleton.css`.
 
 ### Fill the header from props
 

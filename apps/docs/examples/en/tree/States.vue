@@ -12,5 +12,5 @@
 </template>
 
 <script setup lang="ts">
-import { NuiTree } from '@numior/vue';
+import { NuiTree } from '@numior/kit';
 </script>

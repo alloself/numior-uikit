@@ -18,8 +18,7 @@ Then call `useToast()` in any component, and its toasts appear in this toaster.
 ## Installation
 
 ```ts install
-import { NuiToaster } from '@numior/vue';
-import { useToast } from '@numior/primitives';
+import { NuiToaster, useToast } from '@numior/kit';
 ```
 
 ## Examples

@@ -13,7 +13,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { promiseTimeout } from '@vueuse/core';
-import { NuiCombobox, type NuiOption } from '@numior/vue';
+import { NuiCombobox, type NuiOption } from '@numior/kit';
 import { products } from '#demo/products';
 
 const catalog: NuiOption<string>[] = products.map((product) => ({

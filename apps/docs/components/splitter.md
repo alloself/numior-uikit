@@ -10,7 +10,7 @@
 ## Установка
 
 ```ts install
-import { NuiSplitter } from '@numior/vue';
+import { NuiSplitter } from '@numior/kit';
 ```
 
 ## Примеры

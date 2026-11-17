@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiCalendar } from '@numior/vue';
+import { NuiCalendar } from '@numior/kit';
 ```
 
 ## Использование

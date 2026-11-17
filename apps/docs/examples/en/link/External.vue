@@ -6,5 +6,5 @@
 </template>
 
 <script setup lang="ts">
-import { NuiLink } from '@numior/vue';
+import { NuiLink } from '@numior/kit';
 </script>

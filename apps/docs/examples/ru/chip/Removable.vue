@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiButton, NuiChip } from '@numior/vue';
+import { NuiButton, NuiChip } from '@numior/kit';
 import { ORDER_STATUSES, orders, type Order } from '#demo/orders';
 
 interface Filter {

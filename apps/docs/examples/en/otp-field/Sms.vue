@@ -19,7 +19,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { promiseTimeout } from '@vueuse/core';
-import { NuiOtpField } from '@numior/vue';
+import { NuiOtpField } from '@numior/kit';
 
 type Check = 'waiting' | 'checking' | 'passed' | 'failed';
 

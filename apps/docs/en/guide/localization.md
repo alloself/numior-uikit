@@ -31,8 +31,8 @@ of their own `locale` prop. So month names and the date format are always in one
 Pass to `messages` only the texts you want to replace:
 
 ```ts
-import { createNuiConfig, type NuiLocaleMessages, type NuiVueMessages } from '@numior/vue';
-import type { NuiFormsMessages } from '@numior/forms';
+import { createNuiConfig, type NuiLocaleMessages, type NuiVueMessages } from '@numior/kit';
+import type { NuiFormsMessages } from '@numior/kit/forms';
 
 const messages: NuiLocaleMessages<NuiVueMessages & NuiFormsMessages> = {
   en: { dialog: { close: 'Close window' } },
@@ -53,7 +53,7 @@ TypeScript flags a typo in a section name or key.
 Add a section with the language code to `messages` and set that language in `locale`:
 
 ```ts
-import { createNuiConfig, plural, type NuiLocaleMessages, type NuiVueMessages } from '@numior/vue';
+import { createNuiConfig, plural, type NuiLocaleMessages, type NuiVueMessages } from '@numior/kit';
 
 const messages: NuiLocaleMessages<NuiVueMessages> = {
   de: {
@@ -80,7 +80,7 @@ Pass `translate` a function that takes the text from your translation library:
 
 ```ts
 import { createI18n } from 'vue-i18n';
-import { createNuiConfig } from '@numior/vue';
+import { createNuiConfig } from '@numior/kit';
 
 const i18n = createI18n({ legacy: false, locale: 'en-US', messages });
 

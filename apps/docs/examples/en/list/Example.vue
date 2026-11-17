@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiList, type NuiOption } from '@numior/vue';
+import { NuiList, type NuiOption } from '@numior/kit';
 import { team } from '#demo/team';
 
 const people: NuiOption[] = team.map((person) => ({

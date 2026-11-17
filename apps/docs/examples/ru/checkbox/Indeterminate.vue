@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiCheckbox, NuiCheckboxGroup } from '@numior/vue';
+import { NuiCheckbox, NuiCheckboxGroup } from '@numior/kit';
 import { categories } from '#demo/products';
 
 const options = categories.map(({ value, label }) => ({ value, label }));

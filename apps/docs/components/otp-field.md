@@ -10,7 +10,7 @@
 ## Установка
 
 ```ts install
-import { NuiOtpField } from '@numior/vue';
+import { NuiOtpField } from '@numior/kit';
 ```
 
 ## Использование

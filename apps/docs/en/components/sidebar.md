@@ -16,7 +16,7 @@ Choose what collapsing does in `collapsible`:
 ## Installation
 
 ```ts install
-import { NuiSidebar, NuiSidebarContent, NuiSidebarGroup, NuiSidebarItem } from '@numior/vue';
+import { NuiSidebar, NuiSidebarContent, NuiSidebarGroup, NuiSidebarItem } from '@numior/kit';
 ```
 
 ## Examples

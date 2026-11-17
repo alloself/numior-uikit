@@ -30,8 +30,16 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { promiseTimeout } from '@vueuse/core';
-import { NuiInput } from '@numior/vue';
-import { NuiForm, NuiFormError, NuiFormField, email, min, required, useForm } from '@numior/forms';
+import { NuiInput } from '@numior/kit';
+import {
+  NuiForm,
+  NuiFormError,
+  NuiFormField,
+  email,
+  min,
+  required,
+  useForm,
+} from '@numior/kit/forms';
 import { team } from '#demo/team';
 
 const emailRules = [required(), email()];

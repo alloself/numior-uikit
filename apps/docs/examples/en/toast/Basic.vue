@@ -9,8 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { useToast } from '@numior/primitives';
-import { NuiButton } from '@numior/vue';
+import { NuiButton, useToast } from '@numior/kit';
 
 const toast = useToast();
 

@@ -8,13 +8,11 @@ Type in one pane, and the text and the caret show up in the other.
 
 ## Installation
 
-Install it next to the [editor packages](/en/editor/#installation):
-
 ```ts install:packages
-import { NuiCollabPresence } from '@numior/collaboration/vue';
+import { NuiCollabPresence } from '@numior/kit/collaboration/vue';
 ```
 
-The `@numior/collaboration` styles draw the carets, avatars and panels of collaborators.
+The `@numior/kit/collaboration` styles draw the carets, avatars and panels of collaborators.
 
 ## Connecting
 
@@ -23,7 +21,7 @@ The `@numior/collaboration` styles draw the carets, avatars and panels of collab
 Create a transport to your server with `webSocketTransport`:
 
 ```ts
-import { webSocketTransport } from '@numior/collaboration';
+import { webSocketTransport } from '@numior/kit/collaboration';
 
 const transport = webSocketTransport('wss://shop.example/collab');
 ```
@@ -40,9 +38,9 @@ Call `useCollabEditor` with the document name, the user and the transport:
 
 ```ts
 import { computed, useTemplateRef } from 'vue';
-import { useCollabEditor } from '@numior/collaboration/vue';
-import { contentSchema } from '@numior/content';
-import type { NuiEditorApi } from '@numior/editor-vue';
+import { useCollabEditor } from '@numior/kit/collaboration/vue';
+import { contentSchema } from '@numior/kit/content';
+import type { NuiEditorApi } from '@numior/kit/editor';
 
 const editor = useTemplateRef<{ editor: NuiEditorApi }>('editor');
 
@@ -116,8 +114,8 @@ next to the editor, for example as a badge:
 
 ```ts
 import { computed } from 'vue';
-import { CollabStatusKind, type CollabStatus } from '@numior/collaboration';
-import { NuiTone } from '@numior/vue';
+import { CollabStatusKind, type CollabStatus } from '@numior/kit/collaboration';
+import { NuiTone } from '@numior/kit';
 
 const STATES: Readonly<Record<CollabStatus['kind'], { text: string; tone: NuiTone }>> = {
   [CollabStatusKind.Connecting]: { text: 'Connecting', tone: NuiTone.Neutral },

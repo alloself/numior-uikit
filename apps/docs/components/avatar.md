@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiAvatar, NuiAvatarGroup } from '@numior/vue';
+import { NuiAvatar, NuiAvatarGroup } from '@numior/kit';
 ```
 
 ## Использование

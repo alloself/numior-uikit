@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiStepper, type NuiStepperStep } from '@numior/vue';
+import { NuiStepper, type NuiStepperStep } from '@numior/kit';
 
 const steps: NuiStepperStep[] = [
   { value: 'details', label: 'Details', description: 'Name and category', status: 'complete' },

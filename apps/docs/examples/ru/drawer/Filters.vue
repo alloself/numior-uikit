@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { uniq } from 'lodash-es';
-import { NuiButton, NuiCheckboxGroup, NuiDrawer, NuiSelect } from '@numior/vue';
+import { NuiButton, NuiCheckboxGroup, NuiDrawer, NuiSelect } from '@numior/kit';
 import { DELIVERIES, ORDER_STATUSES, orders } from '#demo/orders';
 
 const open = ref(false);

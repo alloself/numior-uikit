@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiBadge } from '@numior/vue';
+import { NuiBadge } from '@numior/kit';
 ```
 
 ## Использование

@@ -28,8 +28,7 @@
 
 <script setup lang="ts">
 import { ref, useTemplateRef } from 'vue';
-import { NuiButton } from '@numior/vue';
-import { createCollection, useListNavigation } from '@numior/primitives';
+import { NuiButton, createCollection, useListNavigation } from '@numior/kit';
 
 const toolbar = useTemplateRef<HTMLElement>('toolbar');
 const last = ref('');

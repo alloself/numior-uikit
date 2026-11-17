@@ -59,20 +59,22 @@ const INSTALL: InstallSource = {
   components: {
     NuiSelect: {
       stylesheets: [
-        '@numior/vue/styles/icon.css',
-        '@numior/vue/styles/field.css',
-        '@numior/vue/styles/select.css',
+        '@numior/kit/styles/icon.css',
+        '@numior/kit/styles/field.css',
+        '@numior/kit/styles/select.css',
       ],
     },
-    NuiTable: { stylesheets: ['@numior/vue/styles/icon.css', '@numior/table/styles/table.css'] },
+    NuiTable: {
+      stylesheets: ['@numior/kit/styles/icon.css', '@numior/kit/table/styles/table.css'],
+    },
   },
   stylesheets: [
-    '@numior/vue/styles.css',
-    '@numior/vue/styles/icon.css',
-    '@numior/vue/styles/field.css',
-    '@numior/vue/styles/select.css',
-    '@numior/table/styles.css',
-    '@numior/table/styles/table.css',
+    '@numior/kit/styles.css',
+    '@numior/kit/styles/icon.css',
+    '@numior/kit/styles/field.css',
+    '@numior/kit/styles/select.css',
+    '@numior/kit/table/styles.css',
+    '@numior/kit/table/styles/table.css',
   ],
 };
 
@@ -138,61 +140,46 @@ describe('docs markdown', () => {
 
   it('prints every stylesheet that the components of an install block render', () => {
     const files = codeProps(
-      md.render("```ts install\nimport { NuiTable, NuiSelect } from '@numior/vue';\n```\n", RU),
+      md.render("```ts install\nimport { NuiTable, NuiSelect } from '@numior/kit';\n```\n", RU),
     );
 
     expect(files.language).toBe('ts');
 
     expect(files.code).toBe(
       [
-        "import { NuiTable, NuiSelect } from '@numior/vue';",
-        "import '@numior/vue/styles/icon.css';",
-        "import '@numior/vue/styles/field.css';",
-        "import '@numior/vue/styles/select.css';",
-        "import '@numior/table/styles/table.css';",
+        "import { NuiTable, NuiSelect } from '@numior/kit';",
+        "import '@numior/kit/styles/icon.css';",
+        "import '@numior/kit/styles/field.css';",
+        "import '@numior/kit/styles/select.css';",
+        "import '@numior/kit/table/styles/table.css';",
       ].join('\n'),
     );
 
     const packages = codeProps(
-      md.render("```ts install:packages\nimport { NuiTable } from '@numior/table';\n```\n", RU),
+      md.render("```ts install:packages\nimport { NuiTable } from '@numior/kit/table';\n```\n", RU),
     );
 
     expect(packages.code).toBe(
       [
-        "import { NuiTable } from '@numior/table';",
-        "import '@numior/vue/styles.css';",
-        "import '@numior/table/styles.css';",
+        "import { NuiTable } from '@numior/kit/table';",
+        "import '@numior/kit/styles.css';",
+        "import '@numior/kit/table/styles.css';",
       ].join('\n'),
     );
   });
 
-  it('prints the install command of a module before its install block', () => {
+  it('prints no install command: the kit holds every module', () => {
     const html = md.render(
-      "```ts install:packages\nimport { NuiTable } from '@numior/table';\n```\n",
+      "```ts install:packages\nimport { NuiTable } from '@numior/kit/table';\n```\n",
       RU,
     );
-
-    const commands = codeGroup(html).map(({ label, code }) => [label, code.code]);
-
-    expect(commands).toEqual([
-      ['pnpm', 'pnpm add @numior/table'],
-      ['npm', 'npm install @numior/table'],
-      ['yarn', 'yarn add @numior/table'],
-      ['bun', 'bun add @numior/table'],
-    ]);
-
-    expect(html.indexOf('<CodeGroup')).toBeLessThan(html.indexOf('<NuiCode'));
-  });
-
-  it('prints no install command for components of the base packages', () => {
-    const html = md.render("```ts install\nimport { NuiSelect } from '@numior/vue';\n```\n", RU);
 
     expect(html).not.toContain('<CodeGroup');
   });
 
   it('refuses an install block that imports no component with styles', () => {
     expect(() =>
-      md.render("```ts install\nimport { useToast } from '@numior/primitives';\n```\n", RU),
+      md.render("```ts install\nimport { useToast } from '@numior/kit';\n```\n", RU),
     ).toThrow('imports no kit component with styles');
   });
 

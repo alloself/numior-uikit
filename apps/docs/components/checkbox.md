@@ -10,7 +10,7 @@
 ## Установка
 
 ```ts install
-import { NuiCheckbox, NuiCheckboxGroup } from '@numior/vue';
+import { NuiCheckbox, NuiCheckboxGroup } from '@numior/kit';
 ```
 
 ## Использование

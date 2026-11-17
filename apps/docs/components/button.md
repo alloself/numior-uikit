@@ -7,7 +7,7 @@
 ## Установка
 
 ```ts install
-import { NuiButton } from '@numior/vue';
+import { NuiButton } from '@numior/kit';
 ```
 
 ## Использование

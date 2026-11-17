@@ -18,8 +18,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useToast } from '@numior/primitives';
-import { NuiButton, NuiDialog } from '@numior/vue';
+import { NuiButton, NuiDialog, useToast } from '@numior/kit';
 
 const open = ref(false);
 const toast = useToast();

@@ -10,5 +10,5 @@
 </template>
 
 <script setup lang="ts">
-import { NuiSkeleton } from '@numior/vue';
+import { NuiSkeleton } from '@numior/kit';
 </script>

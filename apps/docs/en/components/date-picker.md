@@ -9,7 +9,7 @@ The model holds the date as a `YYYY-MM-DD` string.
 ## Installation
 
 ```ts install
-import { NuiDatePicker } from '@numior/vue';
+import { NuiDatePicker } from '@numior/kit';
 ```
 
 ## Usage

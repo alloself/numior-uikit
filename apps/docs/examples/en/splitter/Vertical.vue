@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiList, NuiSplitter, type NuiListEntry } from '@numior/vue';
+import { NuiList, NuiSplitter, type NuiListEntry } from '@numior/kit';
 import { DELIVERIES, ORDER_STATUSES, orders } from '#demo/orders';
 
 const money = new Intl.NumberFormat('en-US', {

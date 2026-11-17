@@ -58,13 +58,3 @@ export const kitPackages = (root: string): KitPackage[] => {
 
   return readdirSync(packagesDir).flatMap((name) => kitPackage(join(packagesDir, name)));
 };
-
-export const styledPackages = (root: string): ReadonlySet<string> =>
-  new Set(
-    kitPackages(root).reduce<string[]>((names, entry) => {
-      if (STYLES_KEY in entry.exports) {
-        names.push(entry.name);
-      }
-      return names;
-    }, []),
-  );

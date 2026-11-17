@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiAvatar, NuiBadge, NuiButton, type NuiTone } from '@numior/vue';
+import { NuiAvatar, NuiBadge, NuiButton, type NuiTone } from '@numior/kit';
 import { ORDER_STATUSES, orders, type OrderStatus } from '#demo/orders';
 
 const TONES: Record<OrderStatus, NuiTone> = {

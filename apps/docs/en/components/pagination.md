@@ -10,7 +10,7 @@ its size.
 ## Installation
 
 ```ts install
-import { NuiPagination } from '@numior/vue';
+import { NuiPagination } from '@numior/kit';
 ```
 
 ## Usage

@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiButton } from '@numior/vue';
+import { NuiButton } from '@numior/kit';
 
 const accents = ['indigo', 'blue', 'violet', 'emerald', 'teal', 'rose', 'orange', 'amber', 'slate'];
 </script>

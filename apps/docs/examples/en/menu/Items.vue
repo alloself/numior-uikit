@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiButton, NuiMenu, type NuiMenuEntry } from '@numior/vue';
+import { NuiButton, NuiMenu, type NuiMenuEntry } from '@numior/kit';
 
 const status = ref('The order is awaiting payment.');
 

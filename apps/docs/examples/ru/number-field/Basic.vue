@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiNumberField } from '@numior/vue';
+import { NuiNumberField } from '@numior/kit';
 import { products } from '#demo/products';
 
 const [chair] = products;

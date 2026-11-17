@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiTable, type NuiTableColumn, type TableSort } from '@numior/table';
+import { NuiTable, type NuiTableColumn, type TableSort } from '@numior/kit/table';
 import { ORDER_STATUSES, orders, type Order } from '#demo/orders';
 
 const latest = orders.slice(-6);

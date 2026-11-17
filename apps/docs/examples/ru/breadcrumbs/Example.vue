@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiBreadcrumbs, type NuiBreadcrumbItem } from '@numior/vue';
+import { NuiBreadcrumbs, type NuiBreadcrumbItem } from '@numior/kit';
 
 const path: NuiBreadcrumbItem[] = [
   { label: 'Каталог', href: '#' },

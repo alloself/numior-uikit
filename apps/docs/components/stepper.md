@@ -10,7 +10,7 @@
 ## Установка
 
 ```ts install
-import { NuiStepper } from '@numior/vue';
+import { NuiStepper } from '@numior/kit';
 ```
 
 ## Использование

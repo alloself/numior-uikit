@@ -23,7 +23,7 @@ import {
   type NuiTableColumn,
   type NuiTableExposed,
   type NuiTablePeer,
-} from '@numior/table';
+} from '@numior/kit/table';
 
 interface Task {
   readonly id: string;

@@ -12,7 +12,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiTable, type NuiTableColumn, type TableNodeId, type TableSource } from '@numior/table';
+import {
+  NuiTable,
+  type NuiTableColumn,
+  type TableNodeId,
+  type TableSource,
+} from '@numior/kit/table';
 
 interface Unit {
   readonly id: string;

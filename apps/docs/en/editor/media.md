@@ -42,7 +42,7 @@ Add your own service as a rule. `source` turns the address of a page into the ad
 frame, or returns nothing for a link it does not know:
 
 ```ts
-import type { NuiEmbedProvider } from '@numior/content';
+import type { NuiEmbedProvider } from '@numior/kit/content';
 
 const showroom: NuiEmbedProvider = {
   id: 'showroom',

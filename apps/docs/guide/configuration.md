@@ -9,7 +9,7 @@
 
 ```ts
 import { createApp } from 'vue';
-import { createNuiConfig } from '@numior/vue';
+import { createNuiConfig } from '@numior/kit';
 import App from './App.vue';
 
 createApp(App)
@@ -59,7 +59,7 @@ createApp(App)
 <template><slot /></template>
 
 <script setup lang="ts">
-import { provideNuiConfig } from '@numior/vue';
+import { provideNuiConfig } from '@numior/kit';
 
 const { locale } = defineProps<{ locale: string }>();
 

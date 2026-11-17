@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiCollapsible } from '@numior/vue';
+import { NuiCollapsible } from '@numior/kit';
 ```
 
 ## Использование

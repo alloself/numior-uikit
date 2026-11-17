@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiButton, NuiDialog } from '@numior/vue';
+import { NuiButton, NuiDialog } from '@numior/kit';
 
 const open = ref(false);
 </script>

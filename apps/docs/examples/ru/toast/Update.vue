@@ -4,8 +4,7 @@
 
 <script setup lang="ts">
 import { promiseTimeout } from '@vueuse/core';
-import { useToast } from '@numior/primitives';
-import { NuiButton } from '@numior/vue';
+import { NuiButton, useToast } from '@numior/kit';
 import { orders } from '#demo/orders';
 
 const FILE = 'orders-september.csv';

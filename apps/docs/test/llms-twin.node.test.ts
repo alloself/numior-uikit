@@ -21,11 +21,11 @@ const BUNDLE: ReferenceBundle = {
   components: {
     NuiButton: {
       name: 'NuiButton',
-      package: '@numior/vue',
+      package: '@numior/kit',
       family: 'button',
       file: 'packages/vue/src/button/NuiButton.vue',
-      styles: { import: '@numior/vue/button.css', blocks: [], tokens: [] },
-      stylesheets: ['@numior/vue/styles/icon.css', '@numior/vue/button.css'],
+      styles: { import: '@numior/kit/styles/button.css', blocks: [], tokens: [] },
+      stylesheets: ['@numior/kit/styles/icon.css', '@numior/kit/styles/button.css'],
       messages: 'button',
       props: [
         {
@@ -60,7 +60,7 @@ const BUNDLE: ReferenceBundle = {
     },
     NuiSelect: {
       name: 'NuiSelect',
-      package: '@numior/vue',
+      package: '@numior/kit',
       family: 'select',
       file: 'packages/vue/src/select/NuiSelect.vue',
       styles: undefined,
@@ -81,13 +81,13 @@ const BUNDLE: ReferenceBundle = {
   declarations: [
     {
       name: 'useHotkey',
-      package: '@numior/primitives',
+      package: '@numior/kit',
       kind: 'function',
       signature: 'declare const useHotkey: (keys: string) => void;',
     },
     {
       name: 'HotkeyOptions',
-      package: '@numior/primitives',
+      package: '@numior/kit',
       kind: 'type',
       signature: 'interface HotkeyOptions {}',
     },
@@ -97,7 +97,11 @@ const BUNDLE: ReferenceBundle = {
     { name: '--nui-surface', group: 'color', light: '#fff', dark: '#111' },
   ],
   icons: [{ alias: 'copy', icon: 'Copy' }],
-  stylesheets: ['@numior/vue/styles.css', '@numior/vue/styles/icon.css', '@numior/vue/button.css'],
+  stylesheets: [
+    '@numior/kit/styles.css',
+    '@numior/kit/styles/icon.css',
+    '@numior/kit/styles/button.css',
+  ],
 };
 
 const contextOf = (locale: 'ru' | 'en' = 'ru'): TwinContext => ({
@@ -142,49 +146,34 @@ describe('markdown twin of a page', () => {
   });
 
   it('prints the stylesheets of an install block the way the page shows them', () => {
-    const page = "## Установка\n\n```ts install\nimport { NuiButton } from '@numior/vue';\n```\n";
+    const page = "## Установка\n\n```ts install\nimport { NuiButton } from '@numior/kit';\n```\n";
 
     expect(pageTwin(page, contextOf())).toBe(
       [
         '## Установка',
         '',
         '```ts',
-        "import { NuiButton } from '@numior/vue';",
-        "import '@numior/vue/styles/icon.css';",
-        "import '@numior/vue/button.css';",
+        "import { NuiButton } from '@numior/kit';",
+        "import '@numior/kit/styles/icon.css';",
+        "import '@numior/kit/styles/button.css';",
         '```',
         '',
       ].join('\n'),
     );
   });
 
-  it('prints the install command of a module before its install block', () => {
-    const page = "## Установка\n\n```ts install\nimport { NuiButton } from '@numior/forms';\n```\n";
+  it('prints no install command for a module of the kit', () => {
+    const page =
+      "## Установка\n\n```ts install\nimport { NuiButton } from '@numior/kit/forms';\n```\n";
 
     expect(pageTwin(page, contextOf())).toBe(
       [
         '## Установка',
         '',
-        '```sh [pnpm]',
-        'pnpm add @numior/forms',
-        '```',
-        '',
-        '```sh [npm]',
-        'npm install @numior/forms',
-        '```',
-        '',
-        '```sh [yarn]',
-        'yarn add @numior/forms',
-        '```',
-        '',
-        '```sh [bun]',
-        'bun add @numior/forms',
-        '```',
-        '',
         '```ts',
-        "import { NuiButton } from '@numior/forms';",
-        "import '@numior/vue/styles/icon.css';",
-        "import '@numior/vue/button.css';",
+        "import { NuiButton } from '@numior/kit/forms';",
+        "import '@numior/kit/styles/icon.css';",
+        "import '@numior/kit/styles/button.css';",
         '```',
         '',
       ].join('\n'),
@@ -210,7 +199,7 @@ describe('markdown twin of a page', () => {
     expect(twin).toContain('### NuiButton');
 
     expect(twin).toContain(
-      "import { NuiButton } from '@numior/vue';\nimport '@numior/vue/button.css';",
+      "import { NuiButton } from '@numior/kit';\nimport '@numior/kit/styles/button.css';",
     );
 
     expect(twin).toContain('#### Props\n\n| Name | Type | Default | Description |');
@@ -245,10 +234,10 @@ describe('markdown twin of a page', () => {
     );
 
     expect(signatures).toContain(
-      "```ts\nimport { useHotkey } from '@numior/primitives';\n\ndeclare const useHotkey: (keys: string) => void;\n```",
+      "```ts\nimport { useHotkey } from '@numior/kit';\n\ndeclare const useHotkey: (keys: string) => void;\n```",
     );
 
-    expect(signatures).toContain("import type { HotkeyOptions } from '@numior/primitives';");
+    expect(signatures).toContain("import type { HotkeyOptions } from '@numior/kit';");
 
     expect(pageTwin('<TokenReference section="shape" />\n', contextOf())).toContain(
       '| `--nui-radius-md` | `0.5rem` |  |',

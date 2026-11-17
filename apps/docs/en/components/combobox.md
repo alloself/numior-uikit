@@ -10,7 +10,7 @@ options whose label contains the typed text, in any letter case.
 ## Installation
 
 ```ts install
-import { NuiCombobox } from '@numior/vue';
+import { NuiCombobox } from '@numior/kit';
 ```
 
 ## Usage

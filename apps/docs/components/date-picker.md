@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiDatePicker } from '@numior/vue';
+import { NuiDatePicker } from '@numior/kit';
 ```
 
 ## Использование

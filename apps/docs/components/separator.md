@@ -7,7 +7,7 @@
 ## Установка
 
 ```ts install
-import { NuiSeparator } from '@numior/vue';
+import { NuiSeparator } from '@numior/kit';
 ```
 
 ## Использование

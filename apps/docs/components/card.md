@@ -7,7 +7,7 @@
 ## Установка
 
 ```ts install
-import { NuiCard, NuiCardContent, NuiCardHeader, NuiCardTitle } from '@numior/vue';
+import { NuiCard, NuiCardContent, NuiCardHeader, NuiCardTitle } from '@numior/kit';
 ```
 
 ## Использование
@@ -57,7 +57,7 @@ import { NuiCard, NuiCardContent, NuiCardHeader, NuiCardTitle } from '@numior/vu
 <Example name="card/Loading" />
 
 Шапка не меняет высоту, когда приходят данные. Заглушкам нужны стили
-`@numior/vue/styles/skeleton.css`.
+`@numior/kit/styles/skeleton.css`.
 
 ### Шапка без частей
 

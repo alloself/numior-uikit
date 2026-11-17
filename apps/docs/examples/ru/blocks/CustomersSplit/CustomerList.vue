@@ -21,7 +21,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { NuiInput, NuiList } from '@numior/vue';
+import { NuiInput, NuiList } from '@numior/kit';
 import type { Customer } from '#demo/customers';
 
 const { customers } = defineProps<{ customers: readonly Customer[] }>();

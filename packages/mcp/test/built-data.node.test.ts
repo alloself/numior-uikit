@@ -19,8 +19,8 @@ describe('the data built from the documentation', () => {
   <NuiButton variant="primary" icon="trash">Delete</NuiButton>
 </template>
 <script setup lang="ts">
-import { NuiButton } from '@numior/vue';
-import '@numior/vue/styles.css';
+import { NuiButton } from '@numior/kit';
+import '@numior/kit/styles.css';
 </script>`,
     });
 
@@ -33,7 +33,7 @@ import '@numior/vue/styles.css';
     expect(Object.keys(data.examples.ru)).toEqual(Object.keys(data.examples.en));
     expect(data.tokens.length).toBeGreaterThan(50);
     expect(data.icons.length).toBeGreaterThan(20);
-    expect(select.json()).toMatchObject({ name: 'NuiSelect', package: '@numior/vue' });
+    expect(select.json()).toMatchObject({ name: 'NuiSelect', package: '@numior/kit' });
     expect(select.texts[1]).toMatch(/^# /u);
     expect(page.text).toMatch(/^# Button/u);
     expect(hits.json()).toHaveLength(3);

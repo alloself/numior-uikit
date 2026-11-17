@@ -14,7 +14,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { promiseTimeout, useBase64 } from '@vueuse/core';
-import { NuiEditor, type NuiEditorUploadAdapter } from '@numior/editor-vue';
+import { NuiEditor, type NuiEditorUploadAdapter } from '@numior/kit/editor';
 
 const STEPS = [0.25, 0.5, 0.75, 1];
 

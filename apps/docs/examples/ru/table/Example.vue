@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiTable, type NuiTableColumn } from '@numior/table';
+import { NuiTable, type NuiTableColumn } from '@numior/kit/table';
 import { ORDER_STATUSES, orders, type Order } from '#demo/orders';
 
 const latest = orders.slice(-6);

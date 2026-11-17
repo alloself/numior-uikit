@@ -9,7 +9,7 @@ For a label the user can remove, use a [Chip](/en/components/chip).
 ## Installation
 
 ```ts install
-import { NuiBadge } from '@numior/vue';
+import { NuiBadge } from '@numior/kit';
 ```
 
 ## Usage

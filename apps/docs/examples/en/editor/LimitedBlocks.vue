@@ -18,9 +18,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { contentSchema } from '@numior/content';
-import { NuiEditor } from '@numior/editor-vue';
-import { NuiButton } from '@numior/vue';
+import { contentSchema } from '@numior/kit/content';
+import { NuiEditor } from '@numior/kit/editor';
+import { NuiButton } from '@numior/kit';
 
 const schema = contentSchema.restrict({
   nodes: ['paragraph', 'bullet_list', 'list_item', 'hard_break'],

@@ -38,7 +38,7 @@ import {
   NuiSwitch,
   type NuiListSource,
   type NuiOption,
-} from '@numior/vue';
+} from '@numior/kit';
 import { DELIVERIES, ORDER_STATUSES, orders, type Delivery } from '#demo/orders';
 
 const order = orders.find((entry) => entry.status === 'paid');

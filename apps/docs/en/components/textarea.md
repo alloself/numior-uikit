@@ -9,7 +9,7 @@ Set the height in lines with `rows`.
 ## Installation
 
 ```ts install
-import { NuiTextarea } from '@numior/vue';
+import { NuiTextarea } from '@numior/kit';
 ```
 
 ## Usage

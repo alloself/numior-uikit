@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiList, type NuiOptionSource } from '@numior/vue';
+import { NuiList, type NuiOptionSource } from '@numior/kit';
 import { categories } from '#demo/products';
 
 const groups: NuiOptionSource = categories.map((category) => ({

@@ -10,7 +10,7 @@
 ## Установка
 
 ```ts install
-import { NuiCombobox } from '@numior/vue';
+import { NuiCombobox } from '@numior/kit';
 ```
 
 ## Использование

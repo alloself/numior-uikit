@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiTooltip, type NuiTooltipTargets } from '@numior/vue';
+import { NuiTooltip, type NuiTooltipTargets } from '@numior/kit';
 import { products } from '#demo/products';
 
 const CLIPPED: NuiTooltipTargets = {

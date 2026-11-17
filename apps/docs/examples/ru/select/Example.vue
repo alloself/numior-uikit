@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiSelect } from '@numior/vue';
+import { NuiSelect } from '@numior/kit';
 import { team } from '#demo/team';
 
 const manager = ref<string | null>(null);

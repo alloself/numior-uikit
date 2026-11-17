@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { LayoutGrid } from '@lucide/vue';
-import { NuiToggleGroup, type NuiToggleItem } from '@numior/vue';
+import { NuiToggleGroup, type NuiToggleItem } from '@numior/kit';
 
 const view = ref<string | null>('table');
 

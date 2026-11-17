@@ -8,8 +8,8 @@
 </template>
 
 <script setup lang="ts">
-import { NuiInput, NuiRadio, NuiRadioGroup } from '@numior/vue';
-import { NuiSmartForm, email, formConfig, required, useForm } from '@numior/forms';
+import { NuiInput, NuiRadio, NuiRadioGroup } from '@numior/kit';
+import { NuiSmartForm, email, formConfig, required, useForm } from '@numior/kit/forms';
 
 interface Contact {
   name: string;

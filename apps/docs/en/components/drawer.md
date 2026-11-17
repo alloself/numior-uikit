@@ -9,7 +9,7 @@ For an app menu that stays on screen, use a [Sidebar](/en/components/sidebar).
 ## Installation
 
 ```ts install
-import { NuiDrawer } from '@numior/vue';
+import { NuiDrawer } from '@numior/kit';
 ```
 
 ## Usage

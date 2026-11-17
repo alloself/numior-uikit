@@ -10,7 +10,7 @@ parts follow the app language.
 ## Installation
 
 ```ts install
-import { NuiTimeField } from '@numior/vue';
+import { NuiTimeField } from '@numior/kit';
 ```
 
 ## Usage

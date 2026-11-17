@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiTable, type NuiTableColumn } from '@numior/table';
+import { NuiTable, type NuiTableColumn } from '@numior/kit/table';
 import { ordersOf } from '#demo/many-orders';
 import type { Order } from '#demo/orders';
 

@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiDialog } from '@numior/vue';
+import { NuiDialog } from '@numior/kit';
 ```
 
 ## Использование

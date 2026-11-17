@@ -11,8 +11,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { addDays } from '@numior/primitives';
-import { NuiDateRangePicker, type NuiDatePreset, type NuiDateRange } from '@numior/vue';
+import { NuiDateRangePicker, addDays, type NuiDatePreset, type NuiDateRange } from '@numior/kit';
 
 const presets: NuiDatePreset[] = [
   { label: 'Last 7 days', range: (today) => ({ start: addDays(today, -6), end: today }) },

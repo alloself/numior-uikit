@@ -8,6 +8,6 @@
 </template>
 
 <script setup lang="ts">
-import { NuiButton, NuiIcon } from '@numior/vue';
+import { NuiButton, NuiIcon } from '@numior/kit';
 import HeartIcon from './HeartIcon.vue';
 </script>

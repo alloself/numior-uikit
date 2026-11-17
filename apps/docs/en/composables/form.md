@@ -1,6 +1,6 @@
 # useForm
 
-`useForm(options)` creates an `@numior/forms` form: the initial values, a schema or validation
+`useForm(options)` creates an `@numior/kit/forms` form: the initial values, a schema or validation
 rules and the submit handler. Use it with `NuiForm` or with your own markup.
 
 `useField` connects a single field to the form, and `useFieldArray` a list of repeated field
@@ -16,7 +16,7 @@ groups, both without `NuiFormField`. `useFormContext` returns the form passed wi
 ## Usage
 
 ```ts
-import { useField, useForm, required } from '@numior/forms';
+import { required, useField, useForm } from '@numior/kit/forms';
 
 const form = useForm({
   initialValues: { email: '' },

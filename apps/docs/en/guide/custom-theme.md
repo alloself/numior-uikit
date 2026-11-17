@@ -13,8 +13,8 @@ Every example in the docs has this toggle.
 Create a CSS file and import it after `theme.css`:
 
 ```ts
-import '@numior/tokens/theme.css';
-import '@numior/tokens/base.css';
+import '@numior/kit/theme.css';
+import '@numior/kit/base.css';
 import './brand.css';
 ```
 
@@ -91,7 +91,7 @@ outside. The full token list is in [Theming](/en/guide/theming#tokens).
 
 ## Tailwind
 
-The `@numior/tailwind` preset reads the same tokens, so the theme is not repeated in the
+The `@numior/kit/tailwind/theme.css` preset reads the same tokens, so the theme is not repeated in the
 Tailwind setup. The classes `bg-surface-elevated`, `text-muted-foreground`, `border` and
 `rounded-lg` in the example above change together with the theme.
 

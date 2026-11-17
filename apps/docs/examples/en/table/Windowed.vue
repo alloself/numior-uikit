@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiTable, type NuiTableColumn } from '@numior/table';
+import { NuiTable, type NuiTableColumn } from '@numior/kit/table';
 
 interface Reading {
   readonly id: number;

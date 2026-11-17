@@ -6,5 +6,5 @@
 </template>
 
 <script setup lang="ts">
-import { NuiKbd } from '@numior/vue';
+import { NuiKbd } from '@numior/kit';
 </script>

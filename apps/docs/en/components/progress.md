@@ -10,7 +10,7 @@ is not known yet.
 ## Installation
 
 ```ts install
-import { NuiProgress } from '@numior/vue';
+import { NuiProgress } from '@numior/kit';
 ```
 
 ## Usage

@@ -11,7 +11,7 @@
 ## Установка
 
 ```ts install
-import { NuiSmartForm, formConfig, useForm } from '@numior/forms';
+import { NuiSmartForm, formConfig, useForm } from '@numior/kit/forms';
 ```
 
 ## Примеры
@@ -67,7 +67,7 @@ TypeScript выводит тип значения из функции выбор
 ## Из JSON
 
 `parseFormConfig(json, { controls })` собирает конфигурацию из JSON. В `controls` передайте набор
-контролов, например `kitControls` из `@numior/vue/controls`.
+контролов, например `kitControls` из `@numior/kit/controls`.
 
 ```json
 [

@@ -103,7 +103,6 @@
 <script setup lang="ts">
 import { computed, ref, type Component } from 'vue';
 import { LogOut, Package, Settings, ShoppingCart, Store, UserCog, Users } from '@lucide/vue';
-import { useMediaQuery, useToast } from '@numior/primitives';
 import {
   NuiAppBar,
   NuiAvatar,
@@ -123,7 +122,9 @@ import {
   NuiSidebarGroup,
   NuiSidebarItem,
   NuiSidebarTrigger,
-} from '@numior/vue';
+  useMediaQuery,
+  useToast,
+} from '@numior/kit';
 import { customers } from '#demo/customers';
 import { ORDER_STATUSES, orders } from '#demo/orders';
 import { products } from '#demo/products';

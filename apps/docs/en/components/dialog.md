@@ -10,7 +10,7 @@ the pressed one.
 ## Installation
 
 ```ts install
-import { NuiDialog } from '@numior/vue';
+import { NuiDialog } from '@numior/kit';
 ```
 
 ## Usage

@@ -6,8 +6,8 @@
 </template>
 
 <script setup lang="ts">
-import { NuiSpreadsheet, type NuiSpreadsheetContextMenu } from '@numior/spreadsheet';
-import { columnName, createWorkbook, textValue } from '@numior/spreadsheet/core';
+import { NuiSpreadsheet, type NuiSpreadsheetContextMenu } from '@numior/kit/spreadsheet';
+import { columnName, createWorkbook, textValue } from '@numior/kit/spreadsheet/core';
 import { ref } from 'vue';
 
 const TASKS = ['Оплата картой', 'Экспорт отчёта', 'Вход по почте'];

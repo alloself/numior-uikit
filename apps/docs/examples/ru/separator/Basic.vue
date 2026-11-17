@@ -8,7 +8,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiButton, NuiInput, NuiSeparator } from '@numior/vue';
+import { NuiButton, NuiInput, NuiSeparator } from '@numior/kit';
 
 const email = ref('');
 </script>

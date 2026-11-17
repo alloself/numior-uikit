@@ -10,5 +10,5 @@
 
 <script setup lang="ts">
 import { ShoppingCart } from '@lucide/vue';
-import { NuiEmpty } from '@numior/vue';
+import { NuiEmpty } from '@numior/kit';
 </script>

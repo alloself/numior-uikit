@@ -22,15 +22,14 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { plural } from '@numior/primitives';
-import { NuiInput } from '@numior/vue';
+import { NuiInput, plural } from '@numior/kit';
 import {
   NuiTable,
   type NuiTableColumn,
   type TableFilter,
   type TableSort,
   type TableSource,
-} from '@numior/table';
+} from '@numior/kit/table';
 import { ordersOf } from '#demo/many-orders';
 import type { Order } from '#demo/orders';
 

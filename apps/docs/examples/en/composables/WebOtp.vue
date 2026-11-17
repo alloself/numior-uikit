@@ -9,8 +9,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiInput } from '@numior/vue';
-import { useWebOtp } from '@numior/primitives';
+import { NuiInput, useWebOtp } from '@numior/kit';
 
 const code = ref('');
 

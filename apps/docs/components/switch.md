@@ -10,7 +10,7 @@
 ## Установка
 
 ```ts install
-import { NuiSwitch } from '@numior/vue';
+import { NuiSwitch } from '@numior/kit';
 ```
 
 ## Использование

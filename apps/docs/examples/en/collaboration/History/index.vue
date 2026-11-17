@@ -15,10 +15,10 @@
 
 <script setup lang="ts">
 import { computed, shallowRef, useTemplateRef } from 'vue';
-import { NuiEditorHistory, useEditorHistory } from '@numior/collaboration/vue';
-import { contentSchema } from '@numior/content';
-import { fromHTML, toJSON, type DocJSON } from '@numior/editor-core';
-import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
+import { NuiEditorHistory, useEditorHistory } from '@numior/kit/collaboration/vue';
+import { contentSchema } from '@numior/kit/content';
+import { fromHTML, toJSON, type DocJSON } from '@numior/kit/editor-core';
+import { NuiEditor, type NuiEditorApi } from '@numior/kit/editor';
 import { brief } from '#demo/description';
 import { team } from '#demo/team';
 import { memoryHistory } from './adapter';

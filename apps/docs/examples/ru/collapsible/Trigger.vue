@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiCollapsible } from '@numior/vue';
+import { NuiCollapsible } from '@numior/kit';
 import { orders } from '#demo/orders';
 
 const lines = orders.find((order) => order.id === 20401)?.lines ?? [];

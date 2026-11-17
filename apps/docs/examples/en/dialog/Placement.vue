@@ -23,7 +23,7 @@ import {
   NuiNumberField,
   NuiSwitch,
   NuiTextarea,
-} from '@numior/vue';
+} from '@numior/kit';
 
 const open = ref(false);
 const name = ref('');

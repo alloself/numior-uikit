@@ -16,9 +16,9 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef } from 'vue';
 import { useDateFormat } from '@vueuse/core';
-import type { DocJSON } from '@numior/editor-core';
-import { NuiEditor } from '@numior/editor-vue';
-import { NuiButton } from '@numior/vue';
+import type { DocJSON } from '@numior/kit/editor-core';
+import { NuiEditor } from '@numior/kit/editor';
+import { NuiButton } from '@numior/kit';
 
 const document = shallowRef<DocJSON>();
 const saved = shallowRef<DocJSON>();

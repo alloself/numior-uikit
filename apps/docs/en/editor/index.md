@@ -9,12 +9,12 @@ Type `/` at the start of a line to turn it into another block, or press + in the
 ## Installation
 
 ```ts install:packages
-import { NuiEditor } from '@numior/editor-vue';
-import type { DocJSON } from '@numior/editor-core';
+import { NuiEditor } from '@numior/kit/editor';
+import type { DocJSON } from '@numior/kit/editor-core';
 ```
 
-`@numior/editor-core` holds the document model: the `DocJSON` type and functions such as `fromHTML`.
-`@numior/content` describes the blocks and renders a finished document, and `@numior/table` draws
+`@numior/kit/editor-core` holds the document model: the `DocJSON` type and functions such as `fromHTML`.
+`@numior/kit/content` describes the blocks and renders a finished document, and `@numior/kit/table` draws
 the tables inside it.
 
 ## Save the document
@@ -101,8 +101,8 @@ Take the `editor` object from a template ref to call the editor from your code:
 
 <script setup lang="ts">
 import { ref, useTemplateRef } from 'vue';
-import { useHotkey } from '@numior/primitives';
-import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
+import { useHotkey } from '@numior/kit';
+import { NuiEditor, type NuiEditorApi } from '@numior/kit/editor';
 import { saveDescription } from './api';
 
 const editor = useTemplateRef<{ editor: NuiEditorApi }>('editor');
@@ -119,7 +119,7 @@ useHotkey('mod+s', save);
 ```
 
 `flush()` writes the latest edits to the model at once, so the shortcut saves what is on the
-screen. `run` applies a command from `@numior/editor-core`, and `revealNode` scrolls to a block
+screen. `run` applies a command from `@numior/kit/editor-core`, and `revealNode` scrolls to a block
 by its id.
 
 `coordsAt`, `posAt`, `contentBox` and `watchLayout` help you draw your own layer in the `overlay`

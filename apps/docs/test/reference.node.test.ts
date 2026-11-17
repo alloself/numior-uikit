@@ -10,6 +10,7 @@ import {
 } from '../.vitepress/reference/build';
 import { applyDocs, checkDocs, loadDocsDir } from '../.vitepress/reference/docs';
 import { parseIconAliases } from '../.vitepress/reference/icons';
+import { kitEntries } from '../.vitepress/reference/kit-entries';
 import { componentReference } from '../.vitepress/reference/meta';
 import { loadReferenceModule, resolveReferenceId } from '../.vitepress/reference/plugin';
 import { componentEntries, familyStyleImport } from '../.vitepress/reference/sources';
@@ -255,6 +256,23 @@ describe('docs reference', () => {
     expect(checkDocs(button, {}).length).toBe(button.props.length + button.slots.length);
   });
 
+  it('names every package inside the kit by the kit entry that carries it', () => {
+    const kit = kitEntries(ROOT);
+
+    expect(kit.module('@numior/vue')).toBe('@numior/kit');
+    expect(kit.module('@numior/primitives')).toBe('@numior/kit');
+    expect(kit.module('@numior/editor-vue')).toBe('@numior/kit/editor');
+    expect(kit.module('@numior/collaboration/room')).toBe('@numior/kit/collaboration/room');
+    expect(kit.sheet('@numior/vue/styles/button.css')).toBe('@numior/kit/styles/button.css');
+    expect(kit.sheet('@numior/table/styles.css')).toBe('@numior/kit/table/styles.css');
+    expect(kit.sheet('@numior/table/styles/table.css')).toBe('@numior/kit/table/styles/table.css');
+    expect(kit.sheet('@numior/tokens/theme.css')).toBe('@numior/kit/theme.css');
+    expect(kit.modules).toContain('@numior/kit/table/');
+    expect(kit.modules).not.toContain('@numior/kit/');
+    expect(() => kit.module('@numior/cli')).toThrow('@numior/cli has no entry in @numior/kit');
+    expect(() => kit.sheet('@numior/collaboration/styles/collab.css')).toThrow('has no entry');
+  });
+
   it('builds the whole bundle from the kit sources and the description files', async () => {
     const docs = await loadDocsDir(`${ROOT}apps/docs/api`);
     const { bundle, problems, undocumented } = await buildReference(ROOT, docs, checker);
@@ -267,9 +285,12 @@ describe('docs reference', () => {
 
     expect(bundle.components.NuiSelect?.messages).toBe('select');
     expect(bundle.catalogs.select?.texts.empty?.ru).toBeTypeOf('string');
-    expect(bundle.components.NuiForm?.package).toBe('@numior/forms');
+    expect(bundle.components.NuiForm?.package).toBe('@numior/kit/forms');
+    expect(bundle.components.NuiTable?.stylesheets).toContain('@numior/kit/table/styles/table.css');
+    expect(bundle.stylesheets[0]).toBe('@numior/kit/styles.css');
     expect(bundle.components.NuiButton?.file).toBe('packages/vue/src/button/NuiButton.vue');
     expect(JSON.stringify(bundle)).not.toContain(ROOT);
+    expect(JSON.stringify(bundle)).not.toMatch(/@numior\/(?!kit\b)/u);
     expect(bundle.declarations.some((entry) => entry.name === 'useClipboard')).toBe(true);
     expect(bundle.tokens.some((token) => token.name === '--nui-primary')).toBe(true);
     expect(bundle.icons.some((icon) => icon.alias === 'direction')).toBe(true);

@@ -10,7 +10,7 @@ Numior UI inputs take `label`, `description` and `error` themselves, so wrap a c
 ## Installation
 
 ```ts install
-import { NuiField } from '@numior/vue';
+import { NuiField } from '@numior/kit';
 ```
 
 ## Usage
@@ -51,7 +51,7 @@ gets the label, the hint and the error.
 
 Place the label, the hint and the error in your own markup with `NuiFieldLabel`,
 `NuiFieldDescription` and `NuiFieldError`. They read the field from the nearest `NuiField` or
-from one you create with `provideField` from `@numior/primitives`.
+from one you create with `provideField` from `@numior/kit`.
 
 ## Accessibility
 

@@ -18,8 +18,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { z } from 'zod';
-import { NuiInput } from '@numior/vue';
-import { NuiForm, NuiFormField, useForm } from '@numior/forms';
+import { NuiInput } from '@numior/kit';
+import { NuiForm, NuiFormField, useForm } from '@numior/kit/forms';
 
 const customer = z
   .object({

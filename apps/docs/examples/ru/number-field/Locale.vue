@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiNumberField } from '@numior/vue';
+import { NuiNumberField } from '@numior/kit';
 
 const weight = ref<number | null>(1234.5);
 </script>

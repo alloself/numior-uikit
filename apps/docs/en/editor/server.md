@@ -10,7 +10,7 @@ When someone else was first, the server rebases the late batch over the steps it
 writes the result. The author gets the written steps back, and they replace the ones it sent.
 
 The contract is open, so the server can run in any language and on any hosting. On Node, build it
-from the ready room in `@numior/collaboration/room`.
+from the ready room in `@numior/kit/collaboration/room`.
 
 ## Transport
 
@@ -26,10 +26,10 @@ events to the listener and returns an object with `send` and `close`:
 The events may come at any moment, even before `open` returns. A transport must keep the order of
 messages within one connection.
 
-`webSocketTransport` from `@numior/collaboration` is the whole transport for WebSocket:
+`webSocketTransport` from `@numior/kit/collaboration` is the whole transport for WebSocket:
 
 ```ts
-import type { CollabTransport } from '@numior/collaboration';
+import type { CollabTransport } from '@numior/kit/collaboration';
 
 const parsed = (data: unknown): unknown => {
   if (typeof data !== 'string') {
@@ -103,7 +103,7 @@ The server replies:
 | `pong`     | none                                    | Answers `ping`                                                             |
 | `error`    | `code`                                  | `schema` when the schemas differ, `protocol` when a rule is broken         |
 
-For an editor document, the snapshot is what `toJSON` from `@numior/editor-core` returns. The
+For an editor document, the snapshot is what `toJSON` from `@numior/kit/editor-core` returns. The
 server does not need to read presence: it passes the state on as it came.
 
 ### What the server does
@@ -130,10 +130,10 @@ server does not need to read presence: it passes the state on as it came.
 11. Never cut the log. A client that worked offline for a long time asks for steps from its old
     version.
 
-The message types come from `@numior/collaboration`: `ClientMessage`, `ServerMessage` and the
+The message types come from `@numior/kit/collaboration`: `ClientMessage`, `ServerMessage` and the
 types of single messages, such as `HelloMessage` and `StepsMessage`.
 
-`parseClientMessage` from `@numior/collaboration/room` turns a parsed JSON value into a client
+`parseClientMessage` from `@numior/kit/collaboration/room` turns a parsed JSON value into a client
 message, and `parseServerMessage` does the same on the client side. Both return `undefined` for a
 message that breaks the format.
 
@@ -151,7 +151,7 @@ import {
   ServerErrorCode,
   ServerMessageKind,
   type ServerMessage,
-} from '@numior/collaboration';
+} from '@numior/kit/collaboration';
 import {
   createRoom,
   editorAuthority,
@@ -159,7 +159,7 @@ import {
   type Room,
   type RoomAuthority,
   type RoomPeer,
-} from '@numior/collaboration/room';
+} from '@numior/kit/collaboration/room';
 import { readDocument } from './documents';
 
 const UNREADABLE = 1008;
@@ -275,11 +275,11 @@ a document of your own kind, write an object with the same fields.
 ### Workbook
 
 A spreadsheet book goes through the same room with `workbookAuthority` from
-`@numior/spreadsheet/core`:
+`@numior/kit/spreadsheet/core`:
 
 ```ts
-import { createRoom } from '@numior/collaboration/room';
-import { bookSteps, workbookAuthority } from '@numior/spreadsheet/core';
+import { createRoom } from '@numior/kit/collaboration/room';
+import { bookSteps, workbookAuthority } from '@numior/kit/spreadsheet/core';
 import { readBook } from './books';
 
 const { book, calculator } = readBook('price-list');
@@ -328,9 +328,9 @@ The client takes a closed socket for a lost connection and keeps trying with a g
 Each `link()` is the transport of one client:
 
 ```ts
-import { contentSchema } from '@numior/content';
-import { createLoopback, editorAuthority } from '@numior/collaboration/room';
-import { fromHTML } from '@numior/editor-core';
+import { contentSchema } from '@numior/kit/content';
+import { createLoopback, editorAuthority } from '@numior/kit/collaboration/room';
+import { fromHTML } from '@numior/kit/editor-core';
 
 const room = createLoopback({
   authorityFor: () => editorAuthority(fromHTML(contentSchema, '<p>Oslo armchair</p>')),
@@ -348,15 +348,37 @@ milliseconds. `setOnline(false)` cuts one link off until `setOnline(true)` bring
 
 ## Yjs
 
-`@numior/collaboration/yjs` keeps the document in a shared Yjs document. It works without this
+`@numior/kit/collaboration/yjs` keeps the document in a shared Yjs document. It works without this
 protocol: there are no steps and no log, and you choose how the Yjs document travels.
+
+Yjs does not ship with Numior UI, so add it to your app:
+
+::: code-group
+
+```sh [pnpm]
+pnpm add yjs
+```
+
+```sh [npm]
+npm install yjs
+```
+
+```sh [yarn]
+yarn add yjs
+```
+
+```sh [bun]
+bun add yjs
+```
+
+:::
 
 ```ts
 import { computed, useTemplateRef } from 'vue';
 import { Doc } from 'yjs';
-import { yjsBinding } from '@numior/collaboration/yjs';
-import { contentSchema } from '@numior/content';
-import type { NuiEditorApi } from '@numior/editor-vue';
+import { yjsBinding } from '@numior/kit/collaboration/yjs';
+import { contentSchema } from '@numior/kit/content';
+import type { NuiEditorApi } from '@numior/kit/editor';
 
 const editor = useTemplateRef<{ editor: NuiEditorApi }>('editor');
 

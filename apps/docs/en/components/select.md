@@ -9,7 +9,7 @@ Pass the options to `options` as `{ value, label }` entries.
 ## Installation
 
 ```ts install
-import { NuiSelect } from '@numior/vue';
+import { NuiSelect } from '@numior/kit';
 ```
 
 ## Usage

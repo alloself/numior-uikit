@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiAlert } from '@numior/vue';
+import { NuiAlert } from '@numior/kit';
 ```
 
 ## Использование

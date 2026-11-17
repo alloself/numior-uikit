@@ -25,8 +25,8 @@ Call `useEditorComments` with the document name, the user and the adapter:
 
 ```ts
 import { computed, useTemplateRef } from 'vue';
-import { useEditorComments } from '@numior/collaboration/vue';
-import type { NuiEditorApi } from '@numior/editor-vue';
+import { useEditorComments } from '@numior/kit/collaboration/vue';
+import type { NuiEditorApi } from '@numior/kit/editor';
 import { commentsOf } from './comments';
 
 const editor = useTemplateRef<{ editor: NuiEditorApi }>('editor');

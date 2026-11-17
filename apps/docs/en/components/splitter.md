@@ -10,7 +10,7 @@ Put the panes into the `start` and `end` slots. The share of the first pane live
 ## Installation
 
 ```ts install
-import { NuiSplitter } from '@numior/vue';
+import { NuiSplitter } from '@numior/kit';
 ```
 
 ## Examples

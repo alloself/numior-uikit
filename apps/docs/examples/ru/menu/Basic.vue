@@ -47,7 +47,7 @@ import {
   NuiMenuRadioItem,
   NuiMenuSeparator,
   NuiMenuSub,
-} from '@numior/vue';
+} from '@numior/kit';
 import { DELIVERIES } from '#demo/orders';
 
 const delivery = ref('courier');

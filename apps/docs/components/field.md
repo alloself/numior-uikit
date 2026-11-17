@@ -10,7 +10,7 @@
 ## Установка
 
 ```ts install
-import { NuiField } from '@numior/vue';
+import { NuiField } from '@numior/kit';
 ```
 
 ## Использование
@@ -47,7 +47,7 @@ import { NuiField } from '@numior/vue';
 
 Части `NuiFieldLabel`, `NuiFieldDescription` и `NuiFieldError` выводят подпись, подсказку и ошибку
 в вашей разметке. Данные они берут из ближайшего `NuiField` или из поля, которое создал
-`provideField` из `@numior/primitives`.
+`provideField` из `@numior/kit`.
 
 Свой элемент ввода свяжите с полем через [`useFieldControl`](/composables/field-control).
 

@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiButton, useLayout } from '@numior/vue';
+import { NuiButton, useLayout } from '@numior/kit';
 
 const layout = useLayout();
 </script>

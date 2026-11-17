@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiCommand, type NuiCommandSource } from '@numior/vue';
+import { NuiCommand, type NuiCommandSource } from '@numior/kit';
 
 const commands: NuiCommandSource = [
   {

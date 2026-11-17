@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { ref, useTemplateRef } from 'vue';
-import { usePopover } from '@numior/vue';
+import { usePopover } from '@numior/kit';
 
 const open = ref(false);
 const panel = useTemplateRef<HTMLElement>('panel');

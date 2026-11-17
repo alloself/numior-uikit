@@ -10,7 +10,7 @@
 ## Установка
 
 ```ts install
-import { NuiTimeField } from '@numior/vue';
+import { NuiTimeField } from '@numior/kit';
 ```
 
 ## Использование

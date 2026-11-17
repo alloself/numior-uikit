@@ -2,7 +2,7 @@
 
 `useControls()` returns the set of controls that JSON-described forms and table cell editors
 pick a control from by name, for example `text` or `date`. The ready-made set of Numior UI
-controls is `kitControls` from `@numior/vue/controls`.
+controls is `kitControls` from `@numior/kit/controls`.
 
 Build your own set with `defineControls`. The entry `text: control(NuiInput, isString)` means:
 the name `text` renders `NuiInput`, and its value is a string. Pass the set to

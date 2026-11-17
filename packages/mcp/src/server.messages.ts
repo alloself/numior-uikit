@@ -17,7 +17,7 @@ export const TOOL_DESCRIPTIONS = {
 
 export const PARAM_DESCRIPTIONS = {
   locale: 'Language of the texts: en or ru.',
-  package: 'Only components of this package, such as @numior/forms.',
+  package: 'Only components of this kit entry, such as @numior/kit/forms.',
   component: 'Component name, such as NuiSelect or select.',
   example: 'Example name, such as select/Basic.',
   path: 'Page address, such as /components/button; the locale parameter picks the language.',

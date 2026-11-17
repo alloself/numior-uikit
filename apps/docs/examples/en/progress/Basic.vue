@@ -15,5 +15,5 @@
 </template>
 
 <script setup lang="ts">
-import { NuiProgress } from '@numior/vue';
+import { NuiProgress } from '@numior/kit';
 </script>

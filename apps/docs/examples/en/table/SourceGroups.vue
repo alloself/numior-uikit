@@ -18,7 +18,7 @@ import {
   type TableNodeId,
   type TableSource,
   type TableSourceGroup,
-} from '@numior/table';
+} from '@numior/kit/table';
 import { ordersOf } from '#demo/many-orders';
 import type { Order } from '#demo/orders';
 

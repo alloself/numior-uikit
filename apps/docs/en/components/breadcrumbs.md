@@ -15,7 +15,7 @@ The last step names the current page and does not link anywhere.
 ## Installation
 
 ```ts install
-import { NuiBreadcrumbs } from '@numior/vue';
+import { NuiBreadcrumbs } from '@numior/kit';
 ```
 
 ## Usage

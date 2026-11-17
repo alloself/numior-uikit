@@ -39,7 +39,7 @@ import {
   NuiSidebarGroup,
   NuiSidebarItem,
   NuiSidebarTrigger,
-} from '@numior/vue';
+} from '@numior/kit';
 
 type PageKey = 'orders' | 'customers' | 'reports' | 'products' | 'warehouse';
 

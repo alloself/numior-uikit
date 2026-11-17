@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiList, NuiSplitter, type NuiOption } from '@numior/vue';
+import { NuiList, NuiSplitter, type NuiOption } from '@numior/kit';
 import { ORDER_STATUSES, orders } from '#demo/orders';
 
 const money = new Intl.NumberFormat('ru-RU', {

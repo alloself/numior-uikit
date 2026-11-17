@@ -15,7 +15,7 @@ arrow element, which the composable points at the reference element.
 ## Usage
 
 ```ts
-import { useFloating } from '@numior/vue';
+import { useFloating } from '@numior/kit';
 
 useFloating(trigger, panel, {
   placement: 'bottom-start',

@@ -48,7 +48,7 @@ import {
   NuiSidebarGroup,
   NuiSidebarItem,
   NuiSidebarTrigger,
-} from '@numior/vue';
+} from '@numior/kit';
 import { team } from '#demo/team';
 
 interface Section {

@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiIcon, NuiInput } from '@numior/vue';
+import { NuiIcon, NuiInput } from '@numior/kit';
 
 const query = ref('');
 const size = ref('60 × 40 × 30');

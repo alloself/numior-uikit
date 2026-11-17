@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiField, NuiInput } from '@numior/vue';
+import { NuiField, NuiInput } from '@numior/kit';
 
 const city = ref('Denver');
 const zip = ref('');

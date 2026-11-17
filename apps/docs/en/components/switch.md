@@ -10,7 +10,7 @@ For a choice that applies only after the form is submitted, use a
 ## Installation
 
 ```ts install
-import { NuiSwitch } from '@numior/vue';
+import { NuiSwitch } from '@numior/kit';
 ```
 
 ## Usage

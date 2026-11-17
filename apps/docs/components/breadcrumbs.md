@@ -15,7 +15,7 @@
 ## Установка
 
 ```ts install
-import { NuiBreadcrumbs } from '@numior/vue';
+import { NuiBreadcrumbs } from '@numior/kit';
 ```
 
 ## Использование

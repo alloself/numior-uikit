@@ -13,8 +13,8 @@
 Создайте CSS-файл и подключите его после `theme.css`:
 
 ```ts
-import '@numior/tokens/theme.css';
-import '@numior/tokens/base.css';
+import '@numior/kit/theme.css';
+import '@numior/kit/base.css';
 import './brand.css';
 ```
 
@@ -90,7 +90,7 @@ import './brand.css';
 
 ## Tailwind
 
-Пресет `@numior/tailwind` читает те же токены, поэтому повторять тему в настройках Tailwind не
+Пресет `@numior/kit/tailwind/theme.css` читает те же токены, поэтому повторять тему в настройках Tailwind не
 нужно. Классы `bg-surface-elevated`, `text-muted-foreground`, `border` и `rounded-lg` в
 примере выше меняются вместе с темой.
 

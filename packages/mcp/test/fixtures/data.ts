@@ -4,15 +4,15 @@ const text = (en: string, ru: string) => ({ en, ru });
 
 export const fixtureButton: McpComponent = {
   name: 'NuiButton',
-  package: '@numior/vue',
+  package: '@numior/kit',
   styles: {
-    import: '@numior/vue/styles/button.css',
+    import: '@numior/kit/styles/button.css',
     blocks: [
       { name: 'nui-button', parts: ['content', 'spinner'], modifiers: ['loading', 'variant-soft'] },
     ],
     tokens: ['--nui-control-height-md', '--nui-primary', '--nui-radius', '--nui-radius-full'],
   },
-  stylesheets: ['@numior/vue/styles/button.css'],
+  stylesheets: ['@numior/kit/styles/button.css'],
   props: [
     {
       name: 'variant',
@@ -56,16 +56,16 @@ export const fixtureButton: McpComponent = {
 
 const select: McpComponent = {
   name: 'NuiSelect',
-  package: '@numior/vue',
+  package: '@numior/kit',
   styles: {
-    import: '@numior/vue/styles/select.css',
+    import: '@numior/kit/styles/select.css',
     blocks: [{ name: 'nui-select', parts: ['trigger', 'value'], modifiers: ['open'] }],
     tokens: ['--nui-border', '--nui-radius'],
   },
   stylesheets: [
-    '@numior/vue/styles/field.css',
-    '@numior/vue/styles/list.css',
-    '@numior/vue/styles/select.css',
+    '@numior/kit/styles/field.css',
+    '@numior/kit/styles/list.css',
+    '@numior/kit/styles/select.css',
   ],
   props: [
     {
@@ -96,16 +96,16 @@ const select: McpComponent = {
 
 const dialog: McpComponent = {
   name: 'NuiDialog',
-  package: '@numior/vue',
+  package: '@numior/kit',
   styles: {
-    import: '@numior/vue/styles/dialog.css',
+    import: '@numior/kit/styles/dialog.css',
     blocks: [
       { name: 'nui-dialog', parts: ['panel'], modifiers: [] },
       { name: 'nui-button', parts: ['content'], modifiers: [] },
     ],
     tokens: ['--nui-surface-elevated'],
   },
-  stylesheets: ['@numior/vue/styles/dialog.css'],
+  stylesheets: ['@numior/kit/styles/dialog.css'],
   messages: 'dialog',
   props: [],
   models: [{ name: 'v-model:open', prop: 'open', event: 'update:open', type: 'boolean' }],
@@ -118,16 +118,16 @@ const dialog: McpComponent = {
 
 const table: McpComponent = {
   name: 'NuiTable',
-  package: '@numior/table',
+  package: '@numior/kit/table',
   styles: {
-    import: '@numior/table/styles/table.css',
+    import: '@numior/kit/table/styles/table.css',
     blocks: [{ name: 'nui-table', parts: ['cell'], modifiers: [] }],
     tokens: [],
   },
   stylesheets: [
-    '@numior/vue/styles.css',
-    '@numior/table/styles.css',
-    '@numior/table/styles/table.css',
+    '@numior/kit/styles.css',
+    '@numior/kit/table/styles.css',
+    '@numior/kit/table/styles/table.css',
   ],
   props: [
     {
@@ -159,13 +159,13 @@ export const fixtureData: McpData = {
   components: { NuiButton: fixtureButton, NuiSelect: select, NuiDialog: dialog, NuiTable: table },
   catalogs: { dialog: { close: text('Close', 'Закрыть') } },
   exports: {
-    '@numior/vue': ['NuiButton', 'NuiButtonVariant', 'NuiDialog', 'NuiSelect'],
-    '@numior/table': ['NuiTable'],
-    '@numior/forms': ['NuiForm', 'useForm'],
+    '@numior/kit': ['NuiButton', 'NuiButtonVariant', 'NuiDialog', 'NuiSelect'],
+    '@numior/kit/table': ['NuiTable'],
+    '@numior/kit/forms': ['NuiForm', 'useForm'],
   },
   packageStyles: {
-    '@numior/vue': '@numior/vue/styles.css',
-    '@numior/table': '@numior/table/styles.css',
+    '@numior/kit': '@numior/kit/styles.css',
+    '@numior/kit/table': '@numior/kit/table/styles.css',
   },
   tokens: [
     {

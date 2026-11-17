@@ -13,7 +13,7 @@
 ## Использование
 
 ```ts
-import { useReorder } from '@numior/vue';
+import { useReorder } from '@numior/kit';
 
 const reorder = useReorder({
   axis: 'y',
@@ -63,7 +63,7 @@ const reorder = useReorder({
 обход. Так устроены ручки колонок и строк в [Table](/components/table/columns).
 
 ```ts
-import { createPressTargets, usePointerSession, usePressTarget } from '@numior/primitives';
+import { createPressTargets, usePointerSession, usePressTarget } from '@numior/kit';
 
 const targets = createPressTargets();
 const session = usePointerSession();

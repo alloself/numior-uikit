@@ -10,8 +10,13 @@
 </template>
 
 <script setup lang="ts">
-import { NuiSpreadsheet, type NuiSpreadsheetFile } from '@numior/spreadsheet';
-import { createWorkbook, numberValue, textValue, type Workbook } from '@numior/spreadsheet/core';
+import { NuiSpreadsheet, type NuiSpreadsheetFile } from '@numior/kit/spreadsheet';
+import {
+  createWorkbook,
+  numberValue,
+  textValue,
+  type Workbook,
+} from '@numior/kit/spreadsheet/core';
 import { markRaw, shallowRef } from 'vue';
 
 interface FirstBook {

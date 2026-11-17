@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiToggleGroup } from '@numior/vue';
+import { NuiToggleGroup } from '@numior/kit';
 ```
 
 ## Использование

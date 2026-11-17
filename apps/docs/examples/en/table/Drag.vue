@@ -18,7 +18,7 @@ import {
   type NuiTableColumn,
   type NuiTableReorderEvent,
   type TableNodeId,
-} from '@numior/table';
+} from '@numior/kit/table';
 
 interface Unit {
   readonly id: string;

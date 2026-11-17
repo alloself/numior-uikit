@@ -12,9 +12,9 @@
 
 <script setup lang="ts">
 import { shallowRef } from 'vue';
-import { contentSchema } from '@numior/content';
-import type { DocJSON } from '@numior/editor-core';
-import { NuiEditor, type NuiEditorLinkMetadata } from '@numior/editor-vue';
+import { contentSchema } from '@numior/kit/content';
+import type { DocJSON } from '@numior/kit/editor-core';
+import { NuiEditor, type NuiEditorLinkMetadata } from '@numior/kit/editor';
 import { products } from '#demo/products';
 
 const SHOP = 'https://shop.example/products/';

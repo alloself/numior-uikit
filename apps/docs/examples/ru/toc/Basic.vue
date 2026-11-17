@@ -23,7 +23,7 @@
 
 <script setup lang="ts">
 import { useTemplateRef } from 'vue';
-import { NuiToc, type NuiTocItem } from '@numior/vue';
+import { NuiToc, type NuiTocItem } from '@numior/kit';
 
 const article = useTemplateRef<HTMLElement>('article');
 

@@ -28,9 +28,9 @@
 
 <script setup lang="ts">
 import { computed, shallowRef, useTemplateRef } from 'vue';
-import { NuiEditorHistory, useEditorHistory } from '@numior/collaboration/vue';
-import type { DocJSON } from '@numior/editor-core';
-import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
+import { NuiEditorHistory, useEditorHistory } from '@numior/kit/collaboration/vue';
+import type { DocJSON } from '@numior/kit/editor-core';
+import { NuiEditor, type NuiEditorApi } from '@numior/kit/editor';
 
 const document = shallowRef<DocJSON>();
 const editor = useTemplateRef<{ editor: NuiEditorApi }>('editor');
@@ -67,7 +67,7 @@ const history = useEditorHistory({
 
 Набор текста к таким значениям не относится: одновременные правки текста сливаются, и остаются обе.
 Перезаписанные значения на сервер не уходят: их хранит вкладка, а с
-[`@numior/offline`](/editor/offline) — ещё и браузер.
+[`@numior/kit/offline`](/editor/offline) — ещё и браузер.
 
 ## API
 

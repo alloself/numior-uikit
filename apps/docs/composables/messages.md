@@ -13,7 +13,7 @@
 ## Множественное число
 
 ```ts
-import { plural } from '@numior/vue';
+import { plural } from '@numior/kit';
 
 const files = (count: number): string =>
   `${count} ${plural('ru', count, { one: 'файл', few: 'файла', many: 'файлов', other: 'файлов' })}`;

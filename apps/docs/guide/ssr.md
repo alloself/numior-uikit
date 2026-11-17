@@ -27,7 +27,7 @@
 ```ts
 import { createSSRApp } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { colorSchemeScript, createNuiConfig } from '@numior/vue';
+import { colorSchemeScript, createNuiConfig } from '@numior/kit';
 import App from './App.vue';
 
 export const render = async (locale: string, dir: 'ltr' | 'rtl') => {

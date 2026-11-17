@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiCode } from '@numior/vue';
+import { NuiCode } from '@numior/kit';
 
 const source = [
   'const totalOf = (order: Order, discount: number): number => {',

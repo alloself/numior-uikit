@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiCombobox } from '@numior/vue';
+import { NuiCombobox } from '@numior/kit';
 import { customers } from '#demo/customers';
 
 const customer = ref<number | null>(null);

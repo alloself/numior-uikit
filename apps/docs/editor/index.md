@@ -9,12 +9,12 @@
 ## Установка
 
 ```ts install:packages
-import { NuiEditor } from '@numior/editor-vue';
-import type { DocJSON } from '@numior/editor-core';
+import { NuiEditor } from '@numior/kit/editor';
+import type { DocJSON } from '@numior/kit/editor-core';
 ```
 
-`@numior/editor-core` хранит модель документа: тип `DocJSON` и функции вроде `fromHTML`. Текст
-документа оформляют стили `@numior/content`, а таблицу внутри документа — стили `@numior/table`.
+`@numior/kit/editor-core` хранит модель документа: тип `DocJSON` и функции вроде `fromHTML`. Текст
+документа оформляют стили `@numior/kit/content`, а таблицу внутри документа — стили `@numior/kit/table`.
 
 ## Сохранить документ
 
@@ -88,8 +88,8 @@ JSON можно сразу положить в базу и вывести на �
 
 <script setup lang="ts">
 import { ref, useTemplateRef } from 'vue';
-import { NuiEditor } from '@numior/editor-vue';
-import { NuiButton } from '@numior/vue';
+import { NuiEditor } from '@numior/kit/editor';
+import { NuiButton } from '@numior/kit';
 
 const text = ref('');
 const saved = ref('');
@@ -103,7 +103,7 @@ const save = () => {
 ```
 
 `flush()` записывает правки в `v-model`, не дожидаясь паузы в наборе. `focus()` ставит курсор в
-текст, а `run()` выполняет команду из `@numior/editor-core`. Остальные методы отдают координаты для
+текст, а `run()` выполняет команду из `@numior/kit/editor-core`. Остальные методы отдают координаты для
 своего слоя поверх текста в слоте `overlay`.
 
 <SignatureReference :names="['NuiEditorApi']" />

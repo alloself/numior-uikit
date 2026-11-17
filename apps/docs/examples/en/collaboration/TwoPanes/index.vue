@@ -6,9 +6,9 @@
 </template>
 
 <script setup lang="ts">
-import { contentSchema } from '@numior/content';
-import { createLoopback, editorAuthority } from '@numior/collaboration/room';
-import { fromHTML } from '@numior/editor-core';
+import { contentSchema } from '@numior/kit/content';
+import { createLoopback, editorAuthority } from '@numior/kit/collaboration/room';
+import { fromHTML } from '@numior/kit/editor-core';
 import { brief } from '#demo/description';
 import { team } from '#demo/team';
 import Pane from './Pane.vue';

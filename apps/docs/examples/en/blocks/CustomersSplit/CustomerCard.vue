@@ -64,7 +64,7 @@ import {
   NuiList,
   NuiListItem,
   type NuiTone,
-} from '@numior/vue';
+} from '@numior/kit';
 import type { Customer } from '#demo/customers';
 import { ORDER_STATUSES, type Order, type OrderStatus } from '#demo/orders';
 

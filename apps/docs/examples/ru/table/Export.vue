@@ -17,8 +17,8 @@
 
 <script setup lang="ts">
 import { useTemplateRef } from 'vue';
-import { NuiButton } from '@numior/vue';
-import { NuiTable, type NuiTableColumn, type NuiTableExposed } from '@numior/table';
+import { NuiButton } from '@numior/kit';
+import { NuiTable, type NuiTableColumn, type NuiTableExposed } from '@numior/kit/table';
 import { orders, type Order } from '#demo/orders';
 
 const latest = orders.slice(0, 5);

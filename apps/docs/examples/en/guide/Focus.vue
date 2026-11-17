@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { ref, useTemplateRef } from 'vue';
-import { NuiButton, NuiInput } from '@numior/vue';
+import { NuiButton, NuiInput } from '@numior/kit';
 
 const query = ref('');
 const search = useTemplateRef<InstanceType<typeof NuiInput>>('search');

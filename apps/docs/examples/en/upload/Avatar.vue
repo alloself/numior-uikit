@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiAvatarUpload, type NuiUploadAdapter, type NuiUploadItem } from '@numior/vue';
+import { NuiAvatarUpload, type NuiUploadAdapter, type NuiUploadItem } from '@numior/kit';
 
 const avatar = ref<NuiUploadItem<string> | null>(null);
 

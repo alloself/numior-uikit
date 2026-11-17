@@ -34,7 +34,7 @@ In your own components, get the direction from `useDirection`, not from `getComp
 the server `useDirection` returns the value from the settings:
 
 ```ts
-import { useDirection } from '@numior/vue';
+import { useDirection } from '@numior/kit';
 
 const direction = useDirection(root);
 const shift = computed(() => (direction.isRtl() ? -offset.value : offset.value));

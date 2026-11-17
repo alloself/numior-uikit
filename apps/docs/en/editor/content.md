@@ -10,8 +10,8 @@ server it renders finished HTML, so the text is on the page before any script ru
 ## Installation
 
 ```ts install:packages
-import { NuiContent } from '@numior/content';
-import { fromHTML } from '@numior/editor-core';
+import { NuiContent } from '@numior/kit/content';
+import { fromHTML } from '@numior/kit/editor-core';
 ```
 
 ## Show tables, code and media
@@ -22,13 +22,13 @@ Pass components for the blocks that need them in `views`:
 
 Each view lives in an entry of its own, so a page loads only the ones it imports:
 
-- `NuiContentTable` from `@numior/content/table` shows a table with the sort and filters its
+- `NuiContentTable` from `@numior/kit/content/table` shows a table with the sort and filters its
   author set.
-- `NuiContentCode` from `@numior/content/code` highlights code in its language.
-- `contentMediaViews` from `@numior/content/media` opens images full size and shows file cards and
+- `NuiContentCode` from `@numior/kit/content/code` highlights code in its language.
+- `contentMediaViews` from `@numior/kit/content/media` opens images full size and shows file cards and
   video frames.
 
-The table view draws with NuiTable, so load `@numior/table/styles.css` with it. Without the media
+The table view draws with NuiTable, so load `@numior/kit/table/styles.css` with it. Without the media
 views, an embedded video renders as a link.
 
 A video shows as a frame only when its service is in `embeds`, the same list the editor takes.
@@ -38,8 +38,8 @@ A video shows as a frame only when its service is in `embeds`, the same list the
 Turn descriptions stored as HTML into a document with `fromHTML`:
 
 ```ts
-import { contentSchema } from '@numior/content';
-import { fromHTML, toJSON } from '@numior/editor-core';
+import { contentSchema } from '@numior/kit/content';
+import { fromHTML, toJSON } from '@numior/kit/editor-core';
 
 const doc = fromHTML(
   contentSchema,
@@ -57,12 +57,12 @@ without Vue. It is the same server render as `NuiContent`, so the function is as
 arrive in the HTML as ready `<svg>`. Pass your own icons in `icons`, keyed by icon name.
 
 ```ts
-import { renderContent } from '@numior/content';
+import { renderContent } from '@numior/kit/content';
 
 const html = await renderContent(doc, { size: 'lg' });
 ```
 
-That page needs the content styles and `@numior/vue/styles/icon.css` too.
+That page needs the content styles and `@numior/kit/styles/icon.css` too.
 
 ## API
 

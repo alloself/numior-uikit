@@ -19,7 +19,7 @@ file stops its request. The returned value becomes the `result` of the file in t
 ## Installation
 
 ```ts install
-import { NuiUpload } from '@numior/vue';
+import { NuiUpload } from '@numior/kit';
 ```
 
 ## Usage

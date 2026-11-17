@@ -3,8 +3,8 @@
 </template>
 
 <script setup lang="ts">
-import { NuiInput, NuiSelect } from '@numior/vue';
-import { NuiSmartForm, formConfig, useForm } from '@numior/forms';
+import { NuiInput, NuiSelect } from '@numior/kit';
+import { NuiSmartForm, formConfig, useForm } from '@numior/kit/forms';
 
 interface Filters {
   query: string;

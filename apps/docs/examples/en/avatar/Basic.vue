@@ -5,5 +5,5 @@
 </template>
 
 <script setup lang="ts">
-import { NuiAvatar } from '@numior/vue';
+import { NuiAvatar } from '@numior/kit';
 </script>

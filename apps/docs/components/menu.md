@@ -16,7 +16,7 @@
 ## Установка
 
 ```ts install
-import { NuiMenu, NuiMenuItem } from '@numior/vue';
+import { NuiMenu, NuiMenuItem } from '@numior/kit';
 ```
 
 ## Использование

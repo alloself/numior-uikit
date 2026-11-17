@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiOtpField } from '@numior/vue';
+import { NuiOtpField } from '@numior/kit';
 
 const code = ref('');
 </script>

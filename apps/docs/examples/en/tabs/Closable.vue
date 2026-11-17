@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiButton, NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
+import { NuiButton, NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/kit';
 import { orders } from '#demo/orders';
 
 const money = new Intl.NumberFormat('en-US', {

@@ -15,7 +15,7 @@
 ## Использование
 
 ```ts
-import { useFloating } from '@numior/vue';
+import { useFloating } from '@numior/kit';
 
 useFloating(trigger, panel, {
   placement: 'bottom-start',

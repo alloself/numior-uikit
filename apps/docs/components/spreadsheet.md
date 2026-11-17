@@ -13,10 +13,10 @@
 ## Установка
 
 ```ts install:packages
-import { NuiSpreadsheet } from '@numior/spreadsheet';
+import { NuiSpreadsheet } from '@numior/kit/spreadsheet';
 ```
 
-Модель книги и формулы лежат в `@numior/spreadsheet/core`. Эта точка входа работает без Vue, в
+Модель книги и формулы лежат в `@numior/kit/spreadsheet/core`. Эта точка входа работает без Vue, в
 том числе на сервере.
 
 ## Примеры
@@ -57,8 +57,7 @@ import { NuiSpreadsheet } from '@numior/spreadsheet';
 
 ### Совместная работа
 
-`useCollabWorkbook` из `@numior/collaboration/spreadsheet` связывает книгу с сервером. Для него рядом с
-`@numior/collaboration` должен стоять `@numior/spreadsheet`.
+`useCollabWorkbook` из `@numior/kit/collaboration/spreadsheet` связывает книгу с сервером.
 
 ```vue
 <template>
@@ -77,11 +76,11 @@ import { NuiSpreadsheet } from '@numior/spreadsheet';
 </template>
 
 <script setup lang="ts">
-import { webSocketTransport } from '@numior/collaboration';
-import { useCollabWorkbook } from '@numior/collaboration/spreadsheet';
-import { NuiCollabFailure } from '@numior/collaboration/vue';
-import { NuiSpreadsheet } from '@numior/spreadsheet';
-import { createCalculator, createWorkbook } from '@numior/spreadsheet/core';
+import { webSocketTransport } from '@numior/kit/collaboration';
+import { useCollabWorkbook } from '@numior/kit/collaboration/spreadsheet';
+import { NuiCollabFailure } from '@numior/kit/collaboration/vue';
+import { NuiSpreadsheet } from '@numior/kit/spreadsheet';
+import { createCalculator, createWorkbook } from '@numior/kit/spreadsheet/core';
 
 const book = createWorkbook();
 const calculator = createCalculator(book);

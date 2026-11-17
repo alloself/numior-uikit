@@ -19,7 +19,7 @@ import {
   type NuiTableCellStyle,
   type NuiTableColumn,
   type NuiTableRange,
-} from '@numior/table';
+} from '@numior/kit/table';
 
 interface Slot {
   readonly time: string;

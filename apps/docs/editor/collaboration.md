@@ -9,10 +9,10 @@
 ## Установка
 
 ```ts install:packages
-import { NuiCollabPresence } from '@numior/collaboration/vue';
+import { NuiCollabPresence } from '@numior/kit/collaboration/vue';
 ```
 
-Стили `@numior/collaboration` рисуют курсоры соавторов, отметки комментариев и панель версий.
+Стили `@numior/kit/collaboration` рисуют курсоры соавторов, отметки комментариев и панель версий.
 
 ## Подключение
 
@@ -21,7 +21,7 @@ import { NuiCollabPresence } from '@numior/collaboration/vue';
 Создайте транспорт до сервера, который задаёт порядок правок:
 
 ```ts
-import { webSocketTransport } from '@numior/collaboration';
+import { webSocketTransport } from '@numior/kit/collaboration';
 
 const transport = webSocketTransport('wss://shop.example.com/collab');
 ```
@@ -38,9 +38,9 @@ const transport = webSocketTransport('wss://shop.example.com/collab');
 
 ```ts
 import { computed, useTemplateRef } from 'vue';
-import { useCollabEditor } from '@numior/collaboration/vue';
-import { contentSchema } from '@numior/content';
-import type { NuiEditorApi } from '@numior/editor-vue';
+import { useCollabEditor } from '@numior/kit/collaboration/vue';
+import { contentSchema } from '@numior/kit/content';
+import type { NuiEditorApi } from '@numior/kit/editor';
 
 const editor = useTemplateRef<{ editor: NuiEditorApi }>('editor');
 const api = computed(() => editor.value?.editor);
@@ -114,8 +114,8 @@ const { ready, document, plugins, ids, peers, status, readOnly, failure, rejoin 
 
 ```ts
 import { computed } from 'vue';
-import { CollabStatusKind, type CollabStatus } from '@numior/collaboration';
-import { NuiTone } from '@numior/vue';
+import { CollabStatusKind, type CollabStatus } from '@numior/kit/collaboration';
+import { NuiTone } from '@numior/kit';
 
 const STATES: Readonly<Record<CollabStatus['kind'], { text: string; tone: NuiTone }>> = {
   [CollabStatusKind.Connecting]: { text: 'Подключение', tone: NuiTone.Neutral },

@@ -12,5 +12,5 @@
 </template>
 
 <script setup lang="ts">
-import { NuiBadge } from '@numior/vue';
+import { NuiBadge } from '@numior/kit';
 </script>

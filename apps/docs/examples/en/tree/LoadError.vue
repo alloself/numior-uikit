@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { promiseTimeout } from '@vueuse/core';
-import { NuiAlert, NuiTree, type NuiTreeItem } from '@numior/vue';
+import { NuiAlert, NuiTree, type NuiTreeItem } from '@numior/kit';
 import { categories, products } from '#demo/products';
 
 const groups = ref<NuiTreeItem<string>[]>(

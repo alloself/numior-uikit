@@ -7,7 +7,7 @@ How to lay out pages with Tailwind 4 classes in the colors and sizes of the Numi
 Tailwind classes hold the order card together: the border, the background, the spacing and the
 layout. The avatar, the status and the buttons inside it come from the library.
 
-The `@numior/tailwind` preset links the classes to the theme tokens. `bg-surface-elevated`,
+The `@numior/kit/tailwind/theme.css` preset links the classes to the theme tokens. `bg-surface-elevated`,
 `text-muted-foreground`, `rounded-lg` and `text-sm` give the same colors, radii and sizes as the
 components.
 
@@ -26,10 +26,10 @@ Then import the preset in CSS after `tailwindcss`:
 
 ```css
 @import 'tailwindcss';
-@import '@numior/tailwind/theme.css';
+@import '@numior/kit/tailwind/theme.css';
 ```
 
-The preset needs the tokens from `@numior/tokens/theme.css`, so import them too. The classes
+The preset needs the tokens from `@numior/kit/theme.css`, so import them too. The classes
 refer to the `--nui-*` variables. So when the theme, the accent or a token value changes, both
 the classes and the components change.
 
@@ -69,13 +69,13 @@ props and with theme tokens.
 ## Preflight and component styles
 
 Preflight, the Tailwind style reset, does not conflict with components: its selectors are
-weaker than the component classes. With Tailwind you do not need `@numior/tokens/base.css`:
+weaker than the component classes. With Tailwind you do not need `@numior/kit/base.css`:
 preflight removes the `body` margin and takes the font from the preset tokens. Set the page
 background with the `bg-surface` class.
 
 ## Text styling
 
-Add the `.nui-prose` class from `@numior/tokens/prose.css` to a block with an article or CMS
+Add the `.nui-prose` class from `@numior/kit/prose.css` to a block with an article or CMS
 text. Headings, paragraphs, lists, quotes, code and tables inside it get styled without their
 own classes.
 

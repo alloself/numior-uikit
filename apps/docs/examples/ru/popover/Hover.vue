@@ -18,5 +18,5 @@
 </template>
 
 <script setup lang="ts">
-import { NuiAvatar, NuiLink, NuiPopover } from '@numior/vue';
+import { NuiAvatar, NuiLink, NuiPopover } from '@numior/kit';
 </script>

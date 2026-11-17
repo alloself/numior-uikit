@@ -7,7 +7,7 @@
 ## Установка
 
 ```ts install
-import { NuiCommand, NuiCommandDialog } from '@numior/vue';
+import { NuiCommand, NuiCommandDialog } from '@numior/kit';
 ```
 
 ## Использование

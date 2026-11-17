@@ -10,5 +10,5 @@
 </template>
 
 <script setup lang="ts">
-import { NuiButton, NuiEmpty } from '@numior/vue';
+import { NuiButton, NuiEmpty } from '@numior/kit';
 </script>

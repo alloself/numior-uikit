@@ -9,8 +9,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useToast } from '@numior/primitives';
-import { NuiButton } from '@numior/vue';
+import { NuiButton, useToast } from '@numior/kit';
 
 const toast = useToast();
 const cancelled = ref(false);

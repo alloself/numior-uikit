@@ -21,7 +21,7 @@ import {
   NuiCardFooter,
   NuiCardHeader,
   NuiCardTitle,
-} from '@numior/vue';
+} from '@numior/kit';
 
 const sent = ref(false);
 </script>

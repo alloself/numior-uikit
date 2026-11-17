@@ -14,7 +14,7 @@
 
 <script setup lang="ts">
 import { reactive } from 'vue';
-import { NuiSwitch } from '@numior/vue';
+import { NuiSwitch } from '@numior/kit';
 
 const notify = reactive({ order: true, cancel: true, review: false });
 </script>

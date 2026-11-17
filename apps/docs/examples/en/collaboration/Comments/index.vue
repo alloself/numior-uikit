@@ -32,11 +32,11 @@ import {
   NuiEditorCommentPopover,
   NuiEditorComments,
   useEditorComments,
-} from '@numior/collaboration/vue';
-import { contentSchema } from '@numior/content';
-import { fromHTML, toJSON, type DocJSON } from '@numior/editor-core';
-import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
-import { NuiButton, NuiPopover } from '@numior/vue';
+} from '@numior/kit/collaboration/vue';
+import { contentSchema } from '@numior/kit/content';
+import { fromHTML, toJSON, type DocJSON } from '@numior/kit/editor-core';
+import { NuiEditor, type NuiEditorApi } from '@numior/kit/editor';
+import { NuiButton, NuiPopover } from '@numior/kit';
 import { brief } from '#demo/description';
 import { team } from '#demo/team';
 import { memoryComments } from './adapter';

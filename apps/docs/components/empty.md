@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiEmpty } from '@numior/vue';
+import { NuiEmpty } from '@numior/kit';
 ```
 
 ## Использование

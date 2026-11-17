@@ -14,8 +14,8 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiSelect, type NuiOptionSource } from '@numior/vue';
-import { NuiTable, type NuiTableColumnDef, type TableNodeId } from '@numior/table';
+import { NuiSelect, type NuiOptionSource } from '@numior/kit';
+import { NuiTable, type NuiTableColumnDef, type TableNodeId } from '@numior/kit/table';
 import { ORDER_STATUSES, orders, type Order } from '#demo/orders';
 
 const money = new Intl.NumberFormat('en-US', {

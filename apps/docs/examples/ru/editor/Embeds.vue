@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiEditor } from '@numior/editor-vue';
+import { NuiEditor } from '@numior/kit/editor';
 
 const document = ref(
   '<p>Показываем кресло со всех сторон и снимаем чехол за две минуты.</p><p></p>',

@@ -12,9 +12,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Package } from '@lucide/vue';
-import { extendContentSchema } from '@numior/content';
-import { insertLeaf, renderTag, type AttrValue } from '@numior/editor-core';
-import { defineBlock, editorBlocks, NuiEditor } from '@numior/editor-vue';
+import { extendContentSchema } from '@numior/kit/content';
+import { insertLeaf, renderTag, type AttrValue } from '@numior/kit/editor-core';
+import { NuiEditor, defineBlock, editorBlocks } from '@numior/kit/editor';
 import { products } from '#demo/products';
 import ProductBlock from './ProductBlock.vue';
 

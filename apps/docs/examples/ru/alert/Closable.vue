@@ -24,7 +24,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiAlert, NuiButton } from '@numior/vue';
+import { NuiAlert, NuiButton } from '@numior/kit';
 
 const open = ref(true);
 </script>

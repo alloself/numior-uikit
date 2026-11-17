@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiSelect } from '@numior/vue';
+import { NuiSelect } from '@numior/kit';
 ```
 
 ## Использование

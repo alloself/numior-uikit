@@ -7,7 +7,7 @@
 ## Установка
 
 ```ts install
-import { NuiAccordion, NuiAccordionItem } from '@numior/vue';
+import { NuiAccordion, NuiAccordionItem } from '@numior/kit';
 ```
 
 ## Использование

@@ -4,7 +4,7 @@ How to validate form values with a schema or rules and show errors from the serv
 
 <Example name="form/Schema" />
 
-A form from `@numior/forms` validates values with a Standard Schema (zod, valibot, arktype),
+A form from `@numior/kit/forms` validates values with a Standard Schema (zod, valibot, arktype),
 with field rules or with both at once. The form shows no errors until the first submit. Form
 components are described on the [Form](/en/components/form) and
 [Smart form](/en/components/smart-form) pages.

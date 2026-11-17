@@ -35,7 +35,7 @@ createNuiConfig({ dir: () => (settings.rtl ? 'rtl' : 'ltr') });
 сервере `useDirection` возвращает значение из настроек:
 
 ```ts
-import { useDirection } from '@numior/vue';
+import { useDirection } from '@numior/kit';
 
 const direction = useDirection(root);
 const shift = computed(() => (direction.isRtl() ? -offset.value : offset.value));

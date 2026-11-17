@@ -10,7 +10,7 @@ For a short notice that appears over the page and goes away by itself, use a
 ## Installation
 
 ```ts install
-import { NuiAlert } from '@numior/vue';
+import { NuiAlert } from '@numior/kit';
 ```
 
 ## Usage

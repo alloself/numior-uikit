@@ -9,7 +9,7 @@ Set the number of characters in `length` and the size of the groups in `groupSiz
 ## Installation
 
 ```ts install
-import { NuiOtpField } from '@numior/vue';
+import { NuiOtpField } from '@numior/kit';
 ```
 
 ## Usage

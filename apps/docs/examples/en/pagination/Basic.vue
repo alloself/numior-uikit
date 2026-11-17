@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiPagination } from '@numior/vue';
+import { NuiPagination } from '@numior/kit';
 
 const page = ref(3);
 const pageSize = ref(20);

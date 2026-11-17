@@ -11,7 +11,7 @@ another link component.
 ## Installation
 
 ```ts install
-import { NuiLink } from '@numior/vue';
+import { NuiLink } from '@numior/kit';
 ```
 
 ## Usage

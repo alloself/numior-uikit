@@ -11,7 +11,7 @@ in the [plain form](/en/components/form) validates and submits them.
 ## Installation
 
 ```ts install
-import { NuiSmartForm, formConfig, useForm } from '@numior/forms';
+import { NuiSmartForm, formConfig, useForm } from '@numior/kit/forms';
 ```
 
 ## Examples

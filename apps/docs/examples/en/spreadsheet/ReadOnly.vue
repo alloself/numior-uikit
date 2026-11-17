@@ -11,8 +11,8 @@
 </template>
 
 <script setup lang="ts">
-import { NuiSpreadsheet } from '@numior/spreadsheet';
-import { createWorkbook, numberValue, textValue } from '@numior/spreadsheet/core';
+import { NuiSpreadsheet } from '@numior/kit/spreadsheet';
+import { createWorkbook, numberValue, textValue } from '@numior/kit/spreadsheet/core';
 
 const PLANS = [
   { plan: 'Starter', price: 490 },

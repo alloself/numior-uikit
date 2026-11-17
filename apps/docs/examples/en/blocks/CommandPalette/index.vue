@@ -44,7 +44,7 @@ import {
   NuiListItem,
   type NuiCommandItem,
   type NuiCommandSource,
-} from '@numior/vue';
+} from '@numior/kit';
 import { ORDER_STATUSES, orders } from '#demo/orders';
 import { products } from '#demo/products';
 

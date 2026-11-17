@@ -2,7 +2,7 @@
 
 `useControls()` возвращает набор контролов, из которого формы по JSON-описанию и редакторы
 ячеек таблицы берут контрол по имени, например `text` или `date`. Готовый набор контролов
-Numior UI — `kitControls` из `@numior/vue/controls`.
+Numior UI — `kitControls` из `@numior/kit/controls`.
 
 Свой набор соберите через `defineControls`. Запись `text: control(NuiInput, isString)` означает:
 по имени `text` выводится `NuiInput`, а его значение — строка. Передайте набор в

@@ -75,7 +75,6 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef } from 'vue';
 import { promiseTimeout } from '@vueuse/core';
-import { useToast } from '@numior/primitives';
 import {
   NuiBadge,
   NuiButton,
@@ -83,8 +82,9 @@ import {
   NuiList,
   NuiListItem,
   NuiSelect,
+  useToast,
   type NuiTone,
-} from '@numior/vue';
+} from '@numior/kit';
 import {
   DELIVERIES,
   ORDER_STATUSES,

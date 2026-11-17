@@ -7,7 +7,7 @@ A command palette with search.
 ## Installation
 
 ```ts install
-import { NuiCommand, NuiCommandDialog } from '@numior/vue';
+import { NuiCommand, NuiCommandDialog } from '@numior/kit';
 ```
 
 ## Usage

@@ -4,59 +4,59 @@
 
 ## Установка
 
-Установите компоненты и темы:
+Установите Numior UI:
 
 ::: code-group
 
 ```sh [pnpm]
-pnpm add @numior/vue @numior/tokens
+pnpm add @numior/kit
 ```
 
 ```sh [npm]
-npm install @numior/vue @numior/tokens
+npm install @numior/kit
 ```
 
 ```sh [yarn]
-yarn add @numior/vue @numior/tokens
+yarn add @numior/kit
 ```
 
 ```sh [bun]
-bun add @numior/vue @numior/tokens
+bun add @numior/kit
 ```
 
 :::
 
-Формы и пресет для Tailwind ставятся отдельно: это пакеты `@numior/forms` и `@numior/tailwind`.
-Все пакеты `@numior/*` выходят под одним номером версии, ставьте их одной версии.
+Модули лежат в том же пакете, каждый в своём подпути, например `@numior/kit/table` или
+`@numior/kit/editor`. Модули, которые приложение не импортирует, в сборку не попадают.
 
 ## Стили
 
 Подключите стили в точке входа приложения:
 
 ```ts
-import '@numior/tokens/theme.css';
-import '@numior/tokens/base.css';
-import '@numior/vue/styles.css';
+import '@numior/kit/theme.css';
+import '@numior/kit/base.css';
+import '@numior/kit/styles.css';
 ```
 
 Если стили приложения собираются в CSS-файле, подключите их там:
 
 ```css
-@import '@numior/tokens/theme.css';
-@import '@numior/tokens/base.css';
-@import '@numior/vue/styles.css';
+@import '@numior/kit/theme.css';
+@import '@numior/kit/base.css';
+@import '@numior/kit/styles.css';
 ```
 
 В `theme.css` лежат цвета, отступы и скругления светлой и тёмной темы. `base.css` задаёт странице
 фон, шрифт и цвет текста. `styles.css` содержит стили всех компонентов.
 
 Чтобы не грузить лишнее, подключите вместо `styles.css` файлы только нужных компонентов, например
-`@numior/vue/styles/button.css`. Составным компонентам нужны и файлы их частей, поэтому в разделе
+`@numior/kit/styles/button.css`. Составным компонентам нужны и файлы их частей, поэтому в разделе
 «Установка» на странице компонента перечислены все его файлы.
 
 ## Первый компонент
 
-Импортируйте компоненты из `@numior/vue` и используйте их в шаблоне:
+Импортируйте компоненты из `@numior/kit` и используйте их в шаблоне:
 
 <Example name="guide/First" />
 
@@ -74,7 +74,7 @@ import '@numior/vue/styles.css';
 
 ```ts
 import { createApp } from 'vue';
-import { createNuiConfig } from '@numior/vue';
+import { createNuiConfig } from '@numior/kit';
 import App from './App.vue';
 
 createApp(App)

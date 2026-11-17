@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiCode } from '@numior/vue';
+import { NuiCode } from '@numior/kit';
 
 const log = [
   '[10:02:11] выгрузка заказов началась',

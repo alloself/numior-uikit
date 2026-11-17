@@ -14,7 +14,7 @@ text.
 ## Plural forms
 
 ```ts
-import { plural } from '@numior/vue';
+import { plural } from '@numior/kit';
 
 const files = (count: number): string =>
   `${count} ${plural('en', count, { one: 'file', other: 'files' })}`;

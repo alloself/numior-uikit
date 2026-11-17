@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { groupBy, orderBy, sumBy, take } from 'lodash-es';
-import { NuiChart, type ChartSpec } from '@numior/charts';
+import { NuiChart, type ChartSpec } from '@numior/kit/charts';
 import { ordersOf } from '#demo/many-orders';
 import { products } from '#demo/products';
 

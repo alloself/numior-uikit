@@ -15,7 +15,7 @@ the direction for everything inside a component without a `dir` attribute.
 
 ```ts
 import { computed, useTemplateRef } from 'vue';
-import { useDirection } from '@numior/vue';
+import { useDirection } from '@numior/kit';
 
 const root = useTemplateRef<HTMLElement>('root');
 const direction = useDirection(root);

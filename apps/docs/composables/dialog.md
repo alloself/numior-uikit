@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import { ref, useTemplateRef } from 'vue';
-import { useDialog } from '@numior/vue';
+import { useDialog } from '@numior/kit';
 
 const open = ref(false);
 const dialog = useTemplateRef<HTMLDialogElement>('dialog');

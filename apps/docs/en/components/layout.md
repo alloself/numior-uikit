@@ -11,7 +11,7 @@ Put a [Sidebar](/en/components/sidebar) into the `sidebar` slot and a `NuiAppBar
 ## Installation
 
 ```ts install
-import { NuiAppBar, NuiLayout } from '@numior/vue';
+import { NuiAppBar, NuiLayout } from '@numior/kit';
 ```
 
 ## Examples

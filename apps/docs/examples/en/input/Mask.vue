@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiInput } from '@numior/vue';
+import { NuiInput } from '@numior/kit';
 
 const PHONE_DIGITS = 10;
 

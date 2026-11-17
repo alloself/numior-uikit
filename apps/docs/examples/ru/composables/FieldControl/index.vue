@@ -7,7 +7,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiField } from '@numior/vue';
+import { NuiField } from '@numior/kit';
 import RatingControl from './RatingControl.vue';
 
 const rating = ref(4);

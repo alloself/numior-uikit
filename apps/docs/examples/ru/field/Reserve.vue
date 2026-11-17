@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiButton, NuiField, NuiInput } from '@numior/vue';
+import { NuiButton, NuiField, NuiInput } from '@numior/kit';
 
 const track = ref('');
 const saved = ref(false);

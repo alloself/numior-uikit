@@ -19,20 +19,20 @@ describe('list_components', () => {
     expect(reply.json()).toEqual([
       {
         name: 'NuiButton',
-        package: '@numior/vue',
+        package: '@numior/kit',
         page: '/components/button',
         description: 'A button that starts an action.',
       },
       {
         name: 'NuiSelect',
-        package: '@numior/vue',
+        package: '@numior/kit',
         page: '/components/select',
         description: 'Pick one value from a dropdown list.',
       },
-      { name: 'NuiDialog', package: '@numior/vue' },
+      { name: 'NuiDialog', package: '@numior/kit' },
       {
         name: 'NuiTable',
-        package: '@numior/table',
+        package: '@numior/kit/table',
         page: '/table',
         description: 'Rows with sorting and filters.',
       },
@@ -40,13 +40,17 @@ describe('list_components', () => {
   });
 
   it('keeps the components of one package and names the packages for an unknown one', async () => {
-    const table = await session.call('list_components', { package: '@numior/table', locale: 'ru' });
-    const charts = await session.call('list_components', { package: '@numior/charts' });
+    const table = await session.call('list_components', {
+      package: '@numior/kit/table',
+      locale: 'ru',
+    });
+
+    const charts = await session.call('list_components', { package: '@numior/kit/charts' });
 
     expect(table.json()).toEqual([
       {
         name: 'NuiTable',
-        package: '@numior/table',
+        package: '@numior/kit/table',
         page: '/table',
         description: 'Строки с сортировкой и фильтрами.',
       },
@@ -55,7 +59,7 @@ describe('list_components', () => {
     expect(charts.error).toBe(true);
 
     expect(charts.text).toBe(
-      'No components come from `@numior/charts`. Packages with components: `@numior/vue`, `@numior/table`.',
+      'No components come from `@numior/kit/charts`. Packages with components: `@numior/kit`, `@numior/kit/table`.',
     );
   });
 });
@@ -66,11 +70,11 @@ describe('get_component', () => {
 
     expect(reply.json()).toMatchObject({
       name: 'NuiSelect',
-      import: "import { NuiSelect } from '@numior/vue';",
+      import: "import { NuiSelect } from '@numior/kit';",
       stylesheets: [
-        '@numior/vue/styles/field.css',
-        '@numior/vue/styles/list.css',
-        '@numior/vue/styles/select.css',
+        '@numior/kit/styles/field.css',
+        '@numior/kit/styles/list.css',
+        '@numior/kit/styles/select.css',
       ],
       models: [{ name: 'v-model', prop: 'modelValue', description: 'Selected value.' }],
       events: [{ name: 'load', payload: '[]', description: 'Asks for more.' }],
@@ -303,7 +307,7 @@ describe('errors', () => {
     const far = await session.call('get_component', { name: 'QuantumFlux', ...ru });
     const page = await session.call('get_page', { path: '/guide/theme', ...ru });
     const lost = await session.call('get_page', { path: '/zzzzzzzzzzzzzz', ...ru });
-    const charts = await session.call('list_components', { package: '@numior/charts', ...ru });
+    const charts = await session.call('list_components', { package: '@numior/kit/charts', ...ru });
     const example = await session.call('get_example', { name: 'chart', ...ru });
 
     expect([close, far, page, lost, charts, example].map((reply) => reply.text)).toEqual([
@@ -311,7 +315,7 @@ describe('errors', () => {
       'В Numior UI нет компонента `QuantumFlux`. Список компонентов показывает list_components.',
       'Страницы `/guide/theme` нет. Возможно, имелась в виду `/guide/theming`.',
       'Страницы `/zzzzzzzzzzzzzz` нет. Страницы по словам находит search.',
-      'В `@numior/charts` нет компонентов. Пакеты с компонентами: `@numior/vue`, `@numior/table`.',
+      'В `@numior/kit/charts` нет компонентов. Пакеты с компонентами: `@numior/kit`, `@numior/kit/table`.',
       'Примера `chart` нет. Имена выглядят как `select/Basic`; get_page выводит примеры страницы кодом.',
     ]);
   });

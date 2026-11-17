@@ -8,5 +8,5 @@
 </template>
 
 <script setup lang="ts">
-import { NuiButton, NuiTooltip } from '@numior/vue';
+import { NuiButton, NuiTooltip } from '@numior/kit';
 </script>

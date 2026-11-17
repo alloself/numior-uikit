@@ -10,7 +10,7 @@
 ## Установка
 
 ```ts install
-import { NuiTree } from '@numior/vue';
+import { NuiTree } from '@numior/kit';
 ```
 
 ## Использование

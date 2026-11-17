@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiAvatarGroup, type NuiAvatarItem } from '@numior/vue';
+import { NuiAvatarGroup, type NuiAvatarItem } from '@numior/kit';
 import { team } from '#demo/team';
 
 const people: NuiAvatarItem[] = team.map(({ id, name }) => ({ key: id, name }));

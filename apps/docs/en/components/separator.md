@@ -7,7 +7,7 @@ A line between blocks of a page or between buttons of a toolbar.
 ## Installation
 
 ```ts install
-import { NuiSeparator } from '@numior/vue';
+import { NuiSeparator } from '@numior/kit';
 ```
 
 ## Usage

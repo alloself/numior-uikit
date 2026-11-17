@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiToc } from '@numior/vue';
+import { NuiToc } from '@numior/kit';
 ```
 
 ## Поведение

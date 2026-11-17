@@ -14,8 +14,8 @@
 
 <script setup lang="ts">
 import { groupBy, sortBy, sumBy, upperFirst } from 'lodash-es';
-import { NuiChart, type ChartSpec } from '@numior/charts';
-import { monthKeyOf } from '@numior/primitives';
+import { NuiChart, type ChartSpec } from '@numior/kit/charts';
+import { monthKeyOf } from '@numior/kit';
 import { ordersOf } from '#demo/many-orders';
 
 const HEIGHT = 260;

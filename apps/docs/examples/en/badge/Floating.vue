@@ -6,5 +6,5 @@
 </template>
 
 <script setup lang="ts">
-import { NuiBadge, NuiButton } from '@numior/vue';
+import { NuiBadge, NuiButton } from '@numior/kit';
 </script>

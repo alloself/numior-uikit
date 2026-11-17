@@ -1,4 +1,4 @@
-import type { CommentThread } from '@numior/collaboration';
+import type { CommentThread } from '@numior/kit/collaboration';
 import {
   AnchorRangeKind,
   ContentNodeKind,
@@ -6,7 +6,7 @@ import {
   type ContentNode,
   type Doc,
   type ElementNode,
-} from '@numior/editor-core';
+} from '@numior/kit/editor-core';
 import { team } from '#demo/team';
 
 const [anna, , maria] = team;

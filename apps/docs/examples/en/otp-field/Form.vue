@@ -17,8 +17,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { promiseTimeout } from '@vueuse/core';
-import { NuiOtpField } from '@numior/vue';
-import { NuiForm, NuiFormField, min, required, useForm } from '@numior/forms';
+import { NuiOtpField } from '@numior/kit';
+import { NuiForm, NuiFormField, min, required, useForm } from '@numior/kit/forms';
 
 const codeRules = [required(), min(6)];
 

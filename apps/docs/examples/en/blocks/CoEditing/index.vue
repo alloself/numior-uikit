@@ -22,10 +22,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { createLoopback, editorAuthority } from '@numior/collaboration/room';
-import { contentSchema } from '@numior/content';
-import { fromHTML } from '@numior/editor-core';
-import { NuiSwitch } from '@numior/vue';
+import { createLoopback, editorAuthority } from '@numior/kit/collaboration/room';
+import { contentSchema } from '@numior/kit/content';
+import { fromHTML } from '@numior/kit/editor-core';
+import { NuiSwitch } from '@numior/kit';
 import { brief } from '#demo/description';
 import { team } from '#demo/team';
 import Pane from './Pane.vue';

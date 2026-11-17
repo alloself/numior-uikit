@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiButton, NuiButtonSize, NuiButtonVariant } from '@numior/vue';
+import { NuiButton, NuiButtonSize, NuiButtonVariant } from '@numior/kit';
 </script>
 ```
 
@@ -58,7 +58,7 @@ import { NuiButton, NuiButtonSize, NuiButtonVariant } from '@numior/vue';
 </template>
 
 <script setup lang="ts">
-import { NuiButton, type NuiButtonProps } from '@numior/vue';
+import { NuiButton, type NuiButtonProps } from '@numior/kit';
 
 const quiet: NuiButtonProps = { variant: 'ghost', tone: 'neutral', size: 'sm' };
 </script>

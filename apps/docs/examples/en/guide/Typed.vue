@@ -7,7 +7,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiSelect, type NuiOptionSource } from '@numior/vue';
+import { NuiSelect, type NuiOptionSource } from '@numior/kit';
 import { ORDER_STATUSES, type OrderStatus } from '#demo/orders';
 
 const NEXT_STEP: Record<OrderStatus, string> = {

@@ -31,8 +31,8 @@ vue-i18n.
 Передайте в `messages` только те тексты, которые хотите заменить:
 
 ```ts
-import { createNuiConfig, type NuiLocaleMessages, type NuiVueMessages } from '@numior/vue';
-import type { NuiFormsMessages } from '@numior/forms';
+import { createNuiConfig, type NuiLocaleMessages, type NuiVueMessages } from '@numior/kit';
+import type { NuiFormsMessages } from '@numior/kit/forms';
 
 const messages: NuiLocaleMessages<NuiVueMessages & NuiFormsMessages> = {
   ru: { dialog: { close: 'Закрыть окно' } },
@@ -53,7 +53,7 @@ createNuiConfig({ locale: 'ru-RU', messages });
 Добавьте в `messages` раздел с кодом языка и укажите этот язык в `locale`:
 
 ```ts
-import { createNuiConfig, plural, type NuiLocaleMessages, type NuiVueMessages } from '@numior/vue';
+import { createNuiConfig, plural, type NuiLocaleMessages, type NuiVueMessages } from '@numior/kit';
 
 const messages: NuiLocaleMessages<NuiVueMessages> = {
   de: {
@@ -80,7 +80,7 @@ createNuiConfig({ locale: 'de-DE', messages });
 
 ```ts
 import { createI18n } from 'vue-i18n';
-import { createNuiConfig } from '@numior/vue';
+import { createNuiConfig } from '@numior/kit';
 
 const i18n = createI18n({ legacy: false, locale: 'ru-RU', messages });
 

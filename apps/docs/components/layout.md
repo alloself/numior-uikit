@@ -11,7 +11,7 @@
 ## Установка
 
 ```ts install
-import { NuiAppBar, NuiLayout } from '@numior/vue';
+import { NuiAppBar, NuiLayout } from '@numior/kit';
 ```
 
 ## Примеры

@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { useMediaQuery } from '@numior/primitives';
+import { useMediaQuery } from '@numior/kit';
 
 const narrow = useMediaQuery('(max-width: 48rem)');
 const dark = useMediaQuery('(prefers-color-scheme: dark)');

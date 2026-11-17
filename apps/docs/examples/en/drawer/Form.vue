@@ -27,8 +27,7 @@
 <script setup lang="ts">
 import { ref, useId } from 'vue';
 import { uniq } from 'lodash-es';
-import { useToast } from '@numior/primitives';
-import { NuiButton, NuiDrawer, NuiInput, NuiSelect } from '@numior/vue';
+import { NuiButton, NuiDrawer, NuiInput, NuiSelect, useToast } from '@numior/kit';
 import { customers } from '#demo/customers';
 
 const formId = useId();

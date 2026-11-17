@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
+import { NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/kit';
 ```
 
 ## Использование

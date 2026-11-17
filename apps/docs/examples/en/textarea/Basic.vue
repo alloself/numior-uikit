@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiTextarea } from '@numior/vue';
+import { NuiTextarea } from '@numior/kit';
 
 const comment = ref('Please call an hour before delivery: the intercom is broken.');
 </script>

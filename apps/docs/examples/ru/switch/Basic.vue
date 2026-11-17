@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiSwitch } from '@numior/vue';
+import { NuiSwitch } from '@numior/kit';
 
 const visible = ref(true);
 </script>

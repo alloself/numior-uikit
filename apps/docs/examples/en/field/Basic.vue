@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiField, NuiInput } from '@numior/vue';
+import { NuiField, NuiInput } from '@numior/kit';
 
 const SKU_RE = /^[A-Z]-\d{3}$/;
 

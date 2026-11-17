@@ -14,9 +14,9 @@ called tokens. Every token has a value for the light and for the dark theme. The
 Import the theme files in the app entry point:
 
 ```ts
-import '@numior/tokens/theme.css';
-import '@numior/tokens/base.css';
-import '@numior/tokens/accents.css';
+import '@numior/kit/theme.css';
+import '@numior/kit/base.css';
+import '@numior/kit/accents.css';
 ```
 
 What `theme.css` and `base.css` do is covered in [Getting started](/en/guide/getting-started#styles).
@@ -34,7 +34,7 @@ To let the user pick the theme, use `useColorScheme`:
 </template>
 
 <script setup lang="ts">
-import { NuiButton, NuiIcon, useColorScheme } from '@numior/vue';
+import { NuiButton, NuiIcon, useColorScheme } from '@numior/kit';
 
 const { scheme, resolved, cycle } = useColorScheme();
 const icons = { light: 'sun', dark: 'moon' } as const;

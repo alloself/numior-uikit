@@ -17,7 +17,7 @@ parts:
 ## Installation
 
 ```ts install
-import { NuiMenu, NuiMenuItem } from '@numior/vue';
+import { NuiMenu, NuiMenuItem } from '@numior/kit';
 ```
 
 ## Usage

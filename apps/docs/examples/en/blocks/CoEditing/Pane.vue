@@ -28,12 +28,12 @@
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import { CollabStatusKind, type CollabStatus } from '@numior/collaboration';
-import type { LoopbackLink } from '@numior/collaboration/room';
-import { NuiCollabCarets, NuiCollabPresence, useCollabEditor } from '@numior/collaboration/vue';
-import { contentSchema } from '@numior/content';
-import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
-import { NuiBadge, NuiTone } from '@numior/vue';
+import { CollabStatusKind, type CollabStatus } from '@numior/kit/collaboration';
+import type { LoopbackLink } from '@numior/kit/collaboration/room';
+import { NuiCollabCarets, NuiCollabPresence, useCollabEditor } from '@numior/kit/collaboration/vue';
+import { contentSchema } from '@numior/kit/content';
+import { NuiEditor, type NuiEditorApi } from '@numior/kit/editor';
+import { NuiBadge, NuiTone } from '@numior/kit';
 import type { Employee } from '#demo/team';
 
 const STATES: Readonly<Record<CollabStatus['kind'], { text: string; tone: NuiTone }>> = {

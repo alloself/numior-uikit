@@ -19,13 +19,13 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { plural } from '@numior/primitives';
+import { plural } from '@numior/kit';
 import {
   NuiTable,
   type NuiTableColumn,
   type NuiTableRanges,
   type NuiTableRowHeights,
-} from '@numior/table';
+} from '@numior/kit/table';
 
 interface Reading {
   readonly hour: number;

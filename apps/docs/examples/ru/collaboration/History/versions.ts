@@ -1,6 +1,6 @@
-import type { DocumentVersion } from '@numior/collaboration';
-import { contentSchema } from '@numior/content';
-import { fromHTML, toJSON } from '@numior/editor-core';
+import type { DocumentVersion } from '@numior/kit/collaboration';
+import { contentSchema } from '@numior/kit/content';
+import { fromHTML, toJSON } from '@numior/kit/editor-core';
 import { brief } from '#demo/description';
 import { team } from '#demo/team';
 import type { StoredVersion } from './adapter';

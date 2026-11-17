@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiCheckboxGroup } from '@numior/vue';
+import { NuiCheckboxGroup } from '@numior/kit';
 import { DELIVERIES } from '#demo/orders';
 
 const REQUIRED = 'courier';

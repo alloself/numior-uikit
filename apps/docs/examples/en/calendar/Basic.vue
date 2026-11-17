@@ -12,8 +12,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { weekdayOf } from '@numior/primitives';
-import { NuiCalendar, type NuiCalendarValue } from '@numior/vue';
+import { NuiCalendar, weekdayOf, type NuiCalendarValue } from '@numior/kit';
 
 const dayFormat = new Intl.DateTimeFormat('en-US', {
   day: 'numeric',

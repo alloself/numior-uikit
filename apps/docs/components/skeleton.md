@@ -7,7 +7,7 @@
 ## Установка
 
 ```ts install
-import { NuiSkeleton } from '@numior/vue';
+import { NuiSkeleton } from '@numior/kit';
 ```
 
 ## Использование

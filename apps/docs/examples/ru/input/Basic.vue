@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiInput } from '@numior/vue';
+import { NuiInput } from '@numior/kit';
 
 const email = ref('');
 </script>

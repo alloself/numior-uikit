@@ -29,9 +29,9 @@ the panel:
 
 <script setup lang="ts">
 import { computed, shallowRef, useTemplateRef } from 'vue';
-import { NuiEditorHistory, useEditorHistory } from '@numior/collaboration/vue';
-import type { DocJSON } from '@numior/editor-core';
-import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
+import { NuiEditorHistory, useEditorHistory } from '@numior/kit/collaboration/vue';
+import type { DocJSON } from '@numior/kit/editor-core';
+import { NuiEditor, type NuiEditorApi } from '@numior/kit/editor';
 import { versionsOf } from './versions';
 
 const document = shallowRef<DocJSON>();

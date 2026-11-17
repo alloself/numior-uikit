@@ -74,7 +74,7 @@ import {
   NuiSidebarItem,
   NuiSidebarSub,
   NuiSidebarTrigger,
-} from '@numior/vue';
+} from '@numior/kit';
 import { team } from '#demo/team';
 
 type PageKey =

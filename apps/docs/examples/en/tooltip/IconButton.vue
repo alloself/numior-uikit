@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { promiseTimeout } from '@vueuse/core';
-import { NuiButton, NuiTooltip } from '@numior/vue';
+import { NuiButton, NuiTooltip } from '@numior/kit';
 
 const checking = ref(false);
 

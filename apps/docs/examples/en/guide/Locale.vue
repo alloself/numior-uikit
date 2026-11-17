@@ -8,8 +8,13 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { provideNuiConfig } from '@numior/primitives';
-import { NuiDatePicker, NuiPagination, NuiSelect, type NuiOption } from '@numior/vue';
+import {
+  NuiDatePicker,
+  NuiPagination,
+  NuiSelect,
+  provideNuiConfig,
+  type NuiOption,
+} from '@numior/kit';
 
 const locale = ref('en-US');
 const page = ref(3);

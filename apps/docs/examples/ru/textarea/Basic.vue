@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiTextarea } from '@numior/vue';
+import { NuiTextarea } from '@numior/kit';
 
 const comment = ref('Позвоните за час до доставки: домофон не работает.');
 </script>

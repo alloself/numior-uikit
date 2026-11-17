@@ -5,5 +5,5 @@
 </template>
 
 <script setup lang="ts">
-import { NuiCard, NuiCardContent } from '@numior/vue';
+import { NuiCard, NuiCardContent } from '@numior/kit';
 </script>

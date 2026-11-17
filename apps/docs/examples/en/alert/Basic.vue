@@ -8,5 +8,5 @@
 </template>
 
 <script setup lang="ts">
-import { NuiAlert } from '@numior/vue';
+import { NuiAlert } from '@numior/kit';
 </script>

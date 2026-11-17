@@ -14,10 +14,10 @@
 ## Установка
 
 ```ts install:packages
-import { NuiTable } from '@numior/table';
+import { NuiTable } from '@numior/kit/table';
 ```
 
-Фильтры, меню колонок, флажки и пагинация таблицы — компоненты `@numior/vue`, поэтому нужны и их
+Фильтры, меню колонок, флажки и пагинация таблицы — компоненты `@numior/kit`, поэтому нужны и их
 стили.
 
 ## Использование

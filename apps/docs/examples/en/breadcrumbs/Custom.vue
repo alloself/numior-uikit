@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiBadge, NuiBreadcrumbs, NuiLink, type NuiBreadcrumbItem } from '@numior/vue';
+import { NuiBadge, NuiBreadcrumbs, NuiLink, type NuiBreadcrumbItem } from '@numior/kit';
 import { ORDER_STATUSES } from '#demo/orders';
 
 const path: NuiBreadcrumbItem[] = [

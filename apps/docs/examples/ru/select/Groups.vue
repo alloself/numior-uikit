@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiSelect, type NuiOptionSource } from '@numior/vue';
+import { NuiSelect, type NuiOptionSource } from '@numior/kit';
 
 const city = ref<string | null>(null);
 

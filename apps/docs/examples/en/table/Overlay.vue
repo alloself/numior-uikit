@@ -24,7 +24,7 @@ import {
   type NuiTableColumn,
   type NuiTableRange,
   type NuiTableRect,
-} from '@numior/table';
+} from '@numior/kit/table';
 
 interface Region {
   readonly name: string;

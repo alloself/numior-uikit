@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiTooltip } from '@numior/vue';
+import { NuiTooltip } from '@numior/kit';
 ```
 
 ## Использование
@@ -28,7 +28,7 @@ import { NuiTooltip } from '@numior/vue';
 
 ### Показать сочетание клавиш
 
-Задайте `shortcut` и подключите `@numior/vue/styles/kbd.css`.
+Задайте `shortcut` и подключите `@numior/kit/styles/kbd.css`.
 
 <Example name="tooltip/Shortcut" />
 

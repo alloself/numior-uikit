@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiButton, NuiPopover } from '@numior/vue';
+import { NuiButton, NuiPopover } from '@numior/kit';
 import { products } from '#demo/products';
 
 const low = products.filter((product) => product.stock < 10);

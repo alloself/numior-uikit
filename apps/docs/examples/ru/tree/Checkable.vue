@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiTree } from '@numior/vue';
+import { NuiTree } from '@numior/kit';
 import { categories } from '#demo/products';
 
 const leaves = categories.flatMap((category) => category.children ?? []);

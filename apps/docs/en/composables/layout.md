@@ -27,7 +27,7 @@ screen width. Pass `sidebarId` to the button's `aria-controls`.
 </template>
 
 <script setup lang="ts">
-import { NuiButton, useLayout } from '@numior/vue';
+import { NuiButton, useLayout } from '@numior/kit';
 
 const layout = useLayout();
 </script>

@@ -20,8 +20,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { NuiEditorBlockViewProps } from '@numior/editor-vue';
-import { NuiSelect } from '@numior/vue';
+import type { NuiEditorBlockViewProps } from '@numior/kit/editor';
+import { NuiSelect } from '@numior/kit';
 import { products } from '#demo/products';
 
 const { node, editable, editor } = defineProps<NuiEditorBlockViewProps>();

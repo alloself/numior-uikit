@@ -5,7 +5,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { promiseTimeout } from '@vueuse/core';
-import { NuiButton } from '@numior/vue';
+import { NuiButton } from '@numior/kit';
 
 const sending = ref(false);
 

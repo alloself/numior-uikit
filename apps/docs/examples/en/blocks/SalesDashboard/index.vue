@@ -35,14 +35,14 @@
 
 <script setup lang="ts">
 import { countBy, sumBy, uniq } from 'lodash-es';
-import { NuiChart, type ChartSpec } from '@numior/charts';
+import { NuiChart, type ChartSpec } from '@numior/kit/charts';
 import {
   NuiCard,
   NuiCardContent,
   NuiCardDescription,
   NuiCardHeader,
   NuiCardTitle,
-} from '@numior/vue';
+} from '@numior/kit';
 import { ORDER_STATUSES, orders } from '#demo/orders';
 
 const DOUGHNUT_HEIGHT = 240;

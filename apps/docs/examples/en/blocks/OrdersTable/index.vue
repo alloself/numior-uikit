@@ -41,8 +41,8 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiBadge, NuiInput, NuiSelect, type NuiTone } from '@numior/vue';
-import { NuiTable, type NuiTableColumn } from '@numior/table';
+import { NuiBadge, NuiInput, NuiSelect, type NuiTone } from '@numior/kit';
+import { NuiTable, type NuiTableColumn } from '@numior/kit/table';
 import { ordersOf } from '#demo/many-orders';
 import { ORDER_STATUSES, type Order, type OrderStatus } from '#demo/orders';
 

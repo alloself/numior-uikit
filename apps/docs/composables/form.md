@@ -1,6 +1,6 @@
 # useForm
 
-`useForm(options)` создаёт форму `@numior/forms`: начальные значения, схему или правила
+`useForm(options)` создаёт форму `@numior/kit/forms`: начальные значения, схему или правила
 проверки и обработчик отправки. Используйте его вместе с `NuiForm` или со своей разметкой.
 
 `useField` подключает к форме одно поле, а `useFieldArray` — список повторяющихся групп полей,
@@ -15,7 +15,7 @@
 ## Использование
 
 ```ts
-import { useField, useForm, required } from '@numior/forms';
+import { required, useField, useForm } from '@numior/kit/forms';
 
 const form = useForm({
   initialValues: { email: '' },

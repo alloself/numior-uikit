@@ -11,7 +11,7 @@
 
 ```ts
 import { useTemplateRef } from 'vue';
-import { useBlockSizeTween } from '@numior/vue';
+import { useBlockSizeTween } from '@numior/kit';
 
 const panel = useTemplateRef<HTMLElement>('panel');
 

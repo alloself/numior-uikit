@@ -21,6 +21,7 @@
     "@numior/editor-core": "workspace:*",
     "@numior/editor-vue": "workspace:*",
     "@numior/forms": "workspace:*",
+    "@numior/kit": "workspace:*",
     "@numior/primitives": "workspace:*",
     "@numior/spreadsheet": "workspace:*",
     "@numior/table": "workspace:*",

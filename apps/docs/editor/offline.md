@@ -9,38 +9,14 @@
 Пока у Марии нет связи, её правки копятся во вкладке. Когда связь возвращается, клиент получает
 правки Анны, переносит свои поверх них и отправляет.
 
-## Установка
-
-Установите пакет:
-
-::: code-group
-
-```sh [pnpm]
-pnpm add @numior/offline
-```
-
-```sh [npm]
-npm install @numior/offline
-```
-
-```sh [yarn]
-yarn add @numior/offline
-```
-
-```sh [bun]
-bun add @numior/offline
-```
-
-:::
-
 ## Сохраните правки в браузере
 
 Передайте `offlinePersistence` в `useCollabEditor`:
 
 ```ts
-import { useCollabEditor } from '@numior/collaboration/vue';
-import { contentSchema } from '@numior/content';
-import { offlinePersistence } from '@numior/offline';
+import { useCollabEditor } from '@numior/kit/collaboration/vue';
+import { contentSchema } from '@numior/kit/content';
+import { offlinePersistence } from '@numior/kit/offline';
 
 const collab = useCollabEditor({
   doc: 'oslo-chair',
@@ -70,7 +46,7 @@ const collab = useCollabEditor({
 
 ```ts
 import { ref } from 'vue';
-import { OfflineCopy, offlinePersistence } from '@numior/offline';
+import { OfflineCopy, offlinePersistence } from '@numior/kit/offline';
 
 const copy = ref<OfflineCopy>();
 

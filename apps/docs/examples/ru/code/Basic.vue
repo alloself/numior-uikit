@@ -10,10 +10,10 @@
 </template>
 
 <script setup lang="ts">
-import { NuiCode, type NuiCodeLine } from '@numior/vue';
+import { NuiCode, type NuiCodeLine } from '@numior/kit';
 
 const source = [
-  "import { NuiButton } from '@numior/vue';",
+  "import { NuiButton } from '@numior/kit';",
   '',
   "const label = ref('Сохранить');",
   'const loading = ref(false);',
@@ -24,7 +24,7 @@ const tokens: readonly NuiCodeLine[] = [
     { text: 'import', scope: 'keyword' },
     { text: ' { NuiButton } ' },
     { text: 'from', scope: 'keyword' },
-    { text: " '@numior/vue'", scope: 'string' },
+    { text: " '@numior/kit'", scope: 'string' },
     { text: ';', scope: 'punctuation' },
   ],
   [{ text: '' }],

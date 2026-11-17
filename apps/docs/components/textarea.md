@@ -10,7 +10,7 @@
 ## Установка
 
 ```ts install
-import { NuiTextarea } from '@numior/vue';
+import { NuiTextarea } from '@numior/kit';
 ```
 
 ## Использование

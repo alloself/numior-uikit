@@ -36,7 +36,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Package, ShoppingCart, Users, Warehouse } from '@lucide/vue';
-import { NuiList, NuiListItem } from '@numior/vue';
+import { NuiList, NuiListItem } from '@numior/kit';
 
 const section = ref('orders');
 </script>

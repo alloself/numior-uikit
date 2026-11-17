@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiNumberField } from '@numior/vue';
+import { NuiNumberField } from '@numior/kit';
 
 const discount = ref<number | null>(10);
 </script>

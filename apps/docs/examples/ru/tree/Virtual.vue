@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiTree, type NuiTreeItem } from '@numior/vue';
+import { NuiTree, type NuiTreeItem } from '@numior/kit';
 import { ordersOf } from '#demo/many-orders';
 
 const nodes: NuiTreeItem<string>[] = ordersOf(2000).map((order) => ({

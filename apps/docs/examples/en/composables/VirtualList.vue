@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import { useVirtualList } from '@numior/primitives';
+import { useVirtualList } from '@numior/kit';
 
 const scroller = useTemplateRef<HTMLElement>('scroller');
 

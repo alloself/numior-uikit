@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiCheckbox } from '@numior/vue';
+import { NuiCheckbox } from '@numior/kit';
 
 const agreed = ref(false);
 </script>

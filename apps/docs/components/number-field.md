@@ -10,7 +10,7 @@
 ## Установка
 
 ```ts install
-import { NuiNumberField } from '@numior/vue';
+import { NuiNumberField } from '@numior/kit';
 ```
 
 ## Использование

@@ -9,7 +9,7 @@ For a field that opens a calendar in a popover, use a [Date picker](/en/componen
 ## Installation
 
 ```ts install
-import { NuiCalendar } from '@numior/vue';
+import { NuiCalendar } from '@numior/kit';
 ```
 
 ## Usage

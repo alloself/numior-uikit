@@ -18,7 +18,7 @@ progress as a fraction from 0 to 1 and a `signal` to cancel the request.
 
 ```ts
 import { ref } from 'vue';
-import { useUploadQueue, type UploadItem } from '@numior/vue';
+import { useUploadQueue, type UploadItem } from '@numior/kit';
 
 const items = ref<UploadItem<{ url: string }>[]>([]);
 

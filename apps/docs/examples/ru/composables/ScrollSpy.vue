@@ -23,8 +23,7 @@
 
 <script setup lang="ts">
 import { useTemplateRef } from 'vue';
-import { NuiButton } from '@numior/vue';
-import { useScrollSpy } from '@numior/primitives';
+import { NuiButton, useScrollSpy } from '@numior/kit';
 
 const root = useTemplateRef<HTMLElement>('root');
 

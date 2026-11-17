@@ -34,8 +34,8 @@ const manyIcons: McpData = {
 
 const STYLED = `
 <script setup lang="ts">
-import { NuiButton, NuiSelect } from '@numior/vue';
-import '@numior/vue/styles.css';
+import { NuiButton, NuiSelect } from '@numior/kit';
+import '@numior/kit/styles.css';
 </script>
 `;
 
@@ -73,8 +73,8 @@ ${STYLED}
 </template>
 <script setup lang="ts">
 import NuiFancy from './NuiFancy.vue';
-import { NuiButton as Action } from '@numior/vue';
-import '@numior/vue/styles.css';
+import { NuiButton as Action } from '@numior/kit';
+import '@numior/kit/styles.css';
 </script>`);
 
     expect(file.messages).toEqual(['`NuiButton` has no prop `varient`.']);
@@ -136,8 +136,8 @@ ${STYLED}`);
   <NuiTable :row-height="40" />
 </template>
 <script setup lang="ts">
-import '@numior/vue/styles.css';
-import '@numior/table/styles.css';
+import '@numior/kit/styles.css';
+import '@numior/kit/table/styles.css';
 </script>`);
 
     expect(file.hints).toEqual(['Use one of: `auto`. Bind a number as `:rowHeight="40"`.']);
@@ -157,10 +157,10 @@ import '@numior/table/styles.css';
 
   it('reports an import of a name the package does not export with the package that does', () => {
     const file = CheckedFile.of(`<script setup lang="ts">
-import { NuiButon, NuiForm, type NuiButtonVariant } from '@numior/vue';
-import Kit from '@numior/vue';
+import { NuiButon, NuiForm, type NuiButtonVariant } from '@numior/kit';
+import Kit from '@numior/kit';
 import { anything } from '@numior/unknown';
-import * as kit from '@numior/vue';
+import * as kit from '@numior/kit';
 </script>`);
 
     expect(file.codes).toEqual(['unknown-export', 'unknown-export', 'unknown-export']);
@@ -168,8 +168,8 @@ import * as kit from '@numior/vue';
 
     expect(file.hints).toEqual([
       'Did you mean `NuiButton`?',
-      '`NuiForm` is exported by `@numior/forms`.',
-      "Import names in braces: `import { … } from '@numior/vue'`.",
+      '`NuiForm` is exported by `@numior/kit/forms`.',
+      "Import names in braces: `import { … } from '@numior/kit'`.",
     ]);
   });
 
@@ -180,8 +180,8 @@ import * as kit from '@numior/vue';
   <NuiButton />
 </template>
 <script setup lang="ts">
-import '@numior/vue/styles/field.css';
-import '@numior/vue/styles/button.css';
+import '@numior/kit/styles/field.css';
+import '@numior/kit/styles/button.css';
 </script>`);
 
     expect(file.codes).toEqual(['missing-styles']);
@@ -189,7 +189,7 @@ import '@numior/vue/styles/button.css';
     expect(file.messages).toEqual(['The styles of `NuiSelect` are not imported in this file.']);
 
     expect(file.hints[0]).toBe(
-      'Import `@numior/vue/styles/list.css`, `@numior/vue/styles/select.css` or `@numior/vue/styles.css`. If the app entry (main.ts or a global CSS file) already imports them, ignore this warning.',
+      'Import `@numior/kit/styles/list.css`, `@numior/kit/styles/select.css` or `@numior/kit/styles.css`. If the app entry (main.ts or a global CSS file) already imports them, ignore this warning.',
     );
   });
 
@@ -199,8 +199,8 @@ import '@numior/vue/styles/button.css';
   <NuiTable />
 </template>
 <style>
-@import '@numior/vue/styles.css';
-@import url('@numior/table/styles.css');
+@import '@numior/kit/styles.css';
+@import url('@numior/kit/table/styles.css');
 </style>`);
 
     expect(file.diagnostics).toEqual([]);
@@ -282,7 +282,7 @@ ${STYLED}
 
   it('reports a script it cannot parse', () => {
     const file = CheckedFile.of(`<script setup lang="ts">
-import { NuiButton } from '@numior/vue'
+import { NuiButton } from '@numior/kit'
 const = 1;
 </script>`);
 
@@ -296,7 +296,7 @@ const = 1;
   <NuiButton zzzzzzzz="1" @qqqqqqqq="x" v-model:shown="y" />
 </template>
 <script setup lang="ts">
-import { qwertyuiop } from '@numior/vue';
+import { qwertyuiop } from '@numior/kit';
 </script>
 <style>
 .nui-dialog__panel { color: red; }
@@ -307,7 +307,7 @@ import { qwertyuiop } from '@numior/vue';
 
     expect(file.hints).toEqual([
       'list_components shows the available components.',
-      'Import `@numior/vue/styles/button.css`. If the app entry (main.ts or a global CSS file) already imports them, ignore this warning.',
+      'Import `@numior/kit/styles/button.css`. If the app entry (main.ts or a global CSS file) already imports them, ignore this warning.',
       'get_component NuiButton lists its props and models.',
       'get_component NuiButton lists its events.',
       '`NuiButton` has no models.',
@@ -327,7 +327,7 @@ import { qwertyuiop } from '@numior/vue';
     ]);
 
     expect(file.hints).toEqual([
-      'Подключите `@numior/vue/styles/button.css` или `@numior/vue/styles.css`. Если их уже подключает точка входа (main.ts или общий CSS-файл), предупреждение можно не учитывать.',
+      'Подключите `@numior/kit/styles/button.css` или `@numior/kit/styles.css`. Если их уже подключает точка входа (main.ts или общий CSS-файл), предупреждение можно не учитывать.',
       'Возможно, имелось в виду `variant`.',
     ]);
   });
@@ -342,8 +342,8 @@ import { qwertyuiop } from '@numior/vue';
   <NuiTable row-height="40" />
 </template>
 <script setup lang="ts">
-import { NuiForm, NuiButon, qwertyuiop } from '@numior/vue';
-import Kit from '@numior/vue';
+import { NuiForm, NuiButon, qwertyuiop } from '@numior/kit';
+import Kit from '@numior/kit';
 </script>
 <style>
 .nui-dialog__panel { color: red; }
@@ -367,10 +367,10 @@ import Kit from '@numior/vue';
       'У `NuiSelect` нет события `lod`.',
       'Стили `NuiTable` не подключены в этом файле.',
       '`NuiTable` не принимает `rowHeight="40"`.',
-      'В `@numior/vue` нет экспорта `NuiForm`.',
-      'В `@numior/vue` нет экспорта `NuiButon`.',
-      'В `@numior/vue` нет экспорта `qwertyuiop`.',
-      'В `@numior/vue` нет экспорта по умолчанию.',
+      'В `@numior/kit` нет экспорта `NuiForm`.',
+      'В `@numior/kit` нет экспорта `NuiButon`.',
+      'В `@numior/kit` нет экспорта `qwertyuiop`.',
+      'В `@numior/kit` нет экспорта по умолчанию.',
       '`.nui-dialog__panel` стилизует снаружи часть `nui-dialog__panel` компонента `NuiDialog`.',
       '`.bar .nui-button` стилизует снаружи блок `nui-button` компонента `NuiButton`.',
     ]);
@@ -378,21 +378,21 @@ import Kit from '@numior/vue';
     expect(file.hints).toEqual([
       'Возможно, имелся в виду `NuiButton`.',
       'Список компонентов показывает list_components.',
-      'Подключите `@numior/vue/styles/button.css`. Если их уже подключает точка входа (main.ts или общий CSS-файл), предупреждение можно не учитывать.',
+      'Подключите `@numior/kit/styles/button.css`. Если их уже подключает точка входа (main.ts или общий CSS-файл), предупреждение можно не учитывать.',
       'Свойства и модели `NuiButton` показывает get_component.',
       'Допустимые значения: `solid`, `soft`, `outline`. `primary` — значение свойства `tone`.',
       'Допустимые значения: `solid`, `soft`, `outline`. Возможно, имелось в виду `outline`.',
       'События `NuiButton` показывает get_component.',
       'У `NuiButton` нет моделей.',
-      'Подключите `@numior/vue/styles/field.css`, `@numior/vue/styles/list.css`, `@numior/vue/styles/select.css`. Если их уже подключает точка входа (main.ts или общий CSS-файл), предупреждение можно не учитывать.',
+      'Подключите `@numior/kit/styles/field.css`, `@numior/kit/styles/list.css`, `@numior/kit/styles/select.css`. Если их уже подключает точка входа (main.ts или общий CSS-файл), предупреждение можно не учитывать.',
       'Модели компонента: `v-model`.',
       'Возможно, имелось в виду `load`.',
-      'Подключите `@numior/vue/styles.css`, `@numior/table/styles.css`, `@numior/table/styles/table.css`. Если их уже подключает точка входа (main.ts или общий CSS-файл), предупреждение можно не учитывать.',
+      'Подключите `@numior/kit/styles.css`, `@numior/kit/table/styles.css`, `@numior/kit/table/styles/table.css`. Если их уже подключает точка входа (main.ts или общий CSS-файл), предупреждение можно не учитывать.',
       'Допустимые значения: `auto`. Число передайте привязкой: `:rowHeight="40"`.',
-      '`NuiForm` экспортирует `@numior/forms`.',
+      '`NuiForm` экспортирует `@numior/kit/forms`.',
       'Возможно, имелось в виду `NuiButton`.',
       'Компоненты и их пакеты показывает list_components.',
-      "Импортируйте имена в фигурных скобках: `import { … } from '@numior/vue'`.",
+      "Импортируйте имена в фигурных скобках: `import { … } from '@numior/kit'`.",
       'Меняйте вид через свойства, свою обёртку или токены темы (list_tokens).',
       'Меняйте вид через свойства (`variant`), свою обёртку или токены темы (list_tokens). Компонент читает `--nui-control-height-md`. Чтобы разместить компонент (ширина, отступы, сетка), дайте класс своей обёртке.',
     ]);

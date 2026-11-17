@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiTree } from '@numior/vue';
+import { NuiTree } from '@numior/kit';
 import { categories } from '#demo/products';
 
 const category = ref<string | null>('tables');

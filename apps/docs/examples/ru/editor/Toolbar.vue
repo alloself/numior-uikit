@@ -14,8 +14,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiEditor, type NuiEditorToolbarMode } from '@numior/editor-vue';
-import { NuiToggleGroup, type NuiToggleItem } from '@numior/vue';
+import { NuiEditor, type NuiEditorToolbarMode } from '@numior/kit/editor';
+import { NuiToggleGroup, type NuiToggleItem } from '@numior/kit';
 
 const mode = ref<NuiEditorToolbarMode | null>('both');
 

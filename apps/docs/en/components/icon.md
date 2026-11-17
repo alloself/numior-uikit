@@ -9,7 +9,7 @@ Each icon loads separately, the first time it is needed.
 ## Installation
 
 ```ts install
-import { NuiIcon } from '@numior/vue';
+import { NuiIcon } from '@numior/kit';
 ```
 
 ## Usage
@@ -34,7 +34,7 @@ Pass your icons to `icons` of the `createNuiConfig` plugin:
 
 ```ts
 import { createApp } from 'vue';
-import { createNuiConfig, lazyIcon } from '@numior/vue';
+import { createNuiConfig, lazyIcon } from '@numior/kit';
 import CheckIcon from './icons/CheckIcon.vue';
 
 createApp(App)

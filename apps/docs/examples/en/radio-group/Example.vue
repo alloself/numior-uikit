@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiRadioGroup } from '@numior/vue';
+import { NuiRadioGroup } from '@numior/kit';
 import { DELIVERIES } from '#demo/orders';
 
 const delivery = ref('courier');

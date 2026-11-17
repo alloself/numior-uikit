@@ -41,7 +41,6 @@
 
 <script setup lang="ts">
 import { promiseTimeout } from '@vueuse/core';
-import { useToast } from '@numior/primitives';
 import {
   NuiCard,
   NuiCardContent,
@@ -52,8 +51,17 @@ import {
   NuiCheckbox,
   NuiInput,
   NuiLink,
-} from '@numior/vue';
-import { NuiForm, NuiFormError, NuiFormField, email, min, required, useForm } from '@numior/forms';
+  useToast,
+} from '@numior/kit';
+import {
+  NuiForm,
+  NuiFormError,
+  NuiFormField,
+  email,
+  min,
+  required,
+  useForm,
+} from '@numior/kit/forms';
 import { team } from '#demo/team';
 
 const emailRules = [required(), email()];

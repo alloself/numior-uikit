@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiCollapsible } from '@numior/vue';
+import { NuiCollapsible } from '@numior/kit';
 import { orders } from '#demo/orders';
 
 const money = new Intl.NumberFormat('ru-RU', {

@@ -12,8 +12,8 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { NuiField, NuiSelect } from '@numior/vue';
-import { kitControls } from '@numior/vue/controls';
+import { NuiField, NuiSelect } from '@numior/kit';
+import { kitControls } from '@numior/kit/controls';
 
 const kinds = [
   { value: 'text', label: 'Text' },

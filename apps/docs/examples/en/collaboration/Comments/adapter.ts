@@ -1,4 +1,4 @@
-import type { CommentThread, CommentsAdapter } from '@numior/collaboration';
+import type { CommentThread, CommentsAdapter } from '@numior/kit/collaboration';
 
 const newId = (): string => Math.random().toString(36).slice(2, 10);
 

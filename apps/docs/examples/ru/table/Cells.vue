@@ -18,9 +18,8 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { plural } from '@numior/primitives';
-import { NuiBadge, type NuiTone } from '@numior/vue';
-import { NuiTable, type NuiTableColumn } from '@numior/table';
+import { NuiBadge, plural, type NuiTone } from '@numior/kit';
+import { NuiTable, type NuiTableColumn } from '@numior/kit/table';
 import { ORDER_STATUSES, orders, type Order, type OrderStatus } from '#demo/orders';
 
 const latest = orders.slice(-5);

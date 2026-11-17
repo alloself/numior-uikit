@@ -18,8 +18,7 @@
 ## Установка
 
 ```ts install
-import { NuiToaster } from '@numior/vue';
-import { useToast } from '@numior/primitives';
+import { NuiToaster, useToast } from '@numior/kit';
 ```
 
 ## Примеры

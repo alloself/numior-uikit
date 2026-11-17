@@ -7,7 +7,7 @@
 ## Установка
 
 ```ts install
-import { NuiCode } from '@numior/vue';
+import { NuiCode } from '@numior/kit';
 ```
 
 ## Использование
@@ -40,11 +40,11 @@ import { NuiCode } from '@numior/vue';
 
 ## Подключите подсветку
 
-Установите `shiki` и передайте подсветчик на Shiki в плагин, и блоки с `language` раскрасятся:
+Передайте подсветчик на Shiki в плагин, и блоки с `language` раскрасятся:
 
 ```ts
-import { createNuiConfig } from '@numior/vue';
-import { createShikiHighlighter } from '@numior/vue/shiki';
+import { createNuiConfig } from '@numior/kit';
+import { createShikiHighlighter } from '@numior/kit/shiki';
 
 app.use(createNuiConfig({ highlighter: createShikiHighlighter() }));
 ```

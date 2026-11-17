@@ -7,7 +7,7 @@ Sections stacked under each other, with one or several open at a time.
 ## Installation
 
 ```ts install
-import { NuiAccordion, NuiAccordionItem } from '@numior/vue';
+import { NuiAccordion, NuiAccordionItem } from '@numior/kit';
 ```
 
 ## Usage

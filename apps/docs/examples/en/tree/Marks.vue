@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiTree, type NuiTreeItem } from '@numior/vue';
+import { NuiTree, type NuiTreeItem } from '@numior/kit';
 import { categories, products, type Category } from '#demo/products';
 
 const countOf = (category: Category): number =>

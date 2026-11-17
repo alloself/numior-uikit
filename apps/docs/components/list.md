@@ -10,7 +10,7 @@
 ## Установка
 
 ```ts install
-import { NuiList, NuiListItem } from '@numior/vue';
+import { NuiList, NuiListItem } from '@numior/kit';
 ```
 
 ## Использование

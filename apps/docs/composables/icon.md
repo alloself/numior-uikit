@@ -25,7 +25,7 @@ Lucide. Встроенная иконка загружается при перв
 </template>
 
 <script setup lang="ts">
-import { useIcon } from '@numior/vue';
+import { useIcon } from '@numior/kit';
 
 const close = useIcon('x');
 </script>

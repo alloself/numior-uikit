@@ -26,8 +26,8 @@
 
 <script setup lang="ts">
 import { groupBy, range, sumBy } from 'lodash-es';
-import { NuiChart, type ChartSpec } from '@numior/charts';
-import { NuiCard, NuiCardContent, NuiCardHeader, NuiCardTitle } from '@numior/vue';
+import { NuiChart, type ChartSpec } from '@numior/kit/charts';
+import { NuiCard, NuiCardContent, NuiCardHeader, NuiCardTitle } from '@numior/kit';
 import { ordersOf } from '#demo/many-orders';
 
 const DAYS = 30;

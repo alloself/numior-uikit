@@ -1,5 +1,5 @@
-import { contentSchema } from '@numior/content';
-import type { DocJSON } from '@numior/editor-core';
+import { contentSchema } from '@numior/kit/content';
+import type { DocJSON } from '@numior/kit/editor-core';
 
 const MARKETPLACE = '{ "sku": "S-101", "fabric": "Gray linen", "stock": 120 }';
 

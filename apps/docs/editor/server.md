@@ -23,7 +23,7 @@
 `webSocketTransport`:
 
 ```ts
-import type { CollabTransport } from '@numior/collaboration';
+import type { CollabTransport } from '@numior/kit/collaboration';
 
 const parsed = (data: unknown): unknown => {
   if (typeof data !== 'string') {
@@ -100,8 +100,8 @@ export const webSocketTransport = (url: string | URL): CollabTransport => ({
 - хранить журнал целиком: клиент, долго работавший без сети, запросит `pull` от старой версии;
 - закрывать молчащие соединения, иначе курсор ушедшего участника останется у остальных.
 
-Типы всех сообщений экспортирует `@numior/collaboration`: `ClientMessage`, `ServerMessage` и вложенные
-в них. `parseClientMessage` из `@numior/collaboration/room` проверяет поля сообщения клиента,
+Типы всех сообщений экспортирует `@numior/kit/collaboration`: `ClientMessage`, `ServerMessage` и вложенные
+в них. `parseClientMessage` из `@numior/kit/collaboration/room` проверяет поля сообщения клиента,
 `parseServerMessage` — сообщения сервера.
 
 <SignatureReference :names="['parseClientMessage', 'parseServerMessage']" />
@@ -113,16 +113,16 @@ export const webSocketTransport = (url: string | URL): CollabTransport => ({
 
 ```ts
 import { WebSocketServer } from 'ws';
-import { ClientMessageKind, type ClientMessage } from '@numior/collaboration';
+import { ClientMessageKind, type ClientMessage } from '@numior/kit/collaboration';
 import {
   createRoom,
   editorAuthority,
   parseClientMessage,
   type Room,
   type RoomPeer,
-} from '@numior/collaboration/room';
-import { contentSchema } from '@numior/content';
-import { createEmptyDoc } from '@numior/editor-core';
+} from '@numior/kit/collaboration/room';
+import { contentSchema } from '@numior/kit/content';
+import { createEmptyDoc } from '@numior/kit/editor-core';
 
 const rooms = new Map<string, Room>();
 
@@ -214,10 +214,10 @@ server.on('connection', (socket) => {
 
 ### Книга
 
-Для документов книги передайте в комнату `workbookAuthority` из `@numior/spreadsheet/core`:
+Для документов книги передайте в комнату `workbookAuthority` из `@numior/kit/spreadsheet/core`:
 
 ```ts
-import { workbookAuthority } from '@numior/spreadsheet/core';
+import { workbookAuthority } from '@numior/kit/spreadsheet/core';
 
 const room = createRoom(workbookAuthority([{ kind: 'addSheet', name: 'Лист1', index: 0 }]));
 ```
@@ -250,9 +250,9 @@ server.on('connection', (socket, request) => {
 Создайте комнаты в памяти страницы через `createLoopback`, когда сервер не нужен: в демо и тестах.
 
 ```ts
-import { createLoopback, editorAuthority } from '@numior/collaboration/room';
-import { contentSchema } from '@numior/content';
-import { fromHTML } from '@numior/editor-core';
+import { createLoopback, editorAuthority } from '@numior/kit/collaboration/room';
+import { contentSchema } from '@numior/kit/content';
+import { fromHTML } from '@numior/kit/editor-core';
 
 const loopback = createLoopback({
   authorityFor: () => editorAuthority(fromHTML(contentSchema, product.descriptionHtml)),
@@ -271,12 +271,34 @@ const mariaLink = loopback.link();
 
 ## Yjs
 
-Подключите `yjsBinding` из `@numior/collaboration/yjs`, если документы уже живут в Yjs. Документ
+Подключите `yjsBinding` из `@numior/kit/collaboration/yjs`, если документы уже живут в Yjs. Документ
 хранится в `Y.Doc`, а доставку правок и сервер выбираете вы.
+
+Yjs в Numior UI не входит, поставьте его рядом:
+
+::: code-group
+
+```sh [pnpm]
+pnpm add yjs
+```
+
+```sh [npm]
+npm install yjs
+```
+
+```sh [yarn]
+yarn add yjs
+```
+
+```sh [bun]
+bun add yjs
+```
+
+:::
 
 ```ts
 import * as Y from 'yjs';
-import { yjsBinding } from '@numior/collaboration/yjs';
+import { yjsBinding } from '@numior/kit/collaboration/yjs';
 
 const ydoc = new Y.Doc();
 

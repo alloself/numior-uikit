@@ -10,7 +10,7 @@
 ## Установка
 
 ```ts install
-import { NuiInput } from '@numior/vue';
+import { NuiInput } from '@numior/kit';
 ```
 
 ## Использование

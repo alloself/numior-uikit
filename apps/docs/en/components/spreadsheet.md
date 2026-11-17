@@ -13,10 +13,10 @@ the sheet is shown. Otherwise the component creates its own.
 ## Installation
 
 ```ts install:packages
-import { NuiSpreadsheet } from '@numior/spreadsheet';
+import { NuiSpreadsheet } from '@numior/kit/spreadsheet';
 ```
 
-The book model and formulas live in `@numior/spreadsheet/core`. That entry works without Vue,
+The book model and formulas live in `@numior/kit/spreadsheet/core`. That entry works without Vue,
 including on a server.
 
 ## Examples
@@ -57,8 +57,7 @@ The function receives the sheet and the selection.
 
 ### Editing together
 
-`useCollabWorkbook` from `@numior/collaboration/spreadsheet` connects a book to a server. It needs
-`@numior/spreadsheet` installed next to `@numior/collaboration`.
+`useCollabWorkbook` from `@numior/kit/collaboration/spreadsheet` connects a book to a server.
 
 ```vue
 <template>
@@ -77,11 +76,11 @@ The function receives the sheet and the selection.
 </template>
 
 <script setup lang="ts">
-import { webSocketTransport } from '@numior/collaboration';
-import { useCollabWorkbook } from '@numior/collaboration/spreadsheet';
-import { NuiCollabFailure } from '@numior/collaboration/vue';
-import { NuiSpreadsheet } from '@numior/spreadsheet';
-import { createCalculator, createWorkbook } from '@numior/spreadsheet/core';
+import { webSocketTransport } from '@numior/kit/collaboration';
+import { useCollabWorkbook } from '@numior/kit/collaboration/spreadsheet';
+import { NuiCollabFailure } from '@numior/kit/collaboration/vue';
+import { NuiSpreadsheet } from '@numior/kit/spreadsheet';
+import { createCalculator, createWorkbook } from '@numior/kit/spreadsheet/core';
 
 const book = createWorkbook();
 const calculator = createCalculator(book);

@@ -24,10 +24,10 @@
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import { contentSchema } from '@numior/content';
-import type { LoopbackLink } from '@numior/collaboration/room';
-import { NuiCollabCarets, NuiCollabPresence, useCollabEditor } from '@numior/collaboration/vue';
-import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
+import { contentSchema } from '@numior/kit/content';
+import type { LoopbackLink } from '@numior/kit/collaboration/room';
+import { NuiCollabCarets, NuiCollabPresence, useCollabEditor } from '@numior/kit/collaboration/vue';
+import { NuiEditor, type NuiEditorApi } from '@numior/kit/editor';
 import type { Employee } from '#demo/team';
 
 const { link, user } = defineProps<{ link: LoopbackLink; user: Employee }>();

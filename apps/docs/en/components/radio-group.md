@@ -10,7 +10,7 @@ one.
 ## Installation
 
 ```ts install
-import { NuiRadio, NuiRadioGroup } from '@numior/vue';
+import { NuiRadio, NuiRadioGroup } from '@numior/kit';
 ```
 
 ## Usage

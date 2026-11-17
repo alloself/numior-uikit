@@ -78,7 +78,6 @@
 
 <script setup lang="ts">
 import { promiseTimeout } from '@vueuse/core';
-import { useToast } from '@numior/primitives';
 import {
   NuiInput,
   NuiNumberField,
@@ -86,9 +85,10 @@ import {
   NuiSwitch,
   NuiTextarea,
   NuiUpload,
+  useToast,
   type NuiUploadAdapter,
   type NuiUploadItem,
-} from '@numior/vue';
+} from '@numior/kit';
 import {
   NuiForm,
   NuiFormError,
@@ -97,7 +97,7 @@ import {
   pattern,
   required,
   useForm,
-} from '@numior/forms';
+} from '@numior/kit/forms';
 import { categories, products } from '#demo/products';
 
 interface ProductDraft {

@@ -8,8 +8,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { groupBy, range, sumBy } from 'lodash-es';
-import { NuiChart, type ChartKind, type ChartSpec } from '@numior/charts';
-import { NuiToggleGroup, type NuiToggleItem } from '@numior/vue';
+import { NuiChart, type ChartKind, type ChartSpec } from '@numior/kit/charts';
+import { NuiToggleGroup, type NuiToggleItem } from '@numior/kit';
 import { ordersOf } from '#demo/many-orders';
 
 const HEIGHT = 260;

@@ -10,7 +10,7 @@ nothing itself: your app or a [Smart form](/en/components/smart-form) decides wh
 ## Installation
 
 ```ts install
-import { NuiStepper } from '@numior/vue';
+import { NuiStepper } from '@numior/kit';
 ```
 
 ## Usage

@@ -11,7 +11,7 @@
 
 ```ts
 import { computed } from 'vue';
-import { useLocale } from '@numior/vue';
+import { useLocale } from '@numior/kit';
 
 const { locale } = defineProps<{ locale?: string | undefined }>();
 const current = useLocale(() => locale);

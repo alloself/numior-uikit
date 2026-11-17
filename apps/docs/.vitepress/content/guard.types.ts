@@ -22,7 +22,6 @@ export interface ApiEntry extends CatalogEntry {
 
 export interface ExampleContext {
   readonly vocabulary: ReadonlySet<string>;
-  readonly misplaced: ReadonlySet<string>;
 }
 
 export type TermList = Readonly<Record<ExampleLocale, readonly (readonly [RegExp, string])[]>>;

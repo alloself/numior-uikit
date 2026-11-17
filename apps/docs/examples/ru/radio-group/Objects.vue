@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiRadio, NuiRadioGroup } from '@numior/vue';
+import { NuiRadio, NuiRadioGroup } from '@numior/kit';
 
 interface Warehouse {
   readonly code: string;

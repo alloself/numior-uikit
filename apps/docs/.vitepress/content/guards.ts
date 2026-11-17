@@ -11,12 +11,13 @@ import {
   tautologyGuards,
   textEntriesOf,
 } from './catalog-guards.ts';
-import { exampleGuards, misplacedExports, vocabularyOf } from './example-guards.ts';
+import { exampleGuards, vocabularyOf } from './example-guards.ts';
 import type { ExampleContext, GuardProblem } from './guard.types.ts';
 import { navigationTexts } from '../navigation.ts';
 import { installGuards } from './install-guards.ts';
 import { kitCatalogGuards } from './kit-catalog-guards.ts';
-import { styledPackages } from '../reference/kit-packages.ts';
+import { kitEntries } from '../reference/kit-entries.ts';
+import { catalogPackageGuards, packageGuards } from './package-guards.ts';
 import { openingGuards, pageGuards } from './page-guards.ts';
 
 const LOCALES: readonly ExampleLocale[] = ['ru', 'en'];
@@ -34,7 +35,6 @@ const API_DIR = 'api';
 const NAVIGATION_FILE = '.vitepress/navigation.ts';
 const TEXTS_FILE = '.vitepress/theme/texts.ts';
 const HOME_FILE = '.vitepress/theme/home-content.ts';
-const VUE_INDEX = 'packages/vue/src/index.ts';
 const PACKAGES_DIR = 'packages';
 const MESSAGES_SUFFIX = '.messages.ts';
 
@@ -132,17 +132,16 @@ const themeGuards = async (docsRoot: string): Promise<GuardProblem[]> => {
   ];
 };
 
-const contextOf = (docsRoot: string, repoRoot: string, locale: ExampleLocale): ExampleContext => ({
+const contextOf = (docsRoot: string, locale: ExampleLocale): ExampleContext => ({
   vocabulary: vocabularyOf(
     walk(join(docsRoot, 'demo', locale), new Set()).map((file) => readFileSync(file, 'utf8')),
     locale,
   ),
-  misplaced: misplacedExports(readFileSync(join(repoRoot, VUE_INDEX), 'utf8')),
 });
 
-const examplesGuards = (docsRoot: string, repoRoot: string): GuardProblem[] =>
+const examplesGuards = (docsRoot: string): GuardProblem[] =>
   LOCALES.flatMap((locale) => {
-    const context = contextOf(docsRoot, repoRoot, locale);
+    const context = contextOf(docsRoot, locale);
 
     return walk(join(docsRoot, 'examples', locale), new Set()).flatMap((file) =>
       file.endsWith('.vue')
@@ -156,6 +155,19 @@ const examplesGuards = (docsRoot: string, repoRoot: string): GuardProblem[] =>
     );
   });
 
+const SAMPLE_DIRS = ['examples', 'demo'];
+const SAMPLE_FILE_RE = /\.(?:vue|ts)$/;
+
+const sampleSources = (docsRoot: string): string[] =>
+  SAMPLE_DIRS.flatMap((dir) =>
+    walk(join(docsRoot, dir), new Set()).filter((file) => SAMPLE_FILE_RE.test(file)),
+  );
+
+const catalogFiles = (docsRoot: string): string[] => [
+  ...walk(join(docsRoot, API_DIR), new Set()).filter((file) => file.endsWith('.ts')),
+  ...[NAVIGATION_FILE, TEXTS_FILE, HOME_FILE].map((file) => join(docsRoot, file)),
+];
+
 const kitGuards = (repoRoot: string): GuardProblem[] =>
   walk(join(repoRoot, PACKAGES_DIR), KIT_SKIPPED).flatMap((file) =>
     file.endsWith(MESSAGES_SUFFIX)
@@ -168,17 +180,24 @@ export const collectGuardProblems = async (
   repoRoot: string,
 ): Promise<GuardProblem[]> => {
   const pages = pagesOf(docsRoot);
-  const styled = styledPackages(repoRoot);
+  const { modules } = kitEntries(repoRoot);
 
   return [
     ...Object.entries(pages).flatMap(([page, source]) => [
       ...pageGuards(page, source),
-      ...installGuards(page, source, styled),
+      ...installGuards(page, source, modules),
+      ...packageGuards(page, source),
     ]),
+    ...sampleSources(docsRoot).flatMap((file) =>
+      packageGuards(slashed(relative(docsRoot, file)), readFileSync(file, 'utf8')),
+    ),
+    ...catalogFiles(docsRoot).flatMap((file) =>
+      catalogPackageGuards(slashed(relative(docsRoot, file)), readFileSync(file, 'utf8')),
+    ),
     ...openingGuards(pages),
     ...(await apiGuards(docsRoot)),
     ...(await themeGuards(docsRoot)),
-    ...examplesGuards(docsRoot, repoRoot),
+    ...examplesGuards(docsRoot),
     ...kitGuards(repoRoot),
   ];
 };

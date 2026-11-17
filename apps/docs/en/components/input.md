@@ -9,7 +9,7 @@ The label, the hint and the error work as described on the [Field](/en/component
 ## Installation
 
 ```ts install
-import { NuiInput } from '@numior/vue';
+import { NuiInput } from '@numior/kit';
 ```
 
 ## Usage

@@ -16,7 +16,7 @@ Sidebar всегда на экране и делит его с содержим�
 ## Установка
 
 ```ts install
-import { NuiSidebar, NuiSidebarContent, NuiSidebarGroup, NuiSidebarItem } from '@numior/vue';
+import { NuiSidebar, NuiSidebarContent, NuiSidebarGroup, NuiSidebarItem } from '@numior/kit';
 ```
 
 ## Примеры

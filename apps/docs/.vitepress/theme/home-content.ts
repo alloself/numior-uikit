@@ -36,7 +36,7 @@ const ru: HomeContent = {
     { text: 'Начать', link: '/guide/getting-started', primary: true },
     { text: 'Компоненты', link: '/components/button', primary: false },
   ],
-  install: 'pnpm add @numior/vue @numior/tokens',
+  install: 'pnpm add @numior/kit',
   screen: SCREEN_BLOCK,
   sections: [
     {
@@ -99,7 +99,7 @@ const en: HomeContent = {
     { text: 'Get started', link: '/en/guide/getting-started', primary: true },
     { text: 'Components', link: '/en/components/button', primary: false },
   ],
-  install: 'pnpm add @numior/vue @numior/tokens',
+  install: 'pnpm add @numior/kit',
   screen: SCREEN_BLOCK,
   sections: [
     {

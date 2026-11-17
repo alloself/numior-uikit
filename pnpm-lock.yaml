@@ -130,6 +130,9 @@ importers:
       '@numior/forms':
         specifier: workspace:*
         version: link:../../packages/forms
+      '@numior/kit':
+        specifier: workspace:*
+        version: link:../../packages/kit
       '@numior/primitives':
         specifier: workspace:*
         version: link:../../packages/primitives

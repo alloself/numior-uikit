@@ -13,5 +13,5 @@
 </template>
 
 <script setup lang="ts">
-import { NuiAccordion, NuiAccordionItem } from '@numior/vue';
+import { NuiAccordion, NuiAccordionItem } from '@numior/kit';
 </script>

@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiChip } from '@numior/vue';
+import { NuiChip } from '@numior/kit';
 ```
 
 ## Использование

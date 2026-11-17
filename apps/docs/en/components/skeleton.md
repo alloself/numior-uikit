@@ -7,7 +7,7 @@ A placeholder that holds the place of content while it loads.
 ## Installation
 
 ```ts install
-import { NuiSkeleton } from '@numior/vue';
+import { NuiSkeleton } from '@numior/kit';
 ```
 
 ## Usage

@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useFileDrop } from '@numior/primitives';
+import { useFileDrop } from '@numior/kit';
 
 const names = ref<string[]>([]);
 

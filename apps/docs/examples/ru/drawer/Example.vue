@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiButton, NuiDrawer } from '@numior/vue';
+import { NuiButton, NuiDrawer } from '@numior/kit';
 import { orders } from '#demo/orders';
 
 const open = ref(false);

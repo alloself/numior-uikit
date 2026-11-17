@@ -21,8 +21,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiInput } from '@numior/vue';
-import { NuiTable, type NuiTableColumn, type NuiTableFilters } from '@numior/table';
+import { NuiInput } from '@numior/kit';
+import { NuiTable, type NuiTableColumn, type NuiTableFilters } from '@numior/kit/table';
 import { ORDER_STATUSES, orders, type Order } from '#demo/orders';
 
 const money = new Intl.NumberFormat('ru-RU', {

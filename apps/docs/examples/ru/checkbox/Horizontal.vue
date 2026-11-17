@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiCheckboxGroup, type NuiOption } from '@numior/vue';
+import { NuiCheckboxGroup, type NuiOption } from '@numior/kit';
 
 const days = ref(['mon', 'wed']);
 

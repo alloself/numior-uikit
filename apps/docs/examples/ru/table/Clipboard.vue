@@ -23,7 +23,7 @@ import {
   type NuiTableClipboardScope,
   type NuiTableColumn,
   type NuiTableEditEvent,
-} from '@numior/table';
+} from '@numior/kit/table';
 
 interface Item {
   readonly sku: string;

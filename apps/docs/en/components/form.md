@@ -13,7 +13,7 @@ The checks come from a Zod, Valibot or ArkType schema or from the rules of the p
 ## Installation
 
 ```ts install
-import { NuiFieldArray, NuiForm, NuiFormField, useForm } from '@numior/forms';
+import { NuiFieldArray, NuiForm, NuiFormField, useForm } from '@numior/kit/forms';
 ```
 
 ## Examples

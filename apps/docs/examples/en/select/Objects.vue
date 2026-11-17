@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiSelect } from '@numior/vue';
+import { NuiSelect } from '@numior/kit';
 import { customers, type Customer } from '#demo/customers';
 
 const customer = ref<Customer | null>(null);

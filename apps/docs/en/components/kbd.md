@@ -10,7 +10,7 @@ on Mac and Ctrl K on Windows and Linux.
 ## Installation
 
 ```ts install
-import { NuiKbd } from '@numior/vue';
+import { NuiKbd } from '@numior/kit';
 ```
 
 ## Usage

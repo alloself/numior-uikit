@@ -48,8 +48,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useMediaQuery } from '@numior/primitives';
-import { NuiEmpty, NuiSplitter } from '@numior/vue';
+import { NuiEmpty, NuiSplitter, useMediaQuery } from '@numior/kit';
 import { customers } from '#demo/customers';
 import { ordersOf } from '#demo/many-orders';
 import type { Order } from '#demo/orders';

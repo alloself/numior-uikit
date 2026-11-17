@@ -9,7 +9,7 @@ Put the reason in `title` and `description`, and the next step in the `actions` 
 ## Installation
 
 ```ts install
-import { NuiEmpty } from '@numior/vue';
+import { NuiEmpty } from '@numior/kit';
 ```
 
 ## Usage

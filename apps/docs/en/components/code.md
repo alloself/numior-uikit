@@ -7,7 +7,7 @@ A code block with a copy button, line numbers and syntax highlighting.
 ## Installation
 
 ```ts install
-import { NuiCode } from '@numior/vue';
+import { NuiCode } from '@numior/kit';
 ```
 
 ## Usage
@@ -40,11 +40,11 @@ Pass the file name to `title`.
 
 ## Connect highlighting
 
-Install `shiki` and pass the Shiki highlighter to the plugin:
+Pass the Shiki highlighter to the plugin:
 
 ```ts
-import { createNuiConfig } from '@numior/vue';
-import { createShikiHighlighter } from '@numior/vue/shiki';
+import { createNuiConfig } from '@numior/kit';
+import { createShikiHighlighter } from '@numior/kit/shiki';
 
 app.use(createNuiConfig({ highlighter: createShikiHighlighter() }));
 ```

@@ -13,7 +13,7 @@ the list scrolls on its own, and Escape cancels the drag.
 ## Usage
 
 ```ts
-import { useReorder } from '@numior/vue';
+import { useReorder } from '@numior/kit';
 
 const reorder = useReorder({
   axis: 'y',
@@ -63,7 +63,7 @@ A press travels from the element under the pointer up to the container, and `sto
 stops it. The column and row grips of [Table](/en/components/table/columns) work this way.
 
 ```ts
-import { createPressTargets, usePointerSession, usePressTarget } from '@numior/primitives';
+import { createPressTargets, usePointerSession, usePressTarget } from '@numior/kit';
 
 const targets = createPressTargets();
 const session = usePointerSession();

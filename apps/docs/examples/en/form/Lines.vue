@@ -40,8 +40,8 @@
 </template>
 
 <script setup lang="ts">
-import { NuiNumberField, NuiSelect } from '@numior/vue';
-import { NuiFieldArray, NuiForm, NuiFormField, required, useForm } from '@numior/forms';
+import { NuiNumberField, NuiSelect } from '@numior/kit';
+import { NuiFieldArray, NuiForm, NuiFormField, required, useForm } from '@numior/kit/forms';
 import { products } from '#demo/products';
 
 interface Line {

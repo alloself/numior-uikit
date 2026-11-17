@@ -10,7 +10,7 @@
 ## Установка
 
 ```ts install
-import { NuiPagination } from '@numior/vue';
+import { NuiPagination } from '@numior/kit';
 ```
 
 ## Использование

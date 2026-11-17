@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiLink } from '@numior/vue';
+import { NuiLink } from '@numior/kit';
 ```
 
 ## Использование

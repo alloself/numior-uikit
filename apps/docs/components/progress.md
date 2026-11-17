@@ -9,7 +9,7 @@
 ## Установка
 
 ```ts install
-import { NuiProgress } from '@numior/vue';
+import { NuiProgress } from '@numior/kit';
 ```
 
 ## Использование

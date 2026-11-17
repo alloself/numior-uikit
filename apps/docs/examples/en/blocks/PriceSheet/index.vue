@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiSpreadsheet } from '@numior/spreadsheet';
+import { NuiSpreadsheet } from '@numior/kit/spreadsheet';
 import {
   createCalculator,
   createWorkbook,
@@ -25,7 +25,7 @@ import {
   numberValue,
   textValue,
   type LineLayout,
-} from '@numior/spreadsheet/core';
+} from '@numior/kit/spreadsheet/core';
 import { products } from '#demo/products';
 
 const HEADER = ['SKU', 'Name', 'Cost', 'Markup, %', 'Price', 'In stock', 'Value'];

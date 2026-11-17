@@ -3,6 +3,6 @@
 </template>
 
 <script setup lang="ts">
-import { NuiContent } from '@numior/content';
+import { NuiContent } from '@numior/kit/content';
 import { document } from './document';
 </script>

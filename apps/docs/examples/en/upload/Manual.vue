@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from 'vue';
 import { promiseTimeout } from '@vueuse/core';
-import { NuiButton, NuiUpload, type NuiUploadAdapter, type NuiUploadItem } from '@numior/vue';
+import { NuiButton, NuiUpload, type NuiUploadAdapter, type NuiUploadItem } from '@numior/kit';
 
 const STEPS = [0.2, 0.4, 0.6, 0.8, 1];
 

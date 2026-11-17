@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiTabs, type NuiTabDescriptor } from '@numior/vue';
+import { NuiTabs, type NuiTabDescriptor } from '@numior/kit';
 import { categories, products, type Product } from '#demo/products';
 
 const category = ref('lighting');

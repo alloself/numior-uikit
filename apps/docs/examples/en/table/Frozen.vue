@@ -17,7 +17,7 @@ import {
   type NuiTableCellRef,
   type NuiTableCellStyle,
   type NuiTableColumn,
-} from '@numior/table';
+} from '@numior/kit/table';
 
 interface Plan {
   readonly name: string;

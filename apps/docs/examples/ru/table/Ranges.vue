@@ -15,14 +15,14 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { plural } from '@numior/primitives';
-import type { NuiMenuEntry } from '@numior/vue';
+import { plural } from '@numior/kit';
+import type { NuiMenuEntry } from '@numior/kit';
 import {
   NuiTable,
   type NuiTableColumn,
   type NuiTableContextScope,
   type NuiTableRanges,
-} from '@numior/table';
+} from '@numior/kit/table';
 import { orders, type Order } from '#demo/orders';
 
 const latest = orders.slice(0, 5);

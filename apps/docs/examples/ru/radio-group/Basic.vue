@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiRadio, NuiRadioGroup } from '@numior/vue';
+import { NuiRadio, NuiRadioGroup } from '@numior/kit';
 
 const payment = ref('card');
 </script>

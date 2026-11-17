@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiButton, NuiMenu, type NuiMenuEntry } from '@numior/vue';
+import { NuiButton, NuiMenu, type NuiMenuEntry } from '@numior/kit';
 
 const actions: NuiMenuEntry[] = [
   { label: 'Открыть заказ', icon: 'eye' },

@@ -7,7 +7,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiCalendar, type NuiCalendarValue } from '@numior/vue';
+import { NuiCalendar, type NuiCalendarValue } from '@numior/kit';
 
 const plural = new Intl.PluralRules('ru-RU');
 

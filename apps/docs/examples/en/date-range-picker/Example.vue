@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiDateRangePicker, type NuiDateRange } from '@numior/vue';
+import { NuiDateRangePicker, type NuiDateRange } from '@numior/kit';
 
 const period = ref<NuiDateRange>({ start: '2026-09-01', end: '2026-09-30' });
 </script>

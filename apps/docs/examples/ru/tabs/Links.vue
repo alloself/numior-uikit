@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiTabs, type NuiTabLinkDescriptor } from '@numior/vue';
+import { NuiTabs, type NuiTabLinkDescriptor } from '@numior/kit';
 
 const page = ref('#tabs-orders');
 

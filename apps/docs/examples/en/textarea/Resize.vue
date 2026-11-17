@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiTextarea } from '@numior/vue';
+import { NuiTextarea } from '@numior/kit';
 
 const reply = ref('Thank you for the review! A new pillow arrives on Friday.');
 </script>

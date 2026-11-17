@@ -19,7 +19,7 @@ type NuiUploadAdapter<R> = (
 ## Установка
 
 ```ts install
-import { NuiUpload } from '@numior/vue';
+import { NuiUpload } from '@numior/kit';
 ```
 
 ## Использование

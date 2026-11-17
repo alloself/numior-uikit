@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiList, type NuiOption } from '@numior/vue';
+import { NuiList, type NuiOption } from '@numior/kit';
 import { DELIVERIES, type Delivery } from '#demo/orders';
 
 const methods: NuiOption<Delivery>[] = [

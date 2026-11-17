@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { uniqBy } from 'lodash-es';
 import { createChecker, type MetaCheckerOptions } from 'vue-component-meta';
 import { catalogReference } from './catalogs.ts';
 import { parseBlocks, parseTokens } from './css.ts';
@@ -8,6 +9,7 @@ import { enumerationMembers, exportedDeclarations } from './declarations.ts';
 import { applyDocs, checkDocs } from './docs.ts';
 import { exampleSources } from '../examples/modules.ts';
 import { parseIconAliases } from './icons.ts';
+import { kitEntries, type KitEntries } from './kit-entries.ts';
 import { componentReference } from './meta.ts';
 import { sceneProblems, type SceneSource } from './scenes.ts';
 import { componentEntries, familyFile, familyStyleImport } from './sources.ts';
@@ -134,6 +136,16 @@ const collectComponent = async (
   };
 };
 
+const kitFacing = (component: ComponentReference, kit: KitEntries): ComponentReference => ({
+  ...component,
+  package: kit.module(component.package),
+  styles:
+    component.styles === undefined
+      ? undefined
+      : { ...component.styles, import: kit.sheet(component.styles.import) },
+  stylesheets: component.stylesheets.map(kit.sheet),
+});
+
 const MEMBER_DEFAULT = /^[A-Z]\w*\.[A-Z]\w*$/;
 
 const unresolvedDefaults = (component: ComponentReference): string[] =>
@@ -172,11 +184,16 @@ export const buildReference = async (
   const problems: string[] = [];
   const sceneOf = sceneSourceOf(root);
   const sheets = kitStylesheets(root);
+  const kit = kitEntries(root);
 
   for (const entry of allEntries(root)) {
     const collected = await collectComponent(checker, entry, docs, members, sceneOf, sheets);
 
-    components[entry.name] = { ...collected.component, file: relative(root, entry.file) };
+    components[entry.name] = kitFacing(
+      { ...collected.component, file: relative(root, entry.file) },
+      kit,
+    );
+
     problems.push(...collected.problems, ...unresolvedDefaults(collected.component));
     if (collected.catalog === undefined) {
       continue;
@@ -191,14 +208,17 @@ export const buildReference = async (
       version: 1,
       components,
       catalogs,
-      declarations: [PRIMITIVES, ...ENTRIES].flatMap((entry) =>
-        exportedDeclarations(join(root, entry.types), entry.name, componentNames),
+      declarations: uniqBy(
+        [PRIMITIVES, ...ENTRIES].flatMap((entry) =>
+          exportedDeclarations(join(root, entry.types), kit.module(entry.name), componentNames),
+        ),
+        (declaration) => `${declaration.package}#${declaration.name}`,
       ),
       tokens: parseThemeTokens(readFileSync(join(root, 'packages/tokens/src/theme.css'), 'utf8')),
       icons: parseIconAliases(
         readFileSync(join(root, 'packages/primitives/src/icons/icon-aliases.ts'), 'utf8'),
       ),
-      stylesheets: sheets.order,
+      stylesheets: sheets.order.map(kit.sheet),
     },
     problems,
     undocumented: Object.keys(components).filter((name) => docs[name] === undefined),

@@ -11,16 +11,15 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { isString } from '@numior/primitives';
-import { NuiSelect, type NuiOption } from '@numior/vue';
-import { kitControls } from '@numior/vue/controls';
+import { NuiSelect, isString, type NuiOption } from '@numior/kit';
+import { kitControls } from '@numior/kit/controls';
 import {
   NuiTable,
   tableEditor,
   type NuiTableCellValue,
   type NuiTableColumn,
   type NuiTableEditEvent,
-} from '@numior/table';
+} from '@numior/kit/table';
 import { team } from '#demo/team';
 
 interface Task {

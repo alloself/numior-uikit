@@ -10,7 +10,7 @@ Pass the text in the default slot or in `label`. The hint and the error work as 
 ## Installation
 
 ```ts install
-import { NuiCheckbox, NuiCheckboxGroup } from '@numior/vue';
+import { NuiCheckbox, NuiCheckboxGroup } from '@numior/kit';
 ```
 
 ## Usage

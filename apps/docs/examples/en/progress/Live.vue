@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { promiseTimeout } from '@vueuse/core';
-import { NuiButton, NuiProgress } from '@numior/vue';
+import { NuiButton, NuiProgress } from '@numior/kit';
 
 const TOTAL = 1200;
 const BATCHES = [120, 340, 560, 780, 1010, 1200];

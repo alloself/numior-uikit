@@ -14,8 +14,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { groupBy, meanBy, range } from 'lodash-es';
-import { NuiChart, type ChartGaps, type ChartSpec, type ChartValue } from '@numior/charts';
-import { NuiToggleGroup, type NuiToggleItem } from '@numior/vue';
+import { NuiChart, type ChartGaps, type ChartSpec, type ChartValue } from '@numior/kit/charts';
+import { NuiToggleGroup, type NuiToggleItem } from '@numior/kit';
 import { ordersOf } from '#demo/many-orders';
 import type { Order } from '#demo/orders';
 

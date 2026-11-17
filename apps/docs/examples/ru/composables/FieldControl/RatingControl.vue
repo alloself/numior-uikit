@@ -15,8 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { useFieldControl } from '@numior/primitives';
-import { NuiButton } from '@numior/vue';
+import { NuiButton, useFieldControl } from '@numior/kit';
 
 const SCORES = [1, 2, 3, 4, 5];
 

@@ -10,8 +10,8 @@ const docs: DocsMap = {
         en: 'Shows the document without editing. The text can still be selected and copied, and the field takes focus. Buttons from `selectionActions` stay available.',
       },
       schema: {
-        ru: 'Схема документа: какие блоки и стили допустимы. По умолчанию — `contentSchema` из `@numior/content`.',
-        en: 'Document schema: which blocks and styles are allowed. Defaults to `contentSchema` from `@numior/content`.',
+        ru: 'Схема документа: какие блоки и стили допустимы. По умолчанию — `contentSchema` из `@numior/kit/content`.',
+        en: 'Document schema: which blocks and styles are allowed. Defaults to `contentSchema` from `@numior/kit/content`.',
       },
       placeholder: {
         ru: 'Текст в пустом документе.',

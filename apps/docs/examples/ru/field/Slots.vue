@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiField, NuiInput, NuiLink } from '@numior/vue';
+import { NuiField, NuiInput, NuiLink } from '@numior/kit';
 
 const promo = ref('');
 </script>

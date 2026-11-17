@@ -30,9 +30,8 @@
 <script setup lang="ts">
 import { computed, ref, useId } from 'vue';
 import { groupBy, orderBy, sortBy, sumBy, take, upperFirst } from 'lodash-es';
-import { NuiChart, type ChartHit, type ChartSpec } from '@numior/charts';
-import { monthKeyOf } from '@numior/primitives';
-import { NuiList, NuiListItem } from '@numior/vue';
+import { NuiChart, type ChartHit, type ChartSpec } from '@numior/kit/charts';
+import { NuiList, NuiListItem, monthKeyOf } from '@numior/kit';
 import { ordersOf } from '#demo/many-orders';
 
 const HEIGHT = 240;

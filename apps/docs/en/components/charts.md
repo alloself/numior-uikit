@@ -9,7 +9,7 @@ Hover a column or walk the columns with the arrow keys to see the value in a too
 ## Installation
 
 ```ts install:packages
-import { NuiChart } from '@numior/charts';
+import { NuiChart } from '@numior/kit/charts';
 ```
 
 Series colors come from the theme tokens `--nui-chart-1`…`--nui-chart-8`, so they follow the light and dark theme.
@@ -19,7 +19,7 @@ Series colors come from the theme tokens `--nui-chart-1`…`--nui-chart-8`, so t
 Describe the chart as a `ChartSpec` object and pass it to `spec`:
 
 ```ts
-import type { ChartSpec } from '@numior/charts';
+import type { ChartSpec } from '@numior/kit/charts';
 
 const revenue: ChartSpec = {
   kind: 'column',

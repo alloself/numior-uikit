@@ -35,8 +35,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { promiseTimeout } from '@vueuse/core';
-import { NuiInput } from '@numior/vue';
-import { NuiForm, NuiFormField, customAsync, pattern, required, useForm } from '@numior/forms';
+import { NuiInput } from '@numior/kit';
+import { NuiForm, NuiFormField, customAsync, pattern, required, useForm } from '@numior/kit/forms';
 import { products } from '#demo/products';
 
 const productWith = async (sku: string) => {

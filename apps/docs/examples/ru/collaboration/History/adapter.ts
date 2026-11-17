@@ -1,5 +1,5 @@
-import type { DocumentVersion, HistoryAdapter } from '@numior/collaboration';
-import type { DocJSON } from '@numior/editor-core';
+import type { DocumentVersion, HistoryAdapter } from '@numior/kit/collaboration';
+import type { DocJSON } from '@numior/kit/editor-core';
 
 export interface StoredVersion {
   readonly version: DocumentVersion;

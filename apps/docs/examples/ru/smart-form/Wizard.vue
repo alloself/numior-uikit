@@ -9,8 +9,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiInput, NuiRadioGroup, NuiTextarea } from '@numior/vue';
-import { NuiSmartForm, email, formConfig, required, useForm } from '@numior/forms';
+import { NuiInput, NuiRadioGroup, NuiTextarea } from '@numior/kit';
+import { NuiSmartForm, email, formConfig, required, useForm } from '@numior/kit/forms';
 import { DELIVERIES, PAYMENTS, type Delivery, type Payment } from '#demo/orders';
 
 interface Checkout {

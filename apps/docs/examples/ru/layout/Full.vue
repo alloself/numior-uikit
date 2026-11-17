@@ -74,7 +74,7 @@ import {
   NuiSidebarTrigger,
   NuiToc,
   type NuiTocItem,
-} from '@numior/vue';
+} from '@numior/kit';
 import { DELIVERIES, PAYMENTS, orders } from '#demo/orders';
 
 const money = new Intl.NumberFormat('ru-RU', {

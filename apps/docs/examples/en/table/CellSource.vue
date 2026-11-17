@@ -15,7 +15,7 @@ import {
   tableCells,
   type NuiTableCellStyle,
   type NuiTableSourceCell,
-} from '@numior/table';
+} from '@numior/kit/table';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 

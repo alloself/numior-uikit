@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiCombobox, type NuiOptionSource } from '@numior/vue';
+import { NuiCombobox, type NuiOptionSource } from '@numior/kit';
 
 const tags = ref(['new', 'sale']);
 

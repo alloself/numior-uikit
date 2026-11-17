@@ -14,9 +14,9 @@
 Подключите файлы темы в точке входа приложения:
 
 ```ts
-import '@numior/tokens/theme.css';
-import '@numior/tokens/base.css';
-import '@numior/tokens/accents.css';
+import '@numior/kit/theme.css';
+import '@numior/kit/base.css';
+import '@numior/kit/accents.css';
 ```
 
 Что делают `theme.css` и `base.css`, описано в [Начале работы](/guide/getting-started#стили).
@@ -34,7 +34,7 @@ import '@numior/tokens/accents.css';
 </template>
 
 <script setup lang="ts">
-import { NuiButton, NuiIcon, useColorScheme } from '@numior/vue';
+import { NuiButton, NuiIcon, useColorScheme } from '@numior/kit';
 
 const { scheme, resolved, cycle } = useColorScheme();
 const icons = { light: 'sun', dark: 'moon' } as const;

@@ -15,8 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuiButton } from '@numior/vue';
-import { useToast } from '@numior/primitives';
+import { NuiButton, useToast } from '@numior/kit';
 
 const toast = useToast();
 

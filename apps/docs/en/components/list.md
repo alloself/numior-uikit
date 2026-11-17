@@ -10,7 +10,7 @@ becomes a link, and a row with `interactive` a button.
 ## Installation
 
 ```ts install
-import { NuiList, NuiListItem } from '@numior/vue';
+import { NuiList, NuiListItem } from '@numior/kit';
 ```
 
 ## Usage

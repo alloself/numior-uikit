@@ -22,15 +22,15 @@
 
 <script setup lang="ts">
 import { ref, useTemplateRef } from 'vue';
-import { min, required } from '@numior/forms';
-import { NuiButton } from '@numior/vue';
+import { min, required } from '@numior/kit/forms';
+import { NuiButton } from '@numior/kit';
 import {
   NuiTable,
   type NuiTableCellValue,
   type NuiTableColumn,
   type NuiTableEditEvent,
   type NuiTableExposed,
-} from '@numior/table';
+} from '@numior/kit/table';
 import { orders } from '#demo/orders';
 
 interface Order {

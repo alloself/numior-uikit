@@ -4,7 +4,7 @@
 
 <Example name="form/Schema" />
 
-Форма из `@numior/forms` проверяет значения схемой Standard Schema (zod, valibot, arktype),
+Форма из `@numior/kit/forms` проверяет значения схемой Standard Schema (zod, valibot, arktype),
 правилами для полей или тем и другим сразу. До первой отправки форма не показывает ошибок.
 Компоненты форм описаны на страницах [Form](/components/form) и [Smart form](/components/smart-form).
 

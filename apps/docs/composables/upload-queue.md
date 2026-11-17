@@ -18,7 +18,7 @@
 
 ```ts
 import { ref } from 'vue';
-import { useUploadQueue, type UploadItem } from '@numior/vue';
+import { useUploadQueue, type UploadItem } from '@numior/kit';
 
 const items = ref<UploadItem<{ url: string }>[]>([]);
 

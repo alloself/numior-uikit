@@ -41,7 +41,7 @@ Import the constant named after the prop type to avoid typing strings by hand:
 </template>
 
 <script setup lang="ts">
-import { NuiButton, NuiButtonSize, NuiButtonVariant } from '@numior/vue';
+import { NuiButton, NuiButtonSize, NuiButtonVariant } from '@numior/kit';
 </script>
 ```
 
@@ -58,7 +58,7 @@ Type the object as `Nui<Name>Props` and pass it with `v-bind`:
 </template>
 
 <script setup lang="ts">
-import { NuiButton, type NuiButtonProps } from '@numior/vue';
+import { NuiButton, type NuiButtonProps } from '@numior/kit';
 
 const quiet: NuiButtonProps = { variant: 'ghost', tone: 'neutral', size: 'sm' };
 </script>

@@ -31,16 +31,16 @@
 
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from 'vue';
-import { NuiInput } from '@numior/vue';
+import { NuiInput } from '@numior/kit';
 import {
   NuiTable,
   columnName,
+  type NuiTableCellPosition,
   type NuiTableColumn,
   type NuiTableDraft,
   type NuiTableEditEvent,
   type NuiTableExposed,
-  type NuiTableCellPosition,
-} from '@numior/table';
+} from '@numior/kit/table';
 import { customers } from '#demo/customers';
 
 interface Contact {

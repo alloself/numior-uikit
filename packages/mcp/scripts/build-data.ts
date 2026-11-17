@@ -1,4 +1,4 @@
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { copyableSource } from '../../../apps/docs/.vitepress/examples/demo.ts';
@@ -11,6 +11,7 @@ import {
 import { llmsEntries } from '../../../apps/docs/.vitepress/llms/files.ts';
 import type { LlmsEntry, LlmsSource } from '../../../apps/docs/.vitepress/llms/llms.types.ts';
 import { parseBundle } from '../../../apps/docs/.vitepress/reference/bundle.ts';
+import { kitEntries } from '../../../apps/docs/.vitepress/reference/kit-entries.ts';
 import type {
   ComponentReference,
   ReferenceBundle,
@@ -33,10 +34,8 @@ const OUT_FILE = fileURLToPath(new URL('../dist/data.json', import.meta.url));
 const LOCALE_PREFIX = /^\/en(?=\/|$)/u;
 const TRAILING_SLASH = /(?<=.)\/$/u;
 const API_HEADING = /^### (Nui\w+)$/gmu;
-const STYLES_EXPORT = './styles.css';
-
-const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+const KIT = '@numior/kit';
+const BUNDLE = 'styles.css';
 
 const pagePathOf = (link: string): string =>
   link.replace(LOCALE_PREFIX, '').replace(TRAILING_SLASH, '') || '/';
@@ -104,28 +103,14 @@ const exportsOf = (bundle: ReferenceBundle): Record<string, string[]> => {
   );
 };
 
-const exportsStyles = (manifest: Readonly<Record<string, unknown>>): boolean =>
-  isRecord(manifest.exports) && STYLES_EXPORT in manifest.exports;
+const packageStylesOf = (): Record<string, string> => {
+  const { modules } = kitEntries(ROOT);
 
-const styledPackageName = (manifest: unknown): string | undefined =>
-  isRecord(manifest) && typeof manifest.name === 'string' && exportsStyles(manifest)
-    ? manifest.name
-    : undefined;
-
-const packageStylesOf = (): Record<string, string> =>
-  Object.fromEntries(
-    readdirSync(join(ROOT, 'packages'), { withFileTypes: true }).flatMap((entry) => {
-      if (!entry.isDirectory()) {
-        return [];
-      }
-
-      const name = styledPackageName(
-        JSON.parse(readFileSync(join(ROOT, 'packages', entry.name, 'package.json'), 'utf8')),
-      );
-
-      return name === undefined ? [] : [[name, `${name}/styles.css`]];
-    }),
-  );
+  return Object.fromEntries([
+    [KIT, `${KIT}/${BUNDLE}`],
+    ...modules.map((folder) => [folder.slice(0, -1), `${folder}${BUNDLE}`]),
+  ]);
+};
 
 const catalogsOf = (bundle: ReferenceBundle): Record<string, Readonly<Record<string, McpText>>> =>
   Object.fromEntries(
