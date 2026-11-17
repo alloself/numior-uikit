@@ -41,8 +41,7 @@
     @apply grid;
   }
   .nui-code__glyph {
-    @apply transition-[opacity,scale] duration-normal ease-nui;
-    grid-area: 1 / 1;
+    @apply transition-[opacity,scale] duration-normal ease-nui row-1 col-1;
   }
   .nui-code__glyph--done {
     @apply opacity-0 text-success scale-50;

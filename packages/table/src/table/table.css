@@ -1074,12 +1074,10 @@
     --_pane-end-at: 0px;
 
     @apply absolute inset-bs-0 inset-s-0 grid inline-full block-full p-0 text-start;
-    @apply pointer-events-none;
-    grid-template: 100% / 100%;
+    @apply pointer-events-none grid-rows-[100%] grid-cols-[100%];
   }
   .nui-table__pane {
-    @apply relative z-10 inline-0 block-0;
-    grid-area: 1 / 1;
+    @apply relative z-10 inline-0 block-0 row-1 col-1;
     align-self: start;
     justify-self: start;
   }

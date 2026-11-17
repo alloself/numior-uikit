@@ -58,7 +58,7 @@
   .nui-otp-field__dot,
   .nui-otp-field__caret,
   .nui-otp-field__placeholder {
-    grid-area: 1 / 1;
+    @apply row-1 col-1;
   }
   .nui-otp-field__char,
   .nui-otp-field__dot {

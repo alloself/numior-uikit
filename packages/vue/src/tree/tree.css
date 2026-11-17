@@ -113,8 +113,7 @@
     @apply inline-grid;
   }
   .nui-tree__glyph {
-    @apply inline-full block-full;
-    grid-area: 1 / 1;
+    @apply inline-full block-full row-1 col-1;
   }
   .nui-tree__glyph--open,
   .nui-tree__item--expanded .nui-tree__glyph--closed {

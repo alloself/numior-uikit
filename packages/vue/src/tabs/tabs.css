@@ -103,7 +103,7 @@
     @apply grid;
   }
   .nui-tab-item > * {
-    grid-area: 1 / 1;
+    @apply row-1 col-1;
   }
   .nui-tab {
     @apply box-border relative z-1 inline-flex items-center justify-center gap-2;

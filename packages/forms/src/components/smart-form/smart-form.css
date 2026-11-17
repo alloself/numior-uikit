@@ -32,8 +32,7 @@
   }
 
   .nui-smart-form__cell--leaving {
-    @apply absolute m-0 transition-[opacity,translate] duration-normal ease-nui;
-    grid-area: auto;
+    @apply absolute m-0 transition-[opacity,translate] duration-normal ease-nui row-auto col-auto;
   }
 
   .nui-smart-form__grid:has(> .nui-smart-form__cell--leaving) {
@@ -139,7 +138,7 @@
     }
 
     .nui-smart-form__cell {
-      grid-area: auto;
+      @apply row-auto col-auto;
     }
 
     .nui-smart-form--inline .nui-smart-form__cell {
