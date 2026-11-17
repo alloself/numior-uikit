@@ -242,13 +242,6 @@ const leaveAll = (host: ViewHost, forward: boolean, source: InputSource): void =
   host.dispatch(state.tr.setSelection(nearestCursor(state.doc, edge, forward ? -1 : 1)), source);
 };
 
-const leaveAllAt = (host: ViewHost, event: MouseEvent): void => {
-  const state = host.state();
-  const pos = posAtCoords(host, event.clientX, event.clientY) ?? 0;
-
-  host.dispatch(state.tr.setSelection(nearestCursor(state.doc, pos)), InputSource.Pointer);
-};
-
 const isForward = (host: ViewHost, arrow: Arrow): boolean =>
   arrow.vertical ? arrow.forward : arrow.forward !== isRtl(host);
 
@@ -523,6 +516,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   const doc = root.ownerDocument;
   let dragging = false;
   let opened: Selection | undefined;
+  let pressedInAll: number | undefined;
 
   const openGap = (): Selection | undefined => {
     const gap = host.state().selection;
@@ -741,8 +735,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
         host.dispatch(tr, 'pointer');
       });
     } else if (collapsesAll(host, event)) {
-      focusFromPress(root);
-      leaveAllAt(host, event);
+      pressedInAll = posAtCoords(host, event.clientX, event.clientY) ?? 0;
     }
   };
 
@@ -774,7 +767,25 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     host.dispatch(host.state().tr.setSelection({ kind: 'node', id: owner.node.id }), 'key');
   };
 
+  const leaveAllAfterPress = (): void => {
+    const pressed = pressedInAll;
+
+    pressedInAll = undefined;
+    if (pressed === undefined) {
+      return;
+    }
+    parts.sync.read();
+    const state = host.state();
+
+    if (state.selection.kind !== SelectionKind.All) {
+      return;
+    }
+
+    host.dispatch(state.tr.setSelection(nearestCursor(state.doc, pressed)), InputSource.Pointer);
+  };
+
   const onMouseup = (): void => {
+    leaveAllAfterPress();
     if (!host.holding()) {
       return;
     }

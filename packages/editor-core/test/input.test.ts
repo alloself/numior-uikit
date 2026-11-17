@@ -707,20 +707,36 @@ describe('editor view input', () => {
     expect(view.selectsAll).toBe(true);
 
     view.pressBlock(0);
+    view.releaseMouse();
 
     expect(view.selection).toEqual(textSelection(1));
     expect(view.selectsAll).toBe(false);
   });
 
-  it('leaves a whole-document selection at the pressed point and takes the focus before the text redraws', () => {
+  it('keeps the text as drawn while the browser handles a press and leaves a whole-document selection at the pressed point on release', () => {
+    const view = mounted(twoParagraphs());
+
+    view.focus();
+    view.selectAll();
+    view.caretFrom('position', 'cd', 1);
+    view.pressBlock(1);
+
+    expect(view.selectsAll).toBe(true);
+
+    view.releaseMouse();
+
+    expect(view.selection).toEqual(textSelection(view.positionInText('cd', 1)));
+  });
+
+  it('takes the caret the browser placed for a press during a whole-document selection', () => {
     const view = mounted(twoParagraphs());
 
     view.selectAll();
     view.focusOutside();
-    view.caretFrom('position', 'cd', 1);
     view.pressBlock(1);
+    view.pointInDom(view.positionInText('cd', 2));
+    view.releaseMouse();
 
-    expect(view.selection).toEqual(textSelection(view.positionInText('cd', 1)));
-    expect(view.editorFocused).toBe(true);
+    expect(view.selection).toEqual(textSelection(view.positionInText('cd', 2)));
   });
 });
