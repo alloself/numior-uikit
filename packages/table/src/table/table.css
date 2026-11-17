@@ -120,11 +120,10 @@
   }
   .nui-table__viewport {
     @apply box-border relative block-(--_height) overflow-auto bg-surface scrollbar-thin;
-    @apply touch-manipulation outline-none;
+    @apply touch-manipulation outline-none scroll-pbs-[calc(var(--_head-size)_+_var(--_frozen))];
+    @apply scroll-pbe-(--_foot) scroll-ps-(--_start) scroll-pe-(--_end);
     overflow-anchor: none;
     overscroll-behavior: var(--_overscroll);
-    scroll-padding-block: calc(var(--_head-size) + var(--_frozen)) var(--_foot);
-    scroll-padding-inline: var(--_start) var(--_end);
   }
   .nui-table__viewport:has(
     > .nui-table__grid
