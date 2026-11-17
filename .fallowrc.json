@@ -40,13 +40,13 @@
     "apps/docs/api/*.ts",
     "apps/docs/scripts/check-content.ts",
     "apps/docs/scripts/check-dist.ts",
-    "packages/nuxt/src/module.ts",
-    "packages/nuxt/src/runtime/plugin.ts",
-    "packages/nuxt/vitest.config.ts",
-    "packages/nuxt/test/fixture/nuxt.config.ts",
-    "packages/nuxt/test/fixture/app/app.config.ts",
-    "packages/nuxt/test/fixture/app/**/*.vue",
-    "packages/nuxt/test/**/*.test.ts",
+    "packages/kit/src/nuxt/module.ts",
+    "packages/kit/src/nuxt/runtime/plugin.ts",
+    "packages/kit/vitest.config.ts",
+    "packages/kit/test/fixture/nuxt.config.ts",
+    "packages/kit/test/fixture/app/app.config.ts",
+    "packages/kit/test/fixture/app/**/*.vue",
+    "packages/kit/test/**/*.test.ts",
     "packages/mcp/src/index.ts",
     "packages/mcp/src/main.ts",
     "packages/mcp/scripts/build-data.ts",
@@ -174,8 +174,8 @@
         "patterns": ["packages/offline/**"]
       },
       {
-        "name": "nuxt",
-        "patterns": ["packages/nuxt/**"]
+        "name": "kit",
+        "patterns": ["packages/kit/**"]
       },
       {
         "name": "mcp-scripts",
@@ -303,8 +303,28 @@
         ]
       },
       {
-        "from": "nuxt",
-        "allow": ["tokens", "primitives", "vue", "forms", "table", "nuxt"]
+        "from": "kit",
+        "allow": [
+          "tokens",
+          "primitives",
+          "tailwind",
+          "vue",
+          "forms",
+          "table",
+          "editor-core",
+          "content-table",
+          "content-code",
+          "content-media",
+          "content",
+          "editor-vue",
+          "spreadsheet",
+          "charts",
+          "collaboration-vue",
+          "collaboration-spreadsheet",
+          "collaboration",
+          "offline",
+          "kit"
+        ]
       },
       {
         "from": "mcp-scripts",
@@ -336,7 +356,7 @@
           "collaboration-vue",
           "collaboration-spreadsheet",
           "offline",
-          "nuxt",
+          "kit",
           "apps"
         ]
       },
@@ -360,7 +380,7 @@
           "collaboration",
           "collaboration-vue",
           "offline",
-          "nuxt",
+          "kit",
           "apps",
           "tests"
         ]

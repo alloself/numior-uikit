@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { installModule, NuxtHost } from './harness/nuxt-host';
 
-describe('@numior/nuxt', () => {
+describe('@numior/kit/nuxt', () => {
   it('registers the kit css, the scheme script, runtime options, components, composables and the plugin', async () => {
     const host = new NuxtHost(await installModule());
 
     expect(host.css).toEqual([
-      '@numior/tokens/theme.css',
-      '@numior/tokens/base.css',
-      '@numior/vue/styles.css',
-      '@numior/forms/styles.css',
-      '@numior/table/styles.css',
+      '@numior/kit/theme.css',
+      '@numior/kit/base.css',
+      '@numior/kit/styles.css',
+      '@numior/kit/forms/styles.css',
+      '@numior/kit/table/styles.css',
     ]);
 
     expect(host.headScripts).toEqual([host.expectedScript('light')]);
@@ -25,10 +25,10 @@ describe('@numior/nuxt', () => {
 
     const components = await host.components();
 
-    expect(components.NuiButton).toBe('@numior/vue#NuiButton');
-    expect(components.NuiFieldFrame).toBe('@numior/vue#NuiFieldFrame');
-    expect(components.NuiForm).toBe('@numior/forms#NuiForm');
-    expect(components.NuiTable).toBe('@numior/table#NuiTable');
+    expect(components.NuiButton).toBe('@numior/kit#NuiButton');
+    expect(components.NuiFieldFrame).toBe('@numior/kit#NuiFieldFrame');
+    expect(components.NuiForm).toBe('@numior/kit/forms#NuiForm');
+    expect(components.NuiTable).toBe('@numior/kit/table#NuiTable');
     expect(components.NuiFormError).toBeUndefined();
 
     const imports = await host.imports();
@@ -37,7 +37,10 @@ describe('@numior/nuxt', () => {
     expect(imports).toContain('useForm');
     expect(imports).not.toContain('required');
     expect(await host.importPriorities()).toEqual([-1]);
-    expect(host.pluginSources).toEqual([expect.stringMatching(/\/src\/runtime\/plugin\.ts$/)]);
+
+    expect(host.pluginSources).toEqual([
+      expect.stringMatching(/\/src\/nuxt\/runtime\/plugin\.ts$/),
+    ]);
 
     await host.close();
   });

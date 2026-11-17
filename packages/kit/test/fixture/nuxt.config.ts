@@ -2,7 +2,7 @@ import { defineNuxtConfig } from 'nuxt/config';
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-09-28',
-  modules: ['../../src/module'],
+  modules: ['@numior/kit/nuxt'],
   devtools: { enabled: false },
   telemetry: false,
   app: { head: { htmlAttrs: { lang: 'ru' }, title: 'Numior в Nuxt' } },

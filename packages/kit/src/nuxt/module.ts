@@ -1,13 +1,6 @@
-import {
-  addComponent,
-  addImports,
-  addPlugin,
-  createResolver,
-  defineNuxtModule,
-  tryResolveModule,
-} from '@nuxt/kit';
 import { colorSchemeScript } from '@numior/vue';
-import type { Nuxt } from '@nuxt/schema';
+import { addComponent, addImports, addPlugin, createResolver, defineNuxtModule } from 'nuxt/kit';
+import type { Nuxt } from 'nuxt/schema';
 import { componentNames, composableNames, type ModuleNamespace } from './exports';
 import type { NuiNuxtColorScheme, NuiNuxtOptions, NuiRuntimeOptions } from './module.types';
 
@@ -18,8 +11,9 @@ export type {
   NuiRuntimeOptions,
 } from './module.types';
 
-interface OptionalPackage {
+interface KitEntry {
   readonly id: string;
+  readonly styles: string;
   readonly load: () => Promise<ModuleNamespace>;
 }
 
@@ -28,14 +22,22 @@ interface Registration {
   readonly composables: boolean;
 }
 
-const VUE = '@numior/vue';
 const DEFAULT_STORAGE_KEY = 'nui-theme';
 const YIELDING_PRIORITY = -1;
-const KIT_CSS = ['@numior/tokens/theme.css', '@numior/tokens/base.css', `${VUE}/styles.css`];
+const TOKEN_CSS = ['@numior/kit/theme.css', '@numior/kit/base.css'];
 
-const OPTIONAL: readonly OptionalPackage[] = [
-  { id: '@numior/forms', load: () => import('@numior/forms') },
-  { id: '@numior/table', load: () => import('@numior/table') },
+const ENTRIES: readonly KitEntry[] = [
+  { id: '@numior/kit', styles: '@numior/kit/styles.css', load: () => import('@numior/vue') },
+  {
+    id: '@numior/kit/forms',
+    styles: '@numior/kit/forms/styles.css',
+    load: () => import('@numior/forms'),
+  },
+  {
+    id: '@numior/kit/table',
+    styles: '@numior/kit/table/styles.css',
+    load: () => import('@numior/table'),
+  },
 ];
 
 const registerNamespace = (id: string, namespace: ModuleNamespace, what: Registration): void => {
@@ -82,24 +84,15 @@ const addHead = (nuxt: Nuxt, scheme: NuiNuxtColorScheme | undefined): void => {
   ];
 };
 
-const installedOf = async (nuxt: Nuxt): Promise<OptionalPackage[]> => {
-  const resolved = await Promise.all(
-    OPTIONAL.map((entry) => tryResolveModule(entry.id, nuxt.options.modulesDir)),
-  );
-
-  return OPTIONAL.filter((_, index) => resolved[index] !== undefined);
-};
-
 export default defineNuxtModule<NuiNuxtOptions>({
   meta: {
-    name: '@numior/nuxt',
+    name: '@numior/kit/nuxt',
     configKey: 'numior',
     compatibility: { nuxt: '>=4.0.0' },
   },
   defaults: { css: true, components: true, composables: true },
   async setup(options, nuxt) {
     const resolver = createResolver(import.meta.url);
-    const installed = await installedOf(nuxt);
 
     const registration = {
       components: options.components === true,
@@ -109,14 +102,13 @@ export default defineNuxtModule<NuiNuxtOptions>({
     nuxt.options.runtimeConfig.public.numior = runtimeOptionsOf(options);
     addHead(nuxt, colorSchemeOf(options));
     if (options.css === true) {
-      for (const sheet of [...KIT_CSS, ...installed.map((entry) => `${entry.id}/styles.css`)]) {
+      for (const sheet of [...TOKEN_CSS, ...ENTRIES.map((entry) => entry.styles)]) {
         nuxt.options.css.push(sheet);
       }
     }
-    registerNamespace(VUE, await import('@numior/vue'), registration);
 
     const loaded = await Promise.all(
-      installed.map(async (entry) => ({ id: entry.id, namespace: await entry.load() })),
+      ENTRIES.map(async (entry) => ({ id: entry.id, namespace: await entry.load() })),
     );
 
     for (const entry of loaded) {

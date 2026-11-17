@@ -3,7 +3,7 @@ import { $fetch, setup } from '@nuxt/test-utils/e2e';
 import { colorSchemeScript } from '@numior/vue';
 import { describe, expect, it } from 'vitest';
 
-describe('the fixture app built on @numior/nuxt', async () => {
+describe('the fixture app built on @numior/kit/nuxt', async () => {
   await setup({
     rootDir: fileURLToPath(new URL('../fixture', import.meta.url)),
     server: true,

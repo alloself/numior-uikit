@@ -30,6 +30,8 @@ const ENTRIES = [
   'collaboration/yjs',
   'collaboration/room',
   'offline',
+  'nuxt/module',
+  'nuxt/runtime/plugin',
 ];
 
 const source = (entry: string): string =>
@@ -51,7 +53,7 @@ export default defineConfig({
     },
     sourcemap: true,
     rolldownOptions: {
-      external: [/^@numior\//],
+      external: [/^@numior\//, /^nuxt\//, '#components', 'vue', /^node:/],
     },
   },
 });

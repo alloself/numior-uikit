@@ -541,11 +541,11 @@ for (const name of await readdir('packages')) {
   }
 }
 
-const nuxtModule = await import(pathToFileURL(resolve('packages/nuxt/dist/module.js')).href);
+const nuxtModule = await import(pathToFileURL(resolve('packages/kit/dist/nuxt/module.js')).href);
 
 assert.equal(typeof nuxtModule.default, 'function', 'nuxt must export the module');
 
-const nuxtPlugin = await readFile('packages/nuxt/dist/runtime/plugin.js', 'utf8');
+const nuxtPlugin = await readFile('packages/kit/dist/nuxt/runtime/plugin.js', 'utf8');
 
 assert.match(nuxtPlugin, /from ['"]nuxt\/app['"]/, 'the nuxt plugin must keep nuxt/app external');
 
@@ -746,13 +746,18 @@ const packageTarget = (specifier, condition) => {
   return resolve(root, entry[condition].replace('*', star));
 };
 
+const REEXPORTS = /^(?:export \* from '@numior\/[a-z/-]+';\n)+$/u;
+
 const forwardedSpecifiers = (file) =>
   [...readFileSync(file, 'utf8').matchAll(/(?:from|@import) '([^']+)'/gu)].map((match) => match[1]);
 
 const kitManifest = JSON.parse(readFileSync(`${KIT}/package.json`, 'utf8'));
 
 for (const [key, entry] of Object.entries(kitManifest.exports)) {
-  if (entry.import === undefined) {
+  if (
+    entry.import === undefined ||
+    !REEXPORTS.test(readFileSync(resolve(KIT, entry['@numior/source']), 'utf8'))
+  ) {
     continue;
   }
 

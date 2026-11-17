@@ -1,4 +1,4 @@
-import type { NuiAppConfig } from '@numior/nuxt';
+import type { NuiAppConfig } from '@numior/kit/nuxt';
 
 const numior: NuiAppConfig = {
   messages: { ru: { code: { copy: 'Скопировать команду' } } },

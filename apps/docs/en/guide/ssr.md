@@ -44,11 +44,11 @@ over the server markup.
 
 ## Nuxt
 
-Add the `@numior/nuxt` module to `nuxt.config.ts`:
+Add the `@numior/kit/nuxt` module to `nuxt.config.ts`:
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['@numior/nuxt'],
+  modules: ['@numior/kit/nuxt'],
   numior: {
     locale: 'en-US',
     colorScheme: { storageKey: 'theme', initial: 'system' },
@@ -57,9 +57,8 @@ export default defineNuxtConfig({
 ```
 
 The module adds the `createNuiConfig` plugin, the styles and auto-imports of the `Nui*`
-components and `use*` composables. It puts the theme script in `<head>` and renders links with
-the `to` prop through `NuxtLink`. When `@numior/forms` or `@numior/table` is installed, their
-components and styles are added the same way.
+components and `use*` composables, forms and table included. It puts the theme script in
+`<head>` and renders links with the `to` prop through `NuxtLink`.
 
 In `nuxt.config.ts` you can set `locale`, `dir`, `colorScheme` (`storageKey`, `initial` or
 `false`) and `toasts`. The `css`, `components` and `composables` flags turn off the styles and
@@ -82,7 +81,7 @@ change.
 
 When a composable name clashes with another one, such as Nuxt's `useLayout` or `useMediaQuery`
 from `@vueuse/nuxt`, auto-import picks the other one. Import the Numior UI composable from
-`@numior/vue` by hand then.
+`@numior/kit` by hand then.
 
 Without the module, add `createNuiConfig` in a plugin with `defineNuxtPlugin` and the theme
 script with `useHead`.

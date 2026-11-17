@@ -8,8 +8,8 @@ Vue 3.5 or later. Vue 2 is not supported.
 
 ## Does it work with Nuxt?
 
-Yes. The `@numior/nuxt` module adds the styles, auto-imports for components and composables and
-the theme script, and renders links with a `to` prop through `NuxtLink`. The setup is in the
+Yes. The `@numior/kit/nuxt` module adds the styles, auto-imports for components and composables and
+the theme script, and renders `to` links through `NuxtLink`. The setup is in the
 [SSR and Nuxt](/en/guide/ssr) guide.
 
 ## Do the components render on the server?

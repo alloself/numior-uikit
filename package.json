@@ -31,7 +31,7 @@
     "release:dry-run": "semantic-release --dry-run",
     "release:check": "node --test scripts/release/*.test.mjs",
     "commitlint": "commitlint",
-    "test:nuxt": "pnpm --filter @numior/nuxt exec vitest run --root ../.. --config packages/nuxt/vitest.config.ts",
+    "test:nuxt": "pnpm --filter @numior/kit exec vitest run --root ../.. --config packages/kit/vitest.config.ts",
     "bench": "pnpm bench:engine && pnpm bench:editor && pnpm bench:spreadsheet && pnpm bench:browser",
     "bench:engine": "pnpm --filter @numior/table build && node --expose-gc packages/table/bench/engine.bench.ts",
     "bench:editor": "pnpm --filter @numior/editor-core build && node --expose-gc packages/editor-core/bench/core.bench.ts",

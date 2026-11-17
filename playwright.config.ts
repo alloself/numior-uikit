@@ -54,7 +54,7 @@ export default defineConfig({
     },
     {
       command:
-        'pnpm --filter @numior/nuxt fixture:build && pnpm --filter @numior/nuxt fixture:start',
+        'pnpm --filter @numior/kit-nuxt-fixture fixture:build && pnpm --filter @numior/kit-nuxt-fixture fixture:start',
       url: NUXT_URL,
       env: { HOST: '127.0.0.1', PORT: '4176', NUXT_TELEMETRY_DISABLED: '1' },
       reuseExistingServer: false,

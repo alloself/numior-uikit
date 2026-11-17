@@ -44,11 +44,11 @@ export const render = async (locale: string, dir: 'ltr' | 'rtl') => {
 
 ## Nuxt
 
-Добавьте модуль `@numior/nuxt` в `nuxt.config.ts`:
+Добавьте модуль `@numior/kit/nuxt` в `nuxt.config.ts`:
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['@numior/nuxt'],
+  modules: ['@numior/kit/nuxt'],
   numior: {
     locale: 'ru-RU',
     colorScheme: { storageKey: 'theme', initial: 'system' },
@@ -57,8 +57,8 @@ export default defineNuxtConfig({
 ```
 
 Модуль подключает плагин `createNuiConfig`, стили и автоимпорт компонентов `Nui*` и композаблов
-`use*`. Скрипт темы он добавляет в `<head>`, а ссылки со свойством `to` выводит через `NuxtLink`.
-Если установлены `@numior/forms` или `@numior/table`, их компоненты и стили подключаются так же.
+`use*`, в том числе форм и таблицы. Скрипт темы он добавляет в `<head>`, а ссылки со свойством
+`to` выводит через `NuxtLink`.
 
 В `nuxt.config.ts` можно задать `locale`, `dir`, `colorScheme` (`storageKey`, `initial` или
 `false`) и `toasts`. Флаги `css`, `components` и `composables` выключают стили и автоимпорт, по
@@ -81,7 +81,7 @@ export default defineAppConfig({
 
 Если имя композабла совпадает с чужим, например `useLayout` у Nuxt или `useMediaQuery` у
 `@vueuse/nuxt`, автоимпорт подставит чужой. Композабл Numior UI тогда импортируйте из
-`@numior/vue` вручную.
+`@numior/kit` вручную.
 
 Без модуля подключите `createNuiConfig` в плагине через `defineNuxtPlugin`, а скрипт темы
 добавьте через `useHead`.

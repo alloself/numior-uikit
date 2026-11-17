@@ -1,9 +1,9 @@
 import { fileURLToPath } from 'node:url';
-import { loadNuxt, runWithNuxtContext } from '@nuxt/kit';
-import type { Nuxt, NuxtConfig, NuxtHooks } from '@nuxt/schema';
 import { colorSchemeScript, type ColorScheme } from '@numior/vue';
+import { loadNuxt, runWithNuxtContext } from 'nuxt/kit';
+import type { Nuxt, NuxtConfig, NuxtHooks } from 'nuxt/schema';
 import { isString, shapeOf } from '../../../primitives/test/support/guards';
-import module from '../../src/module';
+import module from '../../src/nuxt/module';
 
 type RegisteredComponents = Parameters<NuxtHooks['components:extend']>[0];
 type RegisteredImports = Parameters<NuxtHooks['imports:extend']>[0];

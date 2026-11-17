@@ -1,0 +1,15 @@
+{
+  "name": "@numior/kit-nuxt-fixture",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fixture:build": "nuxi build",
+    "fixture:start": "node .output/server/index.mjs"
+  },
+  "dependencies": {
+    "@numior/kit": "workspace:*",
+    "nuxt": "4.5.2",
+    "vue": "3.5.43"
+  }
+}

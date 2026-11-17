@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { componentNames, composableNames } from '../src/exports';
+import { componentNames, composableNames } from '../src/nuxt/exports';
 
 const functional = (): null => null;
 

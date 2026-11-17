@@ -1,7 +1,7 @@
 <template>
   <main class="page" data-testid="home">
     <h1>Numior в Nuxt</h1>
-    <NuiCode code="pnpm add @numior/nuxt" data-testid="install" />
+    <NuiCode code="pnpm add @numior/kit" data-testid="install" />
     <NuiButton to="/about" data-testid="about">О проекте</NuiButton>
     <NuiButton variant="outline" data-testid="notify" @click="notify">Уведомить</NuiButton>
     <NuiToaster />

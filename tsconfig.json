@@ -42,6 +42,6 @@
     "**/.vitepress/cache",
     "**/.nuxt",
     "**/.output",
-    "packages/nuxt/test/fixture"
+    "packages/kit/test/fixture"
   ]
 }

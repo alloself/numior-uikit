@@ -141,6 +141,11 @@
       "types": "./dist/offline.d.ts",
       "import": "./dist/offline.js"
     },
+    "./nuxt": {
+      "@numior/source": "./src/nuxt/module.ts",
+      "types": "./dist/nuxt/module.d.ts",
+      "import": "./dist/nuxt/module.js"
+    },
     "./styles.css": {
       "@numior/source": "./src/styles.css",
       "default": "./dist/styles.css"
@@ -242,12 +247,21 @@
     "@vueuse/core": "15.0.0",
     "shiki": "4.4.3"
   },
+  "devDependencies": {
+    "@nuxt/test-utils": "4.3.2",
+    "nuxt": "4.5.2",
+    "vitest": "catalog:"
+  },
   "peerDependencies": {
+    "nuxt": "^4.0.0",
     "tailwindcss": "^4.0.0",
     "vue": "^3.5.0",
     "yjs": "^13.6.0"
   },
   "peerDependenciesMeta": {
+    "nuxt": {
+      "optional": true
+    },
     "tailwindcss": {
       "optional": true
     },

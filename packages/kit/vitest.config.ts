@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     name: 'nuxt',
     environment: 'node',
-    include: ['packages/nuxt/test/nuxt/**/*.test.ts'],
+    include: ['packages/kit/test/nuxt/**/*.test.ts'],
     hookTimeout: 240_000,
     testTimeout: 60_000,
     fileParallelism: false,
