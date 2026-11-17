@@ -240,6 +240,9 @@ const EXTRA_LONGHANDS = new Map([
   ['font', ['line-height']],
   ['inset', ['top', 'right', 'bottom', 'left']],
   ['gap', ['row-gap', 'column-gap']],
+  ['place-self', ['align-self', 'justify-self']],
+  ['place-items', ['align-items', 'justify-items']],
+  ['place-content', ['align-content', 'justify-content']],
   [
     'grid-area',
     [

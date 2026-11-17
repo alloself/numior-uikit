@@ -204,6 +204,16 @@ describe('longhands of a declaration', () => {
       ['grid-row-end', 'leading'],
     ]);
 
+    expect(longhands('place-self', 'start')).toEqual([
+      ['align-self', 'start'],
+      ['justify-self', 'start'],
+    ]);
+
+    expect(longhands('place-content', 'center space-between')).toEqual([
+      ['align-content', 'center'],
+      ['justify-content', 'space-between'],
+    ]);
+
     expect(longhands('scroll-padding-block', '1px 2px')).toEqual([
       ['scroll-padding-block-start', '1px'],
       ['scroll-padding-block-end', '2px'],

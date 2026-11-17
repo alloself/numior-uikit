@@ -660,6 +660,19 @@ const overflow = (value: string): Longhand[] => {
   ];
 };
 
+const placement =
+  (align: string, justify: string) =>
+  (value: string): Longhand[] | null => {
+    const [first = '', second = first, ...rest] = splitTokens(value);
+
+    return rest.length > 0 || value.includes('var(')
+      ? null
+      : [
+          [align, first],
+          [justify, second],
+        ];
+  };
+
 const gap = (value: string): Longhand[] | null => {
   const [row = '', column = row, ...rest] = splitTokens(value);
 
@@ -751,6 +764,9 @@ const SHORTHANDS = new Map<string, (value: string) => Longhand[] | null>([
   ['list-style', listStyle],
   ['overflow', overflow],
   ['gap', gap],
+  ['place-self', placement('align-self', 'justify-self')],
+  ['place-items', placement('align-items', 'justify-items')],
+  ['place-content', placement('align-content', 'justify-content')],
   ['grid-template', gridTemplate],
   ['grid-area', gridArea],
   ['grid-row', gridLines('row')],
