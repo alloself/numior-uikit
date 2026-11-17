@@ -268,9 +268,12 @@ const findings = sources.flatMap((file) => {
 
 const PAUSABLE = /animation-play-state:\s*var\(--nui-animation-play-state\b/u;
 
+const ENDLESS =
+  /animation:[^;{}]*\binfinite\b[^;{}]*;|\banimate-\[[^\]\s]*[[_]infinite(?:_[^\]\s]*)?\]/gu;
+
 const endless = sources.flatMap((file) =>
   stylesOf(file.path, file.source).flatMap((style) =>
-    [...style.text.matchAll(/animation:[^;{}]*\binfinite\b[^;{}]*;/gu)].flatMap((match) => {
+    [...style.text.matchAll(ENDLESS)].flatMap((match) => {
       const index = match.index ?? 0;
 
       const rule = style.text.slice(
@@ -346,8 +349,8 @@ const paintedOf = (name) =>
 
 const offCompositor = sources.flatMap((file) =>
   stylesOf(file.path, file.source).flatMap((style) =>
-    [...style.text.matchAll(/animation:[^;{}]*\binfinite\b[^;{}]*;/gu)].flatMap((match) => {
-      const name = match[0].split(/[\s:;]+/u).find((word) => keyframes.has(word));
+    [...style.text.matchAll(ENDLESS)].flatMap((match) => {
+      const name = match[0].split(/[\s:;_[\]]+/u).find((word) => keyframes.has(word));
       const painted = paintedOf(name);
       const composited = painted.length === 0 || STEPPED.test(match[0]);
 
