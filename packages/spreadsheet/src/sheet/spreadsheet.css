@@ -78,8 +78,7 @@
   }
   .nui-spreadsheet__bar--expanded .nui-spreadsheet__formula,
   .nui-spreadsheet__bar--expanded .nui-spreadsheet__mirror {
-    @apply whitespace-pre-wrap wrap-anywhere;
-    scrollbar-gutter: stable;
+    @apply whitespace-pre-wrap wrap-anywhere scrollbar-gutter-stable;
   }
   .nui-spreadsheet__bar--expanded .nui-spreadsheet__formula {
     @apply overflow-y-auto;
