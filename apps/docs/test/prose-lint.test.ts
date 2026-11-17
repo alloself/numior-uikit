@@ -51,6 +51,14 @@ describe('prose lint', () => {
     ]);
   });
 
+  it('reads banned phrases in prose and not in inline code', () => {
+    expect(lintProse('Добавьте модуль `@numior/kit/nuxt` в `nuxt.config.ts`.', 'ru')).toEqual([]);
+
+    expect(
+      lintProse('Поставьте kit: `pnpm add @numior/kit`.', 'ru').map((problem) => problem.text),
+    ).toEqual(['kit']);
+  });
+
   it('reports long sentences, long paragraphs, banned phrases and internals in prose', () => {
     const page = `# Кнопка
 

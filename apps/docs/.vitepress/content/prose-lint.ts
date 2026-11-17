@@ -63,6 +63,7 @@ const BANNED_PATTERNS: Readonly<Record<ExampleLocale, readonly (readonly [string
   en: BANNED.en.map((phrase) => [phrase, phrasePattern(phrase)] as const),
 };
 
+const INLINE_CODE_RE = /`[^`]*`/gu;
 const INTERNALS_RE = /nui-[a-z0-9-]+(?:__|--)[a-z0-9_-]+|--_[a-z0-9-]+/;
 const SENTENCE_END_RE = /(?<=[.!?…])\s+(?=[A-ZА-ЯЁ«"`([])/u;
 const LIST_ITEM_RE = /^(?:[-*]|\d+\.)\s+/;
@@ -133,7 +134,7 @@ const wordCount = (sentence: string): number => sentence.match(WORD_RE)?.length 
 const paragraphProblems = (paragraph: Paragraph, locale: ExampleLocale): ProseProblem[] => {
   const problems: ProseProblem[] = [];
   const sentences = sentencesOf(paragraph.text);
-  const lower = paragraph.text.toLowerCase();
+  const lower = paragraph.text.replaceAll(INLINE_CODE_RE, '').toLowerCase();
 
   if (sentences.length > MAX_SENTENCES) {
     problems.push({
