@@ -120,7 +120,7 @@ test.describe('layout', () => {
     await expect(layout.sidebar).toBeVisible();
   });
 
-  test('the icon rail keeps a count at the top end corner of the icon, off most of it, and turns a text tag into a dot', async ({
+  test('the icon rail squares its buttons, centres a count on the top end corner of the button whole and turns a text tag into a dot', async ({
     playground,
     layout,
     isMobile,
@@ -134,29 +134,52 @@ test.describe('layout', () => {
 
     await expect(layout.itemBadge('overview')).toHaveText('12');
 
-    const count = await layout.badgeOnIcon('overview');
-    expect(count.startFromIconEnd).toBeCloseTo(-4, 0);
-    expect(Math.abs(count.centreFromIconTop)).toBeLessThan(1);
-    expect(count.cover).toBeLessThan(0.2);
-    expect(count.insideBar).toBe(true);
+    const count = await layout.badgeOnButton('overview');
+    expect(count.buttonWidth).toBeCloseTo(count.buttonHeight, 0);
+    expect(Math.abs(count.fromButtonRight)).toBeLessThan(1);
+    expect(Math.abs(count.fromButtonTop)).toBeLessThan(1);
+    expect(await layout.badgePainted('overview')).toBe(true);
     expect(await layout.badgeClipped('overview')).toBe(false);
 
-    const dot = await layout.badgeOnIcon('files');
+    const dot = await layout.badgeOnButton('files');
     expect(dot.width).toBeCloseTo(dot.height, 1);
     expect(dot.width).toBeLessThan(12);
-    expect(dot.startFromIconEnd).toBeCloseTo(-4, 0);
+    expect(Math.abs(dot.fromButtonRight)).toBeLessThan(1);
+    expect(await layout.badgePainted('files')).toBe(true);
     await expect(layout.item('files')).toHaveAccessibleName(/Файлы.*Новое/);
 
     await playground.setDirection('rtl');
 
     await expect
-      .poll(async () => (await layout.badgeOnIcon('overview')).endFromIconStart)
-      .toBeCloseTo(4, 0);
+      .poll(async () => Math.abs((await layout.badgeOnButton('overview')).fromButtonLeft))
+      .toBeLessThan(1);
+
+    await expect.poll(() => layout.badgePainted('overview')).toBe(true);
 
     await playground.setDirection('ltr');
     await layout.trigger.click();
     await expect.poll(() => layout.sidebarWidth()).toBeGreaterThan(200);
     await expect(layout.itemBadge('files')).toHaveText('Новое');
+  });
+
+  test('the icons stay in place while the sidebar collapses to the icon rail and expands again', async ({
+    playground,
+    layout,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'desktop sidebar');
+    await playground.open();
+    await layout.root.scrollIntoViewIfNeeded();
+
+    const collapsing = await layout.iconDriftWhile(() => layout.trigger.click());
+
+    expect(collapsing).toBeLessThan(0.5);
+    await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
+
+    const expanding = await layout.iconDriftWhile(() => layout.trigger.click());
+
+    expect(expanding).toBeLessThan(0.5);
+    await expect.poll(() => layout.sidebarWidth()).toBeGreaterThan(200);
   });
 
   test('sub list expands, the sidebar can dock at the end and mirrors in RTL', async ({

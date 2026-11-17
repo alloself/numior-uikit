@@ -118,8 +118,8 @@ const docs: DocsMap = {
         en: 'Disables the item: it stays visible but cannot be clicked.',
       },
       badge: {
-        ru: 'Счётчик или метка в конце строки, например `12`: серая плашка, у текущей страницы — в цвете акцента. В полосе иконок счётчик стоит на углу иконки, метка — точкой. Другой цвет — слотом `trailing`.',
-        en: 'Counter or tag at the end of the row, such as `12`: a gray pill, in the accent color on the current page. In the icon rail, the count sits on the corner of the icon and a tag turns into a dot. For another color, use the `trailing` slot.',
+        ru: 'Счётчик или метка в конце строки, например `12`: серая плашка, у текущей страницы — в цвете акцента. В полосе иконок кнопка пункта становится квадратом, счётчик встаёт центром на его верхний конечный угол, метка — точкой. Другой цвет — слотом `trailing`.',
+        en: 'Counter or tag at the end of the row, such as `12`: a gray pill, in the accent color on the current page. In the icon rail, the item button turns square, the count centers on its top end corner and a tag turns into a dot. For another color, use the `trailing` slot.',
       },
       tooltip: {
         ru: 'Текст подсказки в полосе иконок. По умолчанию — `label`.',

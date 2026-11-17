@@ -10,17 +10,19 @@ import {
 import { sectionScope } from '../helpers/axe';
 import { paintedRgb, type Rgb } from '../helpers/color';
 
-export interface BadgeOnIcon {
-  readonly startFromIconEnd: number;
-  readonly endFromIconStart: number;
-  readonly centreFromIconTop: number;
-  readonly cover: number;
+export interface BadgeOnButton {
+  readonly fromButtonRight: number;
+  readonly fromButtonLeft: number;
+  readonly fromButtonTop: number;
+  readonly buttonWidth: number;
+  readonly buttonHeight: number;
   readonly width: number;
   readonly height: number;
-  readonly insideBar: boolean;
 }
 
 export type LayoutOutput = Guarded<typeof isLayoutOutput>;
+
+const DRIFT_FRAMES = 30;
 
 const isLayoutOutput = shapeOf({
   open: isBoolean,
@@ -107,28 +109,89 @@ export class LayoutSection {
     return this.item(key).locator('.nui-badge');
   }
 
-  async badgeOnIcon(key: string): Promise<BadgeOnIcon> {
-    const [icon, badge, bar] = await Promise.all([
-      boxOf(this.itemIcon(key)),
-      boxOf(this.itemBadge(key)),
-      boxOf(this.sidebar),
-    ]);
-
-    const overlapX =
-      Math.min(icon.x + icon.width, badge.x + badge.width) - Math.max(icon.x, badge.x);
-
-    const overlapY =
-      Math.min(icon.y + icon.height, badge.y + badge.height) - Math.max(icon.y, badge.y);
+  async badgeOnButton(key: string): Promise<BadgeOnButton> {
+    const [button, badge] = await Promise.all([boxOf(this.item(key)), boxOf(this.itemBadge(key))]);
+    const centre = { x: badge.x + badge.width / 2, y: badge.y + badge.height / 2 };
 
     return {
-      startFromIconEnd: badge.x - (icon.x + icon.width),
-      endFromIconStart: badge.x + badge.width - icon.x,
-      centreFromIconTop: badge.y + badge.height / 2 - icon.y,
-      cover: (Math.max(0, overlapX) * Math.max(0, overlapY)) / (icon.width * icon.height),
+      fromButtonRight: centre.x - (button.x + button.width),
+      fromButtonLeft: centre.x - button.x,
+      fromButtonTop: centre.y - button.y,
+      buttonWidth: button.width,
+      buttonHeight: button.height,
       width: badge.width,
       height: badge.height,
-      insideBar: badge.x >= bar.x && badge.x + badge.width <= bar.x + bar.width,
     };
+  }
+
+  badgePainted(key: string): Promise<boolean> {
+    return this.itemBadge(key).evaluate((badge) => {
+      const box = badge.getBoundingClientRect();
+
+      const shown = (element: Element | null): boolean => {
+        if (element === null) {
+          return true;
+        }
+        const style = getComputedStyle(element);
+        const area = element.getBoundingClientRect();
+        const clips = style.overflowX !== 'visible' || style.overflowY !== 'visible';
+
+        const fits =
+          box.left >= area.left + parseFloat(style.borderLeftWidth) - 0.5 &&
+          box.right <= area.right - parseFloat(style.borderRightWidth) + 0.5 &&
+          box.top >= area.top + parseFloat(style.borderTopWidth) - 0.5 &&
+          box.bottom <= area.bottom - parseFloat(style.borderBottomWidth) + 0.5;
+
+        return (!clips || fits) && shown(element.parentElement);
+      };
+
+      return shown(badge.parentElement);
+    });
+  }
+
+  async iconDriftWhile(act: () => Promise<void>): Promise<number> {
+    const drift = await this.sidebar.evaluateHandle(
+      (bar, frames) => ({
+        measured: new Promise<number>((resolve) => {
+          const icons = [...bar.querySelectorAll('.nui-list-item .nui-row__leading')].filter(
+            (icon) => icon.closest('.nui-sidebar-sub__list, .nui-sidebar-sub__flyout') === null,
+          );
+
+          const starts = icons.map((icon) => icon.getBoundingClientRect().x);
+          let largest = 0;
+          let left = frames;
+
+          const sample = (): void => {
+            for (const [index, icon] of icons.entries()) {
+              largest = Math.max(
+                largest,
+                Math.abs(icon.getBoundingClientRect().x - (starts[index] ?? 0)),
+              );
+            }
+            left -= 1;
+
+            if (left > 0) {
+              requestAnimationFrame(sample);
+              return;
+            }
+            resolve(largest);
+          };
+
+          document.addEventListener(
+            'click',
+            () => {
+              requestAnimationFrame(sample);
+            },
+            { capture: true, once: true },
+          );
+        }),
+      }),
+      DRIFT_FRAMES,
+    );
+
+    await act();
+
+    return drift.evaluate((held) => held.measured);
   }
 
   badgeClipped(key: string): Promise<boolean> {
