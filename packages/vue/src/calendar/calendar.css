@@ -33,8 +33,7 @@
     @apply opacity-disabled;
   }
   .nui-calendar__months {
-    @apply flex flex-wrap gap-6;
-    grid-area: months;
+    @apply flex flex-wrap gap-6 row-[months] col-[months];
   }
   .nui-calendar__month {
     @apply grid gap-2 content-start;
@@ -172,8 +171,7 @@
     background: color-mix(in oklab, var(--_selected-bg), var(--_selected-fg) var(--state-hover));
   }
   .nui-calendar__presets {
-    @apply box-border grid gap-1 pe-4 border-e border-e-border;
-    grid-area: presets;
+    @apply box-border grid gap-1 pe-4 border-e border-e-border row-[presets] col-[presets];
     align-content: start;
   }
   .nui-calendar__preset {
@@ -183,8 +181,7 @@
     @apply text-primary-soft-foreground bg-primary-soft bg-none;
   }
   .nui-calendar__footer {
-    @apply flex items-center justify-between gap-2;
-    grid-area: footer;
+    @apply flex items-center justify-between gap-2 row-[footer] col-[footer];
   }
   .nui-calendar__actions {
     @apply flex gap-2 ms-auto;

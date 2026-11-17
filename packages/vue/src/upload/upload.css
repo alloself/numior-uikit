@@ -89,13 +89,13 @@
   }
   .nui-upload-item .nui-row__leading {
     @apply inline-(--_thumb) block-(--_thumb) rounded-sm overflow-hidden bg-surface-muted bg-none;
-    grid-area: leading;
+    @apply row-[leading] col-[leading];
   }
   .nui-upload-item .nui-row__body {
-    grid-area: body;
+    @apply row-[body] col-[body];
   }
   .nui-upload-item .nui-row__trailing {
-    grid-area: trailing;
+    @apply row-[trailing] col-[trailing];
   }
   .nui-upload-item__thumb {
     @apply block inline-full block-full object-cover;
@@ -107,8 +107,7 @@
     @apply inline-flex gap-1;
   }
   .nui-upload-item__progress {
-    @apply mbs-2;
-    grid-area: progress;
+    @apply mbs-2 row-[progress] col-[progress];
   }
   .nui-upload-item--status-queued {
     @apply opacity-72;
