@@ -10,6 +10,15 @@ import {
 import { sectionScope } from '../helpers/axe';
 import { paintedRgb, type Rgb } from '../helpers/color';
 
+export interface BadgeOnIcon {
+  readonly fromIconEnd: number;
+  readonly fromIconStart: number;
+  readonly fromIconTop: number;
+  readonly width: number;
+  readonly height: number;
+  readonly insideBar: boolean;
+}
+
 export type LayoutOutput = Guarded<typeof isLayoutOutput>;
 
 const isLayoutOutput = shapeOf({
@@ -91,6 +100,35 @@ export class LayoutSection {
 
   itemRow(key: string): Locator {
     return this.item(key).locator('xpath=..');
+  }
+
+  itemBadge(key: string): Locator {
+    return this.item(key).locator('.nui-badge');
+  }
+
+  async badgeOnIcon(key: string): Promise<BadgeOnIcon> {
+    const [icon, badge, bar] = await Promise.all([
+      boxOf(this.itemIcon(key)),
+      boxOf(this.itemBadge(key)),
+      boxOf(this.sidebar),
+    ]);
+
+    const centre = { x: badge.x + badge.width / 2, y: badge.y + badge.height / 2 };
+
+    return {
+      fromIconEnd: centre.x - (icon.x + icon.width),
+      fromIconStart: centre.x - icon.x,
+      fromIconTop: centre.y - icon.y,
+      width: badge.width,
+      height: badge.height,
+      insideBar: badge.x >= bar.x && badge.x + badge.width <= bar.x + bar.width,
+    };
+  }
+
+  badgeClipped(key: string): Promise<boolean> {
+    return this.itemBadge(key)
+      .locator('.nui-badge__label')
+      .evaluate((label) => label.scrollWidth > label.clientWidth);
   }
 
   labelWidth(key: string): Promise<number> {

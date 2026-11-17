@@ -120,6 +120,44 @@ test.describe('layout', () => {
     await expect(layout.sidebar).toBeVisible();
   });
 
+  test('the icon rail keeps a count on the top end corner of the icon and turns a text tag into a dot', async ({
+    playground,
+    layout,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'desktop rail');
+    await playground.open();
+    await layout.root.scrollIntoViewIfNeeded();
+    await layout.item('calendar').click();
+    await layout.trigger.click();
+    await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
+
+    await expect(layout.itemBadge('overview')).toHaveText('12');
+
+    const count = await layout.badgeOnIcon('overview');
+    expect(Math.abs(count.fromIconEnd)).toBeLessThan(1);
+    expect(Math.abs(count.fromIconTop)).toBeLessThan(1);
+    expect(count.insideBar).toBe(true);
+    expect(await layout.badgeClipped('overview')).toBe(false);
+
+    const dot = await layout.badgeOnIcon('files');
+    expect(dot.width).toBeCloseTo(dot.height, 1);
+    expect(dot.width).toBeLessThan(12);
+    expect(Math.abs(dot.fromIconEnd)).toBeLessThan(1);
+    await expect(layout.item('files')).toHaveAccessibleName(/Файлы.*Новое/);
+
+    await playground.setDirection('rtl');
+
+    await expect
+      .poll(async () => Math.abs((await layout.badgeOnIcon('overview')).fromIconStart))
+      .toBeLessThan(1);
+
+    await playground.setDirection('ltr');
+    await layout.trigger.click();
+    await expect.poll(() => layout.sidebarWidth()).toBeGreaterThan(200);
+    await expect(layout.itemBadge('files')).toHaveText('Новое');
+  });
+
   test('sub list expands, the sidebar can dock at the end and mirrors in RTL', async ({
     playground,
     layout,

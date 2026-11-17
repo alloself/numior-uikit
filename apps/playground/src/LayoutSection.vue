@@ -182,13 +182,13 @@ interface PrimaryItem {
   readonly key: string;
   readonly label: string;
   readonly icon: 'inbox' | 'calendar' | 'folder-open';
-  readonly badge?: number;
+  readonly badge?: number | string;
 }
 
 const primary: PrimaryItem[] = [
-  { key: 'overview', label: 'Обзор', icon: 'inbox', badge: 3 },
+  { key: 'overview', label: 'Обзор', icon: 'inbox', badge: 12 },
   { key: 'calendar', label: 'Календарь', icon: 'calendar' },
-  { key: 'files', label: 'Файлы', icon: 'folder-open' },
+  { key: 'files', label: 'Файлы', icon: 'folder-open', badge: 'Новое' },
 ];
 
 const titles: Record<string, string> = {
