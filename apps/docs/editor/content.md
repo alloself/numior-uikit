@@ -46,7 +46,17 @@ const document = toJSON(fromHTML(contentSchema, product.descriptionHtml));
 Теги, которых нет в схеме, снимаются, а их текст остаётся. Скрипты, обработчики событий и ссылки
 `javascript:` в документ не попадают.
 
-`renderContent(doc)` собирает из документа строку HTML без Vue, например для письма или RSS.
+`renderContent(doc)` собирает из документа строку HTML, например для письма или RSS. Это тот же
+серверный рендер `NuiContent`, поэтому функция асинхронная, а иконки приходят в HTML готовым
+`<svg>`. Свои иконки передайте в `icons`: ключ — имя иконки, значение — компонент.
+
+```ts
+import { renderContent } from '@numior/content';
+
+const html = await renderContent(doc, { size: 'lg' });
+```
+
+Странице с этим HTML нужны стили контента и `@numior/vue/styles/icon.css`.
 
 ## API
 

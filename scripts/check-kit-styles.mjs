@@ -310,6 +310,19 @@ const steps = sources.flatMap((file) =>
   ),
 );
 
+const INLINE_ICON = /url\(\s*["']?data:image\/svg/gu;
+
+const inlineIcons = sources.flatMap((file) =>
+  file.consumer
+    ? []
+    : stylesOf(file.path, file.source).flatMap((style) =>
+        [...style.text.matchAll(INLINE_ICON)].map(
+          (match) =>
+            `${relative(ROOT, file.path)}:${lineOf(file.source, style.offset + (match.index ?? 0))}`,
+        ),
+      ),
+);
+
 const COMPOSITED = new Set(['transform', 'translate', 'rotate', 'scale', 'opacity']);
 const STEPPED = /\bstep-(?:start|end)\b|\bsteps\(/u;
 
@@ -412,6 +425,16 @@ if (steps.length > 0) {
   process.exitCode = 1;
 } else {
   console.log('kit styles: states mix the fill with its label');
+}
+
+if (inlineIcons.length > 0) {
+  console.error(
+    `Kit icons come from the icon registry (NuiIcon with an alias): an SVG inlined into CSS ignores the icons an app provides:\n${inlineIcons.join('\n')}`,
+  );
+
+  process.exitCode = 1;
+} else {
+  console.log('kit styles: icons come from the registry');
 }
 
 if (offCompositor.length > 0) {

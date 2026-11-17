@@ -7,9 +7,6 @@
     @apply absolute inset-s-0 flex;
     inset-block-start: calc((var(--leading-relaxed) * 1em - var(--_mark)) / 2);
   }
-  .nui-editor__content .nui-content__callout::before {
-    content: none;
-  }
   .nui-editor__content .nui-content__callout > .nui-editor__widget {
     @apply flex items-center justify-center;
     grid-column: 1;

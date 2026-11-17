@@ -1,21 +1,18 @@
 <template>
   <div v-bind="rest" :class="[base, { 'nui-content__toggle--open': open }]">
-    <template v-for="(part, index) in content" :key="index">
-      <component
-        :is="part"
-        v-if="index === 0 && isVNode(part)"
-        :aria-expanded="String(open)"
-        @click="flip"
-      />
-      <component :is="part" v-else-if="isVNode(part)" />
-      <template v-else>{{ part }}</template>
-    </template>
+    <component :is="parts.lead" v-if="parts.lead" :aria-expanded="String(open)" @click="flip">
+      <span class="nui-content__toggle-mark"><NuiIcon icon="chevron-right" /></span>
+    </component>
+    <NuiContentParts :parts="parts.rest" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, isVNode, ref, watch, type VNode } from 'vue';
+import { NuiIcon } from '@numior/vue';
+import { computed, ref, watch } from 'vue';
+import { splitLead, type ContentPart } from './content-parts';
 import { ContentAttrValue } from './content.types';
+import NuiContentParts from './NuiContentParts.vue';
 
 const OPEN = 'nui-content__toggle--open';
 
@@ -26,10 +23,11 @@ const {
 } = defineProps<{
   open: boolean;
   attributes: Readonly<Record<string, string>>;
-  content: readonly (VNode | string)[];
+  content: readonly ContentPart[];
 }>();
 
 const open = ref(initial);
+const parts = computed(() => splitLead(content));
 
 const base = computed(() =>
   (attributes.class ?? '')

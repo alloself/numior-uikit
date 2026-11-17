@@ -242,7 +242,7 @@
       },
       {
         "from": "content",
-        "allow": ["tokens", "editor-core", "content"]
+        "allow": ["tokens", "primitives", "vue", "editor-core", "content"]
       },
       {
         "from": "editor-vue",

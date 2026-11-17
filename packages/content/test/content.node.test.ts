@@ -1,7 +1,8 @@
-import { fromJSON, toJSON } from '@numior/editor-core';
+import { fromJSON, toHTML, toJSON } from '@numior/editor-core';
 import { generateDoc } from '@numior/editor-core/fixtures';
 import { describe, expect, it } from 'vite-plus/test';
 import { contentSchema, renderContent } from '../src';
+import SquareGlyph from './fixtures/SquareGlyph.vue';
 import { EVERY_BLOCK_MARKUP, docOf, everyBlock, node } from './support/documents';
 
 const stamped = (blocks: readonly unknown[]) => ({
@@ -9,6 +10,11 @@ const stamped = (blocks: readonly unknown[]) => ({
   schema: { name: 'numior-content', version: 5 },
   root: { id: 'r', type: 'doc', content: blocks },
 });
+
+const glyphsOf = (html: string): readonly string[] =>
+  [...html.matchAll(/<svg[^>]* class="(?:lucide lucide-|glyph glyph--)([a-z-]+)/gu)].map(
+    ([, name]) => name ?? '',
+  );
 
 const attrIssues = (blocks: readonly unknown[]) => {
   const read = fromJSON(contentSchema, stamped(blocks));
@@ -104,14 +110,29 @@ describe('content schema', () => {
     expect(page.textBetween(0, page.size)).toBe('A B\t\ntwo lines\tFALSE\n\t7');
   });
 
-  it('renders every block and mark into classed markup with a break in empty lines', () => {
-    expect(renderContent(everyBlock())).toBe(
-      `<div class="nui-content nui-content--size-md">${EVERY_BLOCK_MARKUP}</div>`,
-    );
+  it('renders every block and mark into classed markup with a break in empty lines', async () => {
+    expect(toHTML(everyBlock())).toBe(EVERY_BLOCK_MARKUP);
 
-    expect(renderContent(docOf(node('paragraph', ['<b> & "q"'])), { size: 'lg' })).toBe(
-      '<div class="nui-content nui-content--size-lg"><p class="nui-content__paragraph">&lt;b&gt; &amp; &quot;q&quot;</p></div>',
+    expect(await renderContent(docOf(node('paragraph', ['<b> & "q"'])), { size: 'lg' })).toBe(
+      '<div class="nui-content nui-content--size-lg"><!--[--><p class="nui-content__paragraph">&lt;b&gt; &amp; &quot;q&quot;</p><!--]--></div>',
     );
+  });
+
+  it('publishes the marks of todos, callouts, toggles and files as icons of the registry', async () => {
+    expect(glyphsOf(await renderContent(everyBlock()))).toEqual([
+      'check',
+      'triangle-alert',
+      'chevron-right',
+      'file-text',
+    ]);
+
+    expect(
+      glyphsOf(
+        await renderContent(everyBlock(), {
+          icons: { check: SquareGlyph, 'file-pdf': SquareGlyph },
+        }),
+      ),
+    ).toEqual(['square', 'triangle-alert', 'chevron-right', 'square']);
   });
 
   it('accepts web, mail and relative links and refuses script and foreign image sources', () => {

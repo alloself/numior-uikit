@@ -53,7 +53,16 @@ The schema decides what gets into the document: markup it does not describe is d
 text stays. Pass the result to NuiContent or to the editor, or store its JSON.
 
 `renderContent(doc)` does the reverse and returns the HTML string of a document for a page built
-without Vue. That page needs the content styles too.
+without Vue. It is the same server render as `NuiContent`, so the function is async and icons
+arrive in the HTML as ready `<svg>`. Pass your own icons in `icons`, keyed by icon name.
+
+```ts
+import { renderContent } from '@numior/content';
+
+const html = await renderContent(doc, { size: 'lg' });
+```
+
+That page needs the content styles and `@numior/vue/styles/icon.css` too.
 
 ## API
 
