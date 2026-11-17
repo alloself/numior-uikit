@@ -649,11 +649,7 @@ export class DocsSite {
         return false;
       };
 
-      if (sideways > 0) {
-        found.push(`the page scrolls sideways by ${String(sideways)} px`);
-      }
-
-      for (const [index, frame] of [...document.querySelectorAll(frames)].entries()) {
+      const frameOverflow = (frame: Element): number => {
         const box = frame.getBoundingClientRect();
 
         const worst = [...frame.querySelectorAll('*')].reduce((most, element) => {
@@ -668,7 +664,28 @@ export class DocsSite {
           return counted ? Math.max(most, box.left - rect.left, rect.right - box.right) : most;
         }, 0);
 
-        const over = Math.round(worst);
+        return Math.round(worst);
+      };
+
+      const tableOverflow = (table: Element): number => {
+        const column = table.closest('.nui-prose');
+        const edge = table.getBoundingClientRect();
+        const text = column?.getBoundingClientRect() ?? edge;
+
+        const inText =
+          column !== null &&
+          table.closest('.nui-not-prose') === null &&
+          !scrolledInside(table, column);
+
+        return inText ? Math.round(Math.max(text.left - edge.left, edge.right - text.right)) : 0;
+      };
+
+      if (sideways > 0) {
+        found.push(`the page scrolls sideways by ${String(sideways)} px`);
+      }
+
+      for (const [index, frame] of [...document.querySelectorAll(frames)].entries()) {
+        const over = frameOverflow(frame);
 
         if (over <= 1) {
           continue;
@@ -679,18 +696,9 @@ export class DocsSite {
       for (const [index, table] of [
         ...document.querySelectorAll('.nui-prose table:not([class])'),
       ].entries()) {
-        const column = table.closest('.nui-prose');
-        const edge = table.getBoundingClientRect();
-        const text = column?.getBoundingClientRect() ?? edge;
-        const over = Math.round(Math.max(text.left - edge.left, edge.right - text.right));
+        const over = tableOverflow(table);
 
-        const wider =
-          column !== null &&
-          table.closest('.nui-not-prose') === null &&
-          !scrolledInside(table, column) &&
-          over > 1;
-
-        if (!wider) {
+        if (over <= 1) {
           continue;
         }
         found.push(`table ${String(index + 1)} is ${String(over)} px wider than the text`);
