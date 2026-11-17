@@ -1,16 +1,13 @@
 @layer components {
   .nui-spreadsheet__drawing {
     @apply box-border flex flex-col overflow-hidden pointer-events-auto;
+    @apply transition-[inset,inline-size,block-size] duration-fast ease-nui;
     position: absolute;
-    transition:
-      inset var(--transition-duration-fast) var(--ease-nui),
-      inline-size var(--transition-duration-fast) var(--ease-nui),
-      block-size var(--transition-duration-fast) var(--ease-nui);
   }
 
   .nui-spreadsheet__drawing--kind-chart {
-    @apply gap-1 py-2 px-3 bg-surface text-foreground;
-    border: 1px solid var(--color-border);
+    @apply gap-1 py-2 px-3 bg-surface text-foreground border border-solid;
+    @apply border-(color:--color-border);
   }
 
   .nui-spreadsheet__drawing--kind-foreign {
@@ -24,13 +21,11 @@
 
   .nui-spreadsheet__chart-title {
     @apply flex-none m-0 overflow-hidden text-(length:--text-sm) leading-control text-center;
-    @apply text-ellipsis whitespace-nowrap;
-    font-weight: 600;
+    @apply text-ellipsis whitespace-nowrap font-semibold;
   }
 
   .nui-spreadsheet__chart {
-    @apply block min-block-0;
-    flex: 1 1 0;
+    @apply block min-block-0 flex-[1_1_0];
   }
 
   .nui-spreadsheet__foreign {
@@ -47,24 +42,21 @@
 
   .nui-spreadsheet--dragging .nui-spreadsheet__drawing,
   .nui-spreadsheet--dragging .nui-spreadsheet__drawing-frame {
-    transition: none;
+    @apply transition-none;
   }
 
   .nui-spreadsheet__drawing-frame {
-    @apply box-border invisible opacity-0 pointer-events-none;
+    @apply box-border invisible opacity-0 pointer-events-none border border-solid;
+    @apply border-(color:--color-primary);
+    @apply transition-[inset,inline-size,block-size,opacity,visibility];
+    @apply duration-[var(--transition-duration-fast),var(--transition-duration-fast),var(--transition-duration-fast),var(--transition-duration-fast),0s];
+    @apply ease-[var(--ease-nui),var(--ease-nui),var(--ease-nui),var(--ease-nui),linear];
+    @apply delay-[0s,0s,0s,0s,var(--transition-duration-fast)];
     position: absolute;
-    border: 1px solid var(--color-primary);
-    transition:
-      inset var(--transition-duration-fast) var(--ease-nui),
-      inline-size var(--transition-duration-fast) var(--ease-nui),
-      block-size var(--transition-duration-fast) var(--ease-nui),
-      opacity var(--transition-duration-fast) var(--ease-nui),
-      visibility 0s linear var(--transition-duration-fast);
   }
 
   .nui-spreadsheet__drawing-frame--selected {
-    @apply visible opacity-100;
-    transition-delay: 0s;
+    @apply visible opacity-100 delay-[0s];
   }
 
   .nui-spreadsheet__handle {
@@ -73,45 +65,41 @@
     --_inline: calc(50% - var(--_size) / 2);
 
     @apply absolute box-border inline-(--_size) block-(--_size) bg-surface pointer-events-auto;
-    @apply touch-none;
-    border: 1px solid var(--color-primary);
-    border-radius: 2px;
+    @apply touch-none border border-solid border-(color:--color-primary) rounded-[2px];
   }
 
   .nui-spreadsheet__handle::before {
-    @apply absolute;
-    inset: -4px;
-    content: '';
+    @apply absolute inset-[-4px] content-[''];
   }
 
   @media (pointer: coarse) {
     .nui-spreadsheet__handle::before {
-      inset: -9px;
+      @apply inset-[-9px];
     }
   }
 
   .nui-spreadsheet__handle--top,
   .nui-spreadsheet__handle--top-start,
   .nui-spreadsheet__handle--top-end {
-    inset-block-start: calc(var(--_size) / -2);
+    @apply inset-bs-[calc(var(--_size)_/_-2)];
   }
 
   .nui-spreadsheet__handle--bottom,
   .nui-spreadsheet__handle--bottom-start,
   .nui-spreadsheet__handle--bottom-end {
-    inset-block-end: calc(var(--_size) / -2);
+    @apply inset-be-[calc(var(--_size)_/_-2)];
   }
 
   .nui-spreadsheet__handle--start,
   .nui-spreadsheet__handle--top-start,
   .nui-spreadsheet__handle--bottom-start {
-    inset-inline-start: calc(var(--_size) / -2);
+    @apply inset-s-[calc(var(--_size)_/_-2)];
   }
 
   .nui-spreadsheet__handle--end,
   .nui-spreadsheet__handle--top-end,
   .nui-spreadsheet__handle--bottom-end {
-    inset-inline-end: calc(var(--_size) / -2);
+    @apply inset-e-[calc(var(--_size)_/_-2)];
   }
 
   .nui-spreadsheet__handle--top,
@@ -126,22 +114,22 @@
 
   .nui-spreadsheet__handle--top-start,
   .nui-spreadsheet__handle--bottom-end {
-    cursor: nwse-resize;
+    @apply cursor-[nwse-resize];
   }
 
   .nui-spreadsheet__handle--top-end,
   .nui-spreadsheet__handle--bottom-start {
-    cursor: nesw-resize;
+    @apply cursor-[nesw-resize];
   }
 
   .nui-spreadsheet__handle--top-start:dir(rtl),
   .nui-spreadsheet__handle--bottom-end:dir(rtl) {
-    cursor: nesw-resize;
+    @apply cursor-[nesw-resize];
   }
 
   .nui-spreadsheet__handle--top-end:dir(rtl),
   .nui-spreadsheet__handle--bottom-start:dir(rtl) {
-    cursor: nwse-resize;
+    @apply cursor-[nwse-resize];
   }
 
   .nui-spreadsheet__drawing-tools {
@@ -150,7 +138,7 @@
 
   .nui-spreadsheet-chart-settings {
     @apply box-border flex flex-col gap-3 p-3 text-foreground text-(length:--text-sm);
-    inline-size: min(18rem, calc(100vw - --spacing(6)));
+    @apply inline-[min(18rem,calc(100vw_-_--spacing(6)))];
   }
 
   .nui-spreadsheet-chart-settings__header {

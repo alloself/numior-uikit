@@ -17,27 +17,23 @@
   }
   .nui-spreadsheet-rules {
     @apply box-border flex flex-col gap-2 p-3 text-foreground text-(length:--text-sm);
-    inline-size: min(22rem, calc(100vw - --spacing(8)));
+    @apply inline-[min(22rem,calc(100vw_-_--spacing(8)))];
   }
   .nui-spreadsheet-rules__header {
     @apply flex items-center justify-between gap-2;
   }
   .nui-spreadsheet-rules__title {
-    @apply m-0 text-(length:--text-sm) leading-control;
-    font-weight: 600;
+    @apply m-0 text-(length:--text-sm) leading-control font-semibold;
   }
   .nui-spreadsheet-rules__list {
     @apply relative min-inline-0;
   }
   .nui-spreadsheet-rules__rules {
-    @apply flex flex-col m-0 p-0 list-none;
-    gap: 2px;
+    @apply flex flex-col m-0 p-0 list-none gap-[2px];
   }
   .nui-spreadsheet-rules__rule {
     @apply box-border flex items-center gap-2 min-inline-0 py-1 px-2 rounded;
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      opacity var(--transition-duration-fast) var(--ease-nui);
+    @apply transition-[background-color,opacity] duration-fast ease-nui;
   }
   .nui-spreadsheet-rules__rule:hover,
   .nui-spreadsheet-rules__rule:focus-within {
@@ -48,11 +44,8 @@
   }
   .nui-spreadsheet-rules__grip {
     @apply box-border inline-flex flex-none items-center justify-center -ms-1 p-0 rounded-sm;
-    @apply bg-transparent text-muted-foreground cursor-grab opacity-0 touch-none;
-    inline-size: 1.25rem;
-    block-size: 1.75rem;
-    border: 0;
-    transition: opacity var(--transition-duration-fast) var(--ease-nui);
+    @apply bg-transparent text-muted-foreground cursor-grab opacity-0 touch-none inline-[1.25rem];
+    @apply block-[1.75rem] border-0 border-none transition-opacity duration-fast ease-nui;
   }
   .nui-spreadsheet-rules__rule:hover .nui-spreadsheet-rules__grip,
   .nui-spreadsheet-rules__grip:focus-visible,
@@ -80,17 +73,11 @@
 
     @apply box-border relative inline-flex flex-none items-center justify-center gap-px;
     @apply overflow-hidden rounded-sm bg-surface text-foreground text-(length:--text-xs);
-    @apply whitespace-nowrap;
-    inline-size: 3.5rem;
-    block-size: 1.5rem;
-    border: 1px solid var(--color-border);
+    @apply whitespace-nowrap inline-[3.5rem] block-[1.5rem] border border-solid;
+    @apply border-(color:--color-border);
   }
   .nui-spreadsheet-rules__preview--kind-bar::after {
-    @apply absolute rounded-sm;
-    content: '';
-    inset-block: 4px;
-    inset-inline-start: 3px;
-    inline-size: 65%;
+    @apply absolute rounded-sm content-[''] inset-y-[4px] inset-s-[3px] inline-[65%];
     background: color-mix(in oklab, var(--_bar-color) 60%, var(--color-surface));
   }
   .nui-spreadsheet-rules__glyph {
@@ -112,8 +99,7 @@
     @apply text-muted-foreground text-(length:--text-xs);
   }
   .nui-spreadsheet-rules__actions {
-    @apply inline-flex flex-none opacity-0;
-    transition: opacity var(--transition-duration-fast) var(--ease-nui);
+    @apply inline-flex flex-none opacity-0 transition-opacity duration-fast ease-nui;
   }
   .nui-spreadsheet-rules__rule:hover .nui-spreadsheet-rules__actions,
   .nui-spreadsheet-rules__rule:focus-within .nui-spreadsheet-rules__actions {
@@ -137,12 +123,8 @@
   }
   .nui-spreadsheet-rules__drop {
     @apply absolute inset-x-0 rounded-full bg-primary opacity-0 -translate-y-1/2;
-    @apply pointer-events-none;
-    inset-block-start: var(--_drop, 0);
-    block-size: 2px;
-    transition:
-      opacity var(--transition-duration-fast) var(--ease-nui),
-      inset-block-start var(--transition-duration-fast) var(--ease-nui);
+    @apply pointer-events-none inset-bs-[var(--_drop,0)] block-[2px];
+    @apply transition-[opacity,inset-block-start] duration-fast ease-nui;
   }
   .nui-spreadsheet-rules--reordering .nui-spreadsheet-rules__drop {
     @apply opacity-100;
@@ -150,11 +132,8 @@
   .nui-spreadsheet-rules__ghost {
     @apply box-border absolute z-1 inset-s-0 flex items-center gap-2 max-inline-full ps-2 pe-3;
     @apply overflow-hidden rounded bg-surface-elevated text-foreground whitespace-nowrap;
-    @apply -translate-y-1/2 pointer-events-none;
-    inset-block-start: var(--_ghost, 0);
-    block-size: 2.25rem;
-    border: 1px solid var(--color-border-strong);
-    box-shadow: var(--shadow-lg);
+    @apply -translate-y-1/2 pointer-events-none inset-bs-[var(--_ghost,0)] block-[2.25rem] border;
+    @apply border-solid border-(color:--color-border-strong) shadow-lg;
   }
   .nui-spreadsheet-rules__empty {
     @apply box-border m-0 p-3 border border-dashed border-border rounded text-muted-foreground;
@@ -171,19 +150,16 @@
     @apply box-border flex flex-col gap-3 min-inline-0 m-0;
   }
   .nui-spreadsheet-rules__subtitle {
-    @apply m-0 text-muted-foreground text-(length:--text-sm);
-    font-weight: 500;
+    @apply m-0 text-muted-foreground text-(length:--text-sm) font-medium;
   }
   .nui-spreadsheet-rules__fields {
     @apply flex flex-wrap items-end gap-2;
   }
   .nui-spreadsheet-rules__fields > * {
-    @apply min-inline-0;
-    flex: 1 1 8rem;
+    @apply min-inline-0 flex-[1_1_8rem];
   }
   .nui-spreadsheet-rules__glyphs {
-    @apply inline-flex flex-none items-center gap-1;
-    block-size: 2rem;
+    @apply inline-flex flex-none items-center gap-1 block-[2rem];
   }
   .nui-spreadsheet-rules__preset {
     @apply inline-flex items-center gap-2;
@@ -199,36 +175,23 @@
     @apply box-border flex flex-col items-start gap-2;
   }
   .nui-spreadsheet-swatches__current {
-    @apply box-border inline-block flex-none rounded-sm;
-    inline-size: 0.875rem;
-    block-size: 0.875rem;
-    border: 1px solid var(--color-border-strong);
-    background: linear-gradient(
-      to top right,
-      transparent calc(50% - 1px),
-      var(--color-error) 50%,
-      transparent calc(50% + 1px)
-    );
+    @apply box-border inline-block flex-none rounded-sm inline-[0.875rem] block-[0.875rem] border;
+    @apply border-solid border-(color:--color-border-strong) bg-transparent;
+    @apply bg-[linear-gradient(_to_top_right,transparent_calc(50%_-_1px),var(--color-error)_50%,transparent_calc(50%_+_1px)_)];
   }
   .nui-spreadsheet-swatches__grid {
-    @apply grid;
-    grid-template-columns: repeat(10, 1.25rem);
-    gap: 2px;
+    @apply grid grid-cols-[repeat(10,1.25rem)] gap-[2px];
   }
   .nui-spreadsheet-swatches__swatch {
-    @apply box-border p-0 rounded-sm cursor-pointer;
-    inline-size: 1.25rem;
-    block-size: 1.25rem;
+    @apply box-border p-0 rounded-sm cursor-pointer inline-[1.25rem] block-[1.25rem];
+    @apply transition-[box-shadow] duration-fast ease-nui;
     border: 1px solid color-mix(in oklab, var(--color-foreground) 15%, transparent);
-    transition: box-shadow var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-spreadsheet-swatches__swatch:hover {
-    box-shadow: 0 0 0 2px var(--color-border-strong);
+    @apply shadow-[0_0_0_2px_var(--color-border-strong)];
   }
   .nui-spreadsheet-swatches__swatch--chosen {
-    box-shadow:
-      0 0 0 2px var(--color-surface-elevated),
-      0 0 0 4px var(--color-primary);
+    @apply shadow-[0_0_0_2px_var(--color-surface-elevated),0_0_0_4px_var(--color-primary)];
   }
   .nui-spreadsheet-swatches__swatch:focus-visible {
     @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
