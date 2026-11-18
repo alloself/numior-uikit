@@ -1,4 +1,4 @@
-import { syncRef, usePreferredDark } from '@vueuse/core';
+import { syncRef, useMounted, usePreferredDark } from '@vueuse/core';
 import {
   computed,
   effectScope,
@@ -39,6 +39,8 @@ export interface ColorSchemeHandle extends ColorSchemeControl {
 
 export const COLOR_SCHEME_KEY: InjectionKey<ColorSchemeControl> = Symbol('nui-color-scheme');
 
+const SERVER_SCHEMES = new WeakMap<ColorSchemeControl, ColorScheme>();
+
 const CYCLE: readonly ColorScheme[] = [ColorScheme.Light, ColorScheme.Dark, ColorScheme.System];
 
 const SCHEMES: ReadonlySet<unknown> = new Set(CYCLE);
@@ -51,6 +53,19 @@ const OPPOSITE: Record<ResolvedColorScheme, ResolvedColorScheme> = {
 const SCHEME_CLASS = 'nui-theme--';
 
 const isColorScheme = (value: unknown): value is ColorScheme => SCHEMES.has(value);
+
+const resolvedOf = (scheme: ColorScheme, systemDark: boolean): ResolvedColorScheme => {
+  if (scheme !== ColorScheme.System) {
+    return scheme;
+  }
+  return systemDark ? ColorScheme.Dark : ColorScheme.Light;
+};
+
+const remember = <T extends ColorSchemeControl>(control: T, initial: ColorScheme): T => {
+  SERVER_SCHEMES.set(control, initial);
+
+  return control;
+};
 
 const schemeClassOf = (scheme: ColorScheme): string => `${SCHEME_CLASS}${scheme}`;
 
@@ -97,13 +112,7 @@ const createColorScheme = (options: ColorSchemeOptions, run: StartRunner): Color
   const systemDark = ref(false);
   let started = false;
 
-  const resolved = computed<ResolvedColorScheme>(() =>
-    scheme.value === ColorScheme.System
-      ? systemDark.value
-        ? ColorScheme.Dark
-        : ColorScheme.Light
-      : scheme.value,
-  );
+  const resolved = computed<ResolvedColorScheme>(() => resolvedOf(scheme.value, systemDark.value));
 
   const scopeElement = (): HTMLElement | null =>
     toValue(options.scope) ?? (typeof document === 'undefined' ? null : document.documentElement);
@@ -131,28 +140,33 @@ const createColorScheme = (options: ColorSchemeOptions, run: StartRunner): Color
     run(begin);
   };
 
-  return {
-    scheme,
-    resolved,
-    systemDark,
-    start,
-    set: (next) => {
-      start();
+  return remember(
+    {
+      scheme,
+      resolved,
+      systemDark,
+      start,
+      set: (next) => {
+        start();
 
-      if (next === scheme.value) {
-        writeStored(options.storageKey, next);
-      }
-      scheme.value = next;
+        if (next === scheme.value) {
+          writeStored(options.storageKey, next);
+        }
+        scheme.value = next;
+      },
+      toggle: () => {
+        start();
+        scheme.value = OPPOSITE[resolved.value];
+      },
+      cycle: () => {
+        start();
+
+        scheme.value =
+          CYCLE[(CYCLE.indexOf(scheme.value) + 1) % CYCLE.length] ?? ColorScheme.System;
+      },
     },
-    toggle: () => {
-      start();
-      scheme.value = OPPOSITE[resolved.value];
-    },
-    cycle: () => {
-      start();
-      scheme.value = CYCLE[(CYCLE.indexOf(scheme.value) + 1) % CYCLE.length] ?? ColorScheme.System;
-    },
-  };
+    options.initial ?? ColorScheme.System,
+  );
 };
 
 const runInline: StartRunner = (begin) => {
@@ -166,18 +180,31 @@ export const createColorSchemeControl = (options: ColorSchemeOptions = {}): Colo
     scope.run(begin);
   });
 
-  return { ...control, stop: () => scope.stop() };
+  return remember({ ...control, stop: () => scope.stop() }, options.initial ?? ColorScheme.System);
 };
 
 export const useColorScheme = (options?: ColorSchemeOptions): ColorSchemeControl => {
   const shared = options === undefined ? inject(COLOR_SCHEME_KEY, null) : null;
   const control = shared ?? createColorScheme(options ?? {}, runInline);
+  const initial = SERVER_SCHEMES.get(control) ?? ColorScheme.System;
+  const mounted = useMounted();
+
+  const scheme = computed<ColorScheme>({
+    get: () => (mounted.value ? control.scheme.value : initial),
+    set: (next) => {
+      control.scheme.value = next;
+    },
+  });
+
+  const systemDark = computed(() => mounted.value && control.systemDark.value);
+
+  const resolved = computed(() => resolvedOf(scheme.value, systemDark.value));
 
   onMounted(() => {
     control.start();
   });
 
-  return control;
+  return remember({ ...control, scheme, systemDark, resolved }, initial);
 };
 
 export const colorSchemeScript = (storageKey: string, initial?: ColorScheme): string =>

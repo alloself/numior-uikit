@@ -26,6 +26,9 @@ The composable starts after the component mounts, so you do not call `start()`. 
 other two theme classes and leaves the rest of the element's classes alone. On the server the
 class is not changed.
 
+Until the component mounts, `scheme`, `resolved` and `systemDark` hold the server values. Markup
+then hydrates without mismatches, even when another component already started the shared theme.
+
 Add `colorSchemeScript(storageKey, initial?)` to `<head>` so the class of the saved theme lands on
 `<html>` before the first paint. `initial` is the theme for a first visit, when nothing is saved yet, see
 [Theming](/en/guide/theming).

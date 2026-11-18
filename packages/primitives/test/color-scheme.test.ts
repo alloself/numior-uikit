@@ -8,6 +8,7 @@ import {
   type ColorSchemeControl,
 } from '../src';
 import { captureSetup } from './harness/capture';
+import { hydrateSchemeProbe, startedScheme } from './harness/color-scheme';
 
 type MediaListener = (event: { readonly matches: boolean }) => void;
 
@@ -57,12 +58,12 @@ describe('useColorScheme', () => {
       ],
     }).value;
 
-    expect(inner).toBe(outer.control);
     expect(inner.scheme.value).toBe('system');
     expect(inner.resolved.value).toBe('dark');
 
     inner.cycle();
     expect(inner.scheme.value).toBe('light');
+    expect(outer.control?.scheme.value).toBe('light');
 
     await nextTick();
     expect(schemeClasses(document.documentElement)).toEqual(['nui-theme--light']);
@@ -204,6 +205,17 @@ describe('useColorScheme', () => {
     control.toggle();
     await nextTick();
     expect(localStorage.getItem('nui-theme')).toBe('light');
+  });
+
+  it('hydrates a reader that renders after the shared scheme started with what the server rendered', async () => {
+    fakeMedia(true);
+    localStorage.setItem('nui-theme', 'dark');
+
+    const probe = await hydrateSchemeProbe(startedScheme());
+
+    expect(probe.server).toBe('<section class="nui-theme--system">light</section>');
+    expect(probe.warnings).toEqual([]);
+    expect(probe.hydrated).toBe('<section class="nui-theme--dark">dark</section>');
   });
 
   it('survives storage that throws', async () => {
