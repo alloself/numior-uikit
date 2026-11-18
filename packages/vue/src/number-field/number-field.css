@@ -2,7 +2,7 @@
   --_height: var(--nui-control-height-md);
   --_padding: var(--nui-field-padding-md);
   --_font-size: var(--nui-control-font-size-md);
-  --_stepper: 2rem;
+  --_stepper-icon: round(calc(1.15 * var(--nui-control-font-size-xs)), 2px);
 
   box-sizing: border-box;
   display: inline-flex;
@@ -27,13 +27,11 @@
   --_height: var(--nui-control-height-sm);
   --_padding: var(--nui-field-padding-sm);
   --_font-size: var(--nui-control-font-size-sm);
-  --_stepper: 1.75rem;
 }
 .nui-number-field--size-lg {
   --_height: var(--nui-control-height-lg);
   --_padding: var(--nui-field-padding-lg);
   --_font-size: var(--nui-control-font-size-lg);
-  --_stepper: 2.25rem;
 }
 .nui-number-field--steppers {
   padding-inline-end: 0;
@@ -67,19 +65,10 @@
   box-sizing: border-box;
   display: inline-flex;
   flex: none;
-  align-self: stretch;
-  border-inline-start: 1px solid var(--nui-border);
-}
-.nui-number-field__stepper {
-  box-sizing: border-box;
-  min-block-size: 0;
-  block-size: 100%;
-  inline-size: var(--_stepper);
-  padding: 0;
-  border-radius: 0;
-}
-.nui-number-field__stepper + .nui-number-field__stepper {
-  border-inline-start: 1px solid var(--nui-border);
+  gap: 2px;
+  padding-inline-end: calc(
+    var(--_padding) - (var(--nui-control-height-xs) - var(--_stepper-icon)) / 2
+  );
 }
 .nui-number-field:hover:not(
     .nui-number-field--disabled,

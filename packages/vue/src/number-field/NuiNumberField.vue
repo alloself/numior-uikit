@@ -41,7 +41,7 @@
         <NuiButton
           variant="ghost"
           tone="neutral"
-          size="sm"
+          size="xs"
           icon-only
           class="nui-number-field__stepper nui-number-field__stepper--down"
           tabindex="-1"
@@ -54,7 +54,7 @@
         <NuiButton
           variant="ghost"
           tone="neutral"
-          size="sm"
+          size="xs"
           icon-only
           class="nui-number-field__stepper nui-number-field__stepper--up"
           tabindex="-1"
