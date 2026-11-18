@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { motionOf, SLOW_MOTION, slowMotion } from './helpers/motion';
+import { motionOf, slowMotion } from './helpers/motion';
 import { boxOf, rowFillInsets } from './helpers/geometry';
 
 test.describe('data display', () => {
@@ -192,7 +192,7 @@ test.describe('data display', () => {
     expect(insets.bottom).toBeCloseTo(0, 1);
   });
 
-  test('a selected option fades its icon and its description together with its label', async ({
+  test('a selected option changes its label, icon and description at once', async ({
     playground,
     data,
   }) => {
@@ -201,11 +201,11 @@ test.describe('data display', () => {
     await option.scrollIntoViewIfNeeded();
     await slowMotion(data.singleList);
     await option.click();
-    const label = await motionOf(option, 'color');
 
-    expect(label?.duration).toBe(SLOW_MOTION);
-    expect(await motionOf(data.iconOf(option), 'color')).toEqual(label);
-    expect(await motionOf(data.descriptionOf(option), 'color')).toEqual(label);
+    expect(await motionOf(option, 'color')).toBeNull();
+    expect(await motionOf(option, 'background-color')).toBeNull();
+    expect(await motionOf(data.iconOf(option), 'color')).toBeNull();
+    expect(await motionOf(data.descriptionOf(option), 'color')).toBeNull();
     expect(await motionOf(data.titleOf(option), 'color')).toBeNull();
   });
 

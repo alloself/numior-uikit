@@ -249,7 +249,6 @@
   inline-size: 100%;
   margin-inline-start: var(--_rail-shift);
   transition:
-    color var(--nui-duration-fast) var(--nui-easing),
     inline-size var(--nui-duration-normal) var(--nui-easing),
     --_rail-shift var(--nui-duration-normal) var(--nui-easing);
 }
@@ -335,16 +334,10 @@
 .nui-sidebar .nui-list-item .nui-row__trailing {
   margin-inline-start: auto;
 }
-.nui-sidebar-sub > .nui-list-item__inner {
-  transition:
-    background-color var(--nui-duration-fast) var(--nui-easing),
-    color var(--nui-duration-fast) var(--nui-easing);
-}
 .nui-sidebar-sub--active > .nui-list-item__inner {
+  --_row-color: var(--nui-primary-soft-foreground);
   --_row-icon: var(--nui-primary-soft-foreground);
   --_row-weight: 500;
-
-  color: var(--nui-primary-soft-foreground);
 }
 .nui-sidebar-sub--flyout-open > .nui-list-item__inner {
   background: var(--_hover);

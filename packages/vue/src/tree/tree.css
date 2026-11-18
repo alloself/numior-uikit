@@ -74,7 +74,6 @@
   border-radius: var(--nui-radius-sm);
   overflow: hidden;
   transition:
-    color var(--nui-duration-fast) var(--nui-easing),
     opacity var(--nui-duration-normal) var(--nui-easing),
     block-size var(--nui-duration-normal) var(--nui-easing);
 }

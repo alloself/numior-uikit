@@ -9,6 +9,7 @@ import {
 } from '../../../packages/primitives/test/support/guards';
 import { sectionScope } from '../helpers/axe';
 import { paintedRgb, type Rgb } from '../helpers/color';
+import { paintOfRow, type RowPaint } from '../helpers/rows';
 
 export interface BadgeOnButton {
   readonly fromButtonRight: number;
@@ -214,6 +215,16 @@ export class LayoutSection {
     await act();
 
     return drift.evaluate((held) => held.measured);
+  }
+
+  async branchPaintUnderPointer(): Promise<{ rest: RowPaint; hovered: RowPaint }> {
+    await this.page.mouse.move(0, 0);
+
+    const rest = await paintOfRow(this.subToggle);
+
+    await this.subToggle.hover();
+
+    return { rest, hovered: await paintOfRow(this.subToggle) };
   }
 
   badgeClipped(key: string): Promise<boolean> {

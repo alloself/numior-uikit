@@ -196,6 +196,17 @@ test('list rows keep one inset from the edge of panels and another in layers', a
   expect(await playground.rowInsetFaults()).toEqual([]);
 });
 
+test('list rows keep their text colour under the pointer and move fill and text together', async ({
+  playground,
+}) => {
+  test.slow();
+
+  await playground.open();
+
+  expect(await playground.rowTransitionFaults()).toEqual([]);
+  expect(await playground.rowsRecolouredUnderPointer()).toEqual([]);
+});
+
 test('light and dark playground have no automatically detectable WCAG AA violations', async ({
   playground,
 }) => {

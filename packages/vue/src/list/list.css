@@ -167,6 +167,7 @@
   --_hover: var(--nui-hover);
   --_row-weight: 500;
   --_row-description-size: var(--nui-font-size-sm);
+  --_row-fade: 0s;
 
   box-sizing: border-box;
   position: relative;
@@ -174,7 +175,6 @@
   grid-template-columns: minmax(0, 1fr);
   border-block-start: var(--_divider-size) solid var(--_divider);
   background-clip: padding-box;
-  transition: color var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-list-item:first-child {
   border-block-start-color: transparent;
@@ -212,14 +212,17 @@
   border: 0;
   border-radius: 0;
   background: none;
-  color: inherit;
+  color: var(--_row-color, inherit);
   font: inherit;
   text-align: start;
   cursor: pointer;
 }
+.nui-list .nui-list-item__action {
+  transition: none;
+}
 .nui-list .nui-list-item__action:hover {
   background: var(--_hover);
-  color: inherit;
+  color: var(--_row-color, inherit);
 }
 .nui-list .nui-list-item__action:focus-visible {
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);

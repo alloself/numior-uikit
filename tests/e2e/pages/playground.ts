@@ -2,6 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { sectionScope, wcagViolationsOf, type AxeViolations } from '../helpers/axe';
 import { kitButtonsOf, offGridButtons, type KitButton } from '../helpers/buttons';
 import { LAYER_INSET, PANEL_INSET, rowInsetFaultsOf } from '../helpers/insets';
+import { paintOfRow, rowNameOf, ROWS, rowsToHoverOf, rowTransitionFaultsOf } from '../helpers/rows';
 import {
   hideLayer,
   kitPixelsOf,
@@ -421,6 +422,38 @@ export class PlaygroundPage {
     }
 
     return [...new Set(found)].toSorted();
+  }
+
+  rowTransitionFaults(): Promise<string[]> {
+    return rowTransitionFaultsOf(this.page.locator('body'));
+  }
+
+  async rowsRecolouredUnderPointer(): Promise<string[]> {
+    await motionSettled(this.page);
+
+    const found: string[] = [];
+
+    for (const index of await rowsToHoverOf(this.page.locator('body'))) {
+      const row = this.page.locator(ROWS).nth(index);
+
+      await this.page.mouse.move(0, 0);
+
+      const rest = await paintOfRow(row);
+
+      await row.hover();
+
+      const hovered = await paintOfRow(row);
+
+      if (rest.text === hovered.text && rest.icon === hovered.icon) {
+        continue;
+      }
+
+      found.push(
+        `${await rowNameOf(row)}: ${rest.text} ${rest.icon} → ${hovered.text} ${hovered.icon}`,
+      );
+    }
+
+    return found;
   }
 
   hasHorizontalOverflow(): Promise<boolean> {

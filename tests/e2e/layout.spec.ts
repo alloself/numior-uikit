@@ -1,7 +1,7 @@
 import { expect, test } from './fixtures';
 import { channelSumOf, rgbDelta } from './helpers/color';
 import { boxOf } from './helpers/geometry';
-import { motionOf, SLOW_MOTION, slowMotion } from './helpers/motion';
+import { motionOf, slowMotion } from './helpers/motion';
 
 const GUTTER = 24;
 
@@ -184,6 +184,22 @@ test.describe('layout', () => {
     await expect.poll(() => layout.sidebarWidth()).toBeGreaterThan(200);
   });
 
+  test('a branch that holds the current page keeps its accent text and icon under the pointer', async ({
+    playground,
+    layout,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'desktop sidebar');
+    await playground.open();
+    await layout.root.scrollIntoViewIfNeeded();
+    await layout.subToggle.click();
+    await layout.item('report-sales').click();
+
+    const { rest, hovered } = await layout.branchPaintUnderPointer();
+
+    expect(hovered).toEqual(rest);
+  });
+
   test('sub list expands, the sidebar can dock at the end and mirrors in RTL', async ({
     playground,
     layout,
@@ -221,7 +237,7 @@ test.describe('layout', () => {
     await playground.setDirection('ltr');
   });
 
-  test('a navigation item fades its icon together with its label and changes its background at once', async ({
+  test('a navigation item changes its background, label and icon at once', async ({
     playground,
     layout,
     isMobile,
@@ -231,18 +247,18 @@ test.describe('layout', () => {
     await layout.root.scrollIntoViewIfNeeded();
     await slowMotion(layout.sidebar);
     await layout.item('calendar').click();
-    const label = await motionOf(layout.itemRow('calendar'), 'color');
 
-    expect(label?.duration).toBe(SLOW_MOTION);
-    expect(await motionOf(layout.itemIcon('calendar'), 'color')).toEqual(label);
+    expect(await motionOf(layout.itemRow('calendar'), 'color')).toBeNull();
+    expect(await motionOf(layout.itemRow('calendar'), 'background-color')).toBeNull();
+    expect(await motionOf(layout.itemIcon('calendar'), 'color')).toBeNull();
     expect(await motionOf(layout.item('calendar'), 'background-color')).toBeNull();
     expect(await motionOf(layout.item('calendar'), 'color')).toBeNull();
 
     await layout.subToggle.click();
     await layout.item('report-sales').click();
 
-    expect(await motionOf(layout.subToggle, 'color')).toEqual(label);
-    expect(await motionOf(layout.subIcon, 'color')).toEqual(label);
+    expect(await motionOf(layout.subToggle, 'color')).toBeNull();
+    expect(await motionOf(layout.subIcon, 'color')).toBeNull();
   });
 
   test('the icon rail opens sub lists as flyouts by hover, click and keyboard', async ({

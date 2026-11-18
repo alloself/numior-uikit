@@ -8,7 +8,7 @@
   align-items: center;
   justify-content: center;
   color: var(--_row-icon, var(--nui-text-muted));
-  transition: color var(--nui-duration-fast) var(--nui-easing);
+  transition: color var(--_row-fade, var(--nui-duration-fast)) var(--nui-easing);
 }
 .nui-row:not(.nui-row--inline):has(.nui-row__description) .nui-row__leading {
   align-self: flex-start;
@@ -43,7 +43,7 @@
   color: var(--_row-muted, var(--nui-text-muted));
   font-size: var(--_row-description-size, var(--nui-font-size-xs));
   line-height: var(--nui-line-height-control);
-  transition: color var(--nui-duration-fast) var(--nui-easing);
+  transition: color var(--_row-fade, var(--nui-duration-fast)) var(--nui-easing);
 }
 .nui-row__trailing {
   display: inline-flex;
@@ -51,7 +51,7 @@
   align-items: center;
   gap: var(--nui-space-2);
   color: var(--_row-icon, var(--nui-text-muted));
-  transition: color var(--nui-duration-fast) var(--nui-easing);
+  transition: color var(--_row-fade, var(--nui-duration-fast)) var(--nui-easing);
 }
 .nui-row__check {
   display: inline-flex;
