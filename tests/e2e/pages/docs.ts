@@ -13,6 +13,11 @@ export interface Edges {
   readonly end: number;
 }
 
+export interface ScreenLook {
+  readonly fill: string;
+  readonly font: string;
+}
+
 export interface ButtonLook {
   readonly fill: string;
   readonly radius: string;
@@ -91,7 +96,6 @@ export class DocsThemeCompare {
   async frameLook(label: string, name: string): Promise<ButtonLook> {
     return lookOf(await this.button(label, name));
   }
-
 
   screen(label: string): FrameLocator {
     return this.page.frameLocator(`iframe[title="${label}"]`);
@@ -229,7 +233,7 @@ export class DocsHome {
   readonly title: Locator;
   readonly start: Locator;
   readonly copyInstall: Locator;
-  readonly screen: FrameLocator;
+  readonly screen: Locator;
   private readonly options: Locator;
 
   constructor(private readonly page: Page) {
@@ -240,20 +244,23 @@ export class DocsHome {
       .getByRole('region', { name: 'UI-кит для Vue 3' })
       .getByRole('button', { name: 'Скопировать код' });
 
-    this.screen = page.frameLocator('iframe[src$="/blocks/view/AppShell"]');
-    this.options = page.getByRole('group', { name: 'Вид кабинета' });
+    this.screen = page.getByRole('region', { name: 'Компоненты Numior UI на данных магазина' });
+    this.options = page.getByRole('group', { name: 'Вид компонентов' });
   }
 
   screenScheme(): Promise<string | null> {
-    return schemeOf(this.screen.locator('html'));
-  }
-
-  screenAccent(): Promise<string | null> {
-    return accentOf(this.screen.locator('html'));
+    return schemeOf(this.screen);
   }
 
   screenDirection(): Promise<string | null> {
-    return this.screen.locator('html').getAttribute('dir');
+    return this.screen.getAttribute('dir');
+  }
+
+  screenLook(): Promise<ScreenLook> {
+    return this.screen.getByRole('button', { name: 'Оформить заказ' }).evaluate((button) => ({
+      fill: getComputedStyle(button).backgroundColor,
+      font: getComputedStyle(button).fontFamily,
+    }));
   }
 
   siteAccent(): Promise<string | null> {
@@ -277,8 +284,14 @@ export class DocsHome {
     await this.page.getByRole('option', { name: label, exact: true }).click();
   }
 
-  section(title: string): Locator {
-    return this.page.getByRole('region', { name: title });
+  editor(): Locator {
+    return this.screen.getByRole('textbox', { name: 'Описание товара' });
+  }
+
+  async typeInEditor(text: string): Promise<void> {
+    await this.editor().getByText('Выдерживает до 120 кг').click();
+    await this.page.keyboard.press('End');
+    await this.page.keyboard.type(text);
   }
 }
 
@@ -348,6 +361,7 @@ export class DocsSite {
   readonly commandDialog: Locator;
   readonly commandInput: Locator;
   readonly tooltip: Locator;
+  readonly frames: Locator;
   readonly network: MainFrameNetwork;
   private readonly hydration: string[] = [];
 
@@ -363,9 +377,10 @@ export class DocsSite {
 
     this.tooltip = page.getByRole('tooltip');
     this.header = page.locator('.nui-app-bar:not(#docs-content *)');
-    this.sidebar = page.locator('aside.nui-sidebar');
-    this.drawer = page.locator('dialog.nui-sidebar-drawer');
-    this.trigger = page.locator('.nui-sidebar-trigger');
+    this.sidebar = page.locator('aside.nui-sidebar:not(#docs-content *)');
+    this.drawer = page.locator('dialog.nui-sidebar-drawer:not(#docs-content *)');
+    this.trigger = page.locator('.nui-sidebar-trigger:not(#docs-content *)');
+    this.frames = page.locator('iframe');
     this.toc = page.locator('nav.nui-toc');
     this.article = page.locator('#docs-content');
     this.main = page.locator('#docs-layout-content');

@@ -1,5 +1,5 @@
 import type { NuiTableColumn } from '@numior/table';
-import type { NuiCodeProps, ResolvedColorScheme } from '@numior/vue';
+import type { NuiCodeProps } from '@numior/vue';
 import type { MarkdownRenderer } from 'vitepress';
 import type { Component } from 'vue';
 import type { ConfiguratorChange, ConfiguratorState } from './configurator-code';
@@ -249,20 +249,14 @@ export interface ThemeFrameProps {
   palette: readonly string[];
 }
 
-export interface ScreenState {
-  readonly scheme: ResolvedColorScheme;
-  readonly accent: string;
-  readonly rtl: boolean;
-}
-
-export interface FrameTheme {
-  readonly classes: readonly string[];
-  readonly dir: string;
-}
-
 export interface HomeScreenProps {
-  src: string;
-  height: number;
+  screen: Component;
+  texts: DocsTexts;
+}
+
+export interface HomeScreenViewProps {
+  name: string;
+  locale: ExampleLocale;
   texts: DocsTexts;
 }
 

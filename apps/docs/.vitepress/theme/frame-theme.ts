@@ -1,5 +1,4 @@
 import { ACCENT_CLASS_PREFIX, NUMIOR_PALETTE, SITE_THEME_CLASS } from './composables/use-accent';
-import type { FrameTheme, ScreenState } from './theme.types';
 
 const KIT_THEME_PREFIX = 'nui-theme--';
 
@@ -18,11 +17,6 @@ export const themeClassesOf = (element: Element): string[] =>
 export const schemeClassesOf = (element: Element): string[] =>
   [...element.classList].filter(isSchemeClass);
 
-export const screenTheme = (state: ScreenState): FrameTheme => ({
-  classes: [`${KIT_THEME_PREFIX}${state.scheme}`, paletteClassOf(state.accent)],
-  dir: state.rtl ? 'rtl' : 'ltr',
-});
-
 export const applyThemeClasses = (
   target: Element | null | undefined,
   classes: readonly string[],
@@ -36,11 +30,6 @@ export const applyThemeClasses = (
   }
 
   target.classList.add(...classes);
-};
-
-export const applyFrameTheme = (target: Element | null | undefined, theme: FrameTheme): void => {
-  applyThemeClasses(target, theme.classes);
-  target?.setAttribute('dir', theme.dir);
 };
 
 export const topWindowOnly = (script: string): string => `if(window.parent===window){${script}}`;

@@ -3,14 +3,9 @@ import { nextTick } from 'vue';
 import HomeScreen from '../../.vitepress/theme/parts/HomeScreen.vue';
 import { ru } from '../../.vitepress/theme/texts';
 import { TopLayerStubs } from '../../../../packages/vue/test/support/top-layer';
+import SampleButton from '../fixtures/SampleButton.vue';
 
-const SCREEN_SRC = '/blocks/view/AppShell';
-
-const mountScreen = (src: string): VueWrapper =>
-  mount(HomeScreen, {
-    props: { src, height: 720, texts: ru },
-    attachTo: document.body,
-  });
+const SCHEME_PREFIX = 'nui-theme--';
 
 export class HomeScreenDriver {
   constructor(
@@ -20,38 +15,34 @@ export class HomeScreenDriver {
 
   static mount(): HomeScreenDriver {
     const stubs = new TopLayerStubs();
-    const wrapper = mountScreen(SCREEN_SRC);
-    const page = wrapper.find<HTMLIFrameElement>('iframe').element.contentDocument;
 
-    page?.append(page.createElement('html'));
-
-    return new HomeScreenDriver(wrapper, stubs);
+    return new HomeScreenDriver(
+      mount(HomeScreen, {
+        props: { screen: SampleButton, texts: ru },
+        attachTo: document.body,
+      }),
+      stubs,
+    );
   }
 
-  static mountOnSite(siteClasses: string): HomeScreenDriver {
-    const stubs = new TopLayerStubs();
-
-    document.documentElement.className = siteClasses;
-
-    return new HomeScreenDriver(mountScreen('about:blank'), stubs);
-  }
-
-  get screen(): DOMWrapper<HTMLIFrameElement> {
-    return this.wrapper.find<HTMLIFrameElement>('iframe');
+  get screen(): DOMWrapper<HTMLElement> {
+    return this.wrapper.find<HTMLElement>(`[role="region"][aria-label="${ru.homeScreen}"]`);
   }
 
   get accent(): string {
     return this.accentTrigger.text();
   }
 
-  attribute(name: string): string | null {
-    return this.screen.element.contentDocument?.documentElement?.getAttribute(name) ?? null;
+  get direction(): string | undefined {
+    return this.screen.attributes('dir');
   }
 
-  get themeClasses(): string[] {
-    const page = this.screen.element.contentDocument?.documentElement;
+  get schemes(): string[] {
+    return this.screen.classes().filter((name) => name.startsWith(SCHEME_PREFIX));
+  }
 
-    return [...(page?.classList ?? [])].filter((name) => name.includes('-theme--'));
+  themeKey(name: string): string {
+    return this.screen.element.style.getPropertyValue(name);
   }
 
   async choose(group: string, label: string): Promise<void> {

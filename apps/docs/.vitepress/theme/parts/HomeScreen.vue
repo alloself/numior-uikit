@@ -1,5 +1,5 @@
 <template>
-  <section class="flex flex-col gap-6" :aria-label="texts.homeScreen">
+  <div class="flex flex-col gap-6">
     <div role="group" :aria-label="texts.screenOptions" class="flex flex-wrap items-center gap-3">
       <div class="w-44">
         <NuiSelect v-model="accent" :options="accents" :aria-label="texts.accent" size="sm" />
@@ -25,22 +25,24 @@
     </div>
     <div class="relative">
       <FrameCorners />
-      <div class="overflow-hidden rounded-lg border bg-surface">
-        <iframe
-          ref="frame"
-          :src="src"
-          :title="texts.homeScreen"
-          class="block w-full border-0"
-          :style="{ blockSize: `${blockSize}px` }"
-          @load="sync"
-        />
+      <div class="overflow-hidden rounded-lg">
+        <div
+          role="region"
+          :aria-label="texts.homeScreen"
+          :dir="direction"
+          class="bg-surface p-4 font-sans text-foreground sm:p-6"
+          :class="`nui-theme--${scheme}`"
+          :style="look"
+        >
+          <component :is="screen" />
+        </div>
       </div>
     </div>
-  </section>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
+import { computed, ref } from 'vue';
 import {
   NuiSelect,
   NuiToggleGroup,
@@ -50,24 +52,20 @@ import {
   type ResolvedColorScheme,
 } from '@numior/vue';
 import { NUMIOR_PALETTE, useAccent } from '../composables/use-accent';
-import { useFramedHeight } from '../block-height';
-import { applyFrameTheme, screenTheme } from '../frame-theme';
+import { themeModel } from '../theme-sources';
 import { DocsAccent, type HomeScreenProps } from '../theme.types';
 import FrameCorners from './FrameCorners.vue';
 
 const RTL = 'rtl';
 
-const { src, height, texts } = defineProps<HomeScreenProps>();
+const { screen, texts } = defineProps<HomeScreenProps>();
 
 const site = useColorScheme();
 const palette = useAccent();
-const frame = useTemplateRef<HTMLIFrameElement>('frame');
 
 const pickedScheme = ref<ResolvedColorScheme>();
 const pickedAccent = ref<string>();
 const directions = ref<string[]>([]);
-
-const blockSize = useFramedHeight(frame, () => height);
 
 const scheme = computed<ResolvedColorScheme>({
   get: () => pickedScheme.value ?? site.resolved.value,
@@ -97,19 +95,14 @@ const directionItems = computed<readonly NuiToggleItem<string>[]>(() => [
   { value: RTL, label: texts.rtl, icon: 'direction' },
 ]);
 
-const theme = computed(() =>
-  screenTheme({
-    scheme: scheme.value,
-    accent: accent.value ?? NUMIOR_PALETTE,
-    rtl: directions.value.includes(RTL),
-  }),
-);
+const direction = computed(() => (directions.value.includes(RTL) ? 'rtl' : 'ltr'));
 
-const sync = (): void => {
-  applyFrameTheme(frame.value?.contentDocument?.documentElement, theme.value);
-};
+const look = computed(() => {
+  const { presets } = themeModel;
+  const chosen = accent.value ?? NUMIOR_PALETTE;
 
-watch(theme, sync, { flush: 'post' });
-
-onMounted(sync);
+  return themeModel.preview(
+    chosen === NUMIOR_PALETTE ? presets.numior : { ...presets.base, palette: chosen },
+  );
+});
 </script>

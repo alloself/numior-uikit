@@ -15,12 +15,14 @@ test('the home page copies the install line and leads to the guide', async ({ do
   await expect(page).toHaveURL(/\/guide\/getting-started$/);
 });
 
-test('the back office on the home page changes its look and leaves the site as it was', async ({
+test('the components on the home page change their look and leave the site as it was', async ({
   docs,
 }) => {
   await docs.open('/');
   const home = docs.home();
-  await expect(home.screen.getByRole('heading', { name: 'Заказы' })).toBeVisible();
+  await expect(home.screen.getByRole('button', { name: 'Оформить заказ' })).toBeVisible();
+
+  const numior = await home.screenLook();
 
   await home.pick('Тёмная');
   await home.turnRightToLeft();
@@ -28,25 +30,38 @@ test('the back office on the home page changes its look and leaves the site as i
 
   await expect.poll(() => home.screenScheme()).toBe('dark');
   await expect.poll(() => home.screenDirection()).toBe('rtl');
-  await expect.poll(() => home.screenAccent()).toBe('violet');
+
+  const violet = await home.screenLook();
+  expect(numior.font).toContain('Manrope');
+  expect(violet.font).not.toContain('Manrope');
+  expect(violet.fill).not.toBe(numior.fill);
   expect(await home.siteDirection()).not.toBe('rtl');
   expect(await home.siteAccent()).toBeNull();
 
   await home.pickAccent('Numior');
-  await expect.poll(() => home.screenAccent()).toBeNull();
+  await expect.poll(async () => (await home.screenLook()).font).toContain('Manrope');
 });
 
-test('a section of the home page shows a live block and leads to its page', async ({
-  docs,
-  page,
-}) => {
+test('the editor on the home page takes text right on the page', async ({ docs }) => {
   await docs.open('/');
-  const table = docs.home().section('Разметка остаётся таблицей');
-  await expect(docs.block('OrdersTable').content.getByRole('grid')).toBeVisible();
+  const home = docs.home();
+  await expect(docs.frames).toHaveCount(0);
 
-  await table.getByRole('link', { name: 'Открыть таблицу' }).click();
+  await home.typeInEditor(', если стоит на ровном полу');
 
-  await expect(page).toHaveURL(/\/components\/table\/$/);
+  await expect(home.editor()).toContainText('Выдерживает до 120 кг, если стоит на ровном полу');
+});
+
+test('the home page shows the table and the tree among the components', async ({
+  docs,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'a phone shows the first column of cards only');
+  await docs.open('/');
+  const home = docs.home();
+
+  await expect(home.screen.getByRole('grid', { name: 'Последние заказы' })).toBeVisible();
+  await expect(home.screen.getByRole('tree', { name: 'Разделы каталога' })).toBeVisible();
 });
 
 test('the skip link moves focus to the home content', async ({ docs, isMobile }) => {

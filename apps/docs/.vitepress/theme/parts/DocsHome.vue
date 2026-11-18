@@ -1,5 +1,9 @@
 <template>
-  <div id="docs-content" class="mx-auto flex max-w-6xl flex-col gap-20 px-6 py-16" tabindex="-1">
+  <div
+    id="docs-content"
+    class="mx-auto flex max-w-[120rem] flex-col gap-16 px-6 py-16"
+    tabindex="-1"
+  >
     <section
       class="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 text-center"
       :aria-labelledby="`${sectionId}-title`"
@@ -26,41 +30,20 @@
         :copied-label="texts.copied"
       />
     </section>
-    <HomeScreen
-      :src="withBase(blockRouteOf(home.screen, locale))"
-      :height="blockHeightOf(home.screen)"
-      :texts="texts"
-    />
-    <section
-      v-for="(section, index) in home.sections"
-      :key="section.block"
-      class="flex flex-col gap-2"
-      :aria-labelledby="`${sectionId}-${index}`"
-    >
-      <DocsCaption>{{ section.label }}</DocsCaption>
-      <h2 :id="`${sectionId}-${index}`" class="m-0 text-2xl font-semibold tracking-tight">
-        {{ section.title }}
-      </h2>
-      <p class="m-0 max-w-prose text-muted-foreground">{{ section.text }}</p>
-      <NuiLink v-if="section.more" :href="withBase(section.more.link)" class="self-start">{{
-        section.more.text
-      }}</NuiLink>
-      <DocsBlock :name="section.block" />
-    </section>
+    <Suspense>
+      <HomeScreenView :name="home.screen" :locale="locale" :texts="texts" />
+    </Suspense>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, useId } from 'vue';
 import { useData, withBase } from 'vitepress';
-import { NuiButton, NuiCode, NuiLink } from '@numior/vue';
-import { blockHeightOf, blockRouteOf } from '../../blocks';
+import { NuiButton, NuiCode } from '@numior/vue';
 import { useDocs } from '../composables/use-docs';
 import { exampleLocaleOf } from '../examples';
 import { homeOf } from '../home-content';
-import DocsBlock from './DocsBlock.vue';
-import DocsCaption from './DocsCaption.vue';
-import HomeScreen from './HomeScreen.vue';
+import HomeScreenView from './HomeScreenView.vue';
 
 const { localeIndex } = useData();
 const { texts } = useDocs();
