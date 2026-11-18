@@ -42,3 +42,5 @@ export const applyFrameTheme = (target: Element | null | undefined, theme: Frame
   applyThemeClasses(target, theme.classes);
   target?.setAttribute('dir', theme.dir);
 };
+
+export const topWindowOnly = (script: string): string => `if(window.parent===window){${script}}`;

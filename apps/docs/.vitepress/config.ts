@@ -22,6 +22,7 @@ import { sourceCssAliases } from '../../../scripts/source-css';
 import { apiSearchText } from './reference/search-text';
 import type { DocsSearchOptions } from './theme/theme.types';
 import { ACCENT_STORAGE_KEY, accentScript } from './theme/composables/use-accent';
+import { topWindowOnly } from './theme/frame-theme';
 import { searchFields } from './theme/search-index';
 import { absoluteUrl, site } from './theme/site';
 import { en, ru } from './theme/texts';
@@ -61,8 +62,8 @@ export default defineConfigWithTheme<DocsThemeConfig>({
     ['link', { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' }],
     ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' }],
     ['link', { rel: 'manifest', href: '/site.webmanifest' }],
-    ['script', {}, colorSchemeScript('nui-theme')],
-    ['script', {}, accentScript(ACCENT_STORAGE_KEY)],
+    ['script', {}, topWindowOnly(colorSchemeScript('nui-theme'))],
+    ['script', {}, topWindowOnly(accentScript(ACCENT_STORAGE_KEY))],
   ],
   ...(origin === undefined
     ? {}
