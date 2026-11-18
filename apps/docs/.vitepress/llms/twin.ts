@@ -133,10 +133,13 @@ const tokenBlocks: TagRenderer = (attributes, context) => {
 const iconBlocks: TagRenderer = (_attributes, context) =>
   context.bundle === undefined ? [] : iconTable(context.bundle.icons, context.texts);
 
+const nothing: TagRenderer = () => [];
+
 const RENDERERS: Readonly<Record<string, TagRenderer>> = {
   Example: exampleBlocks,
   Block: blockBlocks,
   ThemeCompare: blockBlocks,
+  ThemeBuilder: nothing,
   Configurator: sceneBlocks,
   ApiReference: apiBlocks,
   KeyboardReference: keyboardBlocks,

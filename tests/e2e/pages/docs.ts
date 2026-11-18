@@ -13,6 +13,12 @@ export interface Edges {
   readonly end: number;
 }
 
+export interface ButtonLook {
+  readonly fill: string;
+  readonly radius: string;
+  readonly font: string;
+}
+
 const PREVIEW_FRAMES = '[role="group"][aria-label="Превью"], [role="group"][aria-label="Preview"]';
 
 const PHONE_HEIGHT = 844;
@@ -256,6 +262,58 @@ export class DocsHome {
 
   section(title: string): Locator {
     return this.page.getByRole('region', { name: title });
+  }
+}
+
+const lookOf = (button: Locator): Promise<ButtonLook> =>
+  button.evaluate((element) => {
+    const style = getComputedStyle(element);
+
+    return {
+      fill: style.backgroundColor,
+      radius: style.borderTopLeftRadius,
+      font: style.fontFamily,
+    };
+  });
+
+export class DocsThemeBuilder {
+  readonly preview: Locator;
+  readonly code: Locator;
+  private readonly options: Locator;
+
+  constructor(private readonly page: Page) {
+    this.options = page.getByRole('group', { name: 'Настройки темы' });
+    this.preview = page.getByRole('region', { name: 'Превью темы' });
+    this.code = page.getByRole('dialog', { name: 'Код темы' });
+  }
+
+  async pick(label: string): Promise<void> {
+    await this.options.getByRole('radio', { name: label, exact: true }).click();
+  }
+
+  async pickColor(label: string): Promise<void> {
+    await this.options.getByRole('combobox', { name: 'Цвет' }).click();
+    await this.page.getByRole('option', { name: label, exact: true }).click();
+  }
+
+  async showCode(): Promise<void> {
+    await this.options.getByRole('button', { name: 'Код темы' }).click();
+  }
+
+  async copyCss(): Promise<void> {
+    await this.code.getByRole('button', { name: 'Скопировать код' }).first().click();
+  }
+
+  previewLook(): Promise<ButtonLook> {
+    return lookOf(this.preview.getByRole('button', { name: 'Создать заказ' }));
+  }
+
+  siteLook(): Promise<ButtonLook> {
+    return lookOf(this.options.getByRole('button', { name: 'Код темы' }));
+  }
+
+  previewScheme(): Promise<string | null> {
+    return schemeOf(this.preview);
   }
 }
 
@@ -624,6 +682,10 @@ export class DocsSite {
 
   home(): DocsHome {
     return new DocsHome(this.page);
+  }
+
+  themeBuilder(): DocsThemeBuilder {
+    return new DocsThemeBuilder(this.page);
   }
 
   async markdownOf(path: string): Promise<string> {

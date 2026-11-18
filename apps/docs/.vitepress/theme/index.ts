@@ -5,12 +5,14 @@ import * as forms from '@numior/forms';
 import * as table from '@numior/table';
 import * as spreadsheet from '@numior/spreadsheet';
 import { createNuiConfig } from '@numior/vue';
+import '@fontsource-variable/inter/index.css';
 import '@fontsource-variable/manrope/index.css';
 import '@fontsource-variable/jetbrains-mono/index.css';
 import './tailwind.css';
 import Layout from './Layout.vue';
 import ApiReference from './parts/ApiReference.vue';
 import DocsBlock from './parts/DocsBlock.vue';
+import DocsThemeBuilder from './parts/DocsThemeBuilder.vue';
 import DocsThemeCompare from './parts/DocsThemeCompare.vue';
 import DocsCodeGroup from './parts/DocsCodeGroup.vue';
 import DocsConfigurator from './parts/DocsConfigurator.vue';
@@ -55,6 +57,7 @@ export default {
     app.component('IconReference', DocsIcons);
     app.component('KeyboardReference', DocsKeyboard);
     app.component('SignatureReference', DocsSignature);
+    app.component('ThemeBuilder', DocsThemeBuilder);
     app.component('ThemeCompare', DocsThemeCompare);
     app.component('TokenReference', DocsTokens);
   },

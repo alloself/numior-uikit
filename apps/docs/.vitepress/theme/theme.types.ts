@@ -82,6 +82,8 @@ export interface TokenRow extends TokenReference {
 }
 
 export type DocsAccent = (typeof DocsAccent)[keyof typeof DocsAccent];
+export type ThemePreset = (typeof ThemePreset)[keyof typeof ThemePreset];
+export type ThemeFont = (typeof ThemeFont)[keyof typeof ThemeFont];
 
 export interface DocsTexts {
   readonly navigation: string;
@@ -99,6 +101,19 @@ export interface DocsTexts {
   readonly accent: string;
   readonly builtInAccents: string;
   readonly accents: Readonly<Record<DocsAccent, string>>;
+  readonly themeBuilder: string;
+  readonly themeOptions: string;
+  readonly themePreview: string;
+  readonly themePreset: string;
+  readonly themePresets: Readonly<Record<ThemePreset, string>>;
+  readonly themeColor: string;
+  readonly themeRadius: string;
+  readonly themeFont: string;
+  readonly themeFonts: Readonly<Record<ThemeFont, string>>;
+  readonly themeCode: string;
+  readonly themeCodeLead: string;
+  readonly themeFontLead: string;
+  readonly themeFontImport: string;
   readonly language: string;
   readonly onThisPage: string;
   readonly pager: string;
@@ -248,6 +263,37 @@ export interface FrameTheme {
 export interface HomeScreenProps {
   src: string;
   height: number;
+  texts: DocsTexts;
+}
+
+export interface ThemeChoice {
+  readonly preset: ThemePreset;
+  readonly palette: string;
+  readonly radius: string;
+  readonly font: ThemeFont;
+}
+
+export interface ThemeSources {
+  readonly kit: string;
+  readonly accents: string;
+  readonly site: string;
+}
+
+export interface ThemeModel {
+  readonly presets: Readonly<Record<ThemePreset, ThemeChoice>>;
+  readonly radii: readonly string[];
+  readonly overrides: (choice: ThemeChoice) => ReadonlyMap<string, string>;
+  readonly preview: (choice: ThemeChoice) => Readonly<Record<string, string>>;
+  readonly css: (choice: ThemeChoice) => string;
+}
+
+export interface ThemeBuilderProps {
+  preview: Component;
+  texts: DocsTexts;
+}
+
+export interface ThemeBuilderViewProps {
+  locale: ExampleLocale;
   texts: DocsTexts;
 }
 
@@ -445,3 +491,7 @@ export const DocsAccent = {
   Amber: 'amber',
   Slate: 'slate',
 } as const;
+
+export const ThemePreset = { Base: 'base', Numior: 'numior' } as const;
+
+export const ThemeFont = { Inter: 'inter', Manrope: 'manrope', System: 'system' } as const;

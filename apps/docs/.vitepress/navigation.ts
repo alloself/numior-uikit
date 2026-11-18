@@ -233,8 +233,11 @@ const EDITOR: readonly NavGroup[] = [
 
 const THEME: readonly NavGroup[] = [
   {
-    title: { ru: 'Справочники', en: 'Reference' },
-    pages: [{ link: '/theme/tokens', title: { ru: 'Токены', en: 'Tokens' } }],
+    title: { ru: 'Темы', en: 'Themes' },
+    pages: [
+      { link: '/theme/', title: { ru: 'Конструктор', en: 'Builder' } },
+      { link: '/theme/tokens', title: { ru: 'Токены', en: 'Tokens' } },
+    ],
   },
 ];
 
