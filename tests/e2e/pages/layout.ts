@@ -20,9 +20,19 @@ export interface BadgeOnButton {
   readonly height: number;
 }
 
+export interface StartDrift {
+  readonly icons: number;
+  readonly rows: number;
+}
+
 export type LayoutOutput = Guarded<typeof isLayoutOutput>;
 
 const DRIFT_FRAMES = 30;
+
+const RAIL_PARTS = {
+  icons: '.nui-list-item .nui-row__leading',
+  rows: '.nui-list-item .nui-list-item__inner',
+} as const;
 
 const isLayoutOutput = shapeOf({
   open: isBoolean,
@@ -149,44 +159,56 @@ export class LayoutSection {
     });
   }
 
-  async iconDriftWhile(act: () => Promise<void>): Promise<number> {
+  async startDriftWhile(act: () => Promise<void>): Promise<StartDrift> {
     const drift = await this.sidebar.evaluateHandle(
-      (bar, frames) => ({
-        measured: new Promise<number>((resolve) => {
-          const icons = [...bar.querySelectorAll('.nui-list-item .nui-row__leading')].filter(
-            (icon) => icon.closest('.nui-sidebar-sub__list, .nui-sidebar-sub__flyout') === null,
+      (bar, { frames, parts }) => {
+        const topLevel = (selector: string): Element[] =>
+          [...bar.querySelectorAll(selector)].filter(
+            (part) => part.closest('.nui-sidebar-sub__list, .nui-sidebar-sub__flyout') === null,
           );
 
-          const starts = icons.map((icon) => icon.getBoundingClientRect().x);
-          let largest = 0;
-          let left = frames;
+        const icons = topLevel(parts.icons);
+        const rows = topLevel(parts.rows);
+        const iconStarts = icons.map((part) => part.getBoundingClientRect().x);
+        const rowStarts = rows.map((part) => part.getBoundingClientRect().x);
 
-          const sample = (): void => {
-            for (const [index, icon] of icons.entries()) {
-              largest = Math.max(
-                largest,
-                Math.abs(icon.getBoundingClientRect().x - (starts[index] ?? 0)),
-              );
-            }
-            left -= 1;
+        return {
+          measured: new Promise<StartDrift>((resolve) => {
+            const largest = { icons: 0, rows: 0 };
+            let left = frames;
 
-            if (left > 0) {
-              requestAnimationFrame(sample);
-              return;
-            }
-            resolve(largest);
-          };
+            const sample = (): void => {
+              for (const [index, icon] of icons.entries()) {
+                const moved = Math.abs(icon.getBoundingClientRect().x - (iconStarts[index] ?? 0));
 
-          document.addEventListener(
-            'click',
-            () => {
-              requestAnimationFrame(sample);
-            },
-            { capture: true, once: true },
-          );
-        }),
-      }),
-      DRIFT_FRAMES,
+                largest.icons = Math.max(largest.icons, moved);
+              }
+
+              for (const [index, row] of rows.entries()) {
+                const moved = Math.abs(row.getBoundingClientRect().x - (rowStarts[index] ?? 0));
+
+                largest.rows = Math.max(largest.rows, moved);
+              }
+              left -= 1;
+
+              if (left > 0) {
+                requestAnimationFrame(sample);
+                return;
+              }
+              resolve(largest);
+            };
+
+            document.addEventListener(
+              'click',
+              () => {
+                requestAnimationFrame(sample);
+              },
+              { capture: true, once: true },
+            );
+          }),
+        };
+      },
+      { frames: DRIFT_FRAMES, parts: RAIL_PARTS },
     );
 
     await act();

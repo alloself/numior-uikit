@@ -38,13 +38,13 @@
   --_divider: transparent;
   --_divider-size: 0px;
 
-  padding: var(--nui-space-1);
+  padding: var(--nui-layout-panel-inset);
 }
 .nui-tree.nui-list--variant-floating {
   --_row: 2rem;
 
   position: fixed;
-  padding: var(--nui-space-1);
+  padding: var(--nui-layout-layer-inset);
   overflow: auto;
   scrollbar-width: thin;
 }

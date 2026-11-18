@@ -52,7 +52,7 @@
   flex: 1 1 auto;
   min-block-size: 0;
   max-block-size: 20rem;
-  padding: var(--nui-space-1);
+  padding: var(--nui-layout-layer-inset);
   overflow-y: auto;
   scrollbar-width: thin;
 }

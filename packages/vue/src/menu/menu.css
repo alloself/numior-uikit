@@ -11,7 +11,7 @@
   min-inline-size: 10rem;
   max-inline-size: min(20rem, calc(100vw - var(--nui-space-4)));
   margin: 0;
-  padding: var(--nui-space-1);
+  padding: var(--nui-layout-layer-inset);
   border: 1px solid var(--nui-border);
   border-radius: var(--nui-radius);
   background: var(--nui-surface-overlay);

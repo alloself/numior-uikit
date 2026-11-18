@@ -186,6 +186,16 @@ test('kit buttons keep a 4 px step and icon buttons stay square in both densitie
   expect(compact).toEqual([]);
 });
 
+test('list rows keep one inset from the edge of panels and another in layers', async ({
+  playground,
+}) => {
+  test.slow();
+
+  await playground.open();
+
+  expect(await playground.rowInsetFaults()).toEqual([]);
+});
+
 test('light and dark playground have no automatically detectable WCAG AA violations', async ({
   playground,
 }) => {

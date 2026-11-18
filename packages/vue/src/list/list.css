@@ -98,7 +98,7 @@
   box-sizing: border-box;
   flex: 1 1 auto;
   min-block-size: 0;
-  padding: var(--nui-space-1);
+  padding: var(--nui-layout-layer-inset);
   overflow-y: auto;
   scrollbar-width: thin;
 }

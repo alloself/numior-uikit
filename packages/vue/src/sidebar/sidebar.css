@@ -14,7 +14,7 @@
   --_size: var(--_sidebar-size, 16rem);
   --_rail: var(--_rail-size, var(--nui-layout-rail));
   --_rail-border: 1px;
-  --_padding: var(--nui-space-2);
+  --_padding: var(--nui-layout-panel-inset);
   --_sidebar-icon-inset: calc(var(--_rail) / 2 - var(--_padding) - var(--nui-icon-size) / 2);
   --_row-icon: var(--nui-text-muted);
 
@@ -361,7 +361,7 @@
   min-inline-size: 12rem;
   max-inline-size: min(20rem, calc(100vw - var(--nui-space-4)));
   margin: 0;
-  padding: var(--nui-space-1);
+  padding: var(--nui-layout-layer-inset);
   border: 1px solid var(--nui-border);
   border-radius: var(--nui-radius);
   background: var(--nui-surface-overlay);

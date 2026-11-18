@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { sectionScope, wcagViolationsOf, type AxeViolations } from '../helpers/axe';
 import { kitButtonsOf, offGridButtons, type KitButton } from '../helpers/buttons';
+import { LAYER_INSET, PANEL_INSET, rowInsetFaultsOf } from '../helpers/insets';
 import {
   hideLayer,
   kitPixelsOf,
@@ -180,6 +181,8 @@ const ZOOM_CONTROLS = '.nui-content__zoom';
 const DRAG_GRIPS = '.nui-table__row-grip, .nui-button--grip';
 
 const LAYERS = '[popover], dialog';
+
+const PANELS = '.nui-sidebar:not(.nui-sidebar--rail), .nui-tree.nui-list--variant-outline';
 
 export class PlaygroundPage {
   readonly workspace: Locator;
@@ -396,6 +399,28 @@ export class PlaygroundPage {
     }
 
     return offGridButtons(measured.flat());
+  }
+
+  async rowInsetFaults(): Promise<string[]> {
+    await motionSettled(this.page);
+
+    const found: string[] = [];
+
+    for (const panel of await this.page.locator(PANELS).all()) {
+      found.push(...(await rowInsetFaultsOf(panel, PANEL_INSET)));
+    }
+
+    for (const layer of await this.page.locator(LAYERS).all()) {
+      if (!(await showLayer(layer))) {
+        continue;
+      }
+
+      found.push(...(await rowInsetFaultsOf(layer, LAYER_INSET)));
+
+      await hideLayer(layer);
+    }
+
+    return [...new Set(found)].toSorted();
   }
 
   hasHorizontalOverflow(): Promise<boolean> {

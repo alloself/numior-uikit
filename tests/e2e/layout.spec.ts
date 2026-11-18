@@ -162,7 +162,7 @@ test.describe('layout', () => {
     await expect(layout.itemBadge('files')).toHaveText('Новое');
   });
 
-  test('the icons stay in place while the sidebar collapses to the icon rail and expands again', async ({
+  test('the icons and the start edge of the item fills stay in place while the sidebar collapses to the icon rail and expands again', async ({
     playground,
     layout,
     isMobile,
@@ -171,14 +171,16 @@ test.describe('layout', () => {
     await playground.open();
     await layout.root.scrollIntoViewIfNeeded();
 
-    const collapsing = await layout.iconDriftWhile(() => layout.trigger.click());
+    const collapsing = await layout.startDriftWhile(() => layout.trigger.click());
 
-    expect(collapsing).toBeLessThan(0.5);
+    expect(collapsing.icons).toBeLessThan(0.5);
+    expect(collapsing.rows).toBeLessThan(0.5);
     await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
 
-    const expanding = await layout.iconDriftWhile(() => layout.trigger.click());
+    const expanding = await layout.startDriftWhile(() => layout.trigger.click());
 
-    expect(expanding).toBeLessThan(0.5);
+    expect(expanding.icons).toBeLessThan(0.5);
+    expect(expanding.rows).toBeLessThan(0.5);
     await expect.poll(() => layout.sidebarWidth()).toBeGreaterThan(200);
   });
 
