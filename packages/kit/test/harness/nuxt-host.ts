@@ -7,11 +7,13 @@ import module from '../../src/nuxt/module';
 
 type RegisteredComponents = Parameters<NuxtHooks['components:extend']>[0];
 type RegisteredImports = Parameters<NuxtHooks['imports:extend']>[0];
+type ViteExtension = Parameters<NuxtHooks['vite:extend']>[0];
 
 const FIXTURE = fileURLToPath(new URL('../fixture/', import.meta.url));
 
 const isSourced = shapeOf({ src: isString });
 const isScript = shapeOf({ innerHTML: isString });
+const isNamed = shapeOf({ name: isString });
 
 export const installModule = async (overrides: NuxtConfig = {}): Promise<Nuxt> => {
   const nuxt = await loadNuxt({ cwd: FIXTURE, ready: false, overrides });
@@ -82,6 +84,24 @@ export class NuxtHost {
 
     await this.nuxt.callHook('imports:extend', list);
     return [...new Set(list.map((entry) => entry.priority ?? 0))];
+  }
+
+  templateOptions(filename: string): unknown {
+    return this.nuxt.options.build.templates.find((template) => template.filename === filename)
+      ?.options;
+  }
+
+  async vitePlugins(): Promise<string[]> {
+    const extension: ViteExtension = { nuxt: this.nuxt, config: { plugins: [] } };
+
+    await this.nuxt.callHook('vite:extend', extension);
+
+    return (extension.config.plugins ?? []).flat().reduce<string[]>((names, plugin) => {
+      if (isNamed(plugin)) {
+        names.push(plugin.name);
+      }
+      return names;
+    }, []);
   }
 
   async close(): Promise<void> {

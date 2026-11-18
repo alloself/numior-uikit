@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useTemplateRef, watch } from 'vue';
+import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
 import {
   NuiSelect,
   NuiToggleGroup,
@@ -51,7 +51,7 @@ import {
 } from '@numior/vue';
 import { NUMIOR_PALETTE, useAccent } from '../composables/use-accent';
 import { useFramedHeight } from '../block-height';
-import { applyAttributes, screenAttributes } from '../frame-attributes';
+import { applyFrameTheme, screenTheme } from '../frame-theme';
 import { DocsAccent, type HomeScreenProps } from '../theme.types';
 import FrameCorners from './FrameCorners.vue';
 
@@ -97,8 +97,8 @@ const directionItems = computed<readonly NuiToggleItem<string>[]>(() => [
   { value: RTL, label: texts.rtl, icon: 'direction' },
 ]);
 
-const attributes = computed(() =>
-  screenAttributes({
+const theme = computed(() =>
+  screenTheme({
     scheme: scheme.value,
     accent: accent.value ?? NUMIOR_PALETTE,
     rtl: directions.value.includes(RTL),
@@ -106,8 +106,10 @@ const attributes = computed(() =>
 );
 
 const sync = (): void => {
-  applyAttributes(frame.value?.contentDocument?.documentElement, attributes.value);
+  applyFrameTheme(frame.value?.contentDocument?.documentElement, theme.value);
 };
 
-watch(attributes, sync, { flush: 'post' });
+watch(theme, sync, { flush: 'post' });
+
+onMounted(sync);
 </script>

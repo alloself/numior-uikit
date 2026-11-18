@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 export interface Motion {
   readonly duration: number;
@@ -9,7 +9,7 @@ export const SLOW_MOTION = 10_000;
 
 const PAINT = 'Paint';
 
-export const slowMotion = (scope: Locator, token = '--nui-duration-fast'): Promise<void> =>
+export const slowMotion = (scope: Locator, token = '--transition-duration-fast'): Promise<void> =>
   scope.evaluate(
     (element, { name, value }) => {
       if (!(element instanceof HTMLElement)) {
@@ -20,6 +20,10 @@ export const slowMotion = (scope: Locator, token = '--nui-duration-fast'): Promi
     },
     { name: token, value: `${SLOW_MOTION}ms` },
   );
+
+export const startedClosing = async (popover: Locator): Promise<void> => {
+  await expect(popover.and(popover.page().locator(':popover-open'))).toHaveCount(0);
+};
 
 export const motionOf = (target: Locator, property: string): Promise<Motion | null> =>
   target.evaluate((element, name) => {

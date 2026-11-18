@@ -1,53 +1,31 @@
-.nui-tooltip {
-  --_side-x: 0;
-  --_side-y: -1;
-  --_shift: calc(-1 * var(--_side-x) * var(--nui-space-1))
-    calc(-1 * var(--_side-y) * var(--nui-space-1));
-  --_arrow: 0.5rem;
+@layer components {
+  .nui-tooltip {
+    --_side-x: 0;
+    --_side-y: -1;
+    --_shift-x: calc(-1 * var(--_side-x) * var(--spacing));
+    --_shift-y: calc(-1 * var(--_side-y) * var(--spacing));
+    --_arrow: 0.5rem;
 
-  box-sizing: border-box;
-  position: fixed;
-  inset: auto;
-  max-inline-size: min(18rem, calc(100vw - var(--nui-space-4)));
-  margin: 0;
-  padding: var(--nui-space-1) var(--nui-space-2);
-  border: 0;
-  border-radius: var(--nui-radius-sm);
-  background: var(--nui-neutral);
-  color: var(--nui-neutral-foreground);
-  font-family: var(--nui-font);
-  font-size: var(--nui-font-size-xs);
-  line-height: var(--nui-line-height);
-  box-shadow: var(--nui-shadow-sm);
-  overflow: visible;
-  opacity: 0;
-  translate: var(--_shift);
-  transition:
-    opacity var(--nui-duration-fast) var(--nui-easing),
-    translate var(--nui-duration-fast) var(--nui-easing),
-    display var(--nui-duration-fast) allow-discrete,
-    overlay var(--nui-duration-fast) allow-discrete;
-}
-.nui-tooltip:popover-open {
-  opacity: 1;
-  translate: 0 0;
-}
-@starting-style {
-  .nui-tooltip:popover-open {
-    opacity: 0;
-    translate: var(--_shift);
+    @apply box-border fixed inset-auto m-0 py-1 px-2 rounded-sm bg-neutral text-neutral-foreground;
+    @apply font-sans text-(length:--text-xs) leading-normal overflow-visible opacity-0;
+    @apply max-inline-[min(18rem,calc(100vw_-_--spacing(4)))] border-0 border-none shadow-sm;
+    @apply translate-x-(--_shift-x) translate-y-(--_shift-y);
+    @apply transition-[opacity,translate,display,overlay] duration-fast;
+    @apply ease-[var(--ease-nui),var(--ease-nui),ease,ease] transition-discrete;
   }
-}
-.nui-tooltip__keyed {
-  display: flex;
-  align-items: center;
-  gap: var(--nui-space-2);
-}
-.nui-tooltip__arrow {
-  position: absolute;
-  z-index: -1;
-  inline-size: var(--_arrow);
-  block-size: var(--_arrow);
-  background: inherit;
-  rotate: 45deg;
+  .nui-tooltip:popover-open {
+    @apply opacity-100 translate-0;
+  }
+  @starting-style {
+    .nui-tooltip:popover-open {
+      @apply opacity-0;
+      @apply translate-x-(--_shift-x) translate-y-(--_shift-y);
+    }
+  }
+  .nui-tooltip__keyed {
+    @apply flex items-center gap-2;
+  }
+  .nui-tooltip__arrow {
+    @apply absolute -z-1 inline-(--_arrow) block-(--_arrow) bg-inherit rotate-45;
+  }
 }

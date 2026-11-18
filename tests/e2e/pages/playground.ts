@@ -210,6 +210,12 @@ export class PlaygroundPage {
   };
 
   readonly tailwindSwatch: Locator;
+  readonly variantSwatch: Locator;
+  readonly nestedScope: Locator;
+  readonly nestedVariant: Locator;
+  readonly nestedLight: Locator;
+  readonly nestedLightButton: Locator;
+  readonly nestedLightVariant: Locator;
   readonly skipLink: Locator;
   readonly formsTitle: Locator;
   readonly typography: TypographySection;
@@ -261,6 +267,12 @@ export class PlaygroundPage {
     };
 
     this.tailwindSwatch = page.getByTestId('tailwind');
+    this.variantSwatch = page.getByTestId('variant');
+    this.nestedScope = page.locator('section.nested-theme');
+    this.nestedVariant = page.getByTestId('nested-variant');
+    this.nestedLight = page.getByTestId('nested-light');
+    this.nestedLightButton = page.getByTestId('nested-light-button');
+    this.nestedLightVariant = page.getByTestId('nested-light-variant');
     this.skipLink = page.getByTestId('skip-link');
     this.formsTitle = page.locator('#forms-title');
 

@@ -1,46 +1,38 @@
-.nui-form {
-  --_gap: calc(var(--nui-control-height) / 2);
+@layer components {
+  .nui-form {
+    --_gap: calc(--theme(--spacing-control inline) / 2);
 
-  box-sizing: border-box;
-  display: grid;
-  gap: var(--_gap);
-  min-inline-size: 0;
-}
+    @apply box-border grid gap-(--_gap) min-inline-0;
+  }
 
-.nui-form--pending {
-  cursor: progress;
-}
+  .nui-form--pending {
+    @apply cursor-progress;
+  }
 
-.nui-form__errors {
-  border-radius: var(--nui-radius);
-  animation: nui-form-reveal var(--nui-duration-normal) var(--nui-easing);
-}
+  .nui-form__errors {
+    @apply rounded animate-[nui-form-reveal_var(--transition-duration-normal)_var(--ease-nui)];
+  }
 
-.nui-form__errors:focus-visible {
-  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-  outline-offset: var(--nui-focus-ring-offset);
-}
+  .nui-form__errors:focus-visible {
+    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+  }
 
-.nui-form__error-list {
-  box-sizing: border-box;
-  margin: 0;
-  padding-inline-start: var(--nui-space-4);
-}
+  .nui-form__error-list {
+    @apply box-border m-0 ps-4;
+  }
 
-.nui-form__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--nui-space-2);
-}
+  .nui-form__actions {
+    @apply flex flex-wrap items-center gap-2;
+  }
 
-.nui-form__actions:empty {
-  display: none;
-}
+  .nui-form__actions:empty {
+    @apply hidden;
+  }
 
-@keyframes nui-form-reveal {
-  from {
-    opacity: 0;
-    translate: 0 calc(var(--nui-space-1) * -1);
+  @keyframes nui-form-reveal {
+    from {
+      opacity: 0;
+      translate: 0 calc(var(--spacing) * -1);
+    }
   }
 }

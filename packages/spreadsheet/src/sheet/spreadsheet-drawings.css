@@ -1,211 +1,151 @@
-.nui-spreadsheet__drawing {
-  position: absolute;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  pointer-events: auto;
-  transition:
-    inset var(--nui-duration-fast) var(--nui-easing),
-    inline-size var(--nui-duration-fast) var(--nui-easing),
-    block-size var(--nui-duration-fast) var(--nui-easing);
-}
-
-.nui-spreadsheet__drawing--kind-chart {
-  gap: var(--nui-space-1);
-  padding: var(--nui-space-2) var(--nui-space-3);
-  border: 1px solid var(--nui-border);
-  background-color: var(--nui-surface);
-  color: var(--nui-text);
-}
-
-.nui-spreadsheet__drawing--kind-foreign {
-  align-items: center;
-  justify-content: center;
-  padding: var(--nui-space-2);
-  border: 1px dashed var(--nui-border-strong);
-  background-color: var(--nui-surface-muted);
-}
-
-.nui-spreadsheet__picture {
-  display: block;
-  inline-size: 100%;
-  block-size: 100%;
-  object-fit: fill;
-  user-select: none;
-}
-
-.nui-spreadsheet__chart-title {
-  flex: none;
-  margin: 0;
-  overflow: hidden;
-  font-size: var(--nui-font-size-sm);
-  font-weight: 600;
-  line-height: var(--nui-line-height-control);
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.nui-spreadsheet__chart {
-  display: block;
-  flex: 1 1 0;
-  min-block-size: 0;
-}
-
-.nui-spreadsheet__foreign {
-  margin: 0;
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-xs);
-  line-height: var(--nui-line-height);
-  text-align: center;
-}
-
-.nui-spreadsheet__drawing--editable {
-  cursor: move;
-}
-
-.nui-spreadsheet__drawing--selected {
-  touch-action: none;
-}
-
-.nui-spreadsheet--dragging .nui-spreadsheet__drawing,
-.nui-spreadsheet--dragging .nui-spreadsheet__drawing-frame {
-  transition: none;
-}
-
-.nui-spreadsheet__drawing-frame {
-  position: absolute;
-  box-sizing: border-box;
-  border: 1px solid var(--nui-primary);
-  visibility: hidden;
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    inset var(--nui-duration-fast) var(--nui-easing),
-    inline-size var(--nui-duration-fast) var(--nui-easing),
-    block-size var(--nui-duration-fast) var(--nui-easing),
-    opacity var(--nui-duration-fast) var(--nui-easing),
-    visibility 0s linear var(--nui-duration-fast);
-}
-
-.nui-spreadsheet__drawing-frame--selected {
-  visibility: visible;
-  opacity: 1;
-  transition-delay: 0s;
-}
-
-.nui-spreadsheet__handle {
-  --_size: 9px;
-  --_block: calc(50% - var(--_size) / 2);
-  --_inline: calc(50% - var(--_size) / 2);
-
-  position: absolute;
-  box-sizing: border-box;
-  inline-size: var(--_size);
-  block-size: var(--_size);
-  border: 1px solid var(--nui-primary);
-  border-radius: 2px;
-  background-color: var(--nui-surface);
-  pointer-events: auto;
-  touch-action: none;
-}
-
-.nui-spreadsheet__handle::before {
-  position: absolute;
-  inset: -4px;
-  content: '';
-}
-
-@media (pointer: coarse) {
-  .nui-spreadsheet__handle::before {
-    inset: -9px;
+@layer components {
+  .nui-spreadsheet__drawing {
+    @apply box-border flex flex-col overflow-hidden pointer-events-auto;
+    @apply transition-[inset,inline-size,block-size] duration-fast ease-nui;
+    position: absolute;
   }
-}
 
-.nui-spreadsheet__handle--top,
-.nui-spreadsheet__handle--top-start,
-.nui-spreadsheet__handle--top-end {
-  inset-block-start: calc(var(--_size) / -2);
-}
+  .nui-spreadsheet__drawing--kind-chart {
+    @apply gap-1 py-2 px-3 bg-surface text-foreground border border-solid;
+    @apply border-(color:--color-border);
+  }
 
-.nui-spreadsheet__handle--bottom,
-.nui-spreadsheet__handle--bottom-start,
-.nui-spreadsheet__handle--bottom-end {
-  inset-block-end: calc(var(--_size) / -2);
-}
+  .nui-spreadsheet__drawing--kind-foreign {
+    @apply items-center justify-center p-2 border border-dashed border-border-strong;
+    @apply bg-surface-muted;
+  }
 
-.nui-spreadsheet__handle--start,
-.nui-spreadsheet__handle--top-start,
-.nui-spreadsheet__handle--bottom-start {
-  inset-inline-start: calc(var(--_size) / -2);
-}
+  .nui-spreadsheet__picture {
+    @apply block inline-full block-full object-fill select-none;
+  }
 
-.nui-spreadsheet__handle--end,
-.nui-spreadsheet__handle--top-end,
-.nui-spreadsheet__handle--bottom-end {
-  inset-inline-end: calc(var(--_size) / -2);
-}
+  .nui-spreadsheet__chart-title {
+    @apply flex-none m-0 overflow-hidden text-(length:--text-sm) leading-control text-center;
+    @apply text-ellipsis whitespace-nowrap font-semibold;
+  }
 
-.nui-spreadsheet__handle--top,
-.nui-spreadsheet__handle--bottom {
-  inset-inline-start: var(--_inline);
-  cursor: ns-resize;
-}
+  .nui-spreadsheet__chart {
+    @apply block min-block-0 flex-[1_1_0];
+  }
 
-.nui-spreadsheet__handle--start,
-.nui-spreadsheet__handle--end {
-  inset-block-start: var(--_block);
-  cursor: ew-resize;
-}
+  .nui-spreadsheet__foreign {
+    @apply m-0 text-muted-foreground text-(length:--text-xs) leading-normal text-center;
+  }
 
-.nui-spreadsheet__handle--top-start,
-.nui-spreadsheet__handle--bottom-end {
-  cursor: nwse-resize;
-}
+  .nui-spreadsheet__drawing--editable {
+    @apply cursor-move;
+  }
 
-.nui-spreadsheet__handle--top-end,
-.nui-spreadsheet__handle--bottom-start {
-  cursor: nesw-resize;
-}
+  .nui-spreadsheet__drawing--selected {
+    @apply touch-none;
+  }
 
-.nui-spreadsheet__handle--top-start:dir(rtl),
-.nui-spreadsheet__handle--bottom-end:dir(rtl) {
-  cursor: nesw-resize;
-}
+  .nui-spreadsheet--dragging .nui-spreadsheet__drawing,
+  .nui-spreadsheet--dragging .nui-spreadsheet__drawing-frame {
+    @apply transition-none;
+  }
 
-.nui-spreadsheet__handle--top-end:dir(rtl),
-.nui-spreadsheet__handle--bottom-start:dir(rtl) {
-  cursor: nwse-resize;
-}
+  .nui-spreadsheet__drawing-frame {
+    @apply box-border invisible opacity-0 pointer-events-none border border-solid;
+    @apply border-(color:--color-primary);
+    @apply transition-[inset,inline-size,block-size,opacity,visibility];
+    @apply duration-[var(--transition-duration-fast),var(--transition-duration-fast),var(--transition-duration-fast),var(--transition-duration-fast),0s];
+    @apply ease-[var(--ease-nui),var(--ease-nui),var(--ease-nui),var(--ease-nui),linear];
+    @apply delay-[0s,0s,0s,0s,var(--transition-duration-fast)];
+    position: absolute;
+  }
 
-.nui-spreadsheet__drawing-tools {
-  position: absolute;
-  inset-block-start: var(--nui-space-1);
-  inset-inline-end: var(--nui-space-1);
-  pointer-events: auto;
-}
+  .nui-spreadsheet__drawing-frame--selected {
+    @apply visible opacity-100 delay-[0s];
+  }
 
-.nui-spreadsheet-chart-settings {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: var(--nui-space-3);
-  inline-size: min(18rem, calc(100vw - var(--nui-space-6)));
-  padding: var(--nui-space-3);
-  color: var(--nui-text);
-  font-size: var(--nui-font-size-sm);
-}
+  .nui-spreadsheet__handle {
+    --_size: 9px;
+    --_block: calc(50% - var(--_size) / 2);
+    --_inline: calc(50% - var(--_size) / 2);
 
-.nui-spreadsheet-chart-settings__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--nui-space-2);
-}
+    @apply absolute box-border inline-(--_size) block-(--_size) bg-surface pointer-events-auto;
+    @apply touch-none border border-solid border-(color:--color-primary) rounded-[2px];
+  }
 
-.nui-spreadsheet-chart-settings__title {
-  margin: 0;
-  font-size: var(--nui-font-size-sm);
-  font-weight: var(--nui-font-weight-semibold);
+  .nui-spreadsheet__handle::before {
+    @apply absolute inset-[-4px] content-[''];
+  }
+
+  @media (pointer: coarse) {
+    .nui-spreadsheet__handle::before {
+      @apply inset-[-9px];
+    }
+  }
+
+  .nui-spreadsheet__handle--top,
+  .nui-spreadsheet__handle--top-start,
+  .nui-spreadsheet__handle--top-end {
+    @apply inset-bs-[calc(var(--_size)_/_-2)];
+  }
+
+  .nui-spreadsheet__handle--bottom,
+  .nui-spreadsheet__handle--bottom-start,
+  .nui-spreadsheet__handle--bottom-end {
+    @apply inset-be-[calc(var(--_size)_/_-2)];
+  }
+
+  .nui-spreadsheet__handle--start,
+  .nui-spreadsheet__handle--top-start,
+  .nui-spreadsheet__handle--bottom-start {
+    @apply inset-s-[calc(var(--_size)_/_-2)];
+  }
+
+  .nui-spreadsheet__handle--end,
+  .nui-spreadsheet__handle--top-end,
+  .nui-spreadsheet__handle--bottom-end {
+    @apply inset-e-[calc(var(--_size)_/_-2)];
+  }
+
+  .nui-spreadsheet__handle--top,
+  .nui-spreadsheet__handle--bottom {
+    @apply inset-s-(--_inline) cursor-ns-resize;
+  }
+
+  .nui-spreadsheet__handle--start,
+  .nui-spreadsheet__handle--end {
+    @apply inset-bs-(--_block) cursor-ew-resize;
+  }
+
+  .nui-spreadsheet__handle--top-start,
+  .nui-spreadsheet__handle--bottom-end {
+    @apply cursor-[nwse-resize];
+  }
+
+  .nui-spreadsheet__handle--top-end,
+  .nui-spreadsheet__handle--bottom-start {
+    @apply cursor-[nesw-resize];
+  }
+
+  .nui-spreadsheet__handle--top-start:dir(rtl),
+  .nui-spreadsheet__handle--bottom-end:dir(rtl) {
+    @apply cursor-[nesw-resize];
+  }
+
+  .nui-spreadsheet__handle--top-end:dir(rtl),
+  .nui-spreadsheet__handle--bottom-start:dir(rtl) {
+    @apply cursor-[nwse-resize];
+  }
+
+  .nui-spreadsheet__drawing-tools {
+    @apply absolute inset-bs-1 inset-e-1 pointer-events-auto;
+  }
+
+  .nui-spreadsheet-chart-settings {
+    @apply box-border flex flex-col gap-3 p-3 text-foreground text-(length:--text-sm);
+    @apply inline-[min(18rem,calc(100vw_-_--spacing(6)))];
+  }
+
+  .nui-spreadsheet-chart-settings__header {
+    @apply flex items-center justify-between gap-2;
+  }
+
+  .nui-spreadsheet-chart-settings__title {
+    @apply m-0 text-(length:--text-sm) font-semibold;
+  }
 }

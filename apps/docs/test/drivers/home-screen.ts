@@ -6,6 +6,12 @@ import { TopLayerStubs } from '../../../../packages/vue/test/support/top-layer';
 
 const SCREEN_SRC = '/blocks/view/AppShell';
 
+const mountScreen = (src: string): VueWrapper =>
+  mount(HomeScreen, {
+    props: { src, height: 720, texts: ru },
+    attachTo: document.body,
+  });
+
 export class HomeScreenDriver {
   constructor(
     private readonly wrapper: VueWrapper,
@@ -14,17 +20,20 @@ export class HomeScreenDriver {
 
   static mount(): HomeScreenDriver {
     const stubs = new TopLayerStubs();
-
-    const wrapper = mount(HomeScreen, {
-      props: { src: SCREEN_SRC, height: 720, texts: ru },
-      attachTo: document.body,
-    });
-
+    const wrapper = mountScreen(SCREEN_SRC);
     const page = wrapper.find<HTMLIFrameElement>('iframe').element.contentDocument;
 
     page?.append(page.createElement('html'));
 
     return new HomeScreenDriver(wrapper, stubs);
+  }
+
+  static mountOnSite(siteClasses: string): HomeScreenDriver {
+    const stubs = new TopLayerStubs();
+
+    document.documentElement.className = siteClasses;
+
+    return new HomeScreenDriver(mountScreen('about:blank'), stubs);
   }
 
   get screen(): DOMWrapper<HTMLIFrameElement> {
@@ -37,6 +46,12 @@ export class HomeScreenDriver {
 
   attribute(name: string): string | null {
     return this.screen.element.contentDocument?.documentElement?.getAttribute(name) ?? null;
+  }
+
+  get themeClasses(): string[] {
+    const page = this.screen.element.contentDocument?.documentElement;
+
+    return [...(page?.classList ?? [])].filter((name) => name.includes('-theme--'));
   }
 
   async choose(group: string, label: string): Promise<void> {
@@ -72,6 +87,7 @@ export class HomeScreenDriver {
   unmount(): void {
     this.stubs.restore();
     this.wrapper.unmount();
+    document.documentElement.className = '';
   }
 
   private get accentTrigger(): DOMWrapper<HTMLButtonElement> {

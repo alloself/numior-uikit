@@ -1,106 +1,72 @@
-.nui-select {
-  --_height: var(--nui-control-height-md);
-  --_padding: var(--nui-field-padding-md);
-  --_font-size: var(--nui-control-font-size-md);
-  --_chevron: round(calc(1.15 * var(--nui-control-font-size-xs)), 2px);
-  --_clear-inset: calc(var(--_padding) + var(--_chevron) + var(--nui-space-2));
+@layer components {
+  .nui-select {
+    --_height: var(--spacing-control-md);
+    --_padding: var(--spacing-field-pad-md);
+    --_font-size: var(--text-control-md);
+    --_chevron: round(calc(1.15 * var(--text-control-xs)), 2px);
+    --_clear-inset: calc(var(--_padding) + var(--_chevron) + --spacing(2));
 
-  box-sizing: border-box;
-  position: relative;
-  display: inline-flex;
-  inline-size: 100%;
-  min-inline-size: 0;
-  font-family: var(--nui-font);
-}
-.nui-select--size-sm {
-  --_height: var(--nui-control-height-sm);
-  --_padding: var(--nui-field-padding-sm);
-  --_font-size: var(--nui-control-font-size-sm);
-}
-.nui-select--size-lg {
-  --_height: var(--nui-control-height-lg);
-  --_padding: var(--nui-field-padding-lg);
-  --_font-size: var(--nui-control-font-size-lg);
-}
-.nui-select__trigger {
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--nui-space-2);
-  inline-size: 100%;
-  min-inline-size: 0;
-  min-block-size: var(--_height);
-  padding-block: 0;
-  padding-inline: var(--_padding) calc(var(--_padding) + var(--_chevron) + var(--nui-space-2));
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius);
-  background: var(--nui-surface);
-  color: var(--nui-text);
-  font: inherit;
-  font-size: var(--_font-size);
-  line-height: var(--nui-line-height-control);
-  text-align: start;
-  cursor: pointer;
-  transition:
-    border-color var(--nui-duration-fast) var(--nui-easing),
-    outline-color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-select--clearable .nui-select__value {
-  padding-inline-end: calc(var(--nui-control-height-xs) + var(--nui-space-2));
-}
-.nui-select:not(.nui-select--invalid) .nui-select__trigger:hover:not(:disabled, :focus-visible) {
-  border-color: var(--nui-border-strong);
-}
-.nui-select__trigger:focus-visible,
-.nui-select--open .nui-select__trigger {
-  border-color: var(--nui-focus);
-  outline: var(--nui-field-ring-width) solid var(--nui-focus);
-  outline-offset: var(--nui-focus-ring-offset);
-}
-.nui-select--invalid .nui-select__trigger {
-  border-color: var(--nui-error);
-}
-.nui-select--invalid .nui-select__trigger:focus-visible,
-.nui-select--invalid.nui-select--open .nui-select__trigger {
-  border-color: var(--nui-error);
-  outline-color: var(--nui-error);
-}
-.nui-select--readonly .nui-select__trigger {
-  padding-inline-end: var(--_padding);
-  cursor: default;
-}
-.nui-select--disabled .nui-select__trigger {
-  opacity: var(--nui-disabled-opacity);
-  cursor: not-allowed;
-}
-.nui-select__value {
-  box-sizing: border-box;
-  flex: 1 1 auto;
-  min-inline-size: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.nui-select--empty .nui-select__value {
-  color: var(--nui-text-muted);
-}
-.nui-select__chevron {
-  flex: none;
-  color: var(--nui-text-muted);
-  transition: rotate var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-select--open .nui-select__chevron {
-  rotate: 180deg;
-}
-.nui-select__toggle {
-  position: absolute;
-  inset-block-start: 50%;
-  inset-inline-end: calc(var(--_padding) - (var(--nui-control-height-xs) - var(--_chevron)) / 2);
-  translate: 0 -50%;
-}
-.nui-select__clear {
-  position: absolute;
-  inset-block-start: 50%;
-  inset-inline-end: var(--_clear-inset);
-  translate: 0 -50%;
+    @apply box-border relative inline-flex inline-full min-inline-0 font-sans;
+  }
+  .nui-select--size-sm {
+    --_height: var(--spacing-control-sm);
+    --_padding: var(--spacing-field-pad-sm);
+    --_font-size: var(--text-control-sm);
+  }
+  .nui-select--size-lg {
+    --_height: var(--spacing-control-lg);
+    --_padding: var(--spacing-field-pad-lg);
+    --_font-size: var(--text-control-lg);
+  }
+  .nui-select__trigger {
+    @apply box-border inline-flex items-center gap-2 inline-full min-inline-0 min-block-(--_height);
+    @apply py-0 border border-border rounded bg-surface text-foreground text-start cursor-pointer;
+    @apply ps-(--_padding) pe-[calc(var(--_padding)_+_var(--_chevron)_+_--spacing(2))];
+    @apply transition-[border-color,outline-color] duration-fast ease-nui;
+    font: inherit;
+    @apply text-(length:--_font-size) leading-control;
+  }
+  .nui-select--clearable .nui-select__value {
+    @apply pe-[calc(var(--spacing-control-xs)_+_--spacing(2))];
+  }
+  .nui-select:not(.nui-select--invalid) .nui-select__trigger:hover:not(:disabled, :focus-visible) {
+    @apply border-border-strong;
+  }
+  .nui-select__trigger:focus-visible,
+  .nui-select--open .nui-select__trigger {
+    @apply border-ring outline-(length:--field-ring-width) outline-ring;
+    @apply outline-offset-(--focus-ring-offset);
+  }
+  .nui-select--invalid .nui-select__trigger {
+    @apply border-error;
+  }
+  .nui-select--invalid .nui-select__trigger:focus-visible,
+  .nui-select--invalid.nui-select--open .nui-select__trigger {
+    @apply border-error outline-error;
+  }
+  .nui-select--readonly .nui-select__trigger {
+    @apply pe-(--_padding) cursor-default;
+  }
+  .nui-select--disabled .nui-select__trigger {
+    @apply opacity-disabled cursor-not-allowed;
+  }
+  .nui-select__value {
+    @apply box-border flex-auto min-inline-0 overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+  .nui-select--empty .nui-select__value {
+    @apply text-muted-foreground;
+  }
+  .nui-select__chevron {
+    @apply flex-none text-muted-foreground transition-[rotate] duration-fast ease-nui;
+  }
+  .nui-select--open .nui-select__chevron {
+    @apply rotate-180;
+  }
+  .nui-select__toggle {
+    @apply absolute inset-bs-1/2 -translate-y-1/2;
+    @apply inset-e-[calc(var(--_padding)_-_(var(--spacing-control-xs)_-_var(--_chevron))_/_2)];
+  }
+  .nui-select__clear {
+    @apply absolute inset-bs-1/2 end-(--_clear-inset) -translate-y-1/2;
+  }
 }

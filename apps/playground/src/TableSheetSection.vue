@@ -123,20 +123,20 @@ const COSTS: readonly SheetLine[] = [
   { label: 'Налоги', base: 150, step: 15 },
 ];
 
-const BOLD = { 'font-weight': 'var(--nui-font-weight-semibold)' } as const;
+const BOLD = { 'font-weight': 'var(--font-weight-semibold)' } as const;
 const TITLE: NuiTableCellStyle = { style: BOLD };
-const SECTION: NuiTableCellStyle = { fill: 'var(--nui-neutral-soft)', style: BOLD };
-const HEAD_LABEL: NuiTableCellStyle = { fill: 'var(--nui-surface-muted)', style: BOLD };
+const SECTION: NuiTableCellStyle = { fill: 'var(--demo-neutral-fill)', style: BOLD };
+const HEAD_LABEL: NuiTableCellStyle = { fill: 'var(--color-surface-muted)', style: BOLD };
 const HEAD_MONTH: NuiTableCellStyle = { ...HEAD_LABEL, align: 'center' };
 
 const NOTE_STYLE: NuiTableCellStyle = {
-  color: 'var(--nui-text-muted)',
+  color: 'var(--color-muted-foreground)',
   align: 'center',
   wrap: true,
 };
 
-const FOOTNOTE_STYLE: NuiTableCellStyle = { color: 'var(--nui-text-muted)' };
-const STRONG_LINE = '1px solid var(--nui-border-strong)';
+const FOOTNOTE_STYLE: NuiTableCellStyle = { color: 'var(--color-muted-foreground)' };
+const STRONG_LINE = '1px solid var(--color-border-strong)';
 const TOTAL: NuiTableCellStyle = { style: BOLD, borders: { top: STRONG_LINE } };
 
 const RESULT: NuiTableCellStyle = {
@@ -306,13 +306,13 @@ const merges = computed((): NuiTableRange[] => {
 });
 
 const heatOf = (value: number): string =>
-  `color-mix(in oklab, var(--nui-success) ${Math.round((Math.max(0, value) / PEAK) * HEAT_LIMIT)}%, transparent)`;
+  `color-mix(in oklab, var(--color-success) ${Math.round((Math.max(0, value) / PEAK) * HEAT_LIMIT)}%, transparent)`;
 
 const numberStyle = (value: SheetValue, warm: boolean): NuiTableCellStyle =>
   typeof value === 'number'
     ? {
         align: 'end',
-        color: value < 0 ? 'var(--nui-error)' : undefined,
+        color: value < 0 ? 'var(--color-error)' : undefined,
         fill: warm ? heatOf(value) : undefined,
       }
     : {};

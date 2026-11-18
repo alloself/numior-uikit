@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { exampleFile, ExampleFrameDriver } from './drivers/example-frame';
+import { ru } from '../.vitepress/theme/texts';
 
 const SINGLE = [
   exampleFile('Basic.vue', '<template>\n  <NuiButton>Сохранить</NuiButton>\n</template>'),
@@ -47,22 +48,10 @@ describe('ExampleFrame', () => {
     frame.unmount();
   });
 
-  it('shows the preview in the base theme of the library and keeps the scheme inversion', async () => {
+  it('offers the scheme inversion and the direction, and no base theme', () => {
     const frame = ExampleFrameDriver.mount(SINGLE);
 
-    expect(frame.previewAccent).toBeUndefined();
-
-    await frame.toggleBase();
-    expect(frame.previewAccent).toBe('indigo');
-    expect(frame.previewTheme).toBe('');
-
-    await frame.toggleTheme();
-    expect(frame.previewAccent).toBe('indigo');
-    expect(frame.previewTheme).toBe('dark');
-
-    await frame.toggleBase();
-    expect(frame.previewAccent).toBeUndefined();
-    expect(frame.previewTheme).toBe('dark');
+    expect(frame.previewOptions).toEqual([ru.invertTheme, ru.rtl]);
 
     frame.unmount();
   });

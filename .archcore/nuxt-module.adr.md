@@ -38,9 +38,11 @@ status: accepted
 - CSS токенов, компонентов, форм и таблицы (`@numior/kit/theme.css`, `base.css`, `styles.css`,
   `forms/styles.css`, `table/styles.css`) добавляется в `nuxt.options.css` при `css: true`. Скрипт
   `colorSchemeScript(storageKey, initial)` уходит в `app.head.script` и ставит сохранённую схему
-  или `initial` до первой отрисовки. `htmlAttrs` для `data-nui-theme` не используется: unhead
-  владеет атрибутами `<html>` и после гидрации переписал бы значение из хранилища (e2e поймал
-  `light` вместо сохранённого `dark`).
+  или `initial` до первой отрисовки: класс `nui-theme--<схема>` на `<html>` (с 2026-11-14,
+  раньше атрибут `data-nui-theme`). `htmlAttrs` для схемы не используется: unhead владеет
+  значениями, которые сам задал, и после гидрации переписал бы схему из хранилища (e2e поймал
+  `light` вместо сохранённого `dark`). Свои классы `htmlAttrs.class` unhead меняет по одному,
+  поэтому класс схемы рядом с ними сохраняется (тестовое приложение задаёт `class: 'app'`).
 - `to` рендерит `NuxtLink`: плагин передаёт его в `createNuiConfig({ link })` импортом из
   `#components`, потому что Nuxt регистрирует `NuxtLink` автоимпортом, а не глобально.
 - Сборка кита выпускает два входа модуля (`nuxt/module`, `nuxt/runtime/plugin`); внешние

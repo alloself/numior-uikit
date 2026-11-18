@@ -53,7 +53,7 @@ export default defineConfig({
     },
     sourcemap: true,
     rolldownOptions: {
-      external: [/^@numior\//, /^nuxt\//, '#components', 'vue', /^node:/],
+      external: [/^@numior\//, /^@tailwindcss\//, /^nuxt\//, '#components', 'vue', /^node:/],
     },
   },
 });

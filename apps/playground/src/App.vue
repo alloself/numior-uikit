@@ -1,12 +1,5 @@
 <template>
-  <main
-    ref="workspace"
-    class="workspace"
-    data-nui-theme="system"
-    :data-nui-density="density"
-    :dir="direction"
-    :data-nui-accent="accent"
-  >
+  <main ref="workspace" class="workspace" :class="themeClasses" :dir="direction">
     <NuiSkipLink target="forms-title" data-testid="skip-link" />
     <header class="intro">
       <span class="eyebrow">NUMIOR UI / FOUNDATION</span>
@@ -127,6 +120,12 @@
         <div class="swatch bg-primary text-primary-foreground rounded-md" data-testid="tailwind">
           Tailwind на токенах kit
         </div>
+        <div
+          class="swatch rounded-md bg-surface-muted text-foreground dark:bg-primary dark:text-primary-foreground"
+          data-testid="variant"
+        >
+          Вариант dark: по схеме страницы
+        </div>
       </div>
       <p class="text-muted-foreground">
         Tailwind-пример оформлен только на
@@ -134,7 +133,7 @@
       </p>
     </section>
 
-    <section class="panel nested-theme" data-nui-theme="dark" aria-labelledby="nested-title">
+    <section class="panel nested-theme nui-theme--dark" aria-labelledby="nested-title">
       <h2 id="nested-title">Локальная тёмная тема</h2>
       <p>Тема этой области независима от внешней.</p>
       <div class="flex flex-wrap gap-2">
@@ -144,6 +143,22 @@
           data-testid="nested-dialog-open"
           @click="nestedDialogOpen = true"
           >Диалог в этой теме</NuiButton
+        >
+        <span
+          class="swatch rounded-md bg-surface-muted text-foreground dark:bg-primary dark:text-primary-foreground"
+          data-testid="nested-variant"
+          >Вариант dark: по тёмной области</span
+        >
+      </div>
+      <div
+        class="nui-theme--light mt-3 flex flex-wrap items-center gap-2 rounded-md bg-surface p-3 text-foreground"
+        data-testid="nested-light"
+      >
+        <NuiButton data-testid="nested-light-button">Светлая область внутри тёмной</NuiButton>
+        <span
+          class="swatch rounded-md bg-surface-muted text-foreground dark:bg-primary dark:text-primary-foreground"
+          data-testid="nested-light-variant"
+          >Вариант dark: по светлой области</span
         >
       </div>
       <NuiDialog
@@ -160,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, useTemplateRef } from 'vue';
+import { computed, ref, useTemplateRef } from 'vue';
 import { NuiButton, NuiDialog, NuiSkipLink, useColorScheme } from '@numior/vue';
 import TypographySection from './TypographySection.vue';
 import BookSection from './BookSection.vue';
@@ -198,6 +213,12 @@ const loading = ref(false);
 const nestedDialogOpen = ref(false);
 const workspace = useTemplateRef<HTMLElement>('workspace');
 const { scheme, resolved } = useColorScheme({ scope: workspace });
+
+const themeClasses = computed(() => [
+  `nui-theme--${scheme.value}`,
+  `nui-theme--accent-${accent.value}`,
+  { 'nui-theme--density-compact': density.value === 'compact' },
+]);
 
 usePausedAway(workspace);
 

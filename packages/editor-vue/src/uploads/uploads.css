@@ -1,110 +1,64 @@
-.nui-editor__live {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-.nui-editor__upload {
-  font-family: var(--nui-font);
-  white-space: normal;
-  user-select: none;
-}
-.nui-editor-upload {
-  display: flex;
-  box-sizing: border-box;
-  align-items: center;
-  gap: var(--nui-space-3);
-  padding: var(--nui-space-2) var(--nui-space-3);
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius);
-  background: var(--nui-surface-muted);
-  transition:
-    border-color var(--nui-duration-fast) var(--nui-easing),
-    background-color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-editor-upload--status-error {
-  border-color: color-mix(in oklab, var(--nui-error) 45%, transparent);
-  background: var(--nui-error-soft);
-}
-.nui-editor-upload__preview,
-.nui-editor-upload__icon {
-  flex: none;
-  box-sizing: border-box;
-  inline-size: 3rem;
-  block-size: 3rem;
-  border-radius: var(--nui-radius-sm);
-}
-.nui-editor-upload__preview {
-  object-fit: cover;
-  opacity: 0.7;
-}
-.nui-editor-upload__icon {
-  display: grid;
-  place-items: center;
-  background: var(--nui-surface);
-  color: var(--nui-text-muted);
-  font-size: 1.25rem;
-}
-.nui-editor-upload__body {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: var(--nui-space-1);
-  min-inline-size: 0;
-}
-.nui-editor-upload__name {
-  overflow: hidden;
-  color: var(--nui-text);
-  font-size: var(--nui-font-size-sm);
-  font-weight: var(--nui-font-weight-medium);
-  line-height: var(--nui-line-height);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.nui-editor-upload__status {
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-xs);
-  line-height: var(--nui-line-height);
-}
-.nui-editor-upload--status-error .nui-editor-upload__status {
-  color: var(--nui-error-soft-foreground);
-}
-.nui-editor-upload__actions {
-  display: flex;
-  flex: none;
-  gap: var(--nui-space-1);
-}
-.nui-editor-media {
-  inline-size: calc(min(20rem, calc(100vw - var(--nui-space-8))) - 2 * var(--nui-space-3) - 2px);
-}
-.nui-editor-media__upload {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--nui-space-2);
-  padding-block-start: var(--nui-space-3);
-}
-.nui-editor-media__hint {
-  margin: 0;
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-xs);
-  line-height: var(--nui-line-height);
-}
-.nui-editor-media__form {
-  display: grid;
-  gap: var(--nui-space-2);
-}
-.nui-editor-media__form--tabbed {
-  padding-block-start: var(--nui-space-3);
-}
-.nui-editor-media__actions {
-  display: flex;
-  justify-content: flex-end;
-}
-.nui-editor-media__picker {
-  display: none;
+@layer components {
+  .nui-editor__live {
+    @apply absolute inline-px block-px -m-px p-0 overflow-hidden whitespace-nowrap;
+    clip-path: inset(50%);
+  }
+  .nui-editor__upload {
+    @apply font-sans whitespace-normal select-none;
+  }
+  .nui-editor-upload {
+    @apply flex box-border items-center gap-3 py-2 px-3 border border-border rounded;
+    @apply bg-surface-muted transition-[border-color,background-color] duration-fast ease-nui;
+  }
+  .nui-editor-upload--status-error {
+    @apply bg-error-soft;
+    border-color: color-mix(in oklab, var(--color-error) 45%, transparent);
+  }
+  .nui-editor-upload__preview,
+  .nui-editor-upload__icon {
+    @apply flex-none box-border rounded-sm inline-[3rem] block-[3rem];
+  }
+  .nui-editor-upload__preview {
+    @apply object-cover opacity-70;
+  }
+  .nui-editor-upload__icon {
+    @apply grid place-items-center bg-surface text-muted-foreground text-[length:1.25rem];
+  }
+  .nui-editor-upload__body {
+    @apply flex flex-1 flex-col gap-1 min-inline-0;
+  }
+  .nui-editor-upload__name {
+    @apply overflow-hidden text-foreground text-(length:--text-sm) font-medium leading-normal;
+    @apply text-ellipsis whitespace-nowrap;
+  }
+  .nui-editor-upload__status {
+    @apply text-muted-foreground text-(length:--text-xs) leading-normal;
+  }
+  .nui-editor-upload--status-error .nui-editor-upload__status {
+    @apply text-error-soft-foreground;
+  }
+  .nui-editor-upload__actions {
+    @apply flex flex-none gap-1;
+  }
+  .nui-editor-media {
+    @apply inline-[calc(min(20rem,calc(100vw_-_--spacing(8)))_-_2_*_--spacing(3)_-_2px)];
+  }
+  .nui-editor-media__upload {
+    @apply flex flex-col items-start gap-2 pbs-3;
+  }
+  .nui-editor-media__hint {
+    @apply m-0 text-muted-foreground text-(length:--text-xs) leading-normal;
+  }
+  .nui-editor-media__form {
+    @apply grid gap-2;
+  }
+  .nui-editor-media__form--tabbed {
+    @apply pbs-3;
+  }
+  .nui-editor-media__actions {
+    @apply flex justify-end;
+  }
+  .nui-editor-media__picker {
+    @apply hidden;
+  }
 }

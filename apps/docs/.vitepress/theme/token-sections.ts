@@ -13,71 +13,58 @@ interface SampleRule {
 }
 
 const SECTION_RULES: readonly SectionRule[] = [
-  { section: TokenSection.Code, pattern: /^(?:surface-code|syntax-|code-|chart-)/ },
-  { section: TokenSection.Surfaces, pattern: /^(?:surface|ring$|backdrop|layer-|text|border)/ },
+  {
+    section: TokenSection.Code,
+    pattern: /^(?:color-surface-code|color-syntax-|color-code-|color-chart-)/,
+  },
+  {
+    section: TokenSection.Surfaces,
+    pattern: /^color-(?:surface|backdrop|foreground|muted-foreground|subtle-foreground|border)/,
+  },
   {
     section: TokenSection.Tones,
-    pattern: /^(?:primary|secondary|success|warning|error|info|neutral|soft-)/,
+    pattern:
+      /^(?:color-(?:primary|secondary|success|warning|error|info|neutral)|soft-|neutral-muted-mix$)/,
   },
   {
     section: TokenSection.States,
-    pattern: /^(?:focus|field-ring|disabled|state-|hover$|pressed$)/,
+    pattern:
+      /^(?:color-ring$|focus-|field-ring|opacity-disabled|state-|color-hover$|color-pressed$)/,
   },
   { section: TokenSection.Shape, pattern: /^radius/ },
-  {
-    section: TokenSection.Sizes,
-    pattern: /^(?:space-|control-|field-padding|icon-size|layout-)/,
-  },
+  { section: TokenSection.Sizes, pattern: /^(?:spacing|text-control)/ },
   {
     section: TokenSection.Type,
-    pattern: /^(?:font|line-height|tracking|caption|prose|measure)/,
+    pattern: /^(?:font|text-|leading-|tracking-|caption-|prose-|color-prose-|container-prose)/,
   },
-  { section: TokenSection.Effects, pattern: /^(?:shadow|duration|easing|z-)/ },
+  {
+    section: TokenSection.Effects,
+    pattern: /^(?:shadow|transition-duration-|ease-|default-transition-|z-index-)/,
+  },
 ];
 
 const SAMPLE_RULES: readonly SampleRule[] = [
   { sample: TokenSample.Radius, pattern: /^radius/ },
   { sample: TokenSample.Shadow, pattern: /^shadow/ },
   { sample: TokenSample.FontWeight, pattern: /^font-weight/ },
-  { sample: TokenSample.FontSize, pattern: /font-size/ },
-  { sample: TokenSample.Font, pattern: /^font/ },
-  {
-    sample: TokenSample.Size,
-    pattern: /^(?:space-|control-(?:height|padding)|field-padding|icon-size|layout-)/,
-  },
+  { sample: TokenSample.FontSize, pattern: /^text-(?!.*--)/ },
+  { sample: TokenSample.Font, pattern: /^font-/ },
+  { sample: TokenSample.Size, pattern: /^spacing/ },
 ];
 
 const TONE_RE =
-  /^(primary|secondary|success|warning|error|info|neutral)(|-foreground|-soft|-soft-foreground)$/;
+  /^color-(primary|secondary|success|warning|error|info|neutral)(|-foreground|-soft|-soft-foreground|-muted|-muted-foreground)$/;
 
 const TONE_ORDER = ['primary', 'secondary', 'success', 'warning', 'error', 'info', 'neutral'];
-const TONE_PARTS = ['', '-foreground', '-soft', '-soft-foreground'];
+const TONE_PARTS = ['', '-foreground', '-soft', '-soft-foreground', '-muted', '-muted-foreground'];
 
-const COLOR_VALUE_RE = /^(?:oklch|oklab|rgb|hsl|color-mix|#)/;
-const REFERENCE_RE = /^var\((--nui-[a-z0-9-]+)\)$/;
-const PREFIX = '--nui-';
+const COLOR_VALUE_RE = /^(?:oklch|oklab|rgb|hsl|color-mix|light-dark|#)/;
+const PREFIX = '--';
 
 const shortName = (token: TokenReference): string => token.name.slice(PREFIX.length);
 
-const isColor = (
-  token: TokenReference | undefined,
-  byName: ReadonlyMap<string, TokenReference>,
-): boolean => {
-  if (token === undefined) {
-    return false;
-  }
-  const target = REFERENCE_RE.exec(token.light)?.[1];
-
-  return target === undefined
-    ? token.dark !== undefined || COLOR_VALUE_RE.test(token.light)
-    : isColor(byName.get(target), byName);
-};
-
-const sampleOf = (
-  token: TokenReference,
-  byName: ReadonlyMap<string, TokenReference>,
-): TokenSample => {
-  if (isColor(token, byName)) {
+const sampleOf = (token: TokenReference, value: string): TokenSample => {
+  if (COLOR_VALUE_RE.test(value)) {
     return TokenSample.Color;
   }
   const name = shortName(token);
@@ -103,6 +90,51 @@ const toneRank = (token: TokenReference): number => {
   return TONE_ORDER.indexOf(tone) * TONE_PARTS.length + TONE_PARTS.indexOf(part);
 };
 
+const VAR_OPEN = 'var(';
+const EXPANSION_DEPTH = 8;
+
+const DEPTH_STEP: Readonly<Record<string, number>> = { '(': 1, ')': -1 };
+
+const closingOf = (text: string, open: number): number => {
+  let depth = 0;
+  let at = open;
+
+  do {
+    depth += DEPTH_STEP[text.charAt(at)] ?? 0;
+    at += 1;
+  } while (depth > 0 && at < text.length);
+
+  return at - 1;
+};
+
+const fullValueOf = (token: TokenReference): string =>
+  token.dark === undefined ? token.light : `light-dark(${token.light}, ${token.dark})`;
+
+const expanded = (
+  value: string,
+  byName: ReadonlyMap<string, TokenReference>,
+  depth: number,
+): string => {
+  const start = value.indexOf(VAR_OPEN);
+
+  if (start === -1 || depth === 0) {
+    return value;
+  }
+
+  const end = closingOf(value, start + VAR_OPEN.length - 1);
+  const inner = value.slice(start + VAR_OPEN.length, end);
+  const comma = inner.indexOf(',');
+  const name = (comma === -1 ? inner : inner.slice(0, comma)).trim();
+  const token = byName.get(name);
+  const fallback = comma === -1 ? undefined : inner.slice(comma + 1).trim();
+  const known = token === undefined ? fallback : fullValueOf(token);
+
+  const replacement =
+    known === undefined ? value.slice(start, end + 1) : expanded(known, byName, depth - 1);
+
+  return `${value.slice(0, start)}${replacement}${expanded(value.slice(end + 1), byName, depth)}`;
+};
+
 export const tokenRowsOf = (
   tokens: readonly TokenReference[],
   section: TokenSection,
@@ -110,9 +142,14 @@ export const tokenRowsOf = (
   const byName = new Map(tokens.map((token) => [token.name, token]));
 
   const rows = tokens.reduce<TokenRow[]>((found, token) => {
-    if (tokenSectionOf(token) === section) {
-      found.push({ ...token, sample: sampleOf(token, byName) });
+    if (tokenSectionOf(token) !== section) {
+      return found;
     }
+
+    const value = expanded(fullValueOf(token), byName, EXPANSION_DEPTH);
+
+    found.push({ ...token, sample: sampleOf(token, value), value });
+
     return found;
   }, []);
 

@@ -4,9 +4,9 @@ description: Every Numior UI theme token with a sample and its value in the ligh
 
 # Tokens
 
-A Numior UI theme is a set of custom properties prefixed with `--nui-`. Here they all are, each with a sample, its name and its value from `@numior/kit/theme.css`.
+A Numior UI theme is a set of Tailwind theme keys from `@numior/kit/theme.css`. Here they all are, each with a sample, its name and its value.
 
-To change the theme, declare a token again in your own CSS. The [Custom theme](/en/guide/custom-theme) guide walks through it.
+To change the theme, set a key again in the `@theme` block of your Tailwind CSS file. The [Custom theme](/en/guide/custom-theme) guide walks through it.
 
 ## Surfaces and text
 
@@ -16,7 +16,7 @@ Page and panel backgrounds, three levels of text, and borders. `light-dark()` ho
 
 ## Tones
 
-Each tone has four tokens: a fill, the text on it, a soft fill and the text on the soft fill. The soft fill is derived from the main one, so you rarely set it yourself. The neutral tone also has a middle step, `--nui-neutral-muted`, for counts in rows: the share `--nui-neutral-muted-mix` of the neutral over the surface.
+Each tone has four tokens: a fill, the text on it, a soft fill and the text on the soft fill. The soft fill is derived from the main one, so you rarely set it yourself. The neutral tone also has a middle step, `--color-neutral-muted`, for counts in rows: the share `--neutral-muted-mix` of the neutral over the surface.
 
 <TokenReference section="tones" />
 
@@ -28,7 +28,7 @@ The focus ring, the opacity of disabled elements, and the hover and press steps.
 
 ## Radius
 
-The whole scale is derived from `--nui-radius-base`. Change it and the other steps follow.
+The whole scale is derived from `--radius-base`. Change it and the other steps follow.
 
 <TokenReference section="shape" />
 

@@ -34,6 +34,7 @@
     "scripts/vue-declarations.ts",
     "apps/docs/scripts/check-examples.ts",
     "apps/docs/examples/**/*.vue",
+    "apps/docs/guide/snippets/*.css",
     "apps/docs/demo/**/*.ts",
     "apps/docs/**/*.paths.ts",
     "apps/docs/scripts/reference.ts",
@@ -45,6 +46,7 @@
     "packages/kit/vitest.config.ts",
     "packages/kit/test/fixture/nuxt.config.ts",
     "packages/kit/test/fixture/app/app.config.ts",
+    "packages/kit/test/fixture/app/assets/theme.css",
     "packages/kit/test/fixture/app/**/*.vue",
     "packages/kit/test/**/*.test.ts",
     "packages/mcp/src/index.ts",
@@ -57,6 +59,10 @@
     "packages/spreadsheet/crosscheck/excel.ts",
     "playwright.bench.config.ts",
     "tests/bench/**/*.spec.ts",
+    "playwright.parity.config.ts",
+    "tests/parity/*.spec.ts",
+    "tests/parity/cli.ts",
+    "tests/parity/css-cli.ts",
     "apps/playground/src/bench/main.ts",
     "apps/playground/src/collab/main.ts",
     "apps/playground/collab-dev-server.ts"
@@ -390,7 +396,12 @@
   "duplicates": {
     "minTokens": 100,
     "threshold": 0.001,
-    "ignore": ["**/*.messages.ts", "apps/docs/examples/**", "apps/docs/demo/**"]
+    "ignore": [
+      "**/*.messages.ts",
+      "apps/docs/examples/**",
+      "apps/docs/demo/**",
+      "apps/docs/guide/snippets/**"
+    ]
   },
   "health": {
     "maxCyclomatic": 15,

@@ -20,7 +20,9 @@ export interface KitPixels {
   readonly lines: readonly KitLine[];
 }
 
-const KIT_BOXES = '[class*="nui-"]';
+const THEME_SCOPES = '[class*="nui-theme--"]';
+
+const KIT_BOXES = `[class*="nui-"]:not(${THEME_SCOPES})`;
 
 const RUNNING_TEXT = '.nui-content, .nui-code, .nui-prose, .nui-chart, [contenteditable], svg';
 

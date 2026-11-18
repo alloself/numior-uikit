@@ -1,92 +1,58 @@
-.nui-command {
-  --_padding: var(--nui-space-3);
+@layer components {
+  .nui-command {
+    --_padding: --spacing(3);
 
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  min-inline-size: 0;
-  max-block-size: inherit;
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius-lg);
-  background: var(--nui-surface-overlay);
-  color: var(--nui-text);
-  font-family: var(--nui-font);
-  overflow: hidden;
-}
-.nui-command--embedded {
-  border: 0;
-  border-radius: inherit;
-}
-.nui-command__field {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: var(--nui-space-2);
-  padding-inline: var(--_padding);
-  border-block-end: 1px solid var(--nui-border);
-}
-.nui-command__icon {
-  flex-shrink: 0;
-  inline-size: 1.125rem;
-  block-size: 1.125rem;
-  color: var(--nui-text-muted);
-}
-.nui-command__input {
-  box-sizing: border-box;
-  flex: 1 1 auto;
-  min-inline-size: 0;
-  min-block-size: var(--nui-control-height-lg);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-size: var(--nui-font-size-md);
-  outline: none;
-}
-.nui-command__input::placeholder {
-  color: var(--nui-text-subtle);
-}
-.nui-command__list {
-  position: relative;
-  flex: 1 1 auto;
-  min-block-size: 0;
-  max-block-size: 20rem;
-  padding: var(--nui-layout-layer-inset);
-  overflow-y: auto;
-  scrollbar-width: thin;
-}
-.nui-command .nui-command__list {
-  --_indent: 0px;
-}
-.nui-command__list .nui-list-item {
-  border-radius: var(--nui-radius-sm);
-}
-.nui-command__list .nui-list__group-label {
-  padding-block: var(--nui-space-2) var(--nui-space-1);
-}
-.nui-command__footer {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: var(--nui-space-3);
-  padding-block: var(--nui-space-2);
-  padding-inline: var(--_padding);
-  border-block-start: 1px solid var(--nui-border);
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-xs);
-}
-.nui-command--loading .nui-command__icon {
-  animation: nui-command-pulse 1.2s var(--nui-easing) infinite;
-  animation-play-state: var(--nui-animation-play-state, running);
-}
-@keyframes nui-command-pulse {
-  50% {
-    opacity: 0.4;
+    @apply box-border flex flex-col min-inline-0 border border-border border-solid rounded-lg;
+    @apply bg-surface-overlay text-foreground font-sans overflow-hidden max-block-[inherit];
   }
-}
-@media (prefers-reduced-motion: reduce) {
+  .nui-command--embedded {
+    border: 0;
+    @apply rounded-[inherit];
+  }
+  .nui-command__field {
+    @apply box-border flex items-center gap-2 px-(--_padding) border-be border-be-border;
+  }
+  .nui-command__icon {
+    @apply shrink-0 text-muted-foreground inline-[1.125rem] block-[1.125rem];
+  }
+  .nui-command__input {
+    @apply box-border flex-auto min-inline-0 min-block-control-lg p-0 bg-transparent text-inherit;
+    @apply outline-none;
+    border: 0;
+    font: inherit;
+    @apply text-(length:--text-base);
+  }
+  .nui-command__input::placeholder {
+    @apply text-subtle-foreground;
+  }
+  .nui-command__list {
+    @apply relative flex-auto min-block-0 p-layout-layer-inset overflow-y-auto scrollbar-thin max-block-[20rem];
+  }
+  .nui-command .nui-command__list {
+    --_indent: 0px;
+  }
+  .nui-command__list .nui-list-item {
+    @apply rounded-sm;
+  }
+  .nui-command__list .nui-list__group-label {
+    @apply pbs-2 pbe-1;
+  }
+  .nui-command__footer {
+    @apply box-border flex items-center gap-3 py-2 px-(--_padding) border-bs border-bs-border;
+    @apply text-muted-foreground text-(length:--text-xs);
+  }
   .nui-command--loading .nui-command__icon {
-    animation-duration: 2.4s;
+    @apply animate-[nui-command-pulse_1.2s_var(--ease-nui)_infinite];
+    animation-play-state: var(--nui-animation-play-state, running);
+  }
+  @keyframes nui-command-pulse {
+    50% {
+      opacity: 0.4;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nui-command--loading .nui-command__icon {
+      animation-duration: 2.4s;
+    }
   }
 }

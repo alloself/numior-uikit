@@ -1,170 +1,135 @@
-.nui-tree {
-  --_row: 2.25rem;
-  --_indent: 1.25rem;
-  --_control: 1.25rem;
-  --_height: auto;
-  --_padding-inline: var(--nui-space-2);
-  --_padding-block: var(--nui-space-1);
-  --_row-padding: var(--nui-space-1);
-  --_gap: var(--nui-space-2);
+@layer components {
+  .nui-tree {
+    --_row: 2.25rem;
+    --_indent: 1.25rem;
+    --_control: 1.25rem;
+    --_height: auto;
+    --_padding-inline: --spacing(2);
+    --_padding-block: var(--spacing);
+    --_row-padding: var(--spacing);
+    --_gap: --spacing(2);
 
-  position: relative;
-  block-size: var(--_height);
-  overflow: auto;
-  user-select: none;
-}
-.nui-tree--size-sm {
-  --_row: 2rem;
-}
-.nui-tree--size-lg {
-  --_row: 2.5rem;
-}
-.nui-tree--virtual {
-  overflow-anchor: none;
-}
-.nui-tree--virtual::before,
-.nui-tree--virtual::after {
-  content: '';
-  display: block;
-  flex: none;
-}
-.nui-tree--virtual::before {
-  block-size: var(--_window-lead);
-}
-.nui-tree--virtual::after {
-  block-size: var(--_window-rest);
-}
-.nui-tree.nui-list--variant-outline {
-  --_divider: transparent;
-  --_divider-size: 0px;
-
-  padding: var(--nui-layout-panel-inset);
-}
-.nui-tree.nui-list--variant-floating {
-  --_row: 2rem;
-
-  position: fixed;
-  padding: var(--nui-layout-layer-inset);
-  overflow: auto;
-  scrollbar-width: thin;
-}
-.nui-tree.nui-list--variant-floating .nui-list__items {
-  flex: none;
-  padding: 0;
-  overflow: visible;
-}
-.nui-tree__list {
-  position: relative;
-}
-.nui-tree--virtual .nui-tree__list {
-  --_window-lead: initial;
-  --_window-rest: initial;
-
-  position: sticky;
-  inset-block: var(--_window-clamp-start) var(--_window-clamp-end);
-}
-.nui-tree--virtual .nui-tree__list > * {
-  --_window-clamp-start: initial;
-  --_window-clamp-end: initial;
-}
-.nui-tree .nui-list-item {
-  --_min-size: var(--_row);
-
-  block-size: var(--_row);
-  border-radius: var(--nui-radius-sm);
-  overflow: hidden;
-  transition:
-    opacity var(--nui-duration-normal) var(--nui-easing),
-    block-size var(--nui-duration-normal) var(--nui-easing);
-}
-.nui-tree .nui-list-item__inner {
-  min-block-size: 0;
-  padding-block: 0 var(--_divider-size);
-}
-.nui-tree .nui-tree__item--folded {
-  block-size: 0;
-  opacity: 0;
-}
-.nui-tree .nui-tree__item--leaving {
-  pointer-events: none;
-}
-@starting-style {
-  .nui-tree--virtual .nui-tree__item--revealing {
-    opacity: 0;
+    @apply relative block-(--_height) overflow-auto select-none;
   }
-}
-.nui-tree:focus-visible .nui-list-item--active {
-  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-  outline-offset: calc(-1 * var(--nui-focus-ring-width));
-}
-.nui-tree__controls {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: var(--nui-space-2);
-  margin-inline-start: calc(var(--_indent) * (var(--_level) - 1));
-}
-.nui-tree__toggle {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  inline-size: var(--_control);
-  block-size: var(--_control);
-}
-.nui-tree__toggle:dir(rtl) {
-  scale: -1 1;
-}
-.nui-tree__chevron {
-  inline-size: 1rem;
-  block-size: 1rem;
-  transition: rotate var(--nui-duration-normal) var(--nui-easing);
-}
-.nui-tree__item--expanded .nui-tree__chevron {
-  rotate: 90deg;
-}
-.nui-tree__spinner {
-  inline-size: 1rem;
-  block-size: 1rem;
-  animation: nui-tree-spin 0.8s linear infinite;
-  animation-play-state: var(--nui-animation-play-state, running);
-}
-.nui-tree__checkbox {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-}
-.nui-tree__box {
-  line-height: var(--_size);
-  pointer-events: none;
-}
-.nui-tree__icon {
-  flex: none;
-  inline-size: 1rem;
-  block-size: 1rem;
-}
-.nui-tree__icon--folder {
-  display: inline-grid;
-}
-.nui-tree__glyph {
-  grid-area: 1 / 1;
-  inline-size: 100%;
-  block-size: 100%;
-}
-.nui-tree__glyph--open,
-.nui-tree__item--expanded .nui-tree__glyph--closed {
-  opacity: 0;
-}
-.nui-tree__item--expanded .nui-tree__glyph--open {
-  opacity: 1;
-}
-@keyframes nui-tree-spin {
-  to {
-    rotate: 1turn;
+  .nui-tree--size-sm {
+    --_row: 2rem;
   }
-}
-@media (prefers-reduced-motion: reduce) {
+  .nui-tree--size-lg {
+    --_row: 2.5rem;
+  }
+  .nui-tree--virtual {
+    overflow-anchor: none;
+  }
+  .nui-tree--virtual::before,
+  .nui-tree--virtual::after {
+    @apply block flex-none content-[''];
+  }
+  .nui-tree--virtual::before {
+    @apply block-(--_window-lead);
+  }
+  .nui-tree--virtual::after {
+    @apply block-(--_window-rest);
+  }
+  .nui-tree.nui-list--variant-outline {
+    --_divider: transparent;
+    --_divider-size: 0px;
+
+    @apply p-layout-panel-inset;
+  }
+  .nui-tree.nui-list--variant-floating {
+    --_row: 2rem;
+
+    @apply fixed p-layout-layer-inset overflow-auto scrollbar-thin;
+  }
+  .nui-tree.nui-list--variant-floating .nui-list__items {
+    @apply flex-none p-0 overflow-visible;
+  }
+  .nui-tree__list {
+    @apply relative;
+  }
+  .nui-tree--virtual .nui-tree__list {
+    --_window-lead: initial;
+    --_window-rest: initial;
+
+    @apply sticky inset-bs-(--_window-clamp-start) inset-be-(--_window-clamp-end);
+  }
+  .nui-tree--virtual .nui-tree__list > * {
+    --_window-clamp-start: initial;
+    --_window-clamp-end: initial;
+  }
+  .nui-tree .nui-list-item {
+    --_min-size: var(--_row);
+
+    @apply block-(--_row) rounded-sm overflow-hidden transition-[opacity,block-size];
+    @apply duration-normal;
+    @apply ease-nui;
+  }
+  .nui-tree .nui-list-item__inner {
+    @apply min-block-0 pbs-0 pbe-(--_divider-size);
+  }
+  .nui-tree .nui-tree__item--folded {
+    @apply block-0 opacity-0;
+  }
+  .nui-tree .nui-tree__item--leaving {
+    @apply pointer-events-none;
+  }
+  @starting-style {
+    .nui-tree--virtual .nui-tree__item--revealing {
+      @apply opacity-0;
+    }
+  }
+  .nui-tree:focus-visible .nui-list-item--active {
+    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-width);
+  }
+  .nui-tree__controls {
+    @apply inline-flex flex-none items-center gap-2 ms-[calc(var(--_indent)_*_(var(--_level)_-_1))];
+  }
+  .nui-tree__toggle {
+    @apply inline-flex flex-none items-center justify-center inline-(--_control) block-(--_control);
+  }
+  .nui-tree__toggle:dir(rtl) {
+    @apply -scale-x-100 scale-y-100;
+  }
+  .nui-tree__chevron {
+    @apply inline-[1rem] block-[1rem] transition-[rotate] duration-normal ease-nui;
+  }
+  .nui-tree__item--expanded .nui-tree__chevron {
+    @apply rotate-90;
+  }
   .nui-tree__spinner {
-    animation-duration: 1.6s;
+    @apply inline-[1rem] block-[1rem] animate-[nui-tree-spin_0.8s_linear_infinite];
+    animation-play-state: var(--nui-animation-play-state, running);
+  }
+  .nui-tree__checkbox {
+    @apply inline-flex flex-none items-center;
+  }
+  .nui-tree__box {
+    @apply leading-(--_size) pointer-events-none;
+  }
+  .nui-tree__icon {
+    @apply flex-none inline-[1rem] block-[1rem];
+  }
+  .nui-tree__icon--folder {
+    @apply inline-grid;
+  }
+  .nui-tree__glyph {
+    @apply inline-full block-full row-1 col-1;
+  }
+  .nui-tree__glyph--open,
+  .nui-tree__item--expanded .nui-tree__glyph--closed {
+    @apply opacity-0;
+  }
+  .nui-tree__item--expanded .nui-tree__glyph--open {
+    @apply opacity-100;
+  }
+  @keyframes nui-tree-spin {
+    to {
+      rotate: 1turn;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nui-tree__spinner {
+      animation-duration: 1.6s;
+    }
   }
 }

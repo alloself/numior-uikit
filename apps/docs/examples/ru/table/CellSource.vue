@@ -36,8 +36,8 @@ const ROWS = 1000;
 const COLS = 52;
 
 const HEAD: NuiTableCellStyle = {
-  fill: 'var(--nui-surface-muted)',
-  style: { 'font-weight': 'var(--nui-font-weight-semibold)' },
+  fill: 'var(--color-surface-muted)',
+  style: { 'font-weight': 'var(--font-weight-semibold)' },
 };
 
 const NUMBER: NuiTableCellStyle = { align: 'end' };

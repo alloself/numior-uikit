@@ -2,11 +2,16 @@ import { existsSync, readFileSync } from 'node:fs';
 import type { Plugin } from 'vitepress';
 import type { Highlighter } from 'shiki';
 import type { NuiCodeLine } from '@numior/vue';
+import type { CodeLanguage } from '../markdown/languages.ts';
 import { tokenizeCode } from '../markdown/tokens.ts';
 import { parseBundle } from './bundle.ts';
 import type { ReferenceBundle } from './reference.types.ts';
+import { styleImportOf } from './stylesheet-paths.ts';
 
-export type SignatureTokenizer = (code: string) => readonly NuiCodeLine[] | undefined;
+export type SignatureTokenizer = (
+  code: string,
+  language: CodeLanguage,
+) => readonly NuiCodeLine[] | undefined;
 
 const REGISTRY_ID = 'virtual:nui-reference';
 const SLICE_PREFIX = 'virtual:nui-reference/';
@@ -39,7 +44,7 @@ const declarationModule = (
   if (declaration === undefined) {
     return 'export default null;\n';
   }
-  return `export default ${JSON.stringify({ ...declaration, tokens: tokenize(declaration.signature) })};\n`;
+  return `export default ${JSON.stringify({ ...declaration, tokens: tokenize(declaration.signature, 'ts') })};\n`;
 };
 
 const componentModule = (
@@ -58,7 +63,7 @@ const componentModule = (
       ? undefined
       : {
           ...component.styles,
-          importTokens: tokenize(`import '${component.styles.import}';`),
+          importTokens: tokenize(styleImportOf(component.styles.import), 'css'),
         };
 
   return `export default ${JSON.stringify({ ...component, styles })};\n`;
@@ -120,7 +125,8 @@ export const docsReference = (file: string, highlighter: Highlighter): Plugin =>
     return bundle;
   };
 
-  const tokenize: SignatureTokenizer = (code) => tokenizeCode(highlighter, code, 'ts');
+  const tokenize: SignatureTokenizer = (code, language) =>
+    tokenizeCode(highlighter, code, language);
 
   return {
     name: 'nui-docs-reference',

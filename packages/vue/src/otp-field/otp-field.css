@@ -1,189 +1,137 @@
-.nui-otp-field {
-  --_height: var(--nui-control-height-md);
-  --_font-size: var(--nui-control-font-size-md);
-  --_border: var(--nui-border);
-  --_active: var(--nui-focus);
+@layer components {
+  .nui-otp-field {
+    --_height: var(--spacing-control-md);
+    --_font-size: var(--text-control-md);
+    --_border: var(--color-border);
+    --_active: --theme(--color-ring inline);
 
-  box-sizing: border-box;
-  position: relative;
-  display: inline-flex;
-  max-inline-size: 100%;
-  color: var(--nui-text);
-  font-family: var(--nui-font);
-  font-size: var(--_font-size);
-  line-height: var(--nui-line-height-control);
-  isolation: isolate;
-}
-.nui-otp-field--size-sm {
-  --_height: var(--nui-control-height-sm);
-  --_font-size: var(--nui-control-font-size-sm);
-}
-.nui-otp-field--size-lg {
-  --_height: var(--nui-control-height-lg);
-  --_font-size: var(--nui-control-font-size-lg);
-}
-.nui-otp-field--invalid {
-  --_border: var(--nui-error);
-  --_active: var(--nui-error);
-}
-.nui-otp-field:hover:not(
-    .nui-otp-field--disabled,
-    .nui-otp-field--readonly,
-    .nui-otp-field--invalid
-  ) {
-  --_border: var(--nui-border-strong);
-}
-.nui-otp-field__slots {
-  display: flex;
-  align-items: center;
-  gap: var(--nui-space-2);
-  min-inline-size: 0;
-  direction: ltr;
-  unicode-bidi: isolate;
-}
-.nui-otp-field__group {
-  display: flex;
-  align-items: center;
-  min-inline-size: 0;
-}
-.nui-otp-field__slot {
-  box-sizing: border-box;
-  position: relative;
-  display: grid;
-  place-items: center;
-  flex: 0 1 auto;
-  inline-size: var(--_height);
-  min-inline-size: 0;
-  block-size: var(--_height);
-  border: 1px solid var(--_border);
-  background: var(--nui-surface);
-  outline: var(--nui-focus-ring-width) solid transparent;
-  outline-offset: 0;
-  font-variant-numeric: tabular-nums;
-  font-weight: 500;
-  transition:
-    border-color var(--nui-duration-fast) var(--nui-easing),
-    outline-color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-otp-field__slot:not(:first-child) {
-  margin-inline-start: -1px;
-}
-.nui-otp-field__slot:first-child {
-  border-start-start-radius: var(--nui-radius);
-  border-end-start-radius: var(--nui-radius);
-}
-.nui-otp-field__slot:last-child {
-  border-start-end-radius: var(--nui-radius);
-  border-end-end-radius: var(--nui-radius);
-}
-.nui-otp-field__slot--active {
-  z-index: 1;
-  border-color: var(--_active);
-  outline-color: color-mix(in oklab, var(--_active) 35%, transparent);
-}
-.nui-otp-field__char,
-.nui-otp-field__dot,
-.nui-otp-field__caret,
-.nui-otp-field__placeholder {
-  grid-area: 1 / 1;
-}
-.nui-otp-field__char,
-.nui-otp-field__dot {
-  animation: nui-otp-field-enter var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-otp-field__dot {
-  inline-size: 0.5em;
-  block-size: 0.5em;
-  border-radius: 50%;
-  background: currentColor;
-  transition: scale var(--nui-duration-normal) var(--nui-easing);
-}
-.nui-otp-field--secret .nui-otp-field__char {
-  scale: 0;
-  opacity: 0;
-  transition:
-    scale var(--nui-duration-normal) var(--nui-easing),
-    opacity var(--nui-duration-normal) var(--nui-easing);
-}
-.nui-otp-field--secret .nui-otp-field__slot--revealed .nui-otp-field__char {
-  scale: 1;
-  opacity: 1;
-}
-.nui-otp-field__slot--revealed .nui-otp-field__dot {
-  scale: 0;
-}
-.nui-otp-field__caret {
-  inline-size: 1px;
-  block-size: round(1.25em, 2px);
-  background: currentColor;
-  animation: nui-otp-field-blink 1.2s var(--nui-easing) infinite;
-  animation-play-state: var(--nui-animation-play-state, running);
-}
-.nui-otp-field__placeholder {
-  color: var(--nui-text-muted);
-}
-.nui-otp-field__separator {
-  display: inline-flex;
-  flex: none;
-  color: var(--nui-text-muted);
-}
-.nui-otp-field__overlay {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-.nui-otp-field__control {
-  box-sizing: border-box;
-  position: absolute;
-  inset-block: 0;
-  inset-inline-start: 0;
-  inline-size: calc(100% + 3rem);
-  block-size: 100%;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: transparent;
-  caret-color: transparent;
-  -webkit-text-fill-color: transparent;
-  font-size: max(16px, var(--_font-size));
-  appearance: none;
-  outline: none;
-  cursor: text;
-}
-.nui-otp-field__control::selection {
-  background: transparent;
-}
-.nui-otp-field__control:autofill {
-  transition: background-color 0s 86400s;
-}
-.nui-otp-field--readonly .nui-otp-field__control {
-  cursor: default;
-}
-.nui-otp-field--disabled {
-  opacity: var(--nui-disabled-opacity);
-}
-.nui-otp-field--disabled .nui-otp-field__control {
-  cursor: not-allowed;
-}
-@keyframes nui-otp-field-enter {
-  from {
-    opacity: 0;
-    scale: 0.5;
+    @apply box-border relative inline-flex max-inline-full text-foreground font-sans;
+    @apply text-(length:--_font-size) leading-control isolate;
   }
-}
-@keyframes nui-otp-field-blink {
-  0%,
-  40% {
-    opacity: 1;
+  .nui-otp-field--size-sm {
+    --_height: var(--spacing-control-sm);
+    --_font-size: var(--text-control-sm);
   }
-  55%,
-  85% {
-    opacity: 0;
+  .nui-otp-field--size-lg {
+    --_height: var(--spacing-control-lg);
+    --_font-size: var(--text-control-lg);
   }
-}
-@media (prefers-reduced-motion: reduce) {
+  .nui-otp-field--invalid {
+    --_border: var(--color-error);
+    --_active: var(--color-error);
+  }
+  .nui-otp-field:hover:not(
+      .nui-otp-field--disabled,
+      .nui-otp-field--readonly,
+      .nui-otp-field--invalid
+    ) {
+    --_border: var(--color-border-strong);
+  }
+  .nui-otp-field__slots {
+    @apply flex items-center gap-2 min-inline-0;
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+  .nui-otp-field__group {
+    @apply flex items-center min-inline-0;
+  }
+  .nui-otp-field__slot {
+    @apply box-border relative grid place-items-center flex-initial inline-(--_height) min-inline-0;
+    @apply block-(--_height) border border-(--_border) border-solid bg-surface;
+    @apply outline-(length:--focus-ring-width) outline-transparent outline-offset-0 outline-solid;
+    @apply tabular-nums font-medium transition-[border-color,outline-color] duration-fast ease-nui;
+  }
+  .nui-otp-field__slot:not(:first-child) {
+    @apply -ms-px;
+  }
+  .nui-otp-field__slot:first-child {
+    @apply rounded-ss rounded-es;
+  }
+  .nui-otp-field__slot:last-child {
+    @apply rounded-se rounded-ee;
+  }
+  .nui-otp-field__slot--active {
+    @apply z-1 border-(--_active);
+    outline-color: color-mix(in oklab, var(--_active) 35%, transparent);
+  }
+  .nui-otp-field__char,
+  .nui-otp-field__dot,
+  .nui-otp-field__caret,
+  .nui-otp-field__placeholder {
+    @apply row-1 col-1;
+  }
+  .nui-otp-field__char,
+  .nui-otp-field__dot {
+    @apply animate-[nui-otp-field-enter_var(--transition-duration-fast)_var(--ease-nui)];
+  }
+  .nui-otp-field__dot {
+    @apply bg-current inline-[0.5em] block-[0.5em] rounded-[50%] transition-[scale] duration-normal;
+    @apply ease-nui;
+  }
+  .nui-otp-field--secret .nui-otp-field__char {
+    @apply opacity-0 scale-0 transition-[scale,opacity] duration-normal ease-nui;
+  }
+  .nui-otp-field--secret .nui-otp-field__slot--revealed .nui-otp-field__char {
+    @apply opacity-100 scale-100;
+  }
+  .nui-otp-field__slot--revealed .nui-otp-field__dot {
+    @apply scale-0;
+  }
   .nui-otp-field__caret {
-    animation-duration: 2.4s;
+    @apply inline-px bg-current block-[round(1.25em,2px)];
+    @apply animate-[nui-otp-field-blink_1.2s_var(--ease-nui)_infinite];
+    animation-play-state: var(--nui-animation-play-state, running);
+  }
+  .nui-otp-field__placeholder {
+    @apply text-muted-foreground;
+  }
+  .nui-otp-field__separator {
+    @apply inline-flex flex-none text-muted-foreground;
+  }
+  .nui-otp-field__overlay {
+    @apply absolute inset-0 overflow-hidden;
+  }
+  .nui-otp-field__control {
+    @apply box-border absolute inset-y-0 inset-s-0 block-full m-0 p-0 bg-transparent;
+    @apply text-transparent caret-transparent appearance-none cursor-text;
+    @apply inline-[calc(100%_+_3rem)] border-0 border-none;
+    @apply text-[length:max(16px,var(--_font-size))] outline-none;
+    -webkit-text-fill-color: transparent;
+  }
+  .nui-otp-field__control::selection {
+    @apply bg-transparent;
+  }
+  .nui-otp-field__control:autofill {
+    @apply transition-[background-color] duration-0 ease-[ease] delay-[86400s];
+  }
+  .nui-otp-field--readonly .nui-otp-field__control {
+    @apply cursor-default;
+  }
+  .nui-otp-field--disabled {
+    @apply opacity-disabled;
+  }
+  .nui-otp-field--disabled .nui-otp-field__control {
+    @apply cursor-not-allowed;
+  }
+  @keyframes nui-otp-field-enter {
+    from {
+      opacity: 0;
+      scale: 0.5;
+    }
+  }
+  @keyframes nui-otp-field-blink {
+    0%,
+    40% {
+      opacity: 1;
+    }
+    55%,
+    85% {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nui-otp-field__caret {
+      animation-duration: 2.4s;
+    }
   }
 }

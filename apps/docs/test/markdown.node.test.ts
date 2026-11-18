@@ -35,14 +35,21 @@ const decodeAttribute = (value: string): string =>
     .replaceAll('&#39;', "'")
     .replaceAll('&amp;', '&');
 
+const CODE_BLOCK_RE = /<div class="mb-5"><NuiCode v-bind='([^']*)'><\/NuiCode><\/div>/g;
+
 const codeProps = (html: string) => {
-  const match = /<div class="mb-5"><NuiCode v-bind='([^']*)'><\/NuiCode><\/div>/.exec(html);
+  const match = new RegExp(CODE_BLOCK_RE.source).exec(html);
 
   if (match?.[1] === undefined) {
     throw new Error(`No code block in: ${html}`);
   }
   return parseAs(decodeAttribute(match[1]), isCodeProps, 'code props');
 };
+
+const codeBlocks = (html: string) =>
+  [...html.matchAll(CODE_BLOCK_RE)].map(([, props = '']) =>
+    parseAs(decodeAttribute(props), isCodeProps, 'code props'),
+  );
 
 const codeGroup = (html: string) => {
   const match = /<CodeGroup :items='([^']*)'><\/CodeGroup>/.exec(html);
@@ -85,7 +92,7 @@ describe('docs markdown', () => {
   let md: MarkdownRenderer;
 
   beforeAll(async () => {
-    const highlighter = await createHighlighter({ themes: ['github-light'], langs: ['ts'] });
+    const highlighter = await createHighlighter({ themes: ['github-light'], langs: ['ts', 'css'] });
 
     md = await createMarkdownRenderer(
       fileURLToPath(new URL('..', import.meta.url)),
@@ -139,33 +146,31 @@ describe('docs markdown', () => {
   });
 
   it('prints every stylesheet that the components of an install block render', () => {
-    const files = codeProps(
+    const files = codeBlocks(
       md.render("```ts install\nimport { NuiTable, NuiSelect } from '@numior/kit';\n```\n", RU),
     );
 
-    expect(files.language).toBe('ts');
-
-    expect(files.code).toBe(
+    expect(files.map(({ language, code }) => [language, code])).toEqual([
+      ['ts', "import { NuiTable, NuiSelect } from '@numior/kit';"],
       [
-        "import { NuiTable, NuiSelect } from '@numior/kit';",
-        "import '@numior/kit/styles/icon.css';",
-        "import '@numior/kit/styles/field.css';",
-        "import '@numior/kit/styles/select.css';",
-        "import '@numior/kit/table/styles/table.css';",
-      ].join('\n'),
-    );
+        'css',
+        [
+          "@import '@numior/kit/styles/icon.css';",
+          "@import '@numior/kit/styles/field.css';",
+          "@import '@numior/kit/styles/select.css';",
+          "@import '@numior/kit/table/styles/table.css';",
+        ].join('\n'),
+      ],
+    ]);
 
-    const packages = codeProps(
+    const packages = codeBlocks(
       md.render("```ts install:packages\nimport { NuiTable } from '@numior/kit/table';\n```\n", RU),
     );
 
-    expect(packages.code).toBe(
-      [
-        "import { NuiTable } from '@numior/kit/table';",
-        "import '@numior/kit/styles.css';",
-        "import '@numior/kit/table/styles.css';",
-      ].join('\n'),
-    );
+    expect(packages.map(({ code }) => code)).toEqual([
+      "import { NuiTable } from '@numior/kit/table';",
+      ["@import '@numior/kit/styles.css';", "@import '@numior/kit/table/styles.css';"].join('\n'),
+    ]);
   });
 
   it('prints no install command: the kit holds every module', () => {

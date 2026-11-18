@@ -93,8 +93,8 @@ const BUNDLE: ReferenceBundle = {
     },
   ],
   tokens: [
-    { name: '--nui-radius-md', group: 'radius', light: '0.5rem', dark: undefined },
-    { name: '--nui-surface', group: 'color', light: '#fff', dark: '#111' },
+    { name: '--radius-md', group: 'radius', light: '0.5rem', dark: undefined },
+    { name: '--color-surface', group: 'color', light: '#fff', dark: '#111' },
   ],
   icons: [{ alias: 'copy', icon: 'Copy' }],
   stylesheets: [
@@ -154,8 +154,11 @@ describe('markdown twin of a page', () => {
         '',
         '```ts',
         "import { NuiButton } from '@numior/kit';",
-        "import '@numior/kit/styles/icon.css';",
-        "import '@numior/kit/styles/button.css';",
+        '```',
+        '',
+        '```css',
+        "@import '@numior/kit/styles/icon.css';",
+        "@import '@numior/kit/styles/button.css';",
         '```',
         '',
       ].join('\n'),
@@ -172,8 +175,11 @@ describe('markdown twin of a page', () => {
         '',
         '```ts',
         "import { NuiButton } from '@numior/kit/forms';",
-        "import '@numior/kit/styles/icon.css';",
-        "import '@numior/kit/styles/button.css';",
+        '```',
+        '',
+        '```css',
+        "@import '@numior/kit/styles/icon.css';",
+        "@import '@numior/kit/styles/button.css';",
         '```',
         '',
       ].join('\n'),
@@ -199,7 +205,7 @@ describe('markdown twin of a page', () => {
     expect(twin).toContain('### NuiButton');
 
     expect(twin).toContain(
-      "import { NuiButton } from '@numior/kit';\nimport '@numior/kit/styles/button.css';",
+      "import { NuiButton } from '@numior/kit';\n```\n\n```css\n@import '@numior/kit/styles/button.css';",
     );
 
     expect(twin).toContain('#### Props\n\n| Name | Type | Default | Description |');
@@ -240,7 +246,7 @@ describe('markdown twin of a page', () => {
     expect(signatures).toContain("import type { HotkeyOptions } from '@numior/kit';");
 
     expect(pageTwin('<TokenReference section="shape" />\n', contextOf())).toContain(
-      '| `--nui-radius-md` | `0.5rem` |  |',
+      '| `--radius-md` | `0.5rem` |  |',
     );
 
     expect(pageTwin('<IconReference />\n', contextOf())).toContain('| `copy` | `Copy` |');

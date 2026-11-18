@@ -14,15 +14,15 @@ const MARK_ROWS = 1000;
 const MARK_COLS = 100;
 
 const HEAD: NuiTableCellStyle = {
-  fill: 'var(--nui-surface-muted)',
-  style: { 'font-weight': 'var(--nui-font-weight-semibold)' },
+  fill: 'var(--color-surface-muted)',
+  style: { 'font-weight': 'var(--font-weight-semibold)' },
 };
 
 const NUMBER: NuiTableCellStyle = { align: 'end' };
 
 const LEDGER_END: NuiTableSourceCell = {
   text: 'Конец журнала: ниже лист пуст, и эта подпись идёт поверх пустых ячеек справа',
-  style: { color: 'var(--nui-text-muted)', overflow: true },
+  style: { color: 'var(--color-muted-foreground)', overflow: true },
 };
 
 const numbers = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 1 });

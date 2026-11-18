@@ -260,7 +260,7 @@ export class TableSheetSection extends GridKeys {
     const [cell, root, strong] = await Promise.all([
       boxOf(this.cell(position, col)),
       boxOf(this.root),
-      this.tokenRgb('--nui-border-strong'),
+      this.tokenRgb('--color-border-strong'),
     ]);
 
     const top = cell.y - root.y;

@@ -137,6 +137,7 @@ const iconBlocks: TagRenderer = (_attributes, context) =>
 const RENDERERS: Readonly<Record<string, TagRenderer>> = {
   Example: exampleBlocks,
   Block: blockBlocks,
+  ThemeCompare: blockBlocks,
   Configurator: sceneBlocks,
   ApiReference: apiBlocks,
   KeyboardReference: keyboardBlocks,

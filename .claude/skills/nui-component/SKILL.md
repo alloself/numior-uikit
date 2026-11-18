@@ -1,6 +1,6 @@
 ---
 name: nui-component
-description: Author or change a Numior UI component in packages/vue the way this repo requires. Use for any new Nui* component, prop or styling change; covers props destructure, defineModel, BEM with private CSS variables, motion tokens, lazy icons, docs RU/EN, playground and wiring.
+description: Author or change a Numior UI component in packages/vue the way this repo requires. Use for any new Nui* component, prop or styling change; covers props destructure, defineModel, BEM with private CSS variables and Tailwind @apply, motion tokens, lazy icons, docs RU/EN, playground and wiring.
 ---
 
 # Numior component authoring
@@ -10,7 +10,8 @@ first. Then follow this checklist; every item is required before `pnpm check`.
 
 ## Files
 
-`packages/vue/src/<name>/Nui<Name>.vue`, `<name>.types.ts`, `<name>.css`.
+`packages/vue/src/<name>/Nui<Name>.vue`, `<name>.types.ts`, `<name>.css` with its rules inside
+`@layer components { … }`.
 Add `@import './<name>/<name>.css';` to `packages/vue/src/styles.css`, export the component
 and its types from `packages/vue/src/index.ts`, add the export name to
 `scripts/check-artifacts.mjs`.
@@ -112,6 +113,23 @@ const {
   for states. No `data-*` attributes for variants or states.
 - Modifiers set private variables (`--_height`, `--_tone`); base rules read them. Native
   state comes from pseudo-classes (`:checked`, `:disabled`, `:focus-visible`).
+- Inside a rule: private variables first, then `@apply` with the Tailwind utilities of every
+  declaration a utility writes, arbitrary values included (`inline-[40%]`, `py-[0.75em]`,
+  `transition-[opacity,translate]`), in declaration order, lines up to 100 characters. What
+  stays a declaration belongs to a category of `scripts/styles/utility-guards.mjs`;
+  `pnpm check:styles` refuses the rest. `pnpm parity:css <ref> <file>` compares the file with
+  its version at `<ref>` by computed longhands and names every declaration to return.
+  Templates carry no Tailwind classes.
+- No variants in `@apply`: `hover:` turns into `@media (hover: hover)`, so a state is an own
+  selector of the file. Selectors, specificity and order stay as written: no merged rules, no
+  `:where`/`:is` and no nesting.
+- Values come from theme keys. Base keys are read through `var()` or utilities; derived keys
+  (soft colours, `--color-ring`, `--color-hover`, radii) only through utilities or
+  `--theme(--x inline)`, never `var()`. A scale step inside an expression is `--spacing(N)`.
+- `@keyframes` and `@property` stay as written. An animation is
+  `animate-[name_duration_easing_infinite]` with `animation-play-state` as a declaration. The
+  geometry of the virtual windows in the table, book and editor (spacers, the sticky window,
+  `overflow-anchor`) and of the engine overlays stays declarations.
 - The block root and every part with padding or a border declare `box-sizing: border-box`;
   never rely on a page reset. The playground has none, so a missing declaration shows up in
   e2e sizes and screenshots.
@@ -125,9 +143,9 @@ const {
   nui-layer--elevated`: the `*-soft` tokens re-derive from that surface instead of the page,
   so soft fills inside stay visible in the dark theme.
 - Action buttons inside fields (clear, open, toggle) are `NuiButton size="xs"` ghost neutral
-  with `--nui-text-muted` icons that brighten on hover.
-- Every state change has `transition`/`animation` via `--nui-duration-fast|normal|slow` and
-  `--nui-easing` (`slow` for layout moves such as stacks and layers); infinite animations
+  with `--color-muted-foreground` icons that brighten on hover.
+- Every state change has `transition`/`animation` via `--transition-duration-fast|normal|slow` and
+  `--ease-nui` (`slow` for layout moves such as stacks and layers); infinite animations
   only slow down under reduced motion, and a sweep (skeleton, indeterminate progress)
   leaves the box fully before it re-enters so the loop has no visible seam.
 - A prop typed as `Function | false` (or any union with `boolean`) gets a destructure default
@@ -136,9 +154,8 @@ const {
 - A button takes its glyph from the `icon` prop (`<NuiButton icon="x" />`), not from a
   hand-placed `NuiIcon` in the slot. A button with `icon` and no text, or with a slot of only
   `NuiIcon`, squares itself (`nui-button--icon-only`, no horizontal padding); `:icon-only`
-  forces or disables it. It always needs `aria-label`.
-  Every button, icon-only included, shares the press feedback (`scale: 0.97`). Close buttons
-  in cards align their glyph with the first text line
+  forces or disables it. It always needs `aria-label`. Close buttons in cards align their
+  glyph with the first text line
   (`margin-block-start: calc((font-size * line-height - var(--_height)) / 2)`) and with the
   padding edge (negative `margin-inline-end`).
 - Everything that reacts to a click shows `cursor: pointer` (buttons, links, options, menu and
@@ -147,15 +164,15 @@ const {
   the cursor of every enabled control in the playground.
 - A drag starts only from its handle, never from the whole row or cell: otherwise it fights the
   click (sorting, selection) and text selection.
-- An entrance offset starts on the block-start side (`translate: 0 calc(var(--nui-space-1) * -1)`)
+- An entrance offset starts on the block-start side (`translate: 0 calc(var(--spacing) * -1)`)
   or a `scale` below 1, never below: a box shifted past the end edge of an `overflow: auto`
   container counts as its scrollable overflow and flashes a scrollbar for the whole animation
   (the table's empty state did). Horizontal slides stay within the padding of their scroller.
 - A drag ghost never covers its insertion line: it spans only part of the cross axis (a column
   ghost the header band, a row ghost a compact chip at the row start) while the line runs the
   full width or height beside it. The ghost's grip stays under the pointer.
-- Focus ring: `outline: var(--nui-focus-ring-width) solid var(--nui-focus); outline-offset:
-  var(--nui-focus-ring-offset)`. Disabled: `opacity: var(--nui-disabled-opacity)`.
+- Focus ring: `outline: var(--focus-ring-width) solid var(--color-ring); outline-offset:
+  var(--focus-ring-offset)`. Disabled: `opacity: var(--opacity-disabled)`.
 - Logical properties only (`inline-size`, `inset-inline-start`, `padding-inline`).
 - Icons through `<NuiIcon icon="check" />` (`icon` also takes a component); a new kit alias is a
   new entry in `primitives/src/icons/icon-aliases.ts` (alias → Lucide file name) plus that file

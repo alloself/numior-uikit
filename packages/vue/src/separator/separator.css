@@ -1,48 +1,28 @@
-.nui-separator {
-  --_line: var(--nui-border);
+@layer components {
+  .nui-separator {
+    --_line: var(--color-border);
 
-  box-sizing: border-box;
-  display: block;
-  flex-shrink: 0;
-  inline-size: 100%;
-  block-size: 1px;
-  background: var(--_line);
-}
-.nui-separator--orientation-vertical {
-  display: inline-block;
-  align-self: stretch;
-  inline-size: 1px;
-  min-block-size: 1em;
-  block-size: auto;
-  vertical-align: middle;
-}
-.nui-separator--labelled {
-  display: flex;
-  align-items: center;
-  gap: var(--nui-space-3);
-  block-size: auto;
-  background: none;
-  color: var(--nui-text-muted);
-  font-family: var(--nui-font);
-  font-size: var(--nui-font-size-sm);
-  line-height: var(--nui-line-height);
-}
-.nui-separator--labelled::before,
-.nui-separator--labelled::after {
-  content: '';
-  flex: 1 1 0;
-  block-size: 1px;
-  background: var(--_line);
-}
-.nui-separator--labelled.nui-separator--orientation-vertical {
-  flex-direction: column;
-  inline-size: auto;
-}
-.nui-separator--labelled.nui-separator--orientation-vertical::before,
-.nui-separator--labelled.nui-separator--orientation-vertical::after {
-  inline-size: 1px;
-  block-size: auto;
-}
-.nui-separator__label {
-  white-space: nowrap;
+    @apply box-border block shrink-0 inline-full block-px bg-(--_line);
+  }
+  .nui-separator--orientation-vertical {
+    @apply inline-block self-stretch inline-px block-auto align-middle min-block-[1em];
+  }
+  .nui-separator--labelled {
+    @apply flex items-center gap-3 block-auto text-muted-foreground font-sans;
+    @apply text-(length:--text-sm) leading-normal bg-transparent bg-none;
+  }
+  .nui-separator--labelled::before,
+  .nui-separator--labelled::after {
+    @apply block-px content-[''] flex-[1_1_0] bg-(--_line) bg-none;
+  }
+  .nui-separator--labelled.nui-separator--orientation-vertical {
+    @apply flex-col inline-auto;
+  }
+  .nui-separator--labelled.nui-separator--orientation-vertical::before,
+  .nui-separator--labelled.nui-separator--orientation-vertical::after {
+    @apply inline-px block-auto;
+  }
+  .nui-separator__label {
+    @apply whitespace-nowrap;
+  }
 }

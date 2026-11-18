@@ -1,117 +1,90 @@
-.nui-badge {
-  --_tone: var(--nui-neutral-muted);
-  --_tone-foreground: var(--nui-neutral-muted-foreground);
-  --_tone-soft: var(--nui-neutral-soft);
-  --_tone-soft-foreground: var(--nui-neutral-soft-foreground);
-  --_height: 1.25rem;
-  --_padding: var(--nui-space-2);
-  --_font-size: var(--nui-font-size-xs);
-  --_dot-size: 0.625rem;
-  --_float-x: 50%;
+@layer components {
+  .nui-badge {
+    --_tone: --theme(--color-neutral-muted inline);
+    --_tone-foreground: --theme(--color-neutral-muted-foreground inline);
+    --_tone-soft: --theme(--color-neutral-soft inline);
+    --_tone-soft-foreground: --theme(--color-neutral-soft-foreground inline);
+    --_height: 1.25rem;
+    --_padding: --spacing(2);
+    --_font-size: var(--text-xs);
+    --_dot-size: 0.625rem;
+    --_float-x: 50%;
 
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--nui-space-1);
-  min-inline-size: var(--_height);
-  block-size: var(--_height);
-  padding-inline: var(--_padding);
-  border: 1px solid transparent;
-  border-radius: var(--nui-radius-sm);
-  background: var(--_tone-soft);
-  color: var(--_tone-soft-foreground);
-  font-family: var(--nui-font);
-  font-size: var(--_font-size);
-  font-weight: 600;
-  line-height: var(--nui-line-height-control);
-  white-space: nowrap;
-  vertical-align: middle;
-  transition:
-    background-color var(--nui-duration-fast) var(--nui-easing),
-    border-color var(--nui-duration-fast) var(--nui-easing),
-    color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-badge--size-sm {
-  --_height: 1rem;
-  --_padding: calc(var(--nui-space-1) + 1px);
-  --_font-size: 0.6875rem;
-  --_dot-size: 0.5rem;
-}
-.nui-badge--tone-primary {
-  --_tone: var(--nui-primary);
-  --_tone-foreground: var(--nui-primary-foreground);
-  --_tone-soft: var(--nui-primary-soft);
-  --_tone-soft-foreground: var(--nui-primary-soft-foreground);
-}
-.nui-badge--tone-secondary {
-  --_tone: var(--nui-secondary);
-  --_tone-foreground: var(--nui-secondary-foreground);
-  --_tone-soft: var(--nui-secondary-soft);
-  --_tone-soft-foreground: var(--nui-secondary-soft-foreground);
-}
-.nui-badge--tone-success {
-  --_tone: var(--nui-success);
-  --_tone-foreground: var(--nui-success-foreground);
-  --_tone-soft: var(--nui-success-soft);
-  --_tone-soft-foreground: var(--nui-success-soft-foreground);
-}
-.nui-badge--tone-warning {
-  --_tone: var(--nui-warning);
-  --_tone-foreground: var(--nui-warning-foreground);
-  --_tone-soft: var(--nui-warning-soft);
-  --_tone-soft-foreground: var(--nui-warning-soft-foreground);
-}
-.nui-badge--tone-error {
-  --_tone: var(--nui-error);
-  --_tone-foreground: var(--nui-error-foreground);
-  --_tone-soft: var(--nui-error-soft);
-  --_tone-soft-foreground: var(--nui-error-soft-foreground);
-}
-.nui-badge--tone-info {
-  --_tone: var(--nui-info);
-  --_tone-foreground: var(--nui-info-foreground);
-  --_tone-soft: var(--nui-info-soft);
-  --_tone-soft-foreground: var(--nui-info-soft-foreground);
-}
-.nui-badge--variant-outline {
-  border-color: color-mix(in oklab, var(--_tone) 50%, var(--nui-border));
-  background: transparent;
-}
-.nui-badge--variant-solid {
-  background: var(--_tone);
-  color: var(--_tone-foreground);
-}
-.nui-badge--count {
-  --_padding: var(--nui-space-1);
+    @apply box-border inline-flex items-center justify-center gap-1 min-inline-(--_height);
+    @apply block-(--_height) px-(--_padding) border border-transparent rounded-sm bg-(--_tone-soft);
+    @apply text-(--_tone-soft-foreground) font-sans text-(length:--_font-size) leading-control;
+    @apply whitespace-nowrap align-middle font-semibold;
+    @apply transition-[background-color,border-color,color] duration-fast ease-nui;
+  }
+  .nui-badge--size-sm {
+    --_height: 1rem;
+    --_padding: calc(var(--spacing) + 1px);
+    --_font-size: 0.6875rem;
+    --_dot-size: 0.5rem;
+  }
+  .nui-badge--tone-primary {
+    --_tone: var(--color-primary);
+    --_tone-foreground: var(--color-primary-foreground);
+    --_tone-soft: --theme(--color-primary-soft inline);
+    --_tone-soft-foreground: --theme(--color-primary-soft-foreground inline);
+  }
+  .nui-badge--tone-secondary {
+    --_tone: var(--color-secondary);
+    --_tone-foreground: var(--color-secondary-foreground);
+    --_tone-soft: --theme(--color-secondary-soft inline);
+    --_tone-soft-foreground: --theme(--color-secondary-soft-foreground inline);
+  }
+  .nui-badge--tone-success {
+    --_tone: var(--color-success);
+    --_tone-foreground: var(--color-success-foreground);
+    --_tone-soft: --theme(--color-success-soft inline);
+    --_tone-soft-foreground: --theme(--color-success-soft-foreground inline);
+  }
+  .nui-badge--tone-warning {
+    --_tone: var(--color-warning);
+    --_tone-foreground: var(--color-warning-foreground);
+    --_tone-soft: --theme(--color-warning-soft inline);
+    --_tone-soft-foreground: --theme(--color-warning-soft-foreground inline);
+  }
+  .nui-badge--tone-error {
+    --_tone: var(--color-error);
+    --_tone-foreground: var(--color-error-foreground);
+    --_tone-soft: --theme(--color-error-soft inline);
+    --_tone-soft-foreground: --theme(--color-error-soft-foreground inline);
+  }
+  .nui-badge--tone-info {
+    --_tone: var(--color-info);
+    --_tone-foreground: var(--color-info-foreground);
+    --_tone-soft: --theme(--color-info-soft inline);
+    --_tone-soft-foreground: --theme(--color-info-soft-foreground inline);
+  }
+  .nui-badge--variant-outline {
+    @apply bg-transparent;
+    border-color: color-mix(in oklab, var(--_tone) 50%, var(--color-border));
+  }
+  .nui-badge--variant-solid {
+    @apply bg-(--_tone) text-(--_tone-foreground);
+  }
+  .nui-badge--count {
+    --_padding: var(--spacing);
 
-  border-radius: var(--nui-radius-full);
-}
-.nui-badge--dot {
-  inline-size: var(--_dot-size);
-  min-inline-size: 0;
-  block-size: var(--_dot-size);
-  padding: 0;
-  border-color: transparent;
-  border-radius: 50%;
-  background: var(--_tone);
-}
-.nui-badge--floating {
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline-end: 0;
-  z-index: 1;
-  translate: var(--_float-x) -50%;
-  box-shadow: 0 0 0 2px var(--nui-surface);
-}
-.nui-badge--floating:dir(rtl) {
-  --_float-x: -50%;
-}
-.nui-badge__icon {
-  inline-size: var(--nui-icon-size-sm);
-  block-size: var(--nui-icon-size-sm);
-}
-.nui-badge__label {
-  overflow: hidden;
-  text-overflow: ellipsis;
+    @apply rounded-full;
+  }
+  .nui-badge--dot {
+    @apply inline-(--_dot-size) min-inline-0 block-(--_dot-size) p-0 border-transparent;
+    @apply bg-(--_tone) rounded-[50%];
+  }
+  .nui-badge--floating {
+    @apply absolute inset-bs-0 inset-e-0 z-1 translate-x-(--_float-x) -translate-y-1/2;
+    @apply shadow-[0_0_0_2px_var(--color-surface)];
+  }
+  .nui-badge--floating:dir(rtl) {
+    --_float-x: -50%;
+  }
+  .nui-badge__icon {
+    @apply inline-icon-sm block-icon-sm;
+  }
+  .nui-badge__label {
+    @apply overflow-hidden text-ellipsis;
+  }
 }

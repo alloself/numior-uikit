@@ -1,7 +1,17 @@
 import { colorSchemeScript } from '@numior/vue';
-import { addComponent, addImports, addPlugin, createResolver, defineNuxtModule } from 'nuxt/kit';
+import {
+  addComponent,
+  addImports,
+  addPlugin,
+  addTemplate,
+  addVitePlugin,
+  createResolver,
+  defineNuxtModule,
+} from 'nuxt/kit';
+import tailwindcss from '@tailwindcss/vite';
 import type { Nuxt } from 'nuxt/schema';
 import { componentNames, composableNames, type ModuleNamespace } from './exports';
+import { kitEntry } from './kit-css';
 import type { NuiNuxtColorScheme, NuiNuxtOptions, NuiRuntimeOptions } from './module.types';
 
 export type {
@@ -22,9 +32,14 @@ interface Registration {
   readonly composables: boolean;
 }
 
+interface KitOptions {
+  readonly sheets: readonly string[];
+}
+
+type VitePlugins = Extract<Parameters<typeof addVitePlugin>[0], readonly unknown[]>;
+
 const DEFAULT_STORAGE_KEY = 'nui-theme';
 const YIELDING_PRIORITY = -1;
-const TOKEN_CSS = ['@numior/kit/theme.css', '@numior/kit/base.css'];
 
 const ENTRIES: readonly KitEntry[] = [
   { id: '@numior/kit', styles: '@numior/kit/styles.css', load: () => import('@numior/vue') },
@@ -39,6 +54,33 @@ const ENTRIES: readonly KitEntry[] = [
     load: () => import('@numior/table'),
   },
 ];
+
+const isVitePlugins = (value: unknown): value is VitePlugins =>
+  Array.isArray(value) &&
+  value.every((plugin) => typeof plugin === 'object' && plugin !== null && 'name' in plugin);
+
+const addTailwind = (): void => {
+  const plugins: unknown = tailwindcss();
+
+  if (!isVitePlugins(plugins)) {
+    return;
+  }
+
+  addVitePlugin(plugins);
+};
+
+const addKitCss = (nuxt: Nuxt, sheets: readonly string[]): void => {
+  addTailwind();
+
+  const kit = addTemplate<KitOptions>({
+    filename: 'numior/kit.css',
+    write: true,
+    options: { sheets },
+    getContents: ({ options }) => kitEntry(options.sheets),
+  });
+
+  nuxt.options.css.unshift(kit.dst);
+};
 
 const registerNamespace = (id: string, namespace: ModuleNamespace, what: Registration): void => {
   if (what.components) {
@@ -102,9 +144,10 @@ export default defineNuxtModule<NuiNuxtOptions>({
     nuxt.options.runtimeConfig.public.numior = runtimeOptionsOf(options);
     addHead(nuxt, colorSchemeOf(options));
     if (options.css === true) {
-      for (const sheet of [...TOKEN_CSS, ...ENTRIES.map((entry) => entry.styles)]) {
-        nuxt.options.css.push(sheet);
-      }
+      addKitCss(
+        nuxt,
+        ENTRIES.map((entry) => entry.styles),
+      );
     }
 
     const loaded = await Promise.all(

@@ -1,0 +1,9 @@
+@layer theme, base, components, utilities;
+@import '@numior/tokens/theme.css' layer(theme);
+@import '@numior/tokens/base.css' layer(components);
+@import '@numior/vue/styles.css';
+@import '@numior/table/styles.css';
+@import '@numior/content/styles.css';
+@import '@numior/editor-vue/styles.css';
+@import '@numior/spreadsheet/styles.css';
+@import './bench.css' layer(components);

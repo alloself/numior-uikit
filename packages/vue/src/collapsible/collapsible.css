@@ -1,96 +1,65 @@
-.nui-collapsible {
-  --_padding: 0px;
+@layer components {
+  .nui-collapsible {
+    --_padding: 0px;
 
-  box-sizing: border-box;
-  display: block;
-  font-family: var(--nui-font);
-  color: var(--nui-text);
-}
-.nui-collapsible--variant-card {
-  --_padding: var(--nui-space-4);
+    @apply box-border block font-sans text-foreground;
+  }
+  .nui-collapsible--variant-card {
+    --_padding: --spacing(4);
 
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius-lg);
-  background: var(--nui-surface);
-  transition: border-color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-collapsible__heading {
-  margin: 0;
-  font: inherit;
-}
-.nui-collapsible__trigger {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--nui-space-3);
-  inline-size: 100%;
-  min-block-size: var(--nui-control-height-md);
-  padding-block: var(--nui-space-2);
-  padding-inline: var(--_padding);
-  border: 0;
-  border-radius: var(--nui-radius);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-weight: var(--nui-font-weight-medium);
-  line-height: var(--nui-line-height-label);
-  text-align: start;
-  cursor: pointer;
-  transition:
-    color var(--nui-duration-fast) var(--nui-easing),
-    background-color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-collapsible--variant-card .nui-collapsible__trigger {
-  border-radius: calc(var(--nui-radius-lg) - 1px);
-}
-.nui-collapsible__trigger:hover:not(:disabled) {
-  color: var(--nui-primary);
-}
-.nui-collapsible__trigger:focus-visible {
-  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-  outline-offset: calc(var(--nui-focus-ring-offset) * -1);
-}
-.nui-collapsible__trigger:disabled {
-  opacity: var(--nui-disabled-opacity);
-  cursor: not-allowed;
-}
-.nui-collapsible__label {
-  flex: 1 1 auto;
-}
-.nui-collapsible__chevron {
-  flex-shrink: 0;
-  inline-size: var(--nui-icon-size-sm);
-  block-size: var(--nui-icon-size-sm);
-  color: var(--nui-text-muted);
-  transition: rotate var(--nui-duration-normal) var(--nui-easing);
-}
-.nui-collapsible--open .nui-collapsible__chevron {
-  rotate: 180deg;
-}
-.nui-collapsible__panel {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows var(--nui-duration-normal) var(--nui-easing);
-}
-.nui-collapsible--open .nui-collapsible__panel {
-  grid-template-rows: 1fr;
-}
-.nui-collapsible__content {
-  min-block-size: 0;
-  overflow: hidden;
-}
-.nui-collapsible__content[hidden] {
-  display: block;
-  content-visibility: hidden;
-}
-.nui-collapsible__body {
-  padding-block: var(--nui-space-1) var(--nui-space-3);
-  padding-inline: var(--_padding);
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-sm);
-  line-height: var(--nui-line-height);
-}
-.nui-collapsible--variant-card .nui-collapsible__body {
-  padding-block: 0 var(--nui-space-4);
+    @apply border border-border border-solid rounded-lg bg-surface transition-[border-color];
+    @apply duration-fast ease-nui;
+  }
+  .nui-collapsible__heading {
+    @apply m-0;
+    font: inherit;
+  }
+  .nui-collapsible__trigger {
+    @apply box-border flex items-center justify-between gap-3 inline-full min-block-control-md py-2;
+    @apply px-(--_padding) rounded bg-transparent text-inherit text-start cursor-pointer border-0;
+    @apply border-none transition-[color,background-color] duration-fast ease-nui;
+    font: inherit;
+    @apply font-medium leading-label;
+  }
+  .nui-collapsible--variant-card .nui-collapsible__trigger {
+    @apply rounded-[calc(--theme(--radius-lg_inline)_-_1px)];
+  }
+  .nui-collapsible__trigger:hover:not(:disabled) {
+    @apply text-primary;
+  }
+  .nui-collapsible__trigger:focus-visible {
+    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-offset);
+  }
+  .nui-collapsible__trigger:disabled {
+    @apply opacity-disabled cursor-not-allowed;
+  }
+  .nui-collapsible__label {
+    @apply flex-auto;
+  }
+  .nui-collapsible__chevron {
+    @apply shrink-0 inline-icon-sm block-icon-sm text-muted-foreground transition-[rotate];
+    @apply duration-normal ease-nui;
+  }
+  .nui-collapsible--open .nui-collapsible__chevron {
+    @apply rotate-180;
+  }
+  .nui-collapsible__panel {
+    @apply grid grid-rows-[0fr] transition-[grid-template-rows] duration-normal ease-nui;
+  }
+  .nui-collapsible--open .nui-collapsible__panel {
+    @apply grid-rows-[1fr];
+  }
+  .nui-collapsible__content {
+    @apply min-block-0 overflow-hidden;
+  }
+  .nui-collapsible__content[hidden] {
+    @apply block;
+    content-visibility: hidden;
+  }
+  .nui-collapsible__body {
+    @apply pbs-1 pbe-3 px-(--_padding) text-muted-foreground text-(length:--text-sm) leading-normal;
+  }
+  .nui-collapsible--variant-card .nui-collapsible__body {
+    @apply pbs-0 pbe-4;
+  }
 }

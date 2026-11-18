@@ -10,6 +10,7 @@ import { applyDocs, checkDocs } from './docs.ts';
 import { exampleSources } from '../examples/modules.ts';
 import { parseIconAliases } from './icons.ts';
 import { kitEntries, type KitEntries } from './kit-entries.ts';
+import { compiledKitCss, isLayered, THEME_FILE } from './kit-css.ts';
 import { componentReference } from './meta.ts';
 import { sceneProblems, type SceneSource } from './scenes.ts';
 import { componentEntries, familyFile, familyStyleImport } from './sources.ts';
@@ -86,7 +87,17 @@ const CHECKER_OPTIONS: MetaCheckerOptions = {
 export const createReferenceChecker = (root: string): ReferenceChecker =>
   createChecker(join(root, 'tsconfig.reference.json'), CHECKER_OPTIONS);
 
-const stylesOf = (entry: ComponentEntry): ReferenceStyles | undefined => {
+const THEME_NAMES: ReadonlySet<string> = new Set(
+  parseThemeTokens(readFileSync(THEME_FILE, 'utf8')).map((token) => token.name),
+);
+
+const tokensOf = async (css: string): Promise<string[]> => {
+  const compiled = isLayered(css) ? await compiledKitCss(css) : '';
+
+  return parseTokens(`${css}\n${compiled}`, THEME_NAMES);
+};
+
+const stylesOf = async (entry: ComponentEntry): Promise<ReferenceStyles | undefined> => {
   const file = familyFile(entry, '.css');
   const importPath = familyStyleImport(entry);
 
@@ -95,7 +106,7 @@ const stylesOf = (entry: ComponentEntry): ReferenceStyles | undefined => {
   }
   const css = readFileSync(file, 'utf8');
 
-  return { import: importPath, blocks: parseBlocks(css), tokens: parseTokens(css) };
+  return { import: importPath, blocks: parseBlocks(css), tokens: await tokensOf(css) };
 };
 
 const loadCatalog = async (file: string): Promise<CatalogReference | undefined> =>
@@ -115,7 +126,7 @@ const collectComponent = async (
   const component = componentReference(
     entry,
     checker.getComponentMeta(entry.file),
-    stylesOf(entry),
+    await stylesOf(entry),
     sheets.of(entry.file),
     catalog?.namespace,
     members,
@@ -214,7 +225,7 @@ export const buildReference = async (
         ),
         (declaration) => `${declaration.package}#${declaration.name}`,
       ),
-      tokens: parseThemeTokens(readFileSync(join(root, 'packages/tokens/src/theme.css'), 'utf8')),
+      tokens: parseThemeTokens(readFileSync(THEME_FILE, 'utf8')),
       icons: parseIconAliases(
         readFileSync(join(root, 'packages/primitives/src/icons/icon-aliases.ts'), 'utf8'),
       ),

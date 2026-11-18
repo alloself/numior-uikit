@@ -1,146 +1,93 @@
-.nui-dialog {
-  --_width: 32rem;
-  --_padding: var(--nui-space-6);
-  --_seam: var(--nui-space-3);
+@layer components {
+  .nui-dialog {
+    --_width: 32rem;
+    --_padding: --spacing(6);
+    --_seam: --spacing(3);
 
-  box-sizing: border-box;
-  position: fixed;
-  inset: 0;
-  flex-direction: column;
-  inline-size: min(var(--_width), calc(100% - var(--nui-space-8)));
-  block-size: fit-content;
-  max-inline-size: none;
-  max-block-size: calc(100dvh - var(--nui-space-8));
-  margin: auto;
-  padding: 0;
-  overflow: hidden;
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius-lg);
-  background: var(--nui-surface-overlay);
-  color: var(--nui-text);
-  font-family: var(--nui-font);
-  box-shadow: var(--nui-shadow-lg);
-  opacity: 0;
-  translate: 0 var(--nui-space-2);
-  transition:
-    opacity var(--nui-duration-normal) var(--nui-easing),
-    translate var(--nui-duration-normal) var(--nui-easing),
-    display var(--nui-duration-normal) allow-discrete,
-    overlay var(--nui-duration-normal) allow-discrete;
-}
-.nui-dialog--size-sm {
-  --_width: 24rem;
-}
-.nui-dialog--size-lg {
-  --_width: 48rem;
-}
-.nui-dialog--size-auto {
-  inline-size: fit-content;
-  max-inline-size: calc(100% - var(--nui-space-8));
-}
-.nui-dialog--placement-top {
-  margin-block-start: min(15dvh, var(--nui-space-8) * 4);
-  translate: 0 calc(var(--nui-space-2) * -1);
-}
-.nui-dialog--bare .nui-dialog__header {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-.nui-dialog--bare .nui-dialog__body {
-  padding: 0;
-}
-.nui-dialog[open] {
-  display: flex;
-  opacity: 1;
-  translate: 0 0;
-}
-@starting-style {
+    @apply box-border fixed inset-0 flex-col block-fit max-inline-none m-auto p-0 overflow-hidden;
+    @apply border border-border rounded-lg bg-surface-overlay text-foreground font-sans opacity-0;
+    @apply translate-y-2 inline-[min(var(--_width),calc(100%_-_--spacing(8)))];
+    @apply max-block-[calc(100dvh_-_--spacing(8))] shadow-lg;
+    @apply transition-[opacity,translate,display,overlay] duration-normal;
+    @apply ease-[var(--ease-nui),var(--ease-nui),ease,ease] transition-discrete;
+  }
+  .nui-dialog--size-sm {
+    --_width: 24rem;
+  }
+  .nui-dialog--size-lg {
+    --_width: 48rem;
+  }
+  .nui-dialog--size-auto {
+    @apply inline-fit max-inline-[calc(100%_-_--spacing(8))];
+  }
+  .nui-dialog--placement-top {
+    @apply -translate-y-2 mbs-[min(15dvh,--spacing(8)_*_4)];
+  }
+  .nui-dialog--bare .nui-dialog__header {
+    @apply absolute inline-px block-px -m-px p-0 overflow-hidden whitespace-nowrap;
+    clip-path: inset(50%);
+  }
+  .nui-dialog--bare .nui-dialog__body {
+    @apply p-0;
+  }
   .nui-dialog[open] {
-    opacity: 0;
-    translate: 0 var(--nui-space-2);
+    @apply flex opacity-100 translate-y-0;
   }
-  .nui-dialog--placement-top[open] {
-    translate: 0 calc(var(--nui-space-2) * -1);
+  @starting-style {
+    .nui-dialog[open] {
+      @apply opacity-0 translate-y-2;
+    }
+    .nui-dialog--placement-top[open] {
+      @apply -translate-y-2;
+    }
   }
-}
-.nui-dialog::backdrop {
-  background: var(--nui-backdrop);
-  opacity: 0;
-  transition:
-    opacity var(--nui-duration-normal) var(--nui-easing),
-    background-color var(--nui-duration-normal) var(--nui-easing),
-    display var(--nui-duration-normal) allow-discrete,
-    overlay var(--nui-duration-normal) allow-discrete;
-}
-.nui-dialog[open]::backdrop {
-  opacity: 1;
-}
-.nui-dialog--covered::backdrop {
-  background: transparent;
-}
-@starting-style {
+  .nui-dialog::backdrop {
+    @apply bg-backdrop opacity-0;
+    @apply transition-[opacity,background-color,display,overlay] duration-normal;
+    @apply ease-[var(--ease-nui),var(--ease-nui),ease,ease] transition-discrete;
+  }
   .nui-dialog[open]::backdrop {
-    opacity: 0;
+    @apply opacity-100;
   }
-}
-.nui-dialog__header {
-  box-sizing: border-box;
-  flex: none;
-  display: grid;
-  gap: var(--nui-space-1);
-  padding: var(--_padding) calc(var(--_padding) + var(--nui-space-8)) var(--_seam) var(--_padding);
-}
-.nui-dialog__title {
-  margin: 0;
-  font-size: var(--nui-font-size-lg);
-  font-weight: 600;
-  line-height: var(--nui-line-height-control);
-}
-.nui-dialog__description {
-  margin: 0;
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-sm);
-  line-height: var(--nui-line-height);
-}
-.nui-dialog__body {
-  box-sizing: border-box;
-  flex: 0 1 auto;
-  min-block-size: 0;
-  padding: calc(var(--_padding) - var(--_seam)) var(--_padding);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  font-size: var(--nui-font-size-sm);
-  line-height: var(--nui-line-height);
-}
-.nui-dialog__body > :first-child {
-  margin-block-start: 0;
-}
-.nui-dialog__body > :last-child {
-  margin-block-end: 0;
-}
-.nui-dialog__footer {
-  box-sizing: border-box;
-  flex: none;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--nui-space-2);
-  padding: var(--_seam) var(--_padding) var(--_padding);
-}
-.nui-dialog:not(.nui-dialog--bare, :has(> .nui-dialog__header)) > .nui-dialog__body {
-  padding-block-start: var(--_padding);
-}
-.nui-dialog:not(.nui-dialog--bare, :has(> .nui-dialog__footer)) > .nui-dialog__body {
-  padding-block-end: var(--_padding);
-}
-.nui-dialog__close {
-  position: absolute;
-  inset-block-start: var(--nui-space-3);
-  inset-inline-end: var(--nui-space-3);
+  .nui-dialog--covered::backdrop {
+    @apply bg-transparent;
+  }
+  @starting-style {
+    .nui-dialog[open]::backdrop {
+      @apply opacity-0;
+    }
+  }
+  .nui-dialog__header {
+    @apply box-border flex-none grid gap-1 pbs-(--_padding) pbe-(--_seam) pl-(--_padding);
+    @apply pr-[calc(var(--_padding)_+_--spacing(8))];
+  }
+  .nui-dialog__title {
+    @apply m-0 text-lg/control font-semibold;
+  }
+  .nui-dialog__description {
+    @apply m-0 text-sm/normal text-muted-foreground;
+  }
+  .nui-dialog__body {
+    @apply box-border flex-initial min-block-0 overflow-y-auto overscroll-contain text-sm/normal;
+    @apply py-[calc(var(--_padding)_-_var(--_seam))] px-(--_padding);
+  }
+  .nui-dialog__body > :first-child {
+    @apply mbs-0;
+  }
+  .nui-dialog__body > :last-child {
+    @apply mbe-0;
+  }
+  .nui-dialog__footer {
+    @apply box-border flex-none flex flex-wrap justify-end gap-2;
+    @apply pbs-(--_seam) px-(--_padding) pbe-(--_padding);
+  }
+  .nui-dialog:not(.nui-dialog--bare, :has(> .nui-dialog__header)) > .nui-dialog__body {
+    @apply pbs-(--_padding);
+  }
+  .nui-dialog:not(.nui-dialog--bare, :has(> .nui-dialog__footer)) > .nui-dialog__body {
+    @apply pbe-(--_padding);
+  }
+  .nui-dialog__close {
+    @apply absolute inset-bs-3 end-3;
+  }
 }

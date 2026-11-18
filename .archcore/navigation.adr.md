@@ -64,7 +64,7 @@ status: accepted
   тем же post-flush watch по уже отрисованному списку.
 - `NuiTabs` — части `NuiTabList`, `NuiTab`, `NuiTabPanel`, автоактивация по умолчанию и
   `manual`, индикатор измеряется по выбранной вкладке (offsetLeft/offsetWidth) и едет по
-  `--nui-duration-slow`, панели остаются в DOM с `v-show`, `lazy` монтирует при первом
+  `--transition-duration-slow`, панели остаются в DOM с `v-show`, `lazy` монтирует при первом
   показе. Горизонтальный список прокручивается на узких экранах. Значения вкладок —
   строки: generic-компоненты с `defineSlots` не принимаются `h()` в тестах и SSR.
 - Края прокрутки — общий `useEdgeScroll` (`shared/use-edge-scroll.ts`, 2026-11-14, решение

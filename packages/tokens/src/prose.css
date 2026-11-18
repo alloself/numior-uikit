@@ -1,18 +1,18 @@
 .nui-prose {
-  --_size: var(--nui-font-size-md);
+  --_size: var(--text-base);
   --_flow: 1.25em;
 
-  color: var(--nui-text);
-  font-family: var(--nui-font);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
   font-size: var(--_size);
-  line-height: var(--nui-line-height-relaxed);
+  line-height: var(--leading-relaxed);
   overflow-wrap: break-word;
 }
 .nui-prose--size-sm {
-  --_size: var(--nui-font-size-sm);
+  --_size: var(--text-sm);
 }
 .nui-prose--size-lg {
-  --_size: var(--nui-font-size-lg);
+  --_size: var(--text-lg);
 }
 .nui-prose
   :where(p, ul, ol, dl, blockquote, pre, table, figure, hr):not(:where([class], .nui-not-prose *)),
@@ -24,40 +24,40 @@
 .nui-prose :where(h1, h2, h3, h4, h5, h6):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(h1, h2, h3, h4, h5, h6):not(:where([class])) {
   margin-block: 1.75em 0.6em;
-  color: var(--nui-text);
-  font-family: var(--nui-font-heading);
-  font-weight: var(--nui-font-weight-heading);
-  line-height: var(--nui-line-height-tight);
-  letter-spacing: var(--nui-tracking-heading);
+  color: var(--color-foreground);
+  font-family: --theme(--font-heading inline);
+  font-weight: var(--font-weight-heading);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-heading);
   scroll-margin-block-start: 5rem;
 }
 .nui-prose :where(h1):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(h1):not(:where([class])) {
   margin-block-start: 0;
-  font-size: var(--nui-font-size-3xl);
-  font-weight: var(--nui-font-weight-title);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-weight-title);
 }
 .nui-prose :where(h2):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(h2):not(:where([class])) {
-  font-size: var(--nui-font-size-2xl);
+  font-size: var(--text-2xl);
 }
 .nui-prose
   :where(h1):not(:where([class], .nui-not-prose *))
   + :where(p):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(h1):not(:where([class])) + :where(p):not(:where([class])) {
-  margin-block-end: var(--nui-space-6);
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-lg);
+  margin-block-end: --spacing(6);
+  color: var(--color-muted-foreground);
+  font-size: var(--text-lg);
 }
 .nui-prose :where(h3):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(h3):not(:where([class])) {
   margin-block-start: 1.4em;
-  font-size: var(--nui-font-size-xl);
+  font-size: var(--text-xl);
 }
 .nui-prose :where(h4, h5, h6):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(h4, h5, h6):not(:where([class])) {
   margin-block-start: 1.25em;
-  font-size: var(--nui-font-size-lg);
+  font-size: var(--text-lg);
 }
 .nui-prose
   :where(h1, h2, h3, h4, h5, h6):not(:where([class], .nui-not-prose *))
@@ -70,16 +70,16 @@
 }
 .nui-prose :where(p):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(p):not(:where([class])) {
-  color: var(--nui-text);
+  color: var(--color-foreground);
 }
 .nui-prose :where(a):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(a):not(:where([class])) {
-  color: var(--nui-primary);
+  color: var(--color-primary);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
-  border-radius: var(--nui-radius-sm);
-  transition: text-decoration-thickness var(--nui-duration-fast) var(--nui-easing);
+  border-radius: --theme(--radius-sm inline);
+  transition: text-decoration-thickness var(--transition-duration-fast) var(--ease-nui);
 }
 .nui-prose :where(a):not(:where([class], .nui-not-prose *)):hover,
 .nui-not-prose .nui-prose :where(a):not(:where([class])):hover {
@@ -87,16 +87,16 @@
 }
 .nui-prose :where(a):not(:where([class], .nui-not-prose *)):focus-visible,
 .nui-not-prose .nui-prose :where(a):not(:where([class])):focus-visible {
-  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-  outline-offset: var(--nui-focus-ring-offset);
+  outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+  outline-offset: var(--focus-ring-offset);
 }
 .nui-prose .nui-prose__anchor {
   margin-inline-start: 0.35em;
-  color: var(--nui-text-subtle);
-  font-weight: var(--nui-font-weight-normal);
+  color: var(--color-subtle-foreground);
+  font-weight: var(--font-weight-normal);
   text-decoration: none;
   opacity: 0;
-  transition: opacity var(--nui-duration-fast) var(--nui-easing);
+  transition: opacity var(--transition-duration-fast) var(--ease-nui);
 }
 .nui-prose .nui-prose__anchor::before {
   content: '#';
@@ -107,7 +107,7 @@
 }
 .nui-prose :where(strong, b):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(strong, b):not(:where([class])) {
-  font-weight: var(--nui-font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
 }
 .nui-prose :where(ul, ol):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(ul, ol):not(:where([class])) {
@@ -115,7 +115,7 @@
 }
 .nui-prose :where(ul):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(ul):not(:where([class])) {
-  list-style: var(--nui-prose-marker);
+  list-style: var(--prose-marker);
 }
 .nui-prose :where(ol):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(ol):not(:where([class])) {
@@ -128,7 +128,7 @@
 }
 .nui-prose :where(li):not(:where([class], .nui-not-prose *))::marker,
 .nui-not-prose .nui-prose :where(li):not(:where([class]))::marker {
-  color: var(--nui-prose-marker-color);
+  color: --theme(--color-prose-marker inline);
 }
 .nui-prose :where(li > ul, li > ol):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(li > ul, li > ol):not(:where([class])) {
@@ -136,7 +136,7 @@
 }
 .nui-prose :where(dt):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(dt):not(:where([class])) {
-  font-weight: var(--nui-font-weight-semibold);
+  font-weight: var(--font-weight-semibold);
 }
 .nui-prose :where(dd):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(dd):not(:where([class])) {
@@ -146,47 +146,47 @@
 .nui-prose :where(blockquote):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(blockquote):not(:where([class])) {
   padding-inline-start: 1em;
-  border-inline-start: 3px solid var(--nui-border-strong);
-  color: var(--nui-text-muted);
+  border-inline-start: 3px solid var(--color-border-strong);
+  color: var(--color-muted-foreground);
   font-style: italic;
 }
 .nui-prose :where(hr):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(hr):not(:where([class])) {
   margin-block: 2.5em;
   border: 0;
-  border-block-start: 1px solid var(--nui-border);
+  border-block-start: 1px solid var(--color-border);
 }
 .nui-prose :where(code):not(:where([class], .nui-not-prose *, pre *)),
 .nui-not-prose .nui-prose :where(code):not(:where([class], pre *)) {
   padding: 0.15em 0.4em;
-  border-radius: var(--nui-radius-sm);
-  background: var(--nui-surface-muted);
-  color: var(--nui-code-inline);
-  font-family: var(--nui-font-mono);
+  border-radius: --theme(--radius-sm inline);
+  background: var(--color-surface-muted);
+  color: var(--color-code-inline);
+  font-family: var(--font-mono);
   font-size: 0.875em;
 }
 .nui-prose :where(kbd):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(kbd):not(:where([class])) {
   display: inline-block;
   padding: 0.1em 0.45em;
-  border: 1px solid var(--nui-border);
+  border: 1px solid var(--color-border);
   border-block-end-width: 2px;
-  border-radius: var(--nui-radius-sm);
-  background: var(--nui-surface);
-  color: var(--nui-text);
-  font-family: var(--nui-font-mono);
+  border-radius: --theme(--radius-sm inline);
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  font-family: var(--font-mono);
   font-size: 0.8em;
-  line-height: var(--nui-line-height);
+  line-height: var(--leading-normal);
 }
 .nui-prose :where(pre):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(pre):not(:where([class])) {
-  padding: var(--nui-space-4);
-  border-radius: var(--nui-radius-lg);
-  background: var(--nui-surface-code);
-  color: var(--nui-text);
-  font-family: var(--nui-font-mono);
-  font-size: var(--nui-font-size-sm);
-  line-height: var(--nui-line-height);
+  padding: --spacing(4);
+  border-radius: --theme(--radius-lg inline);
+  background: var(--color-surface-code);
+  color: var(--color-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
   overflow-x: auto;
 }
 .nui-prose :where(table):not(:where([class], .nui-not-prose *)),
@@ -194,23 +194,23 @@
   inline-size: 100%;
   border-collapse: collapse;
   font-size: 0.9em;
-  line-height: var(--nui-line-height);
+  line-height: var(--leading-normal);
 }
 .nui-prose :where(th, td):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(th, td):not(:where([class])) {
   padding: 0.6em 0.75em;
-  border-block-end: 1px solid var(--nui-border);
+  border-block-end: 1px solid var(--color-border);
   text-align: start;
   vertical-align: top;
 }
 .nui-prose :where(th):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(th):not(:where([class])) {
-  color: var(--nui-text);
-  font-weight: var(--nui-font-weight-semibold);
+  color: var(--color-foreground);
+  font-weight: var(--font-weight-semibold);
 }
 .nui-prose :where(thead th):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(thead th):not(:where([class])) {
-  border-block-end-color: var(--nui-border-strong);
+  border-block-end-color: var(--color-border-strong);
 }
 .nui-prose
   :where(tbody tr):not(:where([class], .nui-not-prose *)):last-child
@@ -226,12 +226,12 @@
   display: block;
   max-inline-size: 100%;
   block-size: auto;
-  border-radius: var(--nui-radius);
+  border-radius: --theme(--radius inline);
 }
 .nui-prose :where(figcaption):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(figcaption):not(:where([class])) {
   margin-block-start: 0.5em;
-  color: var(--nui-text-muted);
+  color: var(--color-muted-foreground);
   font-size: 0.875em;
   text-align: center;
 }
@@ -242,9 +242,9 @@
 .nui-prose :where(mark):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(mark):not(:where([class])) {
   padding-inline: 0.15em;
-  border-radius: var(--nui-radius-sm);
-  background: var(--nui-warning-soft);
-  color: var(--nui-warning-soft-foreground);
+  border-radius: --theme(--radius-sm inline);
+  background: --theme(--color-warning-soft inline);
+  color: --theme(--color-warning-soft-foreground inline);
 }
 .nui-prose > :where(:first-child):not(:where(.nui-not-prose *)),
 .nui-not-prose .nui-prose > :where(:first-child) {

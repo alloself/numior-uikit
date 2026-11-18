@@ -1,9 +1,5 @@
 <template>
-  <div
-    ref="root"
-    data-nui-theme="light"
-    class="p-4 bg-surface border rounded-md flex flex-col gap-4"
-  >
+  <div ref="root" class="nui-theme--light p-4 bg-surface border rounded-md flex flex-col gap-4">
     <NuiToggleGroup
       :model-value="scheme"
       :items="schemes"

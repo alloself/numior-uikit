@@ -1,7 +1,7 @@
 <template>
   <footer class="border-t">
     <div
-      class="flex flex-wrap items-center justify-between gap-x-8 gap-y-4 px-(--nui-layout-gutter) py-8 text-sm text-muted-foreground"
+      class="flex flex-wrap items-center justify-between gap-x-8 gap-y-4 px-layout-gutter py-8 text-sm text-muted-foreground"
     >
       <div class="flex flex-col gap-2">
         <NuiLink :href="localeBase" tone="neutral" underline="none" :aria-label="site.title">

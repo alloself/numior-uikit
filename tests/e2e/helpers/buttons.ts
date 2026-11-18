@@ -7,6 +7,17 @@ export interface KitButton {
   readonly height: number;
 }
 
+interface ButtonProbe {
+  readonly name: string;
+  readonly width: number;
+  readonly height: number;
+  readonly icons: number;
+  readonly text: string;
+  readonly control: boolean;
+  readonly running: boolean;
+  readonly visible: boolean;
+}
+
 const KIT_BUTTONS = 'button[class*="nui-"], a.nui-button, [role="button"][class*="nui-"]';
 
 const CONTROLS = '.nui-button:not(.nui-button--variant-link)';
@@ -43,44 +54,51 @@ export const offGridButtons = (buttons: readonly KitButton[]): string[] => {
   return [...found].toSorted();
 };
 
-export const kitButtonsOf = (scope: Locator): Promise<KitButton[]> =>
+const measurable = (probe: ButtonProbe, iconOnly: boolean): boolean => {
+  const sized =
+    Number.isFinite(probe.width) &&
+    Number.isFinite(probe.height) &&
+    probe.width > 1 &&
+    probe.height > 1;
+
+  return sized && (iconOnly || probe.control) && !probe.running && probe.visible;
+};
+
+const probesOf = (scope: Locator): Promise<ButtonProbe[]> =>
   scope.evaluate(
     (root, { buttons, controls, running }) =>
-      [...root.querySelectorAll<HTMLElement>(buttons)].reduce<KitButton[]>((found, element) => {
+      [...root.querySelectorAll<HTMLElement>(buttons)].map((element) => {
         const style = getComputedStyle(element);
-        const width = Number.parseFloat(style.width);
-        const height = Number.parseFloat(style.height);
+        const holder = element.parentElement?.closest<HTMLElement>('[class*="nui-"]');
+        const own = [...element.classList].filter((name) => name.startsWith('nui-')).join('.');
 
         const icons = [...element.querySelectorAll('svg')].filter((icon) =>
           icon.checkVisibility({ opacityProperty: true, visibilityProperty: true }),
         );
 
-        const iconOnly = icons.length === 1 && element.innerText.trim() === '';
-
-        const measurable =
-          Number.isFinite(width) &&
-          Number.isFinite(height) &&
-          width > 1 &&
-          height > 1 &&
-          (iconOnly || element.matches(controls)) &&
-          element.closest(running) === null &&
-          element.checkVisibility({ opacityProperty: true, visibilityProperty: true });
-
-        if (!measurable) {
-          return found;
-        }
-
-        const holder = element.parentElement?.closest<HTMLElement>('[class*="nui-"]');
-        const own = [...element.classList].filter((name) => name.startsWith('nui-')).join('.');
-
-        found.push({
+        return {
           name: `${holder?.classList[0] ?? 'page'} > ${own}`,
-          iconOnly,
-          width,
-          height,
-        });
-
-        return found;
-      }, []),
+          width: Number.parseFloat(style.width),
+          height: Number.parseFloat(style.height),
+          icons: icons.length,
+          text: element.innerText.trim(),
+          control: element.matches(controls),
+          running: element.closest(running) !== null,
+          visible: element.checkVisibility({ opacityProperty: true, visibilityProperty: true }),
+        };
+      }),
     { buttons: KIT_BUTTONS, controls: CONTROLS, running: RUNNING_TEXT },
   );
+
+export const kitButtonsOf = async (scope: Locator): Promise<KitButton[]> =>
+  (await probesOf(scope)).reduce<KitButton[]>((found, probe) => {
+    const iconOnly = probe.icons === 1 && probe.text === '';
+
+    if (!measurable(probe, iconOnly)) {
+      return found;
+    }
+
+    found.push({ name: probe.name, iconOnly, width: probe.width, height: probe.height });
+
+    return found;
+  }, []);

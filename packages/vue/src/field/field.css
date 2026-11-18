@@ -1,60 +1,43 @@
-.nui-field {
-  box-sizing: border-box;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: start;
-  gap: var(--nui-space-1);
-  min-inline-size: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  color: var(--nui-text);
-  font-family: var(--nui-font);
-}
-.nui-field--inline {
-  display: inline-grid;
-  justify-items: start;
-}
-.nui-field__label {
-  font-size: var(--nui-font-size-sm);
-  font-weight: 500;
-  line-height: var(--nui-line-height);
-  transition: opacity var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-field--group > .nui-field__label {
-  padding: 0;
-  margin-block-end: var(--nui-space-1);
-}
-.nui-field__required {
-  margin-inline-start: 0.2em;
-  color: var(--nui-error);
-}
-.nui-field__description,
-.nui-field__error {
-  margin: 0;
-  font-size: var(--nui-font-size-sm);
-  line-height: var(--nui-line-height);
-}
-.nui-field__description {
-  color: var(--nui-text-muted);
-}
-.nui-field__reserve {
-  display: block;
-  min-block-size: calc(var(--nui-font-size-sm) * var(--nui-line-height));
-}
-.nui-field__error {
-  color: var(--nui-error);
-  animation: nui-field-reveal var(--nui-duration-normal) var(--nui-easing);
-}
-.nui-field--disabled {
-  caret-color: transparent;
-}
-.nui-field--disabled > .nui-field__label {
-  opacity: var(--nui-disabled-opacity);
-}
-@keyframes nui-field-reveal {
-  from {
-    opacity: 0;
-    translate: 0 -0.25rem;
+@layer components {
+  .nui-field {
+    @apply box-border grid grid-cols-1 content-start gap-1 min-inline-0 m-0 p-0 text-foreground;
+    @apply font-sans border-0 border-none;
+  }
+  .nui-field--inline {
+    @apply inline-grid justify-items-start;
+  }
+  .nui-field__label {
+    @apply text-sm/normal font-medium transition-opacity duration-fast;
+  }
+  .nui-field--group > .nui-field__label {
+    @apply p-0 mbe-1;
+  }
+  .nui-field__required {
+    @apply text-error ms-[0.2em];
+  }
+  .nui-field__description,
+  .nui-field__error {
+    @apply m-0 text-sm/normal;
+  }
+  .nui-field__description {
+    @apply text-muted-foreground;
+  }
+  .nui-field__reserve {
+    @apply block min-block-[calc(var(--text-sm)_*_var(--leading-normal))];
+  }
+  .nui-field__error {
+    @apply text-error animate-[nui-field-reveal_var(--transition-duration-normal)_var(--ease-nui)];
+  }
+  .nui-field--disabled {
+    @apply caret-transparent;
+  }
+  .nui-field--disabled > .nui-field__label {
+    @apply opacity-disabled;
+  }
+  @keyframes nui-field-reveal {
+    from {
+      opacity: 0;
+      translate: 0 -0.25rem;
+    }
   }
 }

@@ -28,8 +28,14 @@ that its features are implemented. Component and test conventions live in the sk
   flat stream of statements.
 - No `as` or `!` type assertions anywhere (tests and configs included); `as const` only.
 - CSS is BEM (`nui-block`, `nui-block__part`, `nui-block--key-value`, `nui-block--state`)
-  with modifiers setting private custom properties. No `data-*` attributes and no `[data-…]`
-  selectors anywhere: variants, states, theme, color scheme, accent and density are classes.
+  inside `@layer components`, with modifiers setting private custom properties; templates carry
+  no Tailwind classes. Every declaration a Tailwind utility writes, standard or arbitrary
+  (`inline-[40%]`, `gap-x-[0.5em]`), goes into `@apply` with the same computed look
+  (`pnpm parity:css`); only the categories `pnpm check:styles` lists stay declarations (custom
+  properties, `color-mix` and relative colours, properties and values without a utility, engine
+  geometry, border and outline resets). No
+  `data-*` attributes and no `[data-…]` selectors anywhere: variants, states, theme, color
+  scheme, accent and density are classes.
   Scopes never re-declare theme keys: a nested scheme sets only `color-scheme`, derived keys
   live in `@theme inline` and are read through `--theme()` or utilities, never `var()`.
 - Never restyle a component of another package from outside: no selector whose subject is its
@@ -42,7 +48,8 @@ that its features are implemented. Component and test conventions live in the sk
   text props have no default, a prop wins over the dictionary.
 - Tests read as scenarios through drivers (`packages/*/test/drivers`), harnesses and
   Playwright page objects (`tests/e2e/pages`); every component gets unit, SSR, e2e and axe.
-- Keep Vue 3.5+, SSR, keyboard access, RTL, light/dark/system themes and optional Tailwind.
+- Keep Vue 3.5+, SSR, keyboard access, RTL and light/dark/system themes. Tailwind 4 is required:
+  kit styles compile in the CSS entry that loads Tailwind and the `@numior/tailwind` theme.
 - Keep public exports explicit, CSS opt-in and heavy engines outside base UI imports.
 - Record architecture changes in Archcore; use its MCP tools when available.
 - Use Node 24.15+ and pnpm 10.31.0. Install with `pnpm install --frozen-lockfile`.

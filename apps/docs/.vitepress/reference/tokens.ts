@@ -1,6 +1,7 @@
 import type { TokenReference } from './reference.types.ts';
 
-const DECLARATION_RE = /--nui-([a-z0-9-]+):\s*([^;]+);/g;
+const THEME_BLOCK_RE = /@theme(?:\s+[a-z]+)*\s*\{([^}]*)\}/g;
+const DECLARATION_RE = /--([a-z0-9-]+):\s*([^;]+);/g;
 const LIGHT_DARK_RE = /^light-dark\((.*)\)$/s;
 const SPACE_RE = /\s+/g;
 const OPEN_SPACE_RE = /\(\s+/g;
@@ -35,13 +36,16 @@ const tokenOf = (name: string, value: string): TokenReference => {
   const inner = LIGHT_DARK_RE.exec(value.trim())?.[1];
   const [light, dark] = inner === undefined ? [value.trim()] : splitTopLevel(inner);
 
-  return { name: `--nui-${name}`, group: name.split('-')[0] ?? name, light: light ?? '', dark };
+  return { name: `--${name}`, group: name.split('-')[0] ?? name, light: light ?? '', dark };
 };
+
+const themeBodiesOf = (css: string): string =>
+  Array.from(css.matchAll(THEME_BLOCK_RE), ([, body = '']) => body).join('\n');
 
 export const parseThemeTokens = (css: string): TokenReference[] => {
   const tokens = new Map<string, TokenReference>();
 
-  for (const match of css.matchAll(DECLARATION_RE)) {
+  for (const match of themeBodiesOf(css).matchAll(DECLARATION_RE)) {
     const [, name, value] = match;
 
     if (name === undefined || value === undefined || tokens.has(name)) {

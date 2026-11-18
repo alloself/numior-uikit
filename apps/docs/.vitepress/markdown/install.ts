@@ -1,8 +1,15 @@
 import type { MarkdownRenderer } from 'vitepress';
-import { bundleOf, orderedStylesheets } from '../reference/stylesheet-paths.ts';
-import { InstallForm, type InstallSource } from './markdown.types.ts';
+import { bundleOf, orderedStylesheets, styleImportOf } from '../reference/stylesheet-paths.ts';
+import {
+  InstallForm,
+  type CoreState,
+  type CoreToken,
+  type InstallPlan,
+  type InstallSource,
+} from './markdown.types.ts';
 
 const INSTALL_RULE = 'install_styles';
+const STYLES_LANGUAGE = 'css';
 const INSTALL_RE = /(?:^|\s)install(?::(packages))?(?=\s|$)/;
 const KIT_IMPORT_RE = /import\s*\{([^}]*)\}\s*from\s*'@numior\/[^']+';/g;
 const FENCE_RE = /^(`{3,})([^\n`]*)\n([\s\S]*?)^\1[ \t]*$/gm;
@@ -32,11 +39,11 @@ const importedNames = (code: string): string[] =>
     }, []),
   );
 
-const installCode = (
+const installPlan = (
   code: string,
   form: InstallForm,
   source: InstallSource | undefined,
-): string => {
+): InstallPlan => {
   if (source === undefined) {
     throw new Error('An install block needs the API reference: run pnpm docs:reference');
   }
@@ -47,9 +54,22 @@ const installCode = (
   }
   const paths = form === InstallForm.Packages ? sheets.map(bundleOf) : sheets;
   const ordered = orderedStylesheets(paths, source.stylesheets);
-  const lines = ordered.map((path) => `import '${path}';`);
 
-  return `${[code.trimEnd(), ...lines].join('\n')}\n`;
+  return {
+    code: `${code.trimEnd()}\n`,
+    styles: `${ordered.map(styleImportOf).join('\n')}\n`,
+  };
+};
+
+const stylesToken = (state: CoreState, styles: string, map: CoreToken['map']): CoreToken => {
+  const fence = new state.Token('fence', 'code', 0);
+
+  fence.info = STYLES_LANGUAGE;
+  fence.content = styles;
+  fence.markup = '```';
+  fence.block = true;
+  fence.map = map;
+  return fence;
 };
 
 export const expandInstallFences = (markdown: string, source: InstallSource | undefined): string =>
@@ -59,20 +79,27 @@ export const expandInstallFences = (markdown: string, source: InstallSource | un
     if (form === undefined) {
       return block;
     }
-    return `${fence}${withoutInstall(info)}\n${installCode(code, form, source)}${fence}`;
+    const plan = installPlan(code, form, source);
+
+    return [
+      `${fence}${withoutInstall(info)}\n${plan.code}${fence}`,
+      `${fence}${STYLES_LANGUAGE}\n${plan.styles}${fence}`,
+    ].join('\n\n');
   });
 
 export const installBlocks = (md: MarkdownRenderer, source: InstallSource | undefined): void => {
   md.core.ruler.push(INSTALL_RULE, (state) => {
-    for (const token of state.tokens) {
+    state.tokens = state.tokens.flatMap((token) => {
       const form = token.type === 'fence' ? installFormOf(token.info) : undefined;
 
       if (form === undefined) {
-        continue;
+        return [token];
       }
+      const plan = installPlan(token.content, form, source);
 
-      token.content = installCode(token.content, form, source);
+      token.content = plan.code;
       token.info = withoutInstall(token.info);
-    }
+      return [token, stylesToken(state, plan.styles, token.map)];
+    });
   });
 };

@@ -8,10 +8,10 @@ What Numior UI components do for accessibility on their own and what is left to 
   move focus between items. Home and End move focus to the first and last item.
 - The keys of every component are listed in the Accessibility section of its page.
 - The focus ring appears when the user works with the keyboard (`:focus-visible`). The
-  `--nui-focus`, `--nui-focus-ring-width` and `--nui-focus-ring-offset` tokens set its color,
+  `--color-ring`, `--focus-ring-width` and `--focus-ring-offset` theme keys set its color,
   width and offset.
 - A focused input field changes its border color and gets the same ring. The
-  `--nui-field-ring-width` token sets the ring width on fields: with `0px` only the border stays.
+  `--field-ring-width` key sets the ring width on fields: with `0px` only the border stays.
 - A button in the loading state keeps focus.
 - `useHotkey` compares physical keys, so Ctrl+K also works on a Russian keyboard layout.
   Shortcuts without Ctrl or ⌘ do not fire while the user types in an input.
@@ -42,7 +42,7 @@ them. So they get the same theme and writing direction as that button.
 
 ## Animation
 
-All transitions use the `--nui-duration-*` durations. When reduced motion is on in the system
+All transitions use the `--transition-duration-*` durations. When reduced motion is on in the system
 (`prefers-reduced-motion: reduce`), transitions are turned off. Endless animations of the
 skeleton and indeterminate progress only slow down.
 
@@ -52,5 +52,5 @@ skeleton and indeterminate progress only slow down.
   page. `NuiLayout` adds this link on its own.
 - Give every page an `h1` heading and do not skip heading levels. The `headingLevel` prop sets
   the heading level of sections in Collapsible and Accordion.
-- If you change the `--nui-<role>` and `--nui-<role>-foreground` colors, check the text
+- If you change the `--color-<role>` and `--color-<role>-foreground` colors, check the text
   contrast on the new background.

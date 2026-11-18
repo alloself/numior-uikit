@@ -1,0 +1,323 @@
+import type { CDPSession, Locator, Page } from '@playwright/test';
+import { test as base } from '../e2e/fixtures';
+import { sectionScope } from '../e2e/helpers/axe';
+import {
+  clockNow,
+  collect,
+  dropMountMarkers,
+  fontsReady,
+  frameReports,
+  freezeMotion,
+  nextFrame,
+  pageHeight,
+  recordMotion,
+  scrollPageTo,
+  scrollState,
+  seedRandom,
+  seekMotion,
+  showCurrentLinks,
+  stillShadowParts,
+  watchFrameReports,
+} from './page-scripts';
+import { DEFAULT_PROFILE } from './profiles';
+import { PROPERTIES } from './properties';
+import { encodeScene, writeScene } from './store';
+import type { FrameReports, Note, Profile, Shot } from './parity.types';
+
+export interface ParityOptions {
+  readonly profile: Profile;
+}
+
+interface ParityFixtures {
+  readonly scenes: SceneRecorder;
+}
+
+const OUTPUT = process.env.PARITY_OUT ?? 'test-results/parity';
+const FIXED_NOW = new Date('2026-11-11T09:00:00Z');
+const TIMED_SECONDS = 31;
+const SECOND = 1000;
+const FRAME = 16;
+const HELD_FRAMES = 4;
+const HOLD_LEAD = 250;
+const SETTLE_ROUNDS = 60;
+const QUIET_ROUNDS = 3;
+const SHOT = { animations: 'disabled', caret: 'hide', scale: 'device' } as const;
+const PAGE_SHOT = { ...SHOT, fullPage: true, timeout: 60_000 } as const;
+const LIVE_SHOT = { ...SHOT, animations: 'allow' } as const;
+const PAGE_ATTEMPTS = 4;
+const RETRY_FRAMES = 12;
+const SLOW_RENDERER = { rate: 4 };
+const FULL_SPEED = { rate: 1 };
+const SCRIPTS_OFF = { value: true };
+const SCRIPTS_ON = { value: false };
+const FROZEN = { playbackRate: 0 };
+const RUNNING = { playbackRate: 1 };
+const FRAME_STORE = '__parityFrameReports';
+const UNWATCHED: FrameReports = { waiting: 0, signature: '' };
+
+export class SceneRecorder {
+  private pending = 0;
+  private held = false;
+  private framesWatched = false;
+
+  constructor(
+    private readonly page: Page,
+    readonly profile: Profile,
+  ) {
+    page.on('request', () => {
+      this.pending += 1;
+    });
+
+    page.on('requestfinished', () => {
+      this.pending -= 1;
+    });
+
+    page.on('requestfailed', () => {
+      this.pending -= 1;
+    });
+  }
+
+  async watchFrameReports(type: string): Promise<void> {
+    await this.page.addInitScript(watchFrameReports, { store: FRAME_STORE, type });
+    this.framesWatched = true;
+  }
+
+  async settle(): Promise<void> {
+    let quiet = 0;
+    let frames = await this.frames();
+
+    await this.page.evaluate(fontsReady);
+    await this.page.evaluate(stillShadowParts);
+
+    for (let round = 0; round < SETTLE_ROUNDS && quiet < QUIET_ROUNDS; round += 1) {
+      const running = await this.page.evaluate(freezeMotion);
+
+      await this.page.evaluate(nextFrame);
+      const reports = await this.frames();
+      const framed = reports.waiting === 0 && reports.signature === frames.signature;
+
+      frames = reports;
+      quiet = running === 0 && this.pending <= 0 && framed ? quiet + 1 : 0;
+    }
+
+    if (quiet < QUIET_ROUNDS) {
+      throw new Error(`The page never came to rest, ${frames.waiting} frames without their height`);
+    }
+
+    await this.page.evaluate(dropMountMarkers);
+  }
+
+  async finishTimers(): Promise<void> {
+    for (let second = 0; second < TIMED_SECONDS; second += 1) {
+      await this.page.clock.fastForward(SECOND);
+    }
+  }
+
+  async showCurrentLinks(): Promise<void> {
+    await this.page.evaluate(showCurrentLinks);
+    await this.page.evaluate(nextFrame);
+  }
+
+  async holdTimers(): Promise<void> {
+    const now = await this.page.evaluate(clockNow);
+
+    await this.page.clock.pauseAt(now + HOLD_LEAD);
+    this.held = true;
+  }
+
+  async releaseTimers(): Promise<void> {
+    await this.page.clock.resume();
+    this.held = false;
+  }
+
+  async reveal(): Promise<void> {
+    const height = await this.page.evaluate(pageHeight);
+
+    for (let top = 0; top < height; top += this.profile.height) {
+      await this.page.evaluate(scrollPageTo, top);
+      await this.page.evaluate(nextFrame);
+    }
+
+    await this.page.evaluate(scrollPageTo, 0);
+    await this.page.evaluate(nextFrame);
+  }
+
+  async capture(name: string, root: string, shot: Shot): Promise<void> {
+    if (!this.profile.stills) {
+      return;
+    }
+
+    await this.settle();
+    await this.store(name, root, () => this.shoot(shot));
+  }
+
+  async motion(
+    name: string,
+    root: string,
+    act: () => Promise<void>,
+    pointer?: Locator,
+  ): Promise<void> {
+    await pointer?.hover();
+    await this.settle();
+
+    if (!this.profile.motion) {
+      await act();
+      await this.settle();
+      return;
+    }
+
+    const session = await this.page.context().newCDPSession(this.page);
+
+    await session.send('Animation.enable');
+    await session.send('Animation.setPlaybackRate', FROZEN);
+
+    await act();
+
+    if (this.held) {
+      await this.page.clock.runFor(HELD_FRAMES * FRAME);
+    }
+
+    await this.quiet();
+    const notes = await this.page.evaluate(recordMotion, root);
+
+    if (notes.length === 0) {
+      throw new Error(`Nothing moved in ${name}`);
+    }
+
+    const frame = (): Promise<Buffer> => this.page.screenshot(LIVE_SHOT);
+
+    await this.seek(root, 0);
+    await this.store(`${name}--first-frame`, root, frame, notes);
+    await this.seek(root, 0.5);
+    await this.store(`${name}--half-way`, root, frame);
+
+    await session.send('Animation.setPlaybackRate', RUNNING);
+    await session.detach();
+    await this.settle();
+  }
+
+  async captureSection(section: string, name = section): Promise<void> {
+    const target = this.page.locator(sectionScope(section));
+
+    await target.evaluate((element) => {
+      element.scrollIntoView({ block: 'start', behavior: 'instant' });
+    });
+
+    await target.and(this.page.locator(':not(.panel--away)')).waitFor();
+    await this.capture(name, sectionScope(section), target);
+  }
+
+  private frames(): Promise<FrameReports> {
+    if (!this.framesWatched) {
+      return Promise.resolve(UNWATCHED);
+    }
+    return this.page.evaluate(frameReports, FRAME_STORE);
+  }
+
+  private async seek(root: string, progress: number): Promise<void> {
+    await this.page.evaluate(seekMotion, { root, progress });
+    await this.page.evaluate(nextFrame);
+  }
+
+  private async quiet(): Promise<void> {
+    let quiet = 0;
+
+    for (let round = 0; round < SETTLE_ROUNDS && quiet < QUIET_ROUNDS; round += 1) {
+      await this.page.evaluate(nextFrame);
+      quiet = this.pending <= 0 ? quiet + 1 : 0;
+    }
+  }
+
+  private async store(
+    name: string,
+    root: string,
+    shoot: () => Promise<Uint8Array>,
+    notes: readonly Note[] = [],
+  ): Promise<void> {
+    const raw = await this.page.evaluate(collect, { root, properties: PROPERTIES });
+    const scene = encodeScene(`${this.profile.id}/${name}`, PROPERTIES, raw, notes);
+
+    await writeScene(OUTPUT, scene, await shoot());
+  }
+
+  private shoot(shot: Shot): Promise<Buffer> {
+    if (shot === 'page') {
+      return this.withSession((session) => this.retakePage(session));
+    }
+
+    if (shot === 'viewport') {
+      return this.page.screenshot(SHOT);
+    }
+    return this.withSession((session) => this.slowed(session, () => shot.screenshot(SHOT)));
+  }
+
+  private async withSession(use: (session: CDPSession) => Promise<Buffer>): Promise<Buffer> {
+    const session = await this.page.context().newCDPSession(this.page);
+
+    try {
+      return await use(session);
+    } finally {
+      await session.detach();
+    }
+  }
+
+  private async throttled(session: CDPSession, take: () => Promise<Buffer>): Promise<Buffer> {
+    await session.send('Emulation.setCPUThrottlingRate', SLOW_RENDERER);
+
+    try {
+      return await take();
+    } finally {
+      await session.send('Emulation.setCPUThrottlingRate', FULL_SPEED);
+    }
+  }
+
+  private slowed(session: CDPSession, take: () => Promise<Buffer>): Promise<Buffer> {
+    return this.throttled(session, async () => {
+      await session.send('Emulation.setScriptExecutionDisabled', SCRIPTS_OFF);
+
+      try {
+        return await take();
+      } finally {
+        await session.send('Emulation.setScriptExecutionDisabled', SCRIPTS_ON);
+      }
+    });
+  }
+
+  private async retakePage(session: CDPSession): Promise<Buffer> {
+    let previous: Buffer | undefined;
+
+    for (let attempt = 0; attempt < PAGE_ATTEMPTS; attempt += 1) {
+      const scrolled = await this.page.evaluate(scrollState);
+      const picture = await this.slowed(session, () => this.page.screenshot(PAGE_SHOT));
+      const kept = (await this.page.evaluate(scrollState)) === scrolled;
+
+      if (kept || previous?.equals(picture) === true) {
+        return picture;
+      }
+
+      previous = picture;
+      await this.showCurrentLinks();
+      await this.settle();
+
+      for (let frame = 0; frame < RETRY_FRAMES; frame += 1) {
+        await this.page.evaluate(nextFrame);
+      }
+    }
+
+    throw new Error('The page picture neither kept the scroll positions nor repeated');
+  }
+}
+
+export const test = base.extend<ParityFixtures & ParityOptions>({
+  profile: [DEFAULT_PROFILE, { option: true }],
+  page: async ({ page }, use) => {
+    await page.clock.install({ time: FIXED_NOW });
+    await page.addInitScript(seedRandom);
+    await use(page);
+  },
+  scenes: async ({ page, profile }, use) => {
+    await use(new SceneRecorder(page, profile));
+  },
+});
+
+export { expect } from '@playwright/test';

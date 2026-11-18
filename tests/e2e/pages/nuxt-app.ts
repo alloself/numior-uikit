@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { wcagViolationsOf, type AxeViolations } from '../helpers/axe';
+import { schemeOf } from '../helpers/theme';
 
 export type NuxtScheme = 'light' | 'dark' | 'system';
 
@@ -13,6 +14,11 @@ export class NuxtApp {
   readonly back: Locator;
   readonly notify: Locator;
   readonly toasts: Locator;
+  readonly styledPage: Locator;
+  readonly themed: Locator;
+  readonly restyled: Locator;
+  readonly track: Locator;
+  readonly swatch: Locator;
   private readonly console: string[] = [];
 
   constructor(private readonly page: Page) {
@@ -23,6 +29,11 @@ export class NuxtApp {
     this.back = page.getByTestId('back');
     this.notify = page.getByTestId('notify');
     this.toasts = page.locator('.nui-toaster__item');
+    this.styledPage = page.getByTestId('styled-page');
+    this.themed = page.getByTestId('themed');
+    this.restyled = page.getByTestId('restyled');
+    this.track = page.getByTestId('track');
+    this.swatch = page.getByTestId('swatch');
 
     page.on('console', (message) => {
       if (message.type() !== 'warning' && message.type() !== 'error') {
@@ -55,17 +66,27 @@ export class NuxtApp {
   }
 
   theme(): Promise<string | null> {
-    return this.page.locator('html').getAttribute('data-nui-theme');
+    return schemeOf(this.page.locator('html'));
+  }
+
+  async rootClasses(): Promise<string[]> {
+    return ((await this.page.locator('html').getAttribute('class')) ?? '').split(/\s+/u).toSorted();
   }
 
   async mark(): Promise<void> {
     await this.page.evaluate(() => {
-      document.documentElement.dataset.nuiMark = 'kept';
+      document.documentElement.dataset.reloadMark = 'kept';
     });
   }
 
   marked(): Promise<string | null> {
-    return this.page.locator('html').getAttribute('data-nui-mark');
+    return this.page.locator('html').getAttribute('data-reload-mark');
+  }
+
+  styleOf(target: Locator, property: string): Promise<string> {
+    return target.evaluate((element, name) => {
+      return getComputedStyle(element).getPropertyValue(name);
+    }, property);
   }
 
   wcagViolations(): Promise<AxeViolations> {

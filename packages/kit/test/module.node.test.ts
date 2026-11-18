@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { kitEntry } from '../src/nuxt/kit-css';
 import { installModule, NuxtHost } from './harness/nuxt-host';
 
 describe('@numior/kit/nuxt', () => {
@@ -6,13 +7,19 @@ describe('@numior/kit/nuxt', () => {
     const host = new NuxtHost(await installModule());
 
     expect(host.css).toEqual([
-      '@numior/kit/theme.css',
-      '@numior/kit/base.css',
-      '@numior/kit/styles.css',
-      '@numior/kit/forms/styles.css',
-      '@numior/kit/table/styles.css',
+      expect.stringMatching(/\/numior\/kit\.css$/),
+      expect.stringMatching(/\/assets\/theme\.css$/),
     ]);
 
+    expect(host.templateOptions('numior/kit.css')).toEqual({
+      sheets: [
+        '@numior/kit/styles.css',
+        '@numior/kit/forms/styles.css',
+        '@numior/kit/table/styles.css',
+      ],
+    });
+
+    expect(await host.vitePlugins()).toContain('@tailwindcss/vite:generate:build');
     expect(host.headScripts).toEqual([host.expectedScript('light')]);
     expect(host.lang).toBe('ru');
 
@@ -52,7 +59,8 @@ describe('@numior/kit/nuxt', () => {
       }),
     );
 
-    expect(host.css).toEqual([]);
+    expect(host.css).toEqual([expect.stringMatching(/\/assets\/theme\.css$/)]);
+    expect(await host.vitePlugins()).toEqual([]);
     expect(host.headScripts).toEqual([]);
     expect(host.runtime).toEqual({ locale: 'ru-RU' });
     expect(host.runtimeKeys).toEqual(['locale']);
@@ -61,5 +69,17 @@ describe('@numior/kit/nuxt', () => {
     expect(host.pluginSources).toHaveLength(1);
 
     await host.close();
+  });
+
+  it('writes one Tailwind entry for the kit theme and the styles of every installed package', () => {
+    expect(
+      kitEntry(['@numior/kit/styles.css', '@numior/kit/table/styles.css']).split('\n'),
+    ).toEqual([
+      '@layer theme, base, components, utilities;',
+      "@import '@numior/kit/theme.css' layer(theme);",
+      "@import '@numior/kit/base.css' layer(components);",
+      "@import '@numior/kit/styles.css';",
+      "@import '@numior/kit/table/styles.css';",
+    ]);
   });
 });

@@ -1,351 +1,194 @@
-.nui-spreadsheet__anchor {
-  position: absolute;
-  pointer-events: none;
-}
-.nui-spreadsheet__lit {
-  position: absolute;
-  box-sizing: border-box;
-  border: 2px solid var(--nui-primary);
-  background: color-mix(in oklab, var(--nui-primary) 12%, transparent);
-  pointer-events: none;
-  transition: opacity var(--nui-duration-fast) var(--nui-easing);
-
-  @starting-style {
-    opacity: 0;
-  }
-}
-.nui-spreadsheet-rules {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: var(--nui-space-2);
-  inline-size: min(22rem, calc(100vw - var(--nui-space-8)));
-  padding: var(--nui-space-3);
-  color: var(--nui-text);
-  font-size: var(--nui-font-size-sm);
-}
-.nui-spreadsheet-rules__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--nui-space-2);
-}
-.nui-spreadsheet-rules__title {
-  margin: 0;
-  font-size: var(--nui-font-size-sm);
-  font-weight: 600;
-  line-height: var(--nui-line-height-control);
-}
-.nui-spreadsheet-rules__list {
-  position: relative;
-  min-inline-size: 0;
-}
-.nui-spreadsheet-rules__rules {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.nui-spreadsheet-rules__rule {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: var(--nui-space-2);
-  min-inline-size: 0;
-  padding: var(--nui-space-1) var(--nui-space-2);
-  border-radius: var(--nui-radius);
-  transition:
-    background-color var(--nui-duration-fast) var(--nui-easing),
-    opacity var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-spreadsheet-rules__rule:hover,
-.nui-spreadsheet-rules__rule:focus-within {
-  background: var(--nui-hover);
-}
-.nui-spreadsheet-rules__rule--dragging {
-  opacity: 0.5;
-}
-.nui-spreadsheet-rules__grip {
-  box-sizing: border-box;
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  inline-size: 1.25rem;
-  block-size: 1.75rem;
-  margin-inline-start: calc(var(--nui-space-1) * -1);
-  padding: 0;
-  border: 0;
-  border-radius: var(--nui-radius-sm);
-  background: transparent;
-  color: var(--nui-text-muted);
-  cursor: grab;
-  opacity: 0;
-  touch-action: none;
-  transition: opacity var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-spreadsheet-rules__rule:hover .nui-spreadsheet-rules__grip,
-.nui-spreadsheet-rules__grip:focus-visible,
-.nui-spreadsheet-rules__rule--dragging .nui-spreadsheet-rules__grip {
-  opacity: 1;
-}
-.nui-spreadsheet-rules__grip:focus-visible {
-  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-  outline-offset: var(--nui-focus-ring-offset);
-}
-.nui-spreadsheet-rules__grip:disabled {
-  visibility: hidden;
-}
-.nui-spreadsheet-rules--reordering
-  .nui-spreadsheet-rules__rule:not(.nui-spreadsheet-rules__rule--dragging)
-  .nui-spreadsheet-rules__grip {
-  opacity: 0;
-}
-@media (hover: none) {
-  .nui-spreadsheet-rules__grip {
-    opacity: 1;
-  }
-}
-.nui-spreadsheet-rules__preview {
-  --_bar-color: var(--nui-primary);
-
-  box-sizing: border-box;
-  position: relative;
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-  inline-size: 3.5rem;
-  block-size: 1.5rem;
-  overflow: hidden;
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius-sm);
-  background: var(--nui-surface);
-  color: var(--nui-text);
-  font-size: var(--nui-font-size-xs);
-  white-space: nowrap;
-}
-.nui-spreadsheet-rules__preview--kind-bar::after {
-  content: '';
-  position: absolute;
-  inset-block: 4px;
-  inset-inline-start: 3px;
-  inline-size: 65%;
-  border-radius: var(--nui-radius-sm);
-  background: color-mix(in oklab, var(--_bar-color) 60%, var(--nui-surface));
-}
-.nui-spreadsheet-rules__glyph {
-  display: inline-flex;
-  font-size: var(--nui-font-size-sm);
-}
-.nui-spreadsheet-rules__text {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  min-inline-size: 0;
-}
-.nui-spreadsheet-rules__description {
-  display: -webkit-box;
-  overflow: hidden;
-  overflow-wrap: break-word;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-.nui-spreadsheet-rules__area {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.nui-spreadsheet-rules__area {
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-xs);
-}
-.nui-spreadsheet-rules__actions {
-  display: inline-flex;
-  flex: none;
-  opacity: 0;
-  transition: opacity var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-spreadsheet-rules__rule:hover .nui-spreadsheet-rules__actions,
-.nui-spreadsheet-rules__rule:focus-within .nui-spreadsheet-rules__actions {
-  opacity: 1;
-}
-@media (hover: none) {
-  .nui-spreadsheet-rules__actions {
-    opacity: 1;
-  }
-}
-@media (hover: hover) {
-  .nui-spreadsheet-rules__rule {
-    position: relative;
-  }
-  .nui-spreadsheet-rules__actions {
+@layer components {
+  .nui-spreadsheet__anchor {
+    @apply pointer-events-none;
     position: absolute;
-    inset-block: 0;
-    inset-inline-end: 0;
-    align-items: center;
-    padding-inline: var(--nui-space-1);
-    border-radius: var(--nui-radius);
-    background: linear-gradient(var(--nui-hover), var(--nui-hover)), var(--nui-surface-overlay);
   }
-}
-.nui-spreadsheet-rules__drop {
-  position: absolute;
-  inset-inline: 0;
-  inset-block-start: var(--_drop, 0);
-  block-size: 2px;
-  border-radius: var(--nui-radius-full);
-  background: var(--nui-primary);
-  opacity: 0;
-  translate: 0 -50%;
-  pointer-events: none;
-  transition:
-    opacity var(--nui-duration-fast) var(--nui-easing),
-    inset-block-start var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-spreadsheet-rules--reordering .nui-spreadsheet-rules__drop {
-  opacity: 1;
-}
-.nui-spreadsheet-rules__ghost {
-  box-sizing: border-box;
-  position: absolute;
-  z-index: 1;
-  inset-inline-start: 0;
-  inset-block-start: var(--_ghost, 0);
-  display: flex;
-  align-items: center;
-  gap: var(--nui-space-2);
-  max-inline-size: 100%;
-  block-size: 2.25rem;
-  padding-inline: var(--nui-space-2) var(--nui-space-3);
-  overflow: hidden;
-  border: 1px solid var(--nui-border-strong);
-  border-radius: var(--nui-radius);
-  background: var(--nui-surface-elevated);
-  box-shadow: var(--nui-shadow-lg);
-  color: var(--nui-text);
-  white-space: nowrap;
-  translate: 0 -50%;
-  pointer-events: none;
-}
-.nui-spreadsheet-rules__empty {
-  box-sizing: border-box;
-  margin: 0;
-  padding: var(--nui-space-3);
-  border: 1px dashed var(--nui-border);
-  border-radius: var(--nui-radius);
-  color: var(--nui-text-muted);
-  text-align: center;
-}
-.nui-spreadsheet-rules__live {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-.nui-spreadsheet-rules__add {
-  display: grid;
-}
-.nui-spreadsheet-rules__editor {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: var(--nui-space-3);
-  min-inline-size: 0;
-  margin: 0;
-}
-.nui-spreadsheet-rules__subtitle {
-  margin: 0;
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-sm);
-  font-weight: 500;
-}
-.nui-spreadsheet-rules__fields {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--nui-space-2);
-}
-.nui-spreadsheet-rules__fields > * {
-  flex: 1 1 8rem;
-  min-inline-size: 0;
-}
-.nui-spreadsheet-rules__glyphs {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: var(--nui-space-1);
-  block-size: 2rem;
-}
-.nui-spreadsheet-rules__preset {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--nui-space-2);
-}
-.nui-spreadsheet-rules__custom,
-.nui-spreadsheet-rules__stops {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--nui-space-2);
-}
-.nui-spreadsheet-rules__footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--nui-space-2);
-  padding-block-start: var(--nui-space-1);
-}
-.nui-spreadsheet-swatches {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--nui-space-2);
-}
-.nui-spreadsheet-swatches__current {
-  box-sizing: border-box;
-  display: inline-block;
-  flex: none;
-  inline-size: 0.875rem;
-  block-size: 0.875rem;
-  border: 1px solid var(--nui-border-strong);
-  border-radius: var(--nui-radius-sm);
-  background: linear-gradient(
-    to top right,
-    transparent calc(50% - 1px),
-    var(--nui-error) 50%,
-    transparent calc(50% + 1px)
-  );
-}
-.nui-spreadsheet-swatches__grid {
-  display: grid;
-  grid-template-columns: repeat(10, 1.25rem);
-  gap: 2px;
-}
-.nui-spreadsheet-swatches__swatch {
-  box-sizing: border-box;
-  inline-size: 1.25rem;
-  block-size: 1.25rem;
-  padding: 0;
-  border: 1px solid color-mix(in oklab, var(--nui-text) 15%, transparent);
-  border-radius: var(--nui-radius-sm);
-  cursor: pointer;
-  transition: box-shadow var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-spreadsheet-swatches__swatch:hover {
-  box-shadow: 0 0 0 2px var(--nui-border-strong);
-}
-.nui-spreadsheet-swatches__swatch--chosen {
-  box-shadow:
-    0 0 0 2px var(--nui-surface-elevated),
-    0 0 0 4px var(--nui-primary);
-}
-.nui-spreadsheet-swatches__swatch:focus-visible {
-  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-  outline-offset: var(--nui-focus-ring-offset);
+  .nui-spreadsheet__lit {
+    @apply box-border border-2 border-solid border-primary pointer-events-none;
+    @apply transition-opacity duration-fast ease-nui;
+    position: absolute;
+    background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+
+    @starting-style {
+      @apply opacity-0;
+    }
+  }
+  .nui-spreadsheet-rules {
+    @apply box-border flex flex-col gap-2 p-3 text-foreground text-(length:--text-sm);
+    @apply inline-[min(22rem,calc(100vw_-_--spacing(8)))];
+  }
+  .nui-spreadsheet-rules__header {
+    @apply flex items-center justify-between gap-2;
+  }
+  .nui-spreadsheet-rules__title {
+    @apply m-0 text-(length:--text-sm) leading-control font-semibold;
+  }
+  .nui-spreadsheet-rules__list {
+    @apply relative min-inline-0;
+  }
+  .nui-spreadsheet-rules__rules {
+    @apply flex flex-col m-0 p-0 list-none gap-[2px];
+  }
+  .nui-spreadsheet-rules__rule {
+    @apply box-border flex items-center gap-2 min-inline-0 py-1 px-2 rounded;
+    @apply transition-[background-color,opacity] duration-fast ease-nui;
+  }
+  .nui-spreadsheet-rules__rule:hover,
+  .nui-spreadsheet-rules__rule:focus-within {
+    @apply bg-hover;
+  }
+  .nui-spreadsheet-rules__rule--dragging {
+    @apply opacity-50;
+  }
+  .nui-spreadsheet-rules__grip {
+    @apply box-border inline-flex flex-none items-center justify-center -ms-1 p-0 rounded-sm;
+    @apply bg-transparent text-muted-foreground cursor-grab opacity-0 touch-none inline-[1.25rem];
+    @apply block-[1.75rem] border-0 border-none transition-opacity duration-fast ease-nui;
+  }
+  .nui-spreadsheet-rules__rule:hover .nui-spreadsheet-rules__grip,
+  .nui-spreadsheet-rules__grip:focus-visible,
+  .nui-spreadsheet-rules__rule--dragging .nui-spreadsheet-rules__grip {
+    @apply opacity-100;
+  }
+  .nui-spreadsheet-rules__grip:focus-visible {
+    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+  }
+  .nui-spreadsheet-rules__grip:disabled {
+    @apply invisible;
+  }
+  .nui-spreadsheet-rules--reordering
+    .nui-spreadsheet-rules__rule:not(.nui-spreadsheet-rules__rule--dragging)
+    .nui-spreadsheet-rules__grip {
+    @apply opacity-0;
+  }
+  @media (hover: none) {
+    .nui-spreadsheet-rules__grip {
+      @apply opacity-100;
+    }
+  }
+  .nui-spreadsheet-rules__preview {
+    --_bar-color: var(--color-primary);
+
+    @apply box-border relative inline-flex flex-none items-center justify-center gap-px;
+    @apply overflow-hidden rounded-sm bg-surface text-foreground text-(length:--text-xs);
+    @apply whitespace-nowrap inline-[3.5rem] block-[1.5rem] border border-solid;
+    @apply border-(color:--color-border);
+  }
+  .nui-spreadsheet-rules__preview--kind-bar::after {
+    @apply absolute rounded-sm content-[''] inset-y-[4px] inset-s-[3px] inline-[65%];
+    background: color-mix(in oklab, var(--_bar-color) 60%, var(--color-surface));
+  }
+  .nui-spreadsheet-rules__glyph {
+    @apply inline-flex text-(length:--text-sm);
+  }
+  .nui-spreadsheet-rules__text {
+    @apply flex flex-auto flex-col min-inline-0;
+  }
+  .nui-spreadsheet-rules__description {
+    @apply wrap-break-word line-clamp-2;
+  }
+  .nui-spreadsheet-rules__area {
+    @apply overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+  .nui-spreadsheet-rules__area {
+    @apply text-muted-foreground text-(length:--text-xs);
+  }
+  .nui-spreadsheet-rules__actions {
+    @apply inline-flex flex-none opacity-0 transition-opacity duration-fast ease-nui;
+  }
+  .nui-spreadsheet-rules__rule:hover .nui-spreadsheet-rules__actions,
+  .nui-spreadsheet-rules__rule:focus-within .nui-spreadsheet-rules__actions {
+    @apply opacity-100;
+  }
+  @media (hover: none) {
+    .nui-spreadsheet-rules__actions {
+      @apply opacity-100;
+    }
+  }
+  @media (hover: hover) {
+    .nui-spreadsheet-rules__rule {
+      @apply relative;
+    }
+    .nui-spreadsheet-rules__actions {
+      @apply absolute inset-y-0 inset-e-0 items-center px-1 rounded;
+      background:
+        linear-gradient(--theme(--color-hover inline), --theme(--color-hover inline)),
+        var(--color-surface-overlay);
+    }
+  }
+  .nui-spreadsheet-rules__drop {
+    @apply absolute inset-x-0 rounded-full bg-primary opacity-0 -translate-y-1/2;
+    @apply pointer-events-none inset-bs-[var(--_drop,0)] block-[2px];
+    @apply transition-[opacity,inset-block-start] duration-fast ease-nui;
+  }
+  .nui-spreadsheet-rules--reordering .nui-spreadsheet-rules__drop {
+    @apply opacity-100;
+  }
+  .nui-spreadsheet-rules__ghost {
+    @apply box-border absolute z-1 inset-s-0 flex items-center gap-2 max-inline-full ps-2 pe-3;
+    @apply overflow-hidden rounded bg-surface-elevated text-foreground whitespace-nowrap;
+    @apply -translate-y-1/2 pointer-events-none inset-bs-[var(--_ghost,0)] block-[2.25rem] border;
+    @apply border-solid border-(color:--color-border-strong) shadow-lg;
+  }
+  .nui-spreadsheet-rules__empty {
+    @apply box-border m-0 p-3 border border-dashed border-border rounded text-muted-foreground;
+    @apply text-center;
+  }
+  .nui-spreadsheet-rules__live {
+    @apply absolute inline-px block-px overflow-hidden whitespace-nowrap;
+    clip-path: inset(50%);
+  }
+  .nui-spreadsheet-rules__add {
+    @apply grid;
+  }
+  .nui-spreadsheet-rules__editor {
+    @apply box-border flex flex-col gap-3 min-inline-0 m-0;
+  }
+  .nui-spreadsheet-rules__subtitle {
+    @apply m-0 text-muted-foreground text-(length:--text-sm) font-medium;
+  }
+  .nui-spreadsheet-rules__fields {
+    @apply flex flex-wrap items-end gap-2;
+  }
+  .nui-spreadsheet-rules__fields > * {
+    @apply min-inline-0 flex-[1_1_8rem];
+  }
+  .nui-spreadsheet-rules__glyphs {
+    @apply inline-flex flex-none items-center gap-1 block-[2rem];
+  }
+  .nui-spreadsheet-rules__preset {
+    @apply inline-flex items-center gap-2;
+  }
+  .nui-spreadsheet-rules__custom,
+  .nui-spreadsheet-rules__stops {
+    @apply flex flex-wrap items-center gap-2;
+  }
+  .nui-spreadsheet-rules__footer {
+    @apply flex justify-end gap-2 pbs-1;
+  }
+  .nui-spreadsheet-swatches {
+    @apply box-border flex flex-col items-start gap-2;
+  }
+  .nui-spreadsheet-swatches__current {
+    @apply box-border inline-block flex-none rounded-sm inline-[0.875rem] block-[0.875rem] border;
+    @apply border-solid border-(color:--color-border-strong) bg-transparent;
+    @apply bg-[linear-gradient(_to_top_right,transparent_calc(50%_-_1px),var(--color-error)_50%,transparent_calc(50%_+_1px)_)];
+  }
+  .nui-spreadsheet-swatches__grid {
+    @apply grid grid-cols-[repeat(10,1.25rem)] gap-[2px];
+  }
+  .nui-spreadsheet-swatches__swatch {
+    @apply box-border p-0 rounded-sm cursor-pointer inline-[1.25rem] block-[1.25rem];
+    @apply transition-[box-shadow] duration-fast ease-nui border border-solid;
+    border-color: color-mix(in oklab, var(--color-foreground) 15%, transparent);
+  }
+  .nui-spreadsheet-swatches__swatch:hover {
+    @apply shadow-[0_0_0_2px_var(--color-border-strong)];
+  }
+  .nui-spreadsheet-swatches__swatch--chosen {
+    @apply shadow-[0_0_0_2px_var(--color-surface-elevated),0_0_0_4px_var(--color-primary)];
+  }
+  .nui-spreadsheet-swatches__swatch:focus-visible {
+    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+  }
 }

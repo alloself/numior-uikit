@@ -7,9 +7,9 @@ const NESTED = '.nui-sidebar-sub__list, .nui-sidebar--rail';
 
 const TOLERANCE = 0.5;
 
-export const PANEL_INSET = '--nui-layout-panel-inset';
+export const PANEL_INSET = '--spacing-layout-panel-inset';
 
-export const LAYER_INSET = '--nui-layout-layer-inset';
+export const LAYER_INSET = '--spacing-layout-layer-inset';
 
 export const rowInsetFaultsOf = (scope: Locator, token: string): Promise<string[]> =>
   scope.evaluate(

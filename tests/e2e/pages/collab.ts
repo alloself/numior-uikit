@@ -490,7 +490,10 @@ export class CollabClient {
 
   async setTheme(theme: 'light' | 'dark'): Promise<void> {
     await this.page.evaluate((value) => {
-      document.documentElement.setAttribute('data-nui-theme', value);
+      const root = document.documentElement.classList;
+
+      root.remove('nui-theme--light', 'nui-theme--dark', 'nui-theme--system');
+      root.add(`nui-theme--${value}`);
     }, theme);
   }
 

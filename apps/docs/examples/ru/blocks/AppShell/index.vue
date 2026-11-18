@@ -81,7 +81,7 @@
         </template>
       </NuiAppBar>
     </template>
-    <div class="flex flex-col gap-4 px-(--nui-layout-gutter) py-6">
+    <div class="flex flex-col gap-4 px-layout-gutter py-6">
       <div class="flex flex-col gap-1">
         <h1 class="m-0 text-xl font-semibold tracking-tight">{{ current.label }}</h1>
         <p class="m-0 text-sm text-muted-foreground">{{ current.summary }}</p>

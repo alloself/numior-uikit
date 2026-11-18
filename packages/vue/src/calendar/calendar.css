@@ -1,299 +1,220 @@
-.nui-calendar {
-  --_cell: 2.25rem;
-  --_radius: var(--nui-radius-sm);
-  --_font-size: var(--nui-font-size-sm);
-  --_selected-bg: var(--nui-primary);
-  --_selected-fg: var(--nui-primary-foreground);
-  --_range-bg: var(--nui-primary-soft);
-  --_range-fg: var(--nui-primary-soft-foreground);
-  --_slide: 0.75rem;
+@layer components {
+  .nui-calendar {
+    --_cell: 2.25rem;
+    --_radius: --theme(--radius-sm inline);
+    --_font-size: var(--text-sm);
+    --_selected-bg: var(--color-primary);
+    --_selected-fg: var(--color-primary-foreground);
+    --_range-bg: --theme(--color-primary-soft inline);
+    --_range-fg: --theme(--color-primary-soft-foreground inline);
+    --_slide: 0.75rem;
 
-  box-sizing: border-box;
-  display: grid;
-  grid-template-areas:
-    'months'
-    'footer';
-  gap: var(--nui-space-3);
-  inline-size: fit-content;
-  max-inline-size: 100%;
-  padding: var(--nui-space-3);
-  color: var(--nui-text);
-  font-family: var(--nui-font);
-  font-size: var(--_font-size);
-  line-height: var(--nui-line-height-control);
-}
-.nui-calendar--presets {
-  grid-template-areas:
-    'presets months'
-    'presets footer';
-  grid-template-columns: max-content 1fr;
-  column-gap: var(--nui-space-4);
-}
-.nui-calendar--size-sm {
-  --_cell: 1.75rem;
-  --_font-size: var(--nui-font-size-xs);
-}
-.nui-calendar--size-lg {
-  --_cell: 2.5rem;
-  --_font-size: var(--nui-font-size-md);
-}
-.nui-calendar--disabled {
-  opacity: var(--nui-disabled-opacity);
-}
-.nui-calendar__months {
-  display: flex;
-  flex-wrap: wrap;
-  grid-area: months;
-  gap: var(--nui-space-6);
-}
-.nui-calendar__month {
-  display: grid;
-  gap: var(--nui-space-2);
-  align-content: start;
-}
-.nui-calendar__caption {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--nui-space-1);
-  min-block-size: var(--_cell);
-}
-.nui-calendar__nav--hidden {
-  visibility: hidden;
-}
-.nui-calendar__arrow:dir(rtl) {
-  scale: -1 1;
-}
-.nui-calendar__title {
-  display: flex;
-  gap: var(--nui-space-1);
-  font-weight: 500;
-}
-.nui-calendar__title-button {
-  box-sizing: border-box;
-  padding: var(--nui-space-1) var(--nui-space-2);
-  border: 0;
-  border-radius: var(--_radius);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-  transition: background-color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-calendar__title-button:hover,
-.nui-calendar__title-button[aria-expanded='true'] {
-  background: var(--nui-hover);
-}
-.nui-calendar__title-button:focus-visible,
-.nui-calendar__day:focus-visible,
-.nui-calendar__option:focus-visible {
-  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-  outline-offset: calc(-1 * var(--nui-focus-ring-width));
-}
-.nui-calendar__grid {
-  border-collapse: separate;
-  border-spacing: 0;
-  table-layout: fixed;
-}
-.nui-calendar__grid--slide-next,
-.nui-calendar__grid--slide-prev {
-  animation: nui-calendar-slide var(--nui-duration-normal) var(--nui-easing);
-}
-.nui-calendar__grid--slide-prev {
-  --_slide: -0.75rem;
-}
-.nui-calendar__grid--slide-next:dir(rtl) {
-  --_slide: -0.75rem;
-}
-.nui-calendar__grid--slide-prev:dir(rtl) {
-  --_slide: 0.75rem;
-}
-.nui-calendar__weekday,
-.nui-calendar__week-head,
-.nui-calendar__week {
-  box-sizing: border-box;
-  inline-size: var(--_cell);
-  padding: 0 0 var(--nui-space-1);
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-xs);
-  font-weight: 400;
-  text-align: center;
-}
-.nui-calendar__week {
-  padding: 0;
-}
-.nui-calendar__hidden {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-.nui-calendar__cell {
-  box-sizing: border-box;
-  block-size: calc(var(--_cell) + 2px);
-  padding: 1px 0;
-  text-align: center;
-}
-.nui-calendar__cell--range-middle {
-  background: var(--_range-bg);
-}
-.nui-calendar__cell--range-start {
-  background: linear-gradient(to right, transparent 50%, var(--_range-bg) 50%);
-}
-.nui-calendar__cell--range-end {
-  background: linear-gradient(to right, var(--_range-bg) 50%, transparent 50%);
-}
-.nui-calendar__cell--range-start:dir(rtl) {
-  background: linear-gradient(to left, transparent 50%, var(--_range-bg) 50%);
-}
-.nui-calendar__cell--range-end:dir(rtl) {
-  background: linear-gradient(to left, var(--_range-bg) 50%, transparent 50%);
-}
-.nui-calendar__cell--range-start.nui-calendar__cell--range-end {
-  background: none;
-}
-.nui-calendar__cell--preview {
-  --_range-bg: color-mix(in oklab, var(--nui-primary-soft) 60%, transparent);
-}
-.nui-calendar__day {
-  inline-size: var(--_cell);
-  block-size: var(--_cell);
-  padding: 0;
-  border: 0;
-  border-radius: var(--_radius);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  line-height: var(--nui-line-height-control);
-  cursor: pointer;
-  transition:
-    background-color var(--nui-duration-fast) var(--nui-easing),
-    color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-calendar__day:hover {
-  background: var(--nui-hover);
-}
-.nui-calendar__day--outside {
-  color: var(--nui-text-muted);
-}
-.nui-calendar__day--today {
-  box-shadow: inset 0 0 0 1px var(--nui-primary);
-}
-.nui-calendar__cell--range-middle .nui-calendar__day {
-  color: var(--_range-fg);
-}
-.nui-calendar__cell--range-middle .nui-calendar__day:hover {
-  background: color-mix(in oklab, var(--_range-bg), var(--_range-fg) var(--nui-state-hover));
-}
-.nui-calendar__day--selected {
-  background: var(--_selected-bg);
-  color: var(--_selected-fg);
-  box-shadow: none;
-}
-.nui-calendar__day--selected:hover {
-  background: color-mix(in oklab, var(--_selected-bg), var(--_selected-fg) var(--nui-state-hover));
-}
-.nui-calendar__day--disabled,
-.nui-calendar__day--disabled:hover {
-  background: transparent;
-  color: var(--nui-text-muted);
-  opacity: var(--nui-disabled-opacity);
-  cursor: not-allowed;
-}
-.nui-calendar__picker {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--nui-space-1);
-  min-block-size: calc(7 * (var(--_cell) + 2px));
-  align-content: center;
-}
-.nui-calendar__option {
-  box-sizing: border-box;
-  min-block-size: var(--_cell);
-  padding: 0 var(--nui-space-2);
-  border: 0;
-  border-radius: var(--_radius);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-  transition:
-    background-color var(--nui-duration-fast) var(--nui-easing),
-    color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-calendar__option:hover,
-.nui-calendar__option--active {
-  background: var(--nui-hover);
-}
-.nui-calendar__option--selected {
-  background: var(--_selected-bg);
-  color: var(--_selected-fg);
-}
-.nui-calendar__option--selected:is(:hover, .nui-calendar__option--active) {
-  background: color-mix(in oklab, var(--_selected-bg), var(--_selected-fg) var(--nui-state-hover));
-}
-.nui-calendar__presets {
-  box-sizing: border-box;
-  display: grid;
-  grid-area: presets;
-  gap: var(--nui-space-1);
-  align-content: start;
-  padding-inline-end: var(--nui-space-4);
-  border-inline-end: 1px solid var(--nui-border);
-}
-.nui-calendar__preset {
-  justify-content: flex-start;
-}
-.nui-calendar__preset[aria-pressed='true'] {
-  background: var(--nui-primary-soft);
-  color: var(--nui-primary-soft-foreground);
-}
-.nui-calendar__footer {
-  display: flex;
-  grid-area: footer;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--nui-space-2);
-}
-.nui-calendar__actions {
-  display: flex;
-  gap: var(--nui-space-2);
-  margin-inline-start: auto;
-}
-@keyframes nui-calendar-slide {
-  from {
-    opacity: 0;
-    translate: var(--_slide) 0;
-  }
-
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
-}
-@media (max-width: 40rem) {
-  .nui-calendar--presets {
+    @apply box-border grid gap-3 inline-fit max-inline-full p-3 text-foreground font-sans;
+    @apply text-(length:--_font-size) leading-control;
     grid-template-areas:
-      'presets'
       'months'
       'footer';
-    grid-template-columns: minmax(0, 1fr);
   }
-
-  .nui-calendar__presets {
-    display: flex;
-    flex-wrap: wrap;
-    padding-inline-end: 0;
-    padding-block-end: var(--nui-space-2);
-    border-inline-end: 0;
-    border-block-end: 1px solid var(--nui-border);
+  .nui-calendar--presets {
+    @apply gap-x-4 grid-cols-[max-content_1fr];
+    grid-template-areas:
+      'presets months'
+      'presets footer';
   }
-}
-@media (prefers-reduced-motion: reduce) {
+  .nui-calendar--size-sm {
+    --_cell: 1.75rem;
+    --_font-size: var(--text-xs);
+  }
+  .nui-calendar--size-lg {
+    --_cell: 2.5rem;
+    --_font-size: var(--text-base);
+  }
+  .nui-calendar--disabled {
+    @apply opacity-disabled;
+  }
+  .nui-calendar__months {
+    @apply flex flex-wrap gap-6 row-[months] col-[months];
+  }
+  .nui-calendar__month {
+    @apply grid gap-2 content-start;
+  }
+  .nui-calendar__caption {
+    @apply flex items-center justify-between gap-1 min-block-(--_cell);
+  }
+  .nui-calendar__nav--hidden {
+    @apply invisible;
+  }
+  .nui-calendar__arrow:dir(rtl) {
+    @apply -scale-x-100 scale-y-100;
+  }
+  .nui-calendar__title {
+    @apply flex gap-1 font-medium;
+  }
+  .nui-calendar__title-button {
+    @apply box-border py-1 px-2 rounded-(--_radius) bg-transparent text-inherit cursor-pointer;
+    @apply transition-[background-color] duration-fast ease-nui;
+    border: 0;
+    font: inherit;
+  }
+  .nui-calendar__title-button:hover,
+  .nui-calendar__title-button[aria-expanded='true'] {
+    @apply bg-hover;
+  }
+  .nui-calendar__title-button:focus-visible,
+  .nui-calendar__day:focus-visible,
+  .nui-calendar__option:focus-visible {
+    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-width);
+  }
+  .nui-calendar__grid {
+    @apply border-separate table-fixed border-spacing-0;
+  }
   .nui-calendar__grid--slide-next,
   .nui-calendar__grid--slide-prev {
-    animation: none;
+    @apply animate-[nui-calendar-slide_var(--transition-duration-normal)_var(--ease-nui)];
+  }
+  .nui-calendar__grid--slide-prev {
+    --_slide: -0.75rem;
+  }
+  .nui-calendar__grid--slide-next:dir(rtl) {
+    --_slide: -0.75rem;
+  }
+  .nui-calendar__grid--slide-prev:dir(rtl) {
+    --_slide: 0.75rem;
+  }
+  .nui-calendar__weekday,
+  .nui-calendar__week-head,
+  .nui-calendar__week {
+    @apply box-border inline-(--_cell) pbs-0 pbe-1 px-0 text-muted-foreground;
+    @apply text-(length:--text-xs) text-center font-normal;
+  }
+  .nui-calendar__week {
+    @apply p-0;
+  }
+  .nui-calendar__hidden {
+    @apply absolute inline-px block-px overflow-hidden whitespace-nowrap;
+    clip-path: inset(50%);
+  }
+  .nui-calendar__cell {
+    @apply box-border py-px px-0 text-center block-[calc(var(--_cell)_+_2px)];
+  }
+  .nui-calendar__cell--range-middle {
+    @apply bg-(--_range-bg);
+  }
+  .nui-calendar__cell--range-start {
+    @apply bg-transparent bg-[linear-gradient(to_right,transparent_50%,var(--_range-bg)_50%)];
+  }
+  .nui-calendar__cell--range-end {
+    @apply bg-transparent bg-[linear-gradient(to_right,var(--_range-bg)_50%,transparent_50%)];
+  }
+  .nui-calendar__cell--range-start:dir(rtl) {
+    @apply bg-transparent bg-[linear-gradient(to_left,transparent_50%,var(--_range-bg)_50%)];
+  }
+  .nui-calendar__cell--range-end:dir(rtl) {
+    @apply bg-transparent bg-[linear-gradient(to_left,var(--_range-bg)_50%,transparent_50%)];
+  }
+  .nui-calendar__cell--range-start.nui-calendar__cell--range-end {
+    @apply bg-transparent bg-none;
+  }
+  .nui-calendar__cell--preview {
+    --_range-bg: color-mix(in oklab, --theme(--color-primary-soft inline) 60%, transparent);
+  }
+  .nui-calendar__day {
+    @apply inline-(--_cell) block-(--_cell) p-0 rounded-(--_radius) text-inherit cursor-pointer;
+    @apply bg-transparent bg-none transition-[background-color,color] duration-fast ease-nui;
+    border: 0;
+    font: inherit;
+    @apply leading-control;
+  }
+  .nui-calendar__day:hover {
+    @apply bg-hover bg-none;
+  }
+  .nui-calendar__day--outside {
+    @apply text-muted-foreground;
+  }
+  .nui-calendar__day--today {
+    @apply shadow-[inset_0_0_0_1px_var(--color-primary)];
+  }
+  .nui-calendar__cell--range-middle .nui-calendar__day {
+    @apply text-(--_range-fg);
+  }
+  .nui-calendar__cell--range-middle .nui-calendar__day:hover {
+    background: color-mix(in oklab, var(--_range-bg), var(--_range-fg) var(--state-hover));
+  }
+  .nui-calendar__day--selected {
+    @apply text-(--_selected-fg) bg-(--_selected-bg) bg-none shadow-none;
+  }
+  .nui-calendar__day--selected:hover {
+    background: color-mix(in oklab, var(--_selected-bg), var(--_selected-fg) var(--state-hover));
+  }
+  .nui-calendar__day--disabled,
+  .nui-calendar__day--disabled:hover {
+    @apply text-muted-foreground opacity-disabled cursor-not-allowed bg-transparent bg-none;
+  }
+  .nui-calendar__picker {
+    @apply grid gap-1 content-center grid-cols-[repeat(3,1fr)];
+    @apply min-block-[calc(7_*_(var(--_cell)_+_2px))];
+  }
+  .nui-calendar__option {
+    @apply box-border min-block-(--_cell) py-0 px-2 rounded-(--_radius) text-inherit cursor-pointer;
+    @apply bg-transparent bg-none transition-[background-color,color] duration-fast ease-nui;
+    border: 0;
+    font: inherit;
+  }
+  .nui-calendar__option:hover,
+  .nui-calendar__option--active {
+    @apply bg-hover bg-none;
+  }
+  .nui-calendar__option--selected {
+    @apply text-(--_selected-fg) bg-(--_selected-bg) bg-none;
+  }
+  .nui-calendar__option--selected:is(:hover, .nui-calendar__option--active) {
+    background: color-mix(in oklab, var(--_selected-bg), var(--_selected-fg) var(--state-hover));
+  }
+  .nui-calendar__presets {
+    @apply box-border grid gap-1 pe-4 border-e border-e-border row-[presets] col-[presets];
+    align-content: start;
+  }
+  .nui-calendar__preset {
+    @apply justify-start;
+  }
+  .nui-calendar__preset[aria-pressed='true'] {
+    @apply text-primary-soft-foreground bg-primary-soft bg-none;
+  }
+  .nui-calendar__footer {
+    @apply flex items-center justify-between gap-2 row-[footer] col-[footer];
+  }
+  .nui-calendar__actions {
+    @apply flex gap-2 ms-auto;
+  }
+  @keyframes nui-calendar-slide {
+    from {
+      opacity: 0;
+      translate: var(--_slide) 0;
+    }
+
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+  @media (max-width: 40rem) {
+    .nui-calendar--presets {
+      @apply grid-cols-1;
+      grid-template-areas:
+        'presets'
+        'months'
+        'footer';
+    }
+
+    .nui-calendar__presets {
+      @apply flex flex-wrap pe-0 pbe-2 border-be border-be-border;
+      border-inline-end: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nui-calendar__grid--slide-next,
+    .nui-calendar__grid--slide-prev {
+      @apply animate-none;
+    }
   }
 }

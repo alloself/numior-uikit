@@ -68,8 +68,8 @@ const columns: NuiTableColumn<Region>[] = [
 ];
 
 const MARKS: readonly Mark[] = [
-  { range: { from: { row: 0, col: 1 }, to: { row: 2, col: 2 } }, tone: 'var(--nui-primary)' },
-  { range: { from: { row: 4, col: 1 }, to: { row: 4, col: 4 } }, tone: 'var(--nui-success)' },
+  { range: { from: { row: 0, col: 1 }, to: { row: 2, col: 2 } }, tone: 'var(--color-primary)' },
+  { range: { from: { row: 4, col: 1 }, to: { row: 4, col: 4 } }, tone: 'var(--color-success)' },
 ];
 
 const boxesOf = (rectOf: (range: NuiTableRange) => NuiTableRect | undefined) =>

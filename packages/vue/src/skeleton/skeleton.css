@@ -1,70 +1,61 @@
-.nui-skeleton {
-  --_inline-size: 100%;
-  --_block-size: 1em;
-  --_radius: var(--nui-radius-sm);
-  --_tint: color-mix(in oklab, var(--nui-text) 8%, transparent);
-  --_shine: color-mix(in oklab, var(--nui-text) 13%, transparent);
-  --_sweep: 48rem;
+@layer components {
+  .nui-skeleton {
+    --_inline-size: 100%;
+    --_block-size: 1em;
+    --_radius: --theme(--radius-sm inline);
+    --_tint: color-mix(in oklab, var(--color-foreground) 8%, transparent);
+    --_shine: color-mix(in oklab, var(--color-foreground) 13%, transparent);
+    --_sweep: 48rem;
 
-  box-sizing: border-box;
-  display: block;
-  inline-size: var(--_inline-size);
-}
-.nui-skeleton--shape-text {
-  display: grid;
-  gap: 0.5em;
-}
-.nui-skeleton__line,
-.nui-skeleton--shape-rect,
-.nui-skeleton--shape-circle {
-  position: relative;
-  display: block;
-  block-size: var(--_block-size);
-  border-radius: var(--_radius);
-  overflow: hidden;
-}
-.nui-skeleton__line::after,
-.nui-skeleton--shape-rect::after,
-.nui-skeleton--shape-circle::after {
-  content: '';
-  position: absolute;
-  inset-block: 0;
-  left: 0;
-  inline-size: calc(100% + var(--_sweep));
-  background: linear-gradient(90deg, var(--_tint) 40%, var(--_shine) 50%, var(--_tint) 60%) 0 0 /
-    var(--_sweep) 100% repeat-x;
-  animation: nui-skeleton-shimmer 2s linear infinite;
-  animation-play-state: var(--nui-animation-play-state, running);
-}
-.nui-skeleton__line:last-child:not(:only-child) {
-  inline-size: 60%;
-}
-.nui-skeleton--shape-rect {
-  --_block-size: 6rem;
-  --_radius: var(--nui-radius);
-}
-.nui-skeleton--shape-circle {
-  --_inline-size: 2.5rem;
-  --_block-size: 2.5rem;
-  --_radius: var(--nui-radius-full);
-}
-.nui-skeleton--static .nui-skeleton__line::after,
-.nui-skeleton--static.nui-skeleton--shape-rect::after,
-.nui-skeleton--static.nui-skeleton--shape-circle::after {
-  animation: none;
-}
-@keyframes nui-skeleton-shimmer {
-  from {
-    translate: calc(var(--_sweep) * -1) 0;
+    @apply box-border block inline-(--_inline-size);
   }
-  to {
-    translate: 0 0;
+  .nui-skeleton--shape-text {
+    @apply grid gap-[0.5em];
   }
-}
-@media (prefers-reduced-motion: reduce) {
+  .nui-skeleton__line,
+  .nui-skeleton--shape-rect,
+  .nui-skeleton--shape-circle {
+    @apply relative block block-(--_block-size) rounded-(--_radius) overflow-hidden;
+  }
   .nui-skeleton__line::after,
   .nui-skeleton--shape-rect::after,
   .nui-skeleton--shape-circle::after {
-    animation: none;
+    @apply absolute inset-y-0 left-0 content-[''] inline-[calc(100%_+_var(--_sweep))];
+    @apply animate-[nui-skeleton-shimmer_2s_linear_infinite];
+    background: linear-gradient(90deg, var(--_tint) 40%, var(--_shine) 50%, var(--_tint) 60%) 0 0 /
+      var(--_sweep) 100% repeat-x;
+    animation-play-state: var(--nui-animation-play-state, running);
+  }
+  .nui-skeleton__line:last-child:not(:only-child) {
+    @apply inline-[60%];
+  }
+  .nui-skeleton--shape-rect {
+    --_block-size: 6rem;
+    --_radius: --theme(--radius inline);
+  }
+  .nui-skeleton--shape-circle {
+    --_inline-size: 2.5rem;
+    --_block-size: 2.5rem;
+    --_radius: var(--radius-full);
+  }
+  .nui-skeleton--static .nui-skeleton__line::after,
+  .nui-skeleton--static.nui-skeleton--shape-rect::after,
+  .nui-skeleton--static.nui-skeleton--shape-circle::after {
+    @apply animate-none;
+  }
+  @keyframes nui-skeleton-shimmer {
+    from {
+      translate: calc(var(--_sweep) * -1) 0;
+    }
+    to {
+      translate: 0 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nui-skeleton__line::after,
+    .nui-skeleton--shape-rect::after,
+    .nui-skeleton--shape-circle::after {
+      @apply animate-none;
+    }
   }
 }

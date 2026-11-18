@@ -6,8 +6,9 @@ import { DocsSite } from './pages/docs';
 import { DocsGroupsTable } from './pages/docs-table';
 import { NuxtApp } from './pages/nuxt-app';
 import { PlaygroundPage } from './pages/playground';
+import { ThemeLab } from './pages/theme-lab';
 
-interface PageObjects {
+export interface PageObjects {
   readonly playground: PlaygroundPage;
   readonly collab: CollabRoom;
   readonly benchEditor: BenchEditor;
@@ -15,6 +16,7 @@ interface PageObjects {
   readonly docs: DocsSite;
   readonly docsGroups: DocsGroupsTable;
   readonly app: NuxtApp;
+  readonly themeLab: ThemeLab;
   readonly buttons: PlaygroundPage['buttons'];
   readonly typography: PlaygroundPage['typography'];
   readonly chrome: PlaygroundPage['chrome'];
@@ -64,6 +66,9 @@ export const test = base.extend<PageObjects>({
   },
   app: async ({ page }, use) => {
     await use(new NuxtApp(page));
+  },
+  themeLab: async ({ page }, use) => {
+    await use(new ThemeLab(page));
   },
   buttons: async ({ playground }, use) => {
     await use(playground.buttons);

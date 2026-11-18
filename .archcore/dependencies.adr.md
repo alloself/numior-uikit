@@ -88,7 +88,7 @@ Kit писался с нуля: `engineering-quality.rule.md` требовал �
 удалён: он дублировал Tailwind и делал примеры доки некопируемыми для Tailwind-проектов.
 `@numior/tailwind/theme.css` теперь кладёт токены на стандартные имена Tailwind 4
 (`--color-*`, `--radius-*`, `--spacing`, `--text-*` с высотой строки, `--font-weight-*`,
-`--leading-*`, `--shadow-*`, `--container-prose`), красит границы по умолчанию в `--nui-border`
+`--leading-*`, `--shadow-*`, `--container-prose`), красит границы по умолчанию в `--color-border`
 и объявляет `@utility grid-auto`, `grid-auto-sm`, `grid-auto-lg`, `bg-dots`. Проза
 `.nui-prose` переехала в `@numior/tokens/prose.css`. Дока и playground собираются через
 `@tailwindcss/vite` и работают под preflight; компоненты по-прежнему на BEM CSS без
@@ -133,14 +133,14 @@ dev-зависимостей; своя замена потребовала бы 
 
 ## Inter в песочнице (2026-11-08)
 
-Токен `--nui-font` начинается с `Inter`, но кит шрифтов не поставляет: шрифт загружает
+Токен `--font-sans` начинается с `Inter`, но кит шрифтов не поставляет: шрифт загружает
 приложение, как у shadcn. Песочница его не загружала, поэтому вид зависел от машины, а в
 Docker-образе Playwright `sans-serif` подставлял китайский WenQuanYi Zen Hei (многоточие по
 середине строки, кириллица ниже центра). По решению пользователя Inter подключён только в
 песочнице: `@fontsource-variable/inter` 5.3.0 (OFL-1.1, вариативный файл с кириллицей и
 `unicode-range`, грузятся только нужные наборы) — зависимость `apps/playground`, импорт в
-`main.ts`, а `style.css` песочницы ставит `--nui-font: 'Inter Variable', Inter, …` на тех же
-селекторах, что и тема (`:root`, `[data-nui-theme]`). Пакеты кита и доки не меняются.
+`main.ts`, а `style.css` песочницы ставит `--font-sans: 'Inter Variable', Inter, …` на `:root`
+(с 2026-11-14 области темы ключей не переобъявляют, и значение наследуется). Пакеты кита и доки не меняются.
 
 ## ws для эталонного сервера совместной правки (2026-11-09)
 

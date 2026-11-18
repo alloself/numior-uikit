@@ -2,7 +2,7 @@
   <nav :aria-label="label" class="flex min-w-0 items-center gap-1 font-normal">
     <ul
       ref="row"
-      class="m-0 flex max-h-(--nui-control-height-sm) min-w-0 list-none flex-wrap gap-x-1 overflow-hidden p-0"
+      class="m-0 flex max-h-(--spacing-control-sm) min-w-0 list-none flex-wrap gap-x-1 overflow-hidden p-0"
     >
       <li
         v-for="(item, index) in items"

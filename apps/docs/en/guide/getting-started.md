@@ -88,16 +88,16 @@ theme follows the system.
 
 ## Theme and density
 
-Attributes on `<html>` set the theme and density:
+Classes on `<html>` set the theme and density:
 
 ```html
-<html data-nui-theme="dark" data-nui-density="compact"></html>
+<html class="nui-theme--dark nui-theme--density-compact"></html>
 ```
 
-`data-nui-theme` takes `light`, `dark` or `system`, where `system` follows the system setting.
-`data-nui-density="compact"` makes controls shorter and spacing tighter; the default is
-`comfortable`. The attributes work on any element, and then the theme or density changes only
-inside it.
+`nui-theme--light`, `nui-theme--dark` and `nui-theme--system` pick the theme, where `system`
+follows the system setting, as does `<html>` without a class. `nui-theme--density-compact` makes
+controls shorter and spacing tighter. The classes work on any element, and then the theme or
+density changes only inside it.
 
 ## Next
 

@@ -43,7 +43,7 @@
           :src="src"
           :title="`${texts.preview}: ${name}`"
           loading="lazy"
-          class="mx-auto block w-full border-0 bg-surface transition-[max-inline-size] duration-(--nui-duration-normal) ease-nui"
+          class="mx-auto block w-full border-0 bg-surface transition-[max-inline-size] duration-(--transition-duration-normal) ease-nui"
           :style="{ maxInlineSize: VIEWPORT_WIDTHS[viewport], blockSize: `${blockSize}px` }"
           @load="syncTheme"
         />
@@ -56,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from 'vue';
+import { computed, onMounted, ref, useTemplateRef } from 'vue';
 import { useMutationObserver } from '@vueuse/core';
 import { useClipboard } from '@numior/primitives';
 import {
@@ -70,12 +70,10 @@ import {
 } from '@numior/vue';
 import { useFramedHeight } from '../block-height';
 import { fileNamed } from '../example-files';
-import { mirrorAttributes } from '../mirror-attributes';
+import { applyThemeClasses, themeClassesOf } from '../frame-theme';
 import { BlockViewport, type BlockFrameProps } from '../theme.types';
 import ExampleFiles from './ExampleFiles.vue';
 import FrameCorners from './FrameCorners.vue';
-
-const THEME_ATTRIBUTES = ['data-nui-theme', 'data-nui-accent'];
 
 const VIEWPORT_WIDTHS: Readonly<Record<BlockViewport, string>> = {
   [BlockViewport.Desktop]: '100%',
@@ -100,10 +98,9 @@ const viewports = computed<readonly NuiToggleItem<BlockViewport>[]>(() => [
 ]);
 
 const syncTheme = (): void => {
-  mirrorAttributes(
-    document.documentElement,
+  applyThemeClasses(
     frame.value?.contentDocument?.documentElement,
-    THEME_ATTRIBUTES,
+    themeClassesOf(document.documentElement),
   );
 };
 
@@ -113,6 +110,8 @@ const copy = (): void => {
 
 useMutationObserver(() => globalThis.document?.documentElement, syncTheme, {
   attributes: true,
-  attributeFilter: THEME_ATTRIBUTES,
+  attributeFilter: ['class'],
 });
+
+onMounted(syncTheme);
 </script>

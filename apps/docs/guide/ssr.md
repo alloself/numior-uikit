@@ -9,9 +9,9 @@
 
 - Язык и направление текста. Передайте `locale` и `dir` в `createNuiConfig` на каждый запрос:
   `navigator.language` и `Accept-Language` компоненты не читают.
-- Тему. Поставьте на `<html>` атрибут `data-nui-theme` из cookie или значение `system`. Добавьте
-  в `<head>` скрипт `colorSchemeScript(storageKey)`, чтобы сохранённая тема применилась до
-  отрисовки страницы.
+- Тему. Поставьте на `<html>` класс `nui-theme--light` или `nui-theme--dark` из cookie, без
+  класса страница следует за системой. Добавьте в `<head>` скрипт `colorSchemeScript(storageKey)`,
+  чтобы сохранённая тема применилась до отрисовки страницы.
 - Сегодняшнюю дату. Передайте `today` календарю, выбору даты и полю времени. Без `today` дата
   берётся из часов браузера уже после монтирования, поэтому часовой пояс сервера на разметку не
   влияет.
@@ -59,6 +59,18 @@ export default defineNuxtConfig({
 Модуль подключает плагин `createNuiConfig`, стили и автоимпорт компонентов `Nui*` и композаблов
 `use*`, в том числе форм и таблицы. Скрипт темы он добавляет в `<head>`, а ссылки со свойством
 `to` выводит через `NuxtLink`.
+
+Модуль собирает CSS кита в своём входе Tailwind. Тему приложения задайте базовыми ключами в
+`@theme static`, производные ключи следуют за ними:
+
+```css
+@import 'tailwindcss';
+@import '@numior/kit/tailwind/theme.css';
+
+@theme static {
+  --radius-base: 1rem;
+}
+```
 
 В `nuxt.config.ts` можно задать `locale`, `dir`, `colorScheme` (`storageKey`, `initial` или
 `false`) и `toasts`. Флаги `css`, `components` и `composables` выключают стили и автоимпорт, по

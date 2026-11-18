@@ -1,110 +1,85 @@
-.nui-alert {
-  --_tone: var(--nui-info);
-  --_tone-foreground: var(--nui-info-foreground);
-  --_tone-soft: var(--nui-info-soft);
-  --_tone-soft-foreground: var(--nui-info-soft-foreground);
-  --_line: round(down, calc(var(--nui-font-size-sm) * var(--nui-line-height)), 0.25rem);
+@layer components {
+  .nui-alert {
+    --_tone: var(--color-info);
+    --_tone-foreground: var(--color-info-foreground);
+    --_tone-soft: --theme(--color-info-soft inline);
+    --_tone-soft-foreground: --theme(--color-info-soft-foreground inline);
+    --_line: round(down, calc(var(--text-sm) * var(--leading-normal)), 0.25rem);
 
-  box-sizing: border-box;
-  display: flex;
-  align-items: flex-start;
-  gap: var(--nui-space-3);
-  padding: var(--nui-space-3) var(--nui-space-4);
-  border: 1px solid transparent;
-  border-radius: var(--nui-radius);
-  background: var(--_tone-soft);
-  color: var(--_tone-soft-foreground);
-  font-family: var(--nui-font);
-  font-size: var(--nui-font-size-sm);
-  line-height: var(--_line);
-  transition:
-    opacity var(--nui-duration-normal) var(--nui-easing),
-    translate var(--nui-duration-normal) var(--nui-easing),
-    display var(--nui-duration-normal) allow-discrete;
-}
-.nui-alert--tone-primary {
-  --_tone: var(--nui-primary);
-  --_tone-foreground: var(--nui-primary-foreground);
-  --_tone-soft: var(--nui-primary-soft);
-  --_tone-soft-foreground: var(--nui-primary-soft-foreground);
-}
-.nui-alert--tone-secondary {
-  --_tone: var(--nui-secondary);
-  --_tone-foreground: var(--nui-secondary-foreground);
-  --_tone-soft: var(--nui-secondary-soft);
-  --_tone-soft-foreground: var(--nui-secondary-soft-foreground);
-}
-.nui-alert--tone-success {
-  --_tone: var(--nui-success);
-  --_tone-foreground: var(--nui-success-foreground);
-  --_tone-soft: var(--nui-success-soft);
-  --_tone-soft-foreground: var(--nui-success-soft-foreground);
-}
-.nui-alert--tone-warning {
-  --_tone: var(--nui-warning);
-  --_tone-foreground: var(--nui-warning-foreground);
-  --_tone-soft: var(--nui-warning-soft);
-  --_tone-soft-foreground: var(--nui-warning-soft-foreground);
-}
-.nui-alert--tone-error {
-  --_tone: var(--nui-error);
-  --_tone-foreground: var(--nui-error-foreground);
-  --_tone-soft: var(--nui-error-soft);
-  --_tone-soft-foreground: var(--nui-error-soft-foreground);
-}
-.nui-alert--tone-neutral {
-  --_tone: var(--nui-neutral);
-  --_tone-foreground: var(--nui-neutral-foreground);
-  --_tone-soft: var(--nui-neutral-soft);
-  --_tone-soft-foreground: var(--nui-neutral-soft-foreground);
-}
-.nui-alert--variant-outline {
-  border-color: color-mix(in oklab, var(--_tone) 50%, var(--nui-border));
-  background: transparent;
-  color: var(--nui-text);
-}
-.nui-alert--variant-solid {
-  background: var(--_tone);
-  color: var(--_tone-foreground);
-}
-.nui-alert--closed {
-  display: none;
-  opacity: 0;
-  translate: 0 calc(-1 * var(--nui-space-1));
-}
-.nui-alert__icon {
-  flex: none;
-  margin-block-start: calc((var(--_line) - var(--nui-icon-size)) / 2);
-  color: var(--_tone);
-}
-.nui-alert--variant-solid .nui-alert__icon {
-  color: inherit;
-}
-.nui-alert__body {
-  display: grid;
-  flex: 1 1 auto;
-  gap: var(--nui-space-1);
-  min-inline-size: 0;
-}
-.nui-alert__title {
-  margin: 0;
-  font-weight: 600;
-}
-.nui-alert__description > :first-child {
-  margin-block-start: 0;
-}
-.nui-alert__description > :last-child {
-  margin-block-end: 0;
-}
-.nui-alert__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--nui-space-2);
-  margin-block-start: var(--nui-space-1);
-}
-.nui-alert__close {
-  flex: none;
-  margin-block-start: calc((var(--_line) - var(--_height)) / 2);
-  margin-inline-end: calc(-1 * var(--nui-space-2));
-  color: inherit;
+    @apply box-border flex items-start gap-3 py-3 px-4 border border-transparent rounded;
+    @apply bg-(--_tone-soft) text-(--_tone-soft-foreground) font-sans text-(length:--text-sm);
+    @apply leading-(--_line);
+    @apply transition-[opacity,translate,display] duration-normal;
+    @apply ease-[var(--ease-nui),var(--ease-nui),ease] transition-discrete;
+  }
+  .nui-alert--tone-primary {
+    --_tone: var(--color-primary);
+    --_tone-foreground: var(--color-primary-foreground);
+    --_tone-soft: --theme(--color-primary-soft inline);
+    --_tone-soft-foreground: --theme(--color-primary-soft-foreground inline);
+  }
+  .nui-alert--tone-secondary {
+    --_tone: var(--color-secondary);
+    --_tone-foreground: var(--color-secondary-foreground);
+    --_tone-soft: --theme(--color-secondary-soft inline);
+    --_tone-soft-foreground: --theme(--color-secondary-soft-foreground inline);
+  }
+  .nui-alert--tone-success {
+    --_tone: var(--color-success);
+    --_tone-foreground: var(--color-success-foreground);
+    --_tone-soft: --theme(--color-success-soft inline);
+    --_tone-soft-foreground: --theme(--color-success-soft-foreground inline);
+  }
+  .nui-alert--tone-warning {
+    --_tone: var(--color-warning);
+    --_tone-foreground: var(--color-warning-foreground);
+    --_tone-soft: --theme(--color-warning-soft inline);
+    --_tone-soft-foreground: --theme(--color-warning-soft-foreground inline);
+  }
+  .nui-alert--tone-error {
+    --_tone: var(--color-error);
+    --_tone-foreground: var(--color-error-foreground);
+    --_tone-soft: --theme(--color-error-soft inline);
+    --_tone-soft-foreground: --theme(--color-error-soft-foreground inline);
+  }
+  .nui-alert--tone-neutral {
+    --_tone: var(--color-neutral);
+    --_tone-foreground: var(--color-neutral-foreground);
+    --_tone-soft: --theme(--color-neutral-soft inline);
+    --_tone-soft-foreground: --theme(--color-neutral-soft-foreground inline);
+  }
+  .nui-alert--variant-outline {
+    @apply bg-transparent text-foreground;
+    border-color: color-mix(in oklab, var(--_tone) 50%, var(--color-border));
+  }
+  .nui-alert--variant-solid {
+    @apply bg-(--_tone) text-(--_tone-foreground);
+  }
+  .nui-alert--closed {
+    @apply hidden opacity-0 -translate-y-1;
+  }
+  .nui-alert__icon {
+    @apply flex-none text-(--_tone) mbs-[calc((var(--_line)_-_var(--spacing-icon))_/_2)];
+  }
+  .nui-alert--variant-solid .nui-alert__icon {
+    @apply text-inherit;
+  }
+  .nui-alert__body {
+    @apply grid flex-auto gap-1 min-inline-0;
+  }
+  .nui-alert__title {
+    @apply m-0 font-semibold;
+  }
+  .nui-alert__description > :first-child {
+    @apply mbs-0;
+  }
+  .nui-alert__description > :last-child {
+    @apply mbe-0;
+  }
+  .nui-alert__actions {
+    @apply flex flex-wrap gap-2 mbs-1;
+  }
+  .nui-alert__close {
+    @apply flex-none -me-2 text-inherit mbs-[calc((var(--_line)_-_var(--_height))_/_2)];
+  }
 }

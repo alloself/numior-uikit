@@ -52,6 +52,9 @@ importers:
       '@stylistic/eslint-plugin':
         specifier: 5.10.0
         version: 5.10.0(eslint@10.11.0(jiti@2.7.0))
+      '@tailwindcss/node':
+        specifier: 4.3.3
+        version: 4.3.3
       '@types/node':
         specifier: ^24.13.6
         version: 24.13.6
@@ -82,6 +85,9 @@ importers:
       semantic-release:
         specifier: 25.0.9
         version: 25.0.9(typescript@5.9.3)
+      tailwindcss:
+        specifier: 4.3.3
+        version: 4.3.3
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -164,6 +170,9 @@ importers:
         specifier: 3.5.43
         version: 3.5.43(typescript@5.9.3)
     devDependencies:
+      '@tailwindcss/node':
+        specifier: 4.3.3
+        version: 4.3.3
       '@tailwindcss/vite':
         specifier: 4.3.3
         version: 4.3.3(vite@8.3.4(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))
@@ -474,6 +483,9 @@ importers:
       '@numior/vue':
         specifier: workspace:*
         version: link:../vue
+      '@tailwindcss/vite':
+        specifier: 4.3.3
+        version: 4.3.3(vite@8.3.4(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))
       '@vueuse/core':
         specifier: 15.0.0
         version: 15.0.0(vue@3.5.43(typescript@5.9.3))
@@ -481,7 +493,7 @@ importers:
         specifier: 4.4.3
         version: 4.4.3
       tailwindcss:
-        specifier: ^4.0.0
+        specifier: 4.3.3
         version: 4.3.3
       vue:
         specifier: ^3.5.0
@@ -661,7 +673,11 @@ importers:
         specifier: ^4.0.0
         version: 4.3.3
 
-  packages/tokens: {}
+  packages/tokens:
+    dependencies:
+      tailwindcss:
+        specifier: ^4.0.0
+        version: 4.3.3
 
   packages/vue:
     dependencies:
@@ -8841,7 +8857,7 @@ snapshots:
       jiti: 2.7.0
       lightningcss: 1.32.0
       magic-string: 0.30.21
-      source-map-js: 1.2.1
+      source-map-js: 1.2.2
       tailwindcss: 4.3.3
 
   '@tailwindcss/oxide-android-arm64@4.3.3':

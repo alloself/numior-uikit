@@ -1,261 +1,130 @@
-.nui-spreadsheet-pivot {
-  box-sizing: border-box;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--nui-space-3);
-  inline-size: min(24rem, calc(100vw - var(--nui-space-8)));
-  padding: var(--nui-space-3);
-  color: var(--nui-text);
-  font-size: var(--nui-font-size-sm);
-}
-.nui-spreadsheet-pivot--dragging {
-  cursor: grabbing;
-  user-select: none;
-}
-.nui-spreadsheet-pivot__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--nui-space-2);
-}
-.nui-spreadsheet-pivot__tools {
-  display: flex;
-  align-items: center;
-  gap: var(--nui-space-1);
-}
-.nui-spreadsheet-pivot__title {
-  margin: 0;
-  font-size: var(--nui-font-size-sm);
-  font-weight: 600;
-  line-height: var(--nui-line-height-control);
-}
-.nui-spreadsheet-pivot__lost {
-  margin: 0;
-  color: var(--nui-text-muted);
-}
-.nui-spreadsheet-pivot__fields {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  max-block-size: 12rem;
-  margin: 0;
-  padding: var(--nui-space-1);
-  overflow: auto;
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius);
-  list-style: none;
-  transition:
-    border-color var(--nui-duration-fast) var(--nui-easing),
-    background-color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-spreadsheet-pivot__fields--target {
-  border-color: var(--nui-error);
-  background: color-mix(in oklab, var(--nui-error) 6%, transparent);
-}
-.nui-spreadsheet-pivot__field {
-  box-sizing: border-box;
-  display: flex;
-  padding: 2px var(--nui-space-1);
-  border-radius: var(--nui-radius-sm);
-  transition: background-color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-spreadsheet-pivot__field:hover {
-  background: var(--nui-hover);
-}
-.nui-spreadsheet-pivot__areas {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--nui-space-2);
-}
-.nui-spreadsheet-pivot__area {
-  box-sizing: border-box;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--nui-space-1);
-  min-inline-size: 0;
-  min-block-size: 5.5rem;
-  padding: var(--nui-space-2);
-  border: 1px dashed var(--nui-border);
-  border-radius: var(--nui-radius);
-  transition:
-    border-color var(--nui-duration-fast) var(--nui-easing),
-    background-color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-spreadsheet-pivot__area--target {
-  border-style: solid;
-  border-color: var(--nui-primary);
-  background: color-mix(in oklab, var(--nui-primary) 6%, transparent);
-}
-.nui-spreadsheet-pivot__area-title {
-  margin: 0;
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-xs);
-  font-weight: 600;
-  line-height: var(--nui-line-height-control);
-}
-.nui-spreadsheet-pivot__chips {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.nui-spreadsheet-pivot__slot {
-  display: grid;
-  min-inline-size: 0;
-}
-.nui-spreadsheet-pivot__chip {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--nui-space-1);
-  min-inline-size: 0;
-  block-size: 1.75rem;
-  padding-block: 0;
-  padding-inline: var(--nui-space-2) var(--nui-space-1);
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius-sm);
-  background: var(--nui-surface);
-  color: var(--nui-text);
-  font: inherit;
-  cursor: grab;
-  touch-action: none;
-  transition:
-    background-color var(--nui-duration-fast) var(--nui-easing),
-    border-color var(--nui-duration-fast) var(--nui-easing),
-    opacity var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-spreadsheet-pivot__chip:hover:not(:disabled) {
-  background: var(--nui-hover);
-}
-.nui-spreadsheet-pivot__chip:focus-visible {
-  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-  outline-offset: var(--nui-focus-ring-offset);
-}
-.nui-spreadsheet-pivot__chip[aria-expanded='true'] {
-  border-color: var(--nui-border-strong);
-  background: var(--nui-hover);
-}
-.nui-spreadsheet-pivot__chip:disabled {
-  cursor: default;
-}
-.nui-spreadsheet-pivot__chip > :last-child {
-  flex: none;
-  color: var(--nui-text-muted);
-}
-.nui-spreadsheet-pivot__chip--grabbed {
-  opacity: 0.5;
-}
-.nui-spreadsheet-pivot__chip-text {
-  min-inline-size: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.nui-spreadsheet-pivot__hint {
-  display: grid;
-  flex: 1;
-  place-items: center;
-  margin: 0;
-  color: var(--nui-text-subtle);
-  font-size: var(--nui-font-size-xs);
-  text-align: center;
-}
-.nui-spreadsheet-pivot__drop {
-  position: absolute;
-  inset-inline: var(--nui-space-2);
-  inset-block-start: var(--_drop, 0);
-  block-size: 2px;
-  border-radius: var(--nui-radius-full);
-  background: var(--nui-primary);
-  opacity: 0;
-  translate: 0 -50%;
-  pointer-events: none;
-  transition: opacity var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-spreadsheet-pivot__area--target:not(.nui-spreadsheet-pivot__area--empty)
+@layer components {
+  .nui-spreadsheet-pivot {
+    @apply box-border relative flex flex-col gap-3 p-3 text-foreground text-(length:--text-sm);
+    @apply inline-[min(24rem,calc(100vw_-_--spacing(8)))];
+  }
+  .nui-spreadsheet-pivot--dragging {
+    @apply cursor-grabbing select-none;
+  }
+  .nui-spreadsheet-pivot__header {
+    @apply flex items-center justify-between gap-2;
+  }
+  .nui-spreadsheet-pivot__tools {
+    @apply flex items-center gap-1;
+  }
+  .nui-spreadsheet-pivot__title {
+    @apply m-0 text-(length:--text-sm) leading-control font-semibold;
+  }
+  .nui-spreadsheet-pivot__lost {
+    @apply m-0 text-muted-foreground;
+  }
+  .nui-spreadsheet-pivot__fields {
+    @apply box-border flex flex-col m-0 p-1 overflow-auto rounded list-none gap-[2px];
+    @apply max-block-[12rem] border border-solid border-(color:--color-border);
+    @apply transition-[border-color,background-color] duration-fast ease-nui;
+  }
+  .nui-spreadsheet-pivot__fields--target {
+    @apply border-error;
+    background: color-mix(in oklab, var(--color-error) 6%, transparent);
+  }
+  .nui-spreadsheet-pivot__field {
+    @apply box-border flex rounded-sm py-[2px] px-(--spacing) transition-[background-color];
+    @apply duration-fast ease-nui;
+  }
+  .nui-spreadsheet-pivot__field:hover {
+    @apply bg-hover;
+  }
+  .nui-spreadsheet-pivot__areas {
+    @apply grid grid-cols-2 gap-2;
+  }
+  .nui-spreadsheet-pivot__area {
+    @apply box-border relative flex flex-col gap-1 min-inline-0 p-2 border border-dashed;
+    @apply border-border rounded min-block-[5.5rem] transition-[border-color,background-color];
+    @apply duration-fast ease-nui;
+  }
+  .nui-spreadsheet-pivot__area--target {
+    @apply border-solid border-primary;
+    background: color-mix(in oklab, var(--color-primary) 6%, transparent);
+  }
+  .nui-spreadsheet-pivot__area-title {
+    @apply m-0 text-muted-foreground text-(length:--text-xs) leading-control font-semibold;
+  }
+  .nui-spreadsheet-pivot__chips {
+    @apply flex flex-col m-0 p-0 list-none gap-[2px];
+  }
+  .nui-spreadsheet-pivot__slot {
+    @apply grid min-inline-0;
+  }
+  .nui-spreadsheet-pivot__chip {
+    @apply box-border flex items-center justify-between gap-1 min-inline-0 py-0 ps-2 pe-1;
+    @apply rounded-sm bg-surface text-foreground cursor-grab touch-none block-[1.75rem] border;
+    @apply border-solid border-(color:--color-border);
+    @apply transition-[background-color,border-color,opacity] duration-fast ease-nui;
+    font: inherit;
+  }
+  .nui-spreadsheet-pivot__chip:hover:not(:disabled) {
+    @apply bg-hover;
+  }
+  .nui-spreadsheet-pivot__chip:focus-visible {
+    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+  }
+  .nui-spreadsheet-pivot__chip[aria-expanded='true'] {
+    @apply border-border-strong bg-hover;
+  }
+  .nui-spreadsheet-pivot__chip:disabled {
+    @apply cursor-default;
+  }
+  .nui-spreadsheet-pivot__chip > :last-child {
+    @apply flex-none text-muted-foreground;
+  }
+  .nui-spreadsheet-pivot__chip--grabbed {
+    @apply opacity-50;
+  }
+  .nui-spreadsheet-pivot__chip-text {
+    @apply min-inline-0 overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+  .nui-spreadsheet-pivot__hint {
+    @apply grid flex-1 place-items-center m-0 text-subtle-foreground text-(length:--text-xs);
+    @apply text-center;
+  }
   .nui-spreadsheet-pivot__drop {
-  opacity: 1;
-}
-.nui-spreadsheet-pivot__ghost {
-  box-sizing: border-box;
-  position: absolute;
-  z-index: 1;
-  inset-block-start: 0;
-  inset-inline-start: 0;
-  max-inline-size: 100%;
-  block-size: 1.75rem;
-  padding-inline: var(--nui-space-2);
-  overflow: hidden;
-  border: 1px solid var(--nui-border-strong);
-  border-radius: var(--nui-radius-sm);
-  background: var(--nui-surface-elevated);
-  box-shadow: var(--nui-shadow-lg);
-  color: var(--nui-text);
-  line-height: calc(1.75rem - 2px);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition:
-    opacity var(--nui-duration-fast) var(--nui-easing),
-    visibility var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-spreadsheet-pivot__ghost--shown {
-  opacity: 1;
-  visibility: visible;
-}
-.nui-spreadsheet-pivot__live {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-.nui-spreadsheet-pivot__editor {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: var(--nui-space-3);
-  min-inline-size: 0;
-  margin: 0;
-}
-.nui-spreadsheet-pivot__subtitle {
-  margin: 0;
-  overflow: hidden;
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-sm);
-  font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.nui-spreadsheet-pivot__items {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: var(--nui-space-1);
-  min-block-size: 4rem;
-  max-block-size: 14rem;
-  padding: var(--nui-space-2);
-  overflow: auto;
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius);
-}
-.nui-spreadsheet-pivot__note {
-  margin: 0;
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-xs);
-}
-.nui-spreadsheet-pivot__footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--nui-space-2);
-  padding-block-start: var(--nui-space-1);
+    @apply absolute inset-x-2 rounded-full bg-primary opacity-0 -translate-y-1/2;
+    @apply pointer-events-none inset-bs-[var(--_drop,0)] block-[2px] transition-opacity;
+    @apply duration-fast ease-nui;
+  }
+  .nui-spreadsheet-pivot__area--target:not(.nui-spreadsheet-pivot__area--empty)
+    .nui-spreadsheet-pivot__drop {
+    @apply opacity-100;
+  }
+  .nui-spreadsheet-pivot__ghost {
+    @apply box-border absolute z-1 inset-bs-0 inset-s-0 max-inline-full px-2 overflow-hidden;
+    @apply rounded-sm bg-surface-elevated text-foreground text-ellipsis whitespace-nowrap opacity-0;
+    @apply invisible pointer-events-none block-[1.75rem] border border-solid;
+    @apply border-(color:--color-border-strong) shadow-lg leading-[calc(1.75rem_-_2px)];
+    @apply transition-[opacity,visibility] duration-fast ease-nui;
+  }
+  .nui-spreadsheet-pivot__ghost--shown {
+    @apply opacity-100 visible;
+  }
+  .nui-spreadsheet-pivot__live {
+    @apply absolute inline-px block-px overflow-hidden whitespace-nowrap;
+    clip-path: inset(50%);
+  }
+  .nui-spreadsheet-pivot__editor {
+    @apply box-border flex flex-col gap-3 min-inline-0 m-0;
+  }
+  .nui-spreadsheet-pivot__subtitle {
+    @apply m-0 overflow-hidden text-muted-foreground text-(length:--text-sm) text-ellipsis;
+    @apply whitespace-nowrap font-medium;
+  }
+  .nui-spreadsheet-pivot__items {
+    @apply box-border flex flex-col gap-1 p-2 overflow-auto rounded min-block-[4rem];
+    @apply max-block-[14rem] border border-solid border-(color:--color-border);
+  }
+  .nui-spreadsheet-pivot__note {
+    @apply m-0 text-muted-foreground text-(length:--text-xs);
+  }
+  .nui-spreadsheet-pivot__footer {
+    @apply flex justify-end gap-2 pbs-1;
+  }
 }

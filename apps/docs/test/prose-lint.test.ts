@@ -35,6 +35,12 @@ describe('prose lint', () => {
     expect(lintProse(CLEAN, 'ru')).toEqual([]);
   });
 
+  it('accepts the public theme classes in prose', () => {
+    expect(
+      lintProse('Класс `nui-theme--dark` включает тёмную схему внутри элемента.', 'ru'),
+    ).toEqual([]);
+  });
+
   it('matches banned phrases as whole words only', () => {
     expect(lintProse('Список появляется над полем, когда данные загружены.', 'ru')).toEqual([]);
 

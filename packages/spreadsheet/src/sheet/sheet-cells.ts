@@ -240,7 +240,7 @@ const createStyles = (book: Workbook): StyleCache => {
 
 const STALE_CLASS = 'nui-spreadsheet__stale';
 
-const STALE: NuiTableCellStyle = { class: STALE_CLASS, color: 'var(--nui-text-subtle)' };
+const STALE: NuiTableCellStyle = { class: STALE_CLASS, color: 'var(--color-subtle-foreground)' };
 
 const createStale = (): ((style: NuiTableCellStyle | undefined) => NuiTableCellStyle) => {
   const known = new WeakMap<NuiTableCellStyle, NuiTableCellStyle>();

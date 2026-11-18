@@ -4,8 +4,8 @@ import { GuardRule, type GuardProblem } from './guard.types.ts';
 const SECTION_RE = /^## /m;
 const INSTALL_TITLE_RE = /^(?:Установка|Installation)\s*$/;
 const FENCE_RE = /^(`{3,})([^\n`]*)\n([\s\S]*?)^\1[ \t]*$/gm;
-const KIT_STYLE_RE = /^import\s+'@numior\/[^']+\.css';$/m;
-const STYLE_SOURCE_RE = /^@?import\s+'(@numior\/[^']+\.css)';$/gm;
+const KIT_STYLE_RE = /^@?import\s+'@numior\/[^']+\.css'[^;\n]*;$/m;
+const STYLE_SOURCE_RE = /^@?import\s+'(@numior\/[^']+\.css)'[^;\n]*;$/gm;
 const KIT_COMPONENT_RE = /import\s*\{[^}]*\bNui[A-Z]\w*[^}]*\}\s*from\s*'@numior\//;
 
 const HAND_LISTED = 'an install block lists stylesheets by hand; the build prints them';

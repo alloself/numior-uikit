@@ -4,6 +4,7 @@ import { kitButtonsOf, offGridButtons } from '../helpers/buttons';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { boxOf } from '../helpers/geometry';
 import { MainFrameNetwork } from '../helpers/network';
+import { accentOf, schemeOf } from '../helpers/theme';
 
 export type DocsScheme = 'light' | 'dark' | 'system';
 
@@ -50,7 +51,6 @@ export class DocsExample {
   readonly root: Locator;
   readonly previewToggle: Locator;
   readonly codeToggle: Locator;
-  readonly baseTheme: Locator;
   readonly invertTheme: Locator;
   readonly rtl: Locator;
   readonly copy: Locator;
@@ -62,7 +62,6 @@ export class DocsExample {
     this.root = this.preview.locator('xpath=ancestor::*[contains(@class, "nui-tabs")][1]');
     this.previewToggle = this.root.getByRole('tab', { name: previewLabel });
     this.codeToggle = this.root.getByRole('tab', { name: 'Код' });
-    this.baseTheme = this.root.getByRole('button', { name: 'Базовая тема' });
     this.invertTheme = this.root.getByRole('button', { name: 'Обратная тема' });
     this.rtl = this.root.getByRole('button', { name: 'Справа налево' });
     this.copy = this.root.getByRole('button', { name: 'Скопировать код' });
@@ -75,11 +74,41 @@ export class DocsExample {
       .evaluate((element) => getComputedStyle(element).borderRadius);
   }
 
+  surface(): Promise<string> {
+    return this.preview.evaluate((element) => getComputedStyle(element).backgroundColor);
+  }
+
   pageArrowRotation(): Promise<string> {
     return this.preview
       .locator('.nui-pagination__arrow')
       .first()
       .evaluate((element) => getComputedStyle(element).rotate);
+  }
+}
+
+export class DocsThemeCompare {
+  constructor(private readonly page: Page) {}
+
+  screen(label: string): FrameLocator {
+    return this.page.frameLocator(`iframe[title="${label}"]`);
+  }
+
+  async radiusOf(label: string, name: string): Promise<string> {
+    return (await this.button(label, name)).evaluate(
+      (element) => getComputedStyle(element).borderRadius,
+    );
+  }
+
+  async fontOf(label: string, name: string): Promise<string> {
+    return (await this.button(label, name)).evaluate(
+      (element) => getComputedStyle(element).fontFamily,
+    );
+  }
+
+  private async button(label: string, name: string): Promise<Locator> {
+    await this.page.locator(`iframe[title="${label}"]`).scrollIntoViewIfNeeded();
+
+    return this.screen(label).getByRole('button', { name });
   }
 }
 
@@ -188,7 +217,7 @@ export class DocsBlock {
   }
 
   theme(): Promise<string | null> {
-    return this.content.locator('html').getAttribute('data-nui-theme');
+    return schemeOf(this.content.locator('html'));
   }
 }
 
@@ -211,12 +240,24 @@ export class DocsHome {
     this.options = page.getByRole('group', { name: 'Вид кабинета' });
   }
 
-  screenAttribute(name: string): Promise<string | null> {
-    return this.screen.locator('html').getAttribute(name);
+  screenScheme(): Promise<string | null> {
+    return schemeOf(this.screen.locator('html'));
   }
 
-  siteAttribute(name: string): Promise<string | null> {
-    return this.page.locator('html').getAttribute(name);
+  screenAccent(): Promise<string | null> {
+    return accentOf(this.screen.locator('html'));
+  }
+
+  screenDirection(): Promise<string | null> {
+    return this.screen.locator('html').getAttribute('dir');
+  }
+
+  siteAccent(): Promise<string | null> {
+    return accentOf(this.page.locator('html'));
+  }
+
+  siteDirection(): Promise<string | null> {
+    return this.page.locator('html').getAttribute('dir');
   }
 
   async pick(label: string): Promise<void> {
@@ -250,6 +291,7 @@ export class DocsSite {
   readonly languageButton: Locator;
   readonly commandDialog: Locator;
   readonly commandInput: Locator;
+  readonly tooltip: Locator;
   readonly network: MainFrameNetwork;
   private readonly hydration: string[] = [];
 
@@ -263,6 +305,7 @@ export class DocsSite {
       this.hydration.push(message.text());
     });
 
+    this.tooltip = page.getByRole('tooltip');
     this.header = page.locator('.nui-app-bar:not(#docs-content *)');
     this.sidebar = page.locator('aside.nui-sidebar');
     this.drawer = page.locator('dialog.nui-sidebar-drawer');
@@ -560,7 +603,7 @@ export class DocsSite {
   }
 
   tokenSwatches(name: string): Locator {
-    return this.tokenRow(name).locator('[data-nui-theme] > span');
+    return this.tokenRow(name).locator(':is(.nui-theme--light, .nui-theme--dark) > span');
   }
 
   codeVariant(name: string): Locator {
@@ -576,7 +619,7 @@ export class DocsSite {
   }
 
   scheme(): Promise<string | null> {
-    return this.page.locator('html').getAttribute('data-nui-theme');
+    return schemeOf(this.page.locator('html'));
   }
 
   example(previewLabel = 'Превью'): DocsExample {
@@ -585,6 +628,10 @@ export class DocsSite {
 
   block(name: string): DocsBlock {
     return new DocsBlock(this.page, name);
+  }
+
+  themeCompare(): DocsThemeCompare {
+    return new DocsThemeCompare(this.page);
   }
 
   configurator(): DocsConfigurator {

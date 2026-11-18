@@ -12,7 +12,7 @@ Hover a column or walk the columns with the arrow keys to see the value in a too
 import { NuiChart } from '@numior/kit/charts';
 ```
 
-Series colors come from the theme tokens `--nui-chart-1`…`--nui-chart-8`, so they follow the light and dark theme.
+Series colors come from the theme tokens `--color-chart-1`…`--color-chart-8`, so they follow the light and dark theme.
 
 ## Describe a chart
 

@@ -272,9 +272,12 @@ describe('guards of the install blocks', () => {
       fence('sh', ['pnpm add @numior/kit']),
       '',
       fence('ts', ["import '@numior/kit/styles.css';", "import '@numior/kit/charts/styles.css';"]),
+      '',
+      fence('css', ["@import '@numior/kit/table/styles.css';"]),
     ]);
 
     expect(textsOf(installGuards('table/index.md', source, MODULES), GuardRule.Install)).toEqual([
+      'stylesheets of a kit module are listed by hand; mark the block `ts install:packages`',
       'stylesheets of a kit module are listed by hand; mark the block `ts install:packages`',
     ]);
   });

@@ -1,0 +1,40 @@
+@theme {
+  --font-sans: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-weight-heading: 400;
+  --font-weight-title: 300;
+  --tracking-heading: -0.02em;
+  --font-weight-caption: 600;
+  --tracking-caption: 0.16em;
+  --caption-transform: uppercase;
+  --caption-open: '[ ';
+  --caption-close: ' ]';
+  --prose-marker: square;
+  --radius-base: 0.25rem;
+  --field-ring-width: 0px;
+
+  --color-surface: light-dark(#f3f2ef, #030304);
+  --color-surface-muted: light-dark(#e9e8e5, #151414);
+  --color-surface-elevated: light-dark(#faf9f6, #1d1b1b);
+  --color-surface-overlay: light-dark(#faf9f6, #1d1b1b);
+  --color-surface-code: light-dark(#e9e8e5, #151414);
+  --color-surface-ring: light-dark(#f3f2ef, #2c2929);
+  --color-backdrop: light-dark(#15141473, #00000099);
+
+  --color-foreground: light-dark(#151414, #f3f2ef);
+  --color-muted-foreground: light-dark(#5a5655, #9b9797);
+  --color-subtle-foreground: light-dark(#6b6766, #898585);
+  --color-code-inline: light-dark(#151414, #f3f2ef);
+  --color-syntax-highlight: light-dark(#f7eee8, #201816);
+
+  --color-border: light-dark(#d5d4d1, #2c2929);
+  --color-border-strong: light-dark(#a3a29f, #514d4d);
+
+  --color-primary: light-dark(#ae3f10, #e0561a);
+  --color-primary-foreground: light-dark(#f3f2ef, #030304);
+  --color-primary-soft-foreground: light-dark(#7a2c04, #f2662f);
+  --color-secondary: light-dark(#dfdedb, #2c2929);
+  --color-secondary-foreground: light-dark(#151414, #f3f2ef);
+  --color-neutral: light-dark(#151414, #f3f2ef);
+  --color-neutral-foreground: light-dark(#f3f2ef, #151414);
+}

@@ -29,25 +29,39 @@ Then import the preset in CSS after `tailwindcss`:
 @import '@numior/kit/tailwind/theme.css';
 ```
 
-The preset needs the tokens from `@numior/kit/theme.css`, so import them too. The classes
-refer to the `--nui-*` variables. So when the theme, the accent or a token value changes, both
-the classes and the components change.
+The preset brings in the theme from `@numior/kit/theme.css`. The classes and the components
+read the same theme keys, such as `--color-primary` and `--radius-md`. So
+when the theme, the accent or a key value changes, both the classes and the components change.
 
 ## Preset classes
 
 | Group             | Classes                                                                                                                                                                                                                                                                                               |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Colors            | `bg-surface`, `bg-surface-muted`, `bg-surface-elevated`, `bg-<role>`, `bg-<role>-soft`, `text-foreground`, `text-muted-foreground`, `text-subtle-foreground`, `text-<role>`, `text-<role>-foreground`, `border-border`, `border-border-strong`, `ring-ring`, `bg-surface-code`, `text-syntax-<scope>` |
-| Radii             | `rounded-sm`, `rounded-md`, `rounded-lg`, `rounded-xl` from `--nui-radius-*`                                                                                                                                                                                                                          |
-| Spacing           | the `p-*`, `m-*`, `gap-*` scale from `--nui-space-1`, that is 0.25rem per step                                                                                                                                                                                                                        |
+| Radii             | `rounded-sm`, `rounded-md`, `rounded-lg`, `rounded-xl` from `--radius-*`                                                                                                                                                                                                                              |
+| Spacing           | the `p-*`, `m-*`, `gap-*` scale from `--spacing`, that is 0.25rem per step                                                                                                                                                                                                                            |
 | Fonts             | `font-sans`, `font-mono`, `font-heading`, `text-xs` … `text-4xl` with line heights from the tokens, `font-normal` … `font-bold`, `leading-tight`, `leading-relaxed`, `tracking-tight`, `tracking-heading`, `max-w-prose`                                                                              |
 | Shadows           | `shadow-sm`, `shadow-md`, `shadow-lg`                                                                                                                                                                                                                                                                 |
-| Motion            | `ease-nui`; Tailwind transitions use the `--nui-easing` curve by default                                                                                                                                                                                                                              |
+| Motion            | `ease-nui`; Tailwind transitions use the `--ease-nui` curve by default                                                                                                                                                                                                                                |
 | Grid and backdrop | `grid-auto`, `grid-auto-sm`, `grid-auto-lg`: a grid whose columns are at least 16, 12 or 20rem wide and wrap to a new row on their own; `bg-dots`: a dotted background                                                                                                                                |
 
 Replace `<role>` with `primary`, `secondary`, `success`, `warning`, `error`, `info` or
-`neutral`. The `border` class without a color draws a border in `--nui-border`, as on the
+`neutral`. The `border` class without a color draws a border in `--color-border`, as on the
 components.
+
+## Dark theme in classes
+
+The `dark:` variant applies when the dark theme is in effect where the element sits. It follows
+the nearest theme class: `nui-theme--dark` inside a light page turns it on, `nui-theme--light`
+inside a dark one turns it off.
+
+```html
+<section class="nui-theme--dark">
+  <p class="text-muted-foreground dark:text-foreground">Order #1042 is packed</p>
+</section>
+```
+
+A page without a theme class and an element with `nui-theme--system` follow the system setting.
 
 ## Classes on components
 

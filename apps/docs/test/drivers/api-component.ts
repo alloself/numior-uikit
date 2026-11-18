@@ -15,7 +15,7 @@ export const referenceOf = (overrides: Partial<ComponentReference> = {}): Compon
   styles: {
     import: '@numior/vue/styles/sample.css',
     blocks: [{ name: 'nui-sample', parts: ['label'], modifiers: ['size-sm', '__label--muted'] }],
-    tokens: ['--nui-primary'],
+    tokens: ['--color-primary'],
   },
   stylesheets: ['@numior/vue/styles/sample.css'],
   messages: undefined,

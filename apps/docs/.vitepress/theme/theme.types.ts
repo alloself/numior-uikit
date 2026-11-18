@@ -79,6 +79,7 @@ export type BlockViewport = (typeof BlockViewport)[keyof typeof BlockViewport];
 
 export interface TokenRow extends TokenReference {
   readonly sample: TokenSample;
+  readonly value: string;
 }
 
 export type DocsAccent = (typeof DocsAccent)[keyof typeof DocsAccent];
@@ -116,13 +117,14 @@ export interface DocsTexts {
   readonly preview: string;
   readonly code: string;
   readonly exampleOptions: string;
-  readonly baseTheme: string;
   readonly invertTheme: string;
   readonly rtl: string;
   readonly homeScreen: string;
   readonly screenOptions: string;
   readonly copyCode: string;
   readonly blockViewport: string;
+  readonly baseTheme: string;
+  readonly siteTheme: string;
   readonly viewportDesktop: string;
   readonly viewportTablet: string;
   readonly viewportPhone: string;
@@ -220,10 +222,29 @@ export interface BlockFrameProps {
   texts: DocsTexts;
 }
 
+export interface ThemeCompareProps {
+  src: string;
+  height: number;
+  files: readonly ExampleFile[];
+  texts: DocsTexts;
+}
+
+export interface ThemeFrameProps {
+  label: string;
+  src: string;
+  height: number;
+  palette: readonly string[];
+}
+
 export interface ScreenState {
   readonly scheme: ResolvedColorScheme;
   readonly accent: string;
   readonly rtl: boolean;
+}
+
+export interface FrameTheme {
+  readonly classes: readonly string[];
+  readonly dir: string;
 }
 
 export interface HomeScreenProps {
@@ -377,7 +398,7 @@ export interface PreviewFrameProps {
   options: readonly PreviewOption[];
 }
 
-export type PreviewOption = 'base' | 'dark' | 'rtl';
+export type PreviewOption = 'dark' | 'rtl';
 
 export interface PreviewOptionsProps {
   texts: DocsTexts;

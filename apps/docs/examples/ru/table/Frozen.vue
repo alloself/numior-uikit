@@ -92,7 +92,7 @@ const columns: NuiTableColumn<Plan>[] = [
 ];
 
 const CURRENT: NuiTableCellStyle = {
-  style: { 'font-weight': 'var(--nui-font-weight-semibold)' },
+  style: { 'font-weight': 'var(--font-weight-semibold)' },
 };
 
 const styleOf = ({ position }: NuiTableCellRef<Plan>): NuiTableCellStyle | undefined =>

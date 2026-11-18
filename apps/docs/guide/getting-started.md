@@ -88,16 +88,16 @@ createApp(App)
 
 ## Тема и плотность
 
-Тему и плотность задают атрибуты на `<html>`:
+Тему и плотность задают классы на `<html>`:
 
 ```html
-<html data-nui-theme="dark" data-nui-density="compact"></html>
+<html class="nui-theme--dark nui-theme--density-compact"></html>
 ```
 
-`data-nui-theme` принимает `light`, `dark` или `system`, где `system` повторяет настройку
-системы. `data-nui-density="compact"` уменьшает высоту контролов и отступы, по умолчанию стоит
-`comfortable`. Атрибуты работают на любом элементе, и тогда тема или плотность меняются только
-внутри него.
+Тему выбирают `nui-theme--light`, `nui-theme--dark` и `nui-theme--system`, где `system`
+повторяет настройку системы, как и `<html>` без класса. `nui-theme--density-compact` уменьшает
+высоту контролов и отступы. Классы работают на любом элементе, и тогда тема или плотность
+меняются только внутри него.
 
 ## Дальше
 

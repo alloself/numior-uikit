@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-sm">
     <NuiSelect v-model="kind" :options="kinds" label="Control kind" />
-    <NuiField label="Value" class="mt-3">
+    <NuiField label="Value">
       <component :is="entry.component" v-model="value" v-bind="entry.props(props) ? props : {}" />
     </NuiField>
     <p class="m-0 text-sm text-muted-foreground">

@@ -32,7 +32,7 @@ status: accepted
   уменьшенными (`--_index`, `--_peek`, `scale`), остальные скрыты; наведение, фокус внутри
   или `expand` раскрывают список с зазором. Высоты карточек измеряет `ResizeObserver`
   региона (переменные `--_size`, `--_offset`, `--_front-size`), а движение —
-  только CSS (`:focus-within`, `@starting-style`, `--nui-duration-slow`).
+  только CSS (`:focus-within`, `@starting-style`, `--transition-duration-slow`).
 - Наведение на стопку — состояние (`nui-toaster--hovered`), а не `:hover` (2026-11-11, замечание
   пользователя U9). Регион без своей площади: наведение приходит через карточки. Когда карточка
   под неподвижным курсором закрывалась, `:hover` пропадал, Chromium не пересчитывал его без

@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import { tokenValueOf } from './theme';
 
 export type Rgb = readonly [number, number, number];
 
@@ -65,9 +66,9 @@ export const tokenRgbIn = async (locator: Locator, token: string): Promise<Rgb> 
     const probe = document.createElement('span');
 
     probe.className = 'e2e-token-probe';
-    probe.style.background = `var(${name})`;
+    probe.style.background = name;
     element.append(probe);
-  }, token);
+  }, tokenValueOf(token));
 
   const probe = locator.locator('.e2e-token-probe');
   const rgb = await rgbOf(probe, 'background-color');

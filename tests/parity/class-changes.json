@@ -1,0 +1,62 @@
+[
+  {
+    "element": "^button\\.nui-button\\..*\\.font-normal\\.text-muted-foreground$",
+    "dropped": ["font-normal", "text-muted-foreground"],
+    "reason": "cf3472f9 the search button of the docs header lost two utilities that never took effect"
+  },
+  {
+    "element": "^figure\\.nui-code\\..*\\.mb-5$",
+    "dropped": ["mb-5"],
+    "reason": "cf3472f9 the code block of the signature reference lost a margin utility that never took effect"
+  },
+  {
+    "element": "^div\\.nui-splitter\\..*\\.min-h-40\\.",
+    "dropped": ["min-h-40"],
+    "reason": "cf3472f9 the splitter example lost a height utility that never took effect"
+  },
+  {
+    "element": "^div\\.nui-field(\\.[\\w-]+)*\\.mt-3$",
+    "dropped": ["mt-3"],
+    "reason": "cf8a9461 the field of the controls example lost a margin utility that never took effect"
+  },
+  {
+    "element": "nui-theme--|docs-theme--",
+    "dropped": [
+      "nui-theme--light",
+      "nui-theme--dark",
+      "nui-theme--system",
+      "nui-theme--density-compact",
+      "nui-theme--accent-amber",
+      "nui-theme--accent-blue",
+      "nui-theme--accent-emerald",
+      "nui-theme--accent-indigo",
+      "nui-theme--accent-orange",
+      "nui-theme--accent-rose",
+      "nui-theme--accent-slate",
+      "nui-theme--accent-teal",
+      "nui-theme--accent-violet",
+      "docs-theme--numior"
+    ],
+    "reason": "9a98a5ce theme, accent and density scopes and the Numior palette of the docs moved from data attributes to classes"
+  },
+  {
+    "element": "--nui-|--caption-|--transition-duration-|--font-weight-caption|--tracking-caption|--spacing-control-",
+    "dropped": [
+      "[text-transform:var(--nui-caption-transform)]",
+      "[text-transform:var(--caption-transform)]",
+      "before:[content:var(--nui-caption-open)/'']",
+      "before:[content:var(--caption-open)/'']",
+      "after:[content:var(--nui-caption-close)/'']",
+      "after:[content:var(--caption-close)/'']",
+      "duration-(--nui-duration-normal)",
+      "duration-(--transition-duration-normal)",
+      "font-(--nui-caption-weight)",
+      "font-(--font-weight-caption)",
+      "tracking-(--nui-caption-tracking)",
+      "tracking-(--tracking-caption)",
+      "max-h-(--nui-control-height-sm)",
+      "max-h-(--spacing-control-sm)"
+    ],
+    "reason": "9a98a5ce utilities in docs templates read theme keys instead of the --nui-* aliases: each pair names one value"
+  }
+]

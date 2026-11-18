@@ -15,34 +15,54 @@ interface Pair {
 
 const AA = 4.5;
 const NON_TEXT = 3;
-const NEUTRAL_FILL = 'neutral-muted';
+const NEUTRAL_FILL = 'color-neutral-muted';
 const ROW_STATES = ['state-hover', 'state-pressed'];
-const ROW_SURFACES = ['surface', 'surface-muted', 'surface-elevated', 'surface-overlay'];
-const SCHEMES: readonly Scheme[] = ['light', 'dark'];
-const ROLES = ['primary', 'secondary', 'success', 'warning', 'error', 'info', 'neutral'];
-const TEXTS = ['text', 'text-muted', 'text-subtle', 'primary', 'code-inline'];
 
-const SURFACES = [
-  'surface',
-  'surface-muted',
-  'surface-elevated',
-  'surface-overlay',
-  'surface-code',
+const ROW_SURFACES = [
+  'color-surface',
+  'color-surface-muted',
+  'color-surface-elevated',
+  'color-surface-overlay',
 ];
 
-const CODE_SURFACES = ['surface-code', 'syntax-highlight'];
+const SCHEMES: readonly Scheme[] = ['light', 'dark'];
+const ROLES = ['primary', 'secondary', 'success', 'warning', 'error', 'info', 'neutral'];
+
+const TEXTS = [
+  'color-foreground',
+  'color-muted-foreground',
+  'color-subtle-foreground',
+  'color-primary',
+  'color-code-inline',
+];
+
+const SURFACES = [
+  'color-surface',
+  'color-surface-muted',
+  'color-surface-elevated',
+  'color-surface-overlay',
+  'color-surface-code',
+];
+
+const CODE_SURFACES = ['color-surface-code', 'color-syntax-highlight'];
+const SITE_SCOPE = '.docs-theme--numior';
+const HOOK_PREFIX = '--color-theme-';
+const DEFAULT_LAYER = 'color-surface';
+const UNSET = 'initial';
 const DECLARATION_RE = /(--[a-z0-9-]+|[a-z-]+):\s*([^;{}]+);/gu;
 const LIGHT_DARK_RE = /^light-dark\((.+)\)$/su;
-const VAR_RE = /^var\(--nui-([a-z0-9-]+)\)$/u;
+const VAR_RE = /^var\(--([a-z0-9-]+)(?:,\s*(.+))?\)$/su;
 
 const SOFT_RE =
-  /^oklab\(\s*from color-mix\(in oklab, var\(--nui-([a-z]+)\) (\d+)%, var\(--nui-layer-surface\)\)\s+max\(l, var\(--nui-soft-min-lightness\)\) a b\s*\)$/u;
+  /^oklab\(\s*from color-mix\(in oklab, var\(--color-([a-z]+)\) (\d+)%, var\(--color-layer, var\(--color-surface\)\)\)\s+max\(l, var\(--soft-min-lightness\)\) a b\s*\)$/u;
 
 const MIX_RE =
-  /^color-mix\(\s*in oklab,\s*var\(--nui-([a-z-]+)\) (?:(\d+)%|var\(--nui-([a-z-]+)\)),\s*var\(--nui-([a-z-]+)\)\s*\)$/u;
+  /^color-mix\(in oklab, var\(--([a-z-]+)\) (?:(\d+)%|var\(--([a-z-]+)\)), var\(--([a-z-]+)\)\)$/u;
 
 const BLOCK_RE = /([^{}]+)\{([^{}]*)\}/gu;
-const LAYER_RE = /--nui-layer-surface:\s*([^;]+);/gu;
+const THEME_BLOCK_RE = /@theme(?:\s+[a-z]+)*\s*\{([^}]*)\}/gu;
+const LAYER_RE = /--color-layer:\s*([^;]+);/gu;
+const HOOK_RE = /^(--[a-z0-9-]+):\s*var\((--color-theme-[a-z0-9-]+),/u;
 
 const read = (path: string): string =>
   readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8');
@@ -50,6 +70,34 @@ const read = (path: string): string =>
 const kitTheme = read('../../../packages/tokens/src/theme.css');
 const builtInAccents = read('../../../packages/tokens/src/accents.css');
 const numior = read('../.vitepress/theme/numior.css');
+const printed = read('../guide/snippets/numior-theme.css');
+
+const squash = (value: string): string =>
+  value.replaceAll(/\s+/gu, ' ').replaceAll(/\(\s+/gu, '(').replaceAll(/\s+\)/gu, ')').trim();
+
+const declared = (css: string): string[] =>
+  [...css.matchAll(DECLARATION_RE)].map(([, name = '', value = '']) => `${name}: ${squash(value)}`);
+
+const themeBlocksOf = (css: string): string =>
+  [...css.matchAll(THEME_BLOCK_RE)].map(([, body = '']) => body).join('\n');
+
+const hookedKeys: ReadonlyMap<string, string> = new Map(
+  declared(themeBlocksOf(kitTheme)).reduce<[string, string][]>((pairs, line) => {
+    const [, key, hook] = HOOK_RE.exec(line) ?? [];
+
+    if (key !== undefined && hook !== undefined) {
+      pairs.push([hook, key]);
+    }
+    return pairs;
+  }, []),
+);
+
+const asThemeKeys = (lines: readonly string[]): string[] =>
+  lines.map((line) => {
+    const name = line.slice(0, line.indexOf(':'));
+
+    return `${hookedKeys.get(name) ?? name}${line.slice(name.length)}`;
+  });
 
 const schemeValue = (value: string, scheme: Scheme): string => {
   const inner = LIGHT_DARK_RE.exec(value.trim())?.[1];
@@ -66,18 +114,31 @@ const schemeValue = (value: string, scheme: Scheme): string => {
 
 const tokensOf = (css: string, scheme: Scheme, into = new Map<string, string>()): Tokens =>
   [...css.matchAll(DECLARATION_RE)].reduce((tokens, [, name = '', value = '']) => {
-    if (name.startsWith('--nui-')) {
-      tokens.set(name.slice('--nui-'.length), schemeValue(value, scheme));
+    if (name.startsWith('--')) {
+      tokens.set(name.slice('--'.length), schemeValue(squash(value), scheme));
     }
     return tokens;
   }, into);
 
+const kitTokens = (scheme: Scheme): Map<string, string> =>
+  new Map(tokensOf(themeBlocksOf(kitTheme), scheme));
+
 const accentCss = (accent: DocsAccent): string =>
   [...builtInAccents.matchAll(BLOCK_RE)].reduce(
     (css, [, selector = '', body = '']) =>
-      selector.includes(`'${accent}'`) ? `${css}\n${body}` : css,
+      selector.trim() === `.nui-theme--accent-${accent}` ? `${css}\n${body}` : css,
     '',
   );
+
+const withFallback = (tokens: Tokens, name: string, fallback: string | undefined): Tokens => {
+  const value = tokens.get(name);
+  const unset = value === undefined || value === UNSET;
+
+  return unset && fallback !== undefined ? new Map([...tokens, [name, fallback]]) : tokens;
+};
+
+const mixShare = (tokens: Tokens, share?: string, shareToken?: string): number =>
+  Number.parseFloat(share ?? tokens.get(shareToken ?? '') ?? '') / 100;
 
 const colorOf = (tokens: Tokens, name: string): Oklab => {
   const value = tokens.get(name);
@@ -86,10 +147,10 @@ const colorOf = (tokens: Tokens, name: string): Oklab => {
     throw new Error(`No token ${name}`);
   }
 
-  const reference = VAR_RE.exec(value)?.[1];
+  const [, reference, fallback] = VAR_RE.exec(value) ?? [];
 
   if (reference !== undefined) {
-    return colorOf(tokens, reference);
+    return colorOf(withFallback(tokens, reference, fallback), reference);
   }
 
   const [, color, share, shareToken, base] = MIX_RE.exec(value) ?? [];
@@ -98,20 +159,22 @@ const colorOf = (tokens: Tokens, name: string): Oklab => {
     return parseColor(value);
   }
 
-  const percent = share ?? tokens.get(shareToken ?? '') ?? '';
-
-  return mixColors(colorOf(tokens, color), colorOf(tokens, base), Number.parseFloat(percent) / 100);
+  return mixColors(
+    colorOf(tokens, color),
+    colorOf(tokens, base),
+    mixShare(tokens, share, shareToken),
+  );
 };
 
 const softOf = (tokens: Tokens, role: string, layer: string): Oklab => {
-  const share = SOFT_RE.exec(tokens.get(`${role}-soft`) ?? '')?.[2];
+  const share = SOFT_RE.exec(tokens.get(`color-${role}-soft`) ?? '')?.[2];
 
   if (share === undefined) {
     throw new Error(`No soft mix for ${role}`);
   }
 
   const [lightness, a, b] = mixColors(
-    colorOf(tokens, role),
+    colorOf(tokens, `color-${role}`),
     colorOf(tokens, layer),
     Number(share) / 100,
   );
@@ -119,10 +182,12 @@ const softOf = (tokens: Tokens, role: string, layer: string): Oklab => {
   return [Math.max(lightness, Number(tokens.get('soft-min-lightness'))), a, b];
 };
 
-const layersOf = (scheme: Scheme): string[] =>
-  [...kitTheme.matchAll(LAYER_RE)].map(
+const layersOf = (scheme: Scheme): string[] => [
+  DEFAULT_LAYER,
+  ...[...kitTheme.matchAll(LAYER_RE)].map(
     ([, value = '']) => VAR_RE.exec(schemeValue(value, scheme))?.[1] ?? value,
-  );
+  ),
+];
 
 const fillPairs = (tokens: Tokens, fills: readonly string[]): Pair[] =>
   fills.map((fill) => ({
@@ -144,7 +209,7 @@ const rowPairs = (tokens: Tokens): Pair[] =>
       surface: `${state} on ${layer}`,
       ratio: contrastOf(
         fill,
-        overlayColor(colorOf(tokens, 'text'), surface, shareOf(tokens, state)),
+        overlayColor(colorOf(tokens, 'color-foreground'), surface, shareOf(tokens, state)),
       ),
     }));
 
@@ -152,12 +217,22 @@ const rowPairs = (tokens: Tokens): Pair[] =>
   });
 
 const rolePairs = (tokens: Tokens, roles: readonly string[], scheme: Scheme): Pair[] => [
-  ...fillPairs(tokens, roles),
+  ...roles.map((role) => ({
+    text: `color-${role}-foreground`,
+    surface: `color-${role}`,
+    ratio: contrastOf(
+      colorOf(tokens, `color-${role}-foreground`),
+      colorOf(tokens, `color-${role}`),
+    ),
+  })),
   ...roles.flatMap((role) =>
     layersOf(scheme).map((layer) => ({
-      text: `${role}-soft-foreground`,
-      surface: `${role}-soft on ${layer}`,
-      ratio: contrastOf(colorOf(tokens, `${role}-soft-foreground`), softOf(tokens, role, layer)),
+      text: `color-${role}-soft-foreground`,
+      surface: `color-${role}-soft on ${layer}`,
+      ratio: contrastOf(
+        colorOf(tokens, `color-${role}-soft-foreground`),
+        softOf(tokens, role, layer),
+      ),
     })),
   ),
 ];
@@ -173,7 +248,7 @@ const textPairs = (tokens: Tokens, texts: readonly string[]): Pair[] =>
 
 const syntaxPairs = (tokens: Tokens): Pair[] =>
   [...tokens.keys()].reduce<Pair[]>((pairs, name) => {
-    if (name === 'syntax-highlight' || !/^(?:syntax-|text-subtle$)/u.test(name)) {
+    if (name === 'color-syntax-highlight' || !/^color-(?:syntax-|subtle-foreground$)/u.test(name)) {
       return pairs;
     }
 
@@ -197,7 +272,7 @@ const failing = (pairs: readonly Pair[], least = AA): string[] =>
   }, []);
 
 describe('Numior theme of the docs site', () => {
-  it('holds nothing but kit custom properties on the theme scopes', () => {
+  it('holds theme keys and docs hooks on one class scope', () => {
     const blocks = [...numior.matchAll(BLOCK_RE)];
 
     const selectors = blocks.map(([, selector = '']) => selector.trim().replaceAll(/\s+/gu, ' '));
@@ -206,23 +281,37 @@ describe('Numior theme of the docs site', () => {
       [...body.matchAll(DECLARATION_RE)].map(([, name = '']) => name),
     );
 
-    expect(selectors).toEqual([
-      ':root:not([data-nui-accent]), [data-nui-theme]:not([data-nui-accent], [data-nui-accent] *)',
-    ]);
-
-    expect(properties.filter((name) => !name.startsWith('--nui-'))).toEqual([]);
+    expect(selectors).toEqual([SITE_SCOPE]);
+    expect(properties.filter((name) => !name.startsWith('--'))).toEqual([]);
   });
 
-  it('overrides only tokens that the kit theme declares', () => {
-    const known = tokensOf(kitTheme, 'light');
-    const own = [...tokensOf(numior, 'light').keys()];
+  it('lets every built-in accent drop the own soft text and highlight of a theme', () => {
+    const accents = [...builtInAccents.matchAll(BLOCK_RE)].map(([, , body = '']) => declared(body));
 
-    expect(own.filter((name) => !known.has(name))).toEqual([]);
+    const resets = [...hookedKeys.keys()].map((hook) => `${hook}: ${UNSET}`);
+
+    expect(hookedKeys.size).toBe(2);
+    expect(accents.filter((lines) => resets.some((line) => !lines.includes(line)))).toEqual([]);
+  });
+
+  it('prints in the guide the same values under the theme keys', () => {
+    expect(declared(themeBlocksOf(printed))).toEqual(asThemeKeys(declared(numior)));
+  });
+
+  it('overrides only base keys of the kit and hooks that the docs theme reads', () => {
+    const known = tokensOf(kitTheme, 'light');
+    const own = [...tokensOf(numior, 'light').keys()].map((name) => `--${name}`);
+
+    expect(
+      own.filter((name) => !name.startsWith(HOOK_PREFIX) && !known.has(name.slice(2))),
+    ).toEqual([]);
+
+    expect(own.filter((name) => name.startsWith(HOOK_PREFIX) && !hookedKeys.has(name))).toEqual([]);
   });
 
   it('keeps every text readable on its surface in both schemes', () => {
     const failures = SCHEMES.flatMap((scheme) => {
-      const tokens = tokensOf(numior, scheme, new Map(tokensOf(kitTheme, scheme)));
+      const tokens = tokensOf(numior, scheme, kitTokens(scheme));
 
       return failing([
         ...textPairs(tokens, TEXTS),
@@ -236,12 +325,12 @@ describe('Numior theme of the docs site', () => {
   });
 
   it('keeps every neutral fill above the band of the row states', () => {
-    const kit = tokensOf(kitTheme, 'light');
+    const kit = kitTokens('light');
 
     const steps = [
       shareOf(kit, 'state-hover'),
       shareOf(kit, 'state-pressed'),
-      Number(SOFT_RE.exec(kit.get('neutral-soft') ?? '')?.[2]) / 100,
+      Number(SOFT_RE.exec(kit.get('color-neutral-soft') ?? '')?.[2]) / 100,
       shareOf(kit, 'neutral-muted-mix'),
     ];
 
@@ -251,8 +340,8 @@ describe('Numior theme of the docs site', () => {
 
   it('keeps the neutral fill apart from a row at rest, on hover and when pressed', () => {
     const failures = SCHEMES.flatMap((scheme) => {
-      const kit = tokensOf(kitTheme, scheme);
-      const site = tokensOf(numior, scheme, new Map(kit));
+      const kit = kitTokens(scheme);
+      const site = tokensOf(numior, scheme, kitTokens(scheme));
 
       return [
         ...failing(fillPairs(kit, [NEUTRAL_FILL])).map((line) => `kit ${scheme}: ${line}`),
@@ -267,10 +356,10 @@ describe('Numior theme of the docs site', () => {
   it('keeps the kit palette readable under every accent of the palette menu', () => {
     const failures = SCHEMES.flatMap((scheme) =>
       Object.values(DocsAccent).flatMap((accent) => {
-        const tokens = tokensOf(accentCss(accent), scheme, new Map(tokensOf(kitTheme, scheme)));
+        const tokens = tokensOf(accentCss(accent), scheme, kitTokens(scheme));
 
         return failing([
-          ...textPairs(tokens, ['primary']),
+          ...textPairs(tokens, ['color-primary']),
           ...rolePairs(tokens, ['primary'], scheme),
         ]).map((line) => `${accent} ${scheme}: ${line}`);
       }),

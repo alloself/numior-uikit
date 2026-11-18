@@ -19,7 +19,7 @@ status: accepted
 
 ## Examples
 
-Good: приложение импортирует @numior/vue и явно CSS; пользователь меняет --nui-primary; новый сценарий клавиатуры проверяется в браузере.
+Good: приложение импортирует @numior/vue и явно CSS; пользователь меняет --color-primary; новый сценарий клавиатуры проверяется в браузере.
 
 Bad: кнопка импортирует spreadsheet через общий barrel; все packages/** исключены из Fallow; screenshot подменяет проверку сохранения документа; deferred HTML сохраняется без flush.
 

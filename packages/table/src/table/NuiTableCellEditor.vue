@@ -48,7 +48,7 @@ import type {
 const FOCUSABLE = 'input, textarea, select, button, [tabindex]';
 const SIZE = '--_size';
 const LIFT = '--_lift';
-const LIFTED = 'var(--nui-shadow-md)';
+const LIFTED = 'var(--shadow-md)';
 const NEIGHBOURS = 64;
 const ALIGNED_END = '.nui-table__cell--align-end';
 const CARET = 4;

@@ -62,24 +62,19 @@ test('a focused field shows its frame without an outer ring and a button keeps t
   await expect(docs.searchButton).toHaveCSS('outline-width', '2px');
 });
 
-test('an example leaves the site theme for the base one and the guide shows the theme file', async ({
+test('the custom theme guide shows the base theme next to Numior and prints the theme file', async ({
   docs,
 }) => {
   await docs.open('/guide/custom-theme');
-  const example = docs.example();
+  const compare = docs.themeCompare();
 
-  await expect(example.preview).not.toHaveAttribute('data-nui-accent');
-  expect(await example.radiusOf('Подтвердить заказ')).toBe('4px');
-
-  await example.baseTheme.click();
-  await expect(example.preview).toHaveAttribute('data-nui-accent', 'indigo');
-  expect(await example.radiusOf('Подтвердить заказ')).toBe('8px');
-
-  await example.baseTheme.click();
-  expect(await example.radiusOf('Подтвердить заказ')).toBe('4px');
+  await expect.poll(() => compare.radiusOf('Базовая тема', 'Подтвердить заказ')).toBe('8px');
+  await expect.poll(() => compare.radiusOf('Тема Numior', 'Подтвердить заказ')).toBe('4px');
+  expect(await compare.fontOf('Тема Numior', 'Подтвердить заказ')).toContain('Manrope');
+  expect(await compare.fontOf('Базовая тема', 'Подтвердить заказ')).not.toContain('Manrope');
 
   await expect(
-    docs.printedText('--nui-primary: light-dark(#ae3f10, #e0561a);').last(),
+    docs.printedText('--color-primary: light-dark(#ae3f10, #e0561a);').last(),
   ).toBeAttached();
 });
 
@@ -264,10 +259,15 @@ test('the tokens page shows a colour of the base theme in both schemes whatever 
 }) => {
   await docs.open('/theme/tokens', 'dark');
   await expect(docs.heading).toHaveText('Токены');
-  await expect(docs.tokenRow('--nui-primary')).toContainText('oklch(0.457 0.215 277.02)');
+  await expect(docs.tokenRow('--color-primary')).toContainText('oklch(0.457 0.215 277.02)');
 
-  await expectRgb(docs.tokenSwatches('--nui-surface').nth(0), 'background-color', [255, 255, 255]);
-  await expectRgb(docs.tokenSwatches('--nui-surface').nth(1), 'background-color', [24, 24, 27]);
+  await expectRgb(
+    docs.tokenSwatches('--color-surface').nth(0),
+    'background-color',
+    [255, 255, 255],
+  );
+
+  await expectRgb(docs.tokenSwatches('--color-surface').nth(1), 'background-color', [24, 24, 27]);
 });
 
 test('the icon page finds an icon by its Lucide name and copies the name components use', async ({

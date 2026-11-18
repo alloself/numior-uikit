@@ -64,7 +64,7 @@ const BANNED_PATTERNS: Readonly<Record<ExampleLocale, readonly (readonly [string
 };
 
 const INLINE_CODE_RE = /`[^`]*`/gu;
-const INTERNALS_RE = /nui-[a-z0-9-]+(?:__|--)[a-z0-9_-]+|--_[a-z0-9-]+/;
+const INTERNALS_RE = /nui-(?!theme--)[a-z0-9-]+(?:__|--)[a-z0-9_-]+|--_[a-z0-9-]+/;
 const SENTENCE_END_RE = /(?<=[.!?…])\s+(?=[A-ZА-ЯЁ«"`([])/u;
 const LIST_ITEM_RE = /^(?:[-*]|\d+\.)\s+/;
 const WORD_RE = /[\p{L}\p{N}]+(?:[-'’][\p{L}\p{N}]+)*/gu;

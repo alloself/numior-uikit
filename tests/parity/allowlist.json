@@ -1,0 +1,13 @@
+[
+  {
+    "element": "nui-field--disabled",
+    "property": "^caret-color$",
+    "reason": "48ff5c13 fix(vue): hide the text caret in disabled fields, taken from docs/product-site after the baseline"
+  },
+  {
+    "scene": "/composables/controls$",
+    "element": "nui-code__line:3 > span\\.nui-code__token",
+    "property": "^\\(element\\)$",
+    "reason": "cf8a9461 the closed source tab of the controls example lost the class attribute of the margin utility that never took effect; its tokens have no box"
+  }
+]

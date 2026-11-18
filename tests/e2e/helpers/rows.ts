@@ -1,5 +1,18 @@
 import type { Locator } from '@playwright/test';
 
+interface PartTransition {
+  readonly part: string;
+  readonly colourOnly: boolean;
+  readonly properties: string;
+  readonly durations: string;
+  readonly easings: string;
+}
+
+interface RowTransitions {
+  readonly holder: string;
+  readonly parts: readonly PartTransition[];
+}
+
 export interface RowPaint {
   readonly text: string;
   readonly icon: string;
@@ -84,51 +97,79 @@ export const rowsToHoverOf = (scope: Locator): Promise<number[]> =>
     { rows: ROWS, stated: STATED, disabled: DISABLED, plain: PLAIN_PER_LIST },
   );
 
-export const rowTransitionFaultsOf = (scope: Locator): Promise<string[]> =>
-  scope.evaluate(
-    (root, { rows, moving }) => {
-      const found = new Set<string>();
+const LIST_SPLIT = /,(?![^(]*\))/u;
 
-      for (const row of root.querySelectorAll(rows)) {
+const listOf = (value: string): string[] => value.split(LIST_SPLIT).map((piece) => piece.trim());
+
+const timingOf = (transition: PartTransition, property: string): string => {
+  const properties = listOf(transition.properties);
+  const durations = listOf(transition.durations);
+  const easings = listOf(transition.easings);
+  const exact = properties.indexOf(property);
+  const index = exact === -1 ? properties.indexOf('all') : exact;
+
+  if (index === -1) {
+    return 'none';
+  }
+
+  const duration = durations[index % durations.length] ?? '0s';
+
+  return duration === '0s' ? 'none' : `${duration} ${easings[index % easings.length] ?? ''}`;
+};
+
+const partTimings = (transition: PartTransition): string[] =>
+  (transition.colourOnly ? ['color'] : MOVING).map(
+    (property) => `${transition.part} ${property} ${timingOf(transition, property)}`,
+  );
+
+const faultOf = (row: RowTransitions): string | undefined => {
+  const timings = row.parts.flatMap(partTimings);
+  const kinds = new Set(timings.map((timing) => timing.split(' ').slice(2).join(' ')));
+
+  return kinds.size === 1 ? undefined : `${row.holder}: ${timings.join(', ')}`;
+};
+
+const transitionsOf = (scope: Locator): Promise<RowTransitions[]> =>
+  scope.evaluate(
+    (root, { rows }) =>
+      [...root.querySelectorAll(rows)].map((row) => {
         const item = row.closest('.nui-list-item');
         const holders = item === null || item === row ? [row] : [item, row];
         const rowParts = [...row.querySelectorAll('.nui-row__leading, .nui-row__description')];
-        const timings: string[] = [];
-
-        for (const part of [...holders, ...rowParts]) {
-          const style = getComputedStyle(part);
-
-          const [properties = [], durations = [], easings = []] = [
-            style.transitionProperty,
-            style.transitionDuration,
-            style.transitionTimingFunction,
-          ].map((value) => value.split(/,(?![^(]*\))/u).map((piece) => piece.trim()));
-
-          const watched = rowParts.includes(part) ? ['color'] : moving;
-
-          for (const property of watched) {
-            const exact = properties.indexOf(property);
-            const index = exact === -1 ? properties.indexOf('all') : exact;
-            const duration = index === -1 ? '0s' : (durations[index % durations.length] ?? '0s');
-            const easing = index === -1 ? '' : (easings[index % easings.length] ?? '');
-            const timing = duration === '0s' ? 'none' : `${duration} ${easing}`;
-
-            timings.push(`${part.classList[0] ?? ''} ${property} ${timing}`);
-          }
-        }
-
-        const kinds = new Set(timings.map((timing) => timing.split(' ').slice(2).join(' ')));
-
-        if (kinds.size === 1) {
-          continue;
-        }
-
         const holder = row.closest('.nui-sidebar, .nui-tree, .nui-list, .nui-menu');
 
-        found.add(`${holder?.classList[0] ?? 'page'}: ${timings.join(', ')}`);
-      }
+        const parts = [
+          ...holders.map((element) => ({ element, colourOnly: false })),
+          ...rowParts.map((element) => ({ element, colourOnly: true })),
+        ];
 
-      return [...found].toSorted();
-    },
-    { rows: ROWS, moving: MOVING },
+        return {
+          holder: holder?.classList[0] ?? 'page',
+          parts: parts.map(({ element, colourOnly }) => {
+            const style = getComputedStyle(element);
+
+            return {
+              part: element.classList[0] ?? '',
+              colourOnly,
+              properties: style.transitionProperty,
+              durations: style.transitionDuration,
+              easings: style.transitionTimingFunction,
+            };
+          }),
+        };
+      }),
+    { rows: ROWS },
   );
+
+export const rowTransitionFaultsOf = async (scope: Locator): Promise<string[]> => {
+  const faults = (await transitionsOf(scope)).reduce((found, row) => {
+    const fault = faultOf(row);
+
+    if (fault !== undefined) {
+      found.add(fault);
+    }
+    return found;
+  }, new Set<string>());
+
+  return [...faults].toSorted();
+};

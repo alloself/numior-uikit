@@ -1,5 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
+import { themeFindings } from './styles/theme-guards.mjs';
+import { utilityFindings } from './styles/utility-guards.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 
@@ -14,20 +16,36 @@ const SKIPPED = new Set(['node_modules', 'dist', 'test', 'bench', '.output', '.n
 
 const SHARED = new Map([['nui-content', new Set(['editor-vue'])]]);
 
-const isSource = (name) => /\.(?:css|vue)$/u.test(name);
+const THEME_ROOTS = [
+  'packages',
+  'apps/docs/.vitepress',
+  'apps/docs/examples',
+  'apps/docs/test',
+  'apps/playground',
+  'tests/e2e',
+];
 
-const pathsOf = (dir, entry) => {
+const THEME_SKIPPED = new Set(['node_modules', 'dist', '.output', '.nuxt', 'cache']);
+
+const STYLES = { accepts: (name) => /\.(?:css|vue)$/u.test(name), skipped: SKIPPED };
+
+const THEMED = {
+  accepts: (name) => /\.(?:css|vue|ts|mjs|js|html)$/u.test(name),
+  skipped: THEME_SKIPPED,
+};
+
+const pathsOf = (dir, entry, filter) => {
   const path = join(dir, entry.name);
 
   if (!entry.isDirectory()) {
-    return isSource(entry.name) ? [path] : [];
+    return filter.accepts(entry.name) ? [path] : [];
   }
-  return SKIPPED.has(entry.name) ? [] : walk(path);
+  return filter.skipped.has(entry.name) ? [] : walk(path, filter);
 };
 
-const walk = async (dir) => {
+const walk = async (dir, filter = STYLES) => {
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
-  const nested = await Promise.all(entries.map((entry) => pathsOf(dir, entry)));
+  const nested = await Promise.all(entries.map((entry) => pathsOf(dir, entry, filter)));
 
   return nested.flat();
 };
@@ -251,9 +269,12 @@ const findings = sources.flatMap((file) => {
 
 const PAUSABLE = /animation-play-state:\s*var\(--nui-animation-play-state\b/u;
 
+const ENDLESS =
+  /animation:[^;{}]*\binfinite\b[^;{}]*;|\banimate-\[[^\]\s]*[[_]infinite(?:_[^\]\s]*)?\]/gu;
+
 const endless = sources.flatMap((file) =>
   stylesOf(file.path, file.source).flatMap((style) =>
-    [...style.text.matchAll(/animation:[^;{}]*\binfinite\b[^;{}]*;/gu)].flatMap((match) => {
+    [...style.text.matchAll(ENDLESS)].flatMap((match) => {
       const index = match.index ?? 0;
 
       const rule = style.text.slice(
@@ -303,6 +324,20 @@ const inlineIcons = sources.flatMap((file) =>
       ),
 );
 
+const UTILITY_SKIPPED = /\/packages\/(?:tokens|tailwind)\//u;
+
+const declared = utilityFindings(
+  sources.reduce((sheets, file) => {
+    if (file.consumer || !file.path.endsWith('.css') || UTILITY_SKIPPED.test(file.path)) {
+      return sheets;
+    }
+
+    sheets.push({ path: relative(ROOT, file.path), source: file.source });
+
+    return sheets;
+  }, []),
+);
+
 const COMPOSITED = new Set(['transform', 'translate', 'rotate', 'scale', 'opacity']);
 const STEPPED = /\bstep-(?:start|end)\b|\bsteps\(/u;
 
@@ -342,8 +377,8 @@ const paintedOf = (name) =>
 
 const offCompositor = sources.flatMap((file) =>
   stylesOf(file.path, file.source).flatMap((style) =>
-    [...style.text.matchAll(/animation:[^;{}]*\binfinite\b[^;{}]*;/gu)].flatMap((match) => {
-      const name = match[0].split(/[\s:;]+/u).find((word) => keyframes.has(word));
+    [...style.text.matchAll(ENDLESS)].flatMap((match) => {
+      const name = match[0].split(/[\s:;_[\]]+/u).find((word) => keyframes.has(word));
       const painted = paintedOf(name);
       const composited = painted.length === 0 || STEPPED.test(match[0]);
 
@@ -354,6 +389,17 @@ const offCompositor = sources.flatMap((file) =>
           ];
     }),
   ),
+);
+
+const themeSources = await Promise.all(
+  (await Promise.all(THEME_ROOTS.map((dir) => walk(join(ROOT, dir), THEMED))))
+    .flat()
+    .map(async (path) => ({ path: relative(ROOT, path), source: await readFile(path, 'utf8') })),
+);
+
+const themed = themeFindings(
+  themeSources,
+  await readFile(join(ROOT, 'packages/tokens/src/theme.css'), 'utf8'),
 );
 
 if (findings.length > 0) {
@@ -388,7 +434,7 @@ if (polar.length > 0) {
 
 if (steps.length > 0) {
   console.error(
-    `Hover and pressed fills mix the fill with its label colour, color-mix(in oklab, fill, label var(--nui-state-hover)): a lightness step leaves sRGB on saturated tones and shifts the hue:\n${steps.join('\n')}`,
+    `Hover and pressed fills mix the fill with its label colour, color-mix(in oklab, fill, label var(--state-hover)): a lightness step leaves sRGB on saturated tones and shifts the hue:\n${steps.join('\n')}`,
   );
 
   process.exitCode = 1;
@@ -406,6 +452,16 @@ if (inlineIcons.length > 0) {
   console.log('kit styles: icons come from the registry');
 }
 
+if (declared.length > 0) {
+  console.error(
+    `Declarations that a Tailwind utility writes, arbitrary values included, go into @apply; scripts/styles/utility-guards.mjs lists the categories that stay declarations:\n${declared.join('\n')}`,
+  );
+
+  process.exitCode = 1;
+} else {
+  console.log('kit styles: declarations a utility writes go through @apply');
+}
+
 if (offCompositor.length > 0) {
   console.error(
     `Infinite animations must animate only ${[...COMPOSITED].join(', ')} or move in steps (anything else wakes the main thread on every frame):\n${offCompositor.join('\n')}`,
@@ -414,4 +470,12 @@ if (offCompositor.length > 0) {
   process.exitCode = 1;
 } else {
   console.log('kit styles: every infinite animation runs off the main thread');
+}
+
+if (themed.length > 0) {
+  console.error(`Themes are BEM classes over theme keys:\n${themed.join('\n')}`);
+
+  process.exitCode = 1;
+} else {
+  console.log('kit styles: themes on classes and theme keys');
 }

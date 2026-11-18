@@ -12,6 +12,9 @@ const THEME = parseThemeTokens(
   ),
 );
 
+const rowOf = (section: TokenSection, name: string) =>
+  tokenRowsOf(THEME, section).find((row) => row.name === name);
+
 const namesOf = (section: TokenSection): string[] =>
   tokenRowsOf(THEME, section).map((row) => row.name);
 
@@ -26,42 +29,62 @@ describe('token sections', () => {
 
   it('lists a tone as its fill, the text on it, the soft fill and the text on the soft fill', () => {
     expect(namesOf(TokenSection.Tones).slice(0, 5)).toEqual([
-      '--nui-primary',
-      '--nui-primary-foreground',
-      '--nui-primary-soft',
-      '--nui-primary-soft-foreground',
-      '--nui-secondary',
+      '--color-primary',
+      '--color-primary-foreground',
+      '--color-primary-soft',
+      '--color-primary-soft-foreground',
+      '--color-secondary',
     ]);
 
-    expect(namesOf(TokenSection.Tones).at(-1)).toBe('--nui-soft-min-lightness');
+    expect(namesOf(TokenSection.Tones).at(-1)).toBe('--soft-min-lightness');
   });
 
   it('keeps code colours out of the surfaces and the field ring with the states', () => {
-    expect(namesOf(TokenSection.Surfaces)).not.toContain('--nui-surface-code');
-    expect(namesOf(TokenSection.Code)).toContain('--nui-surface-code');
-    expect(namesOf(TokenSection.States)).toContain('--nui-field-ring-width');
-    expect(namesOf(TokenSection.Sizes)).toContain('--nui-field-padding-md');
+    expect(namesOf(TokenSection.Surfaces)).not.toContain('--color-surface-code');
+    expect(namesOf(TokenSection.Code)).toContain('--color-surface-code');
+    expect(namesOf(TokenSection.States)).toContain('--field-ring-width');
+    expect(namesOf(TokenSection.Sizes)).toContain('--spacing-field-pad-md');
   });
 
   it('follows a reference to know that a token is a colour', () => {
     const states = samplesOf(TokenSection.States);
 
-    expect(states['--nui-focus']).toBe(TokenSample.Color);
-    expect(states['--nui-hover']).toBe(TokenSample.Color);
-    expect(states['--nui-focus-ring-width']).toBe(TokenSample.None);
-    expect(samplesOf(TokenSection.Type)['--nui-prose-marker-color']).toBe(TokenSample.Color);
+    expect(states['--color-ring']).toBe(TokenSample.Color);
+    expect(states['--color-hover']).toBe(TokenSample.Color);
+    expect(states['--focus-ring-width']).toBe(TokenSample.None);
+    expect(samplesOf(TokenSection.Type)['--color-prose-marker']).toBe(TokenSample.Color);
+  });
+
+  it('takes the fallback of a theme hook to know that a token is a colour', () => {
+    const soft = rowOf(TokenSection.Tones, '--color-primary-soft-foreground');
+    const highlight = rowOf(TokenSection.Code, '--color-syntax-highlight');
+
+    expect(soft?.light).toContain('var(--color-theme-soft-foreground,');
+    expect(soft?.sample).toBe(TokenSample.Color);
+    expect(soft?.value).toBe(rowOf(TokenSection.Tones, '--color-primary')?.value);
+    expect(highlight?.light).toContain('var(--color-theme-syntax-highlight,');
+    expect(highlight?.sample).toBe(TokenSample.Color);
   });
 
   it('picks the sample of shape, size, shadow and type tokens by their names', () => {
     const type = samplesOf(TokenSection.Type);
     const sizes = samplesOf(TokenSection.Sizes);
 
-    expect(samplesOf(TokenSection.Shape)['--nui-radius-lg']).toBe(TokenSample.Radius);
-    expect(samplesOf(TokenSection.Effects)['--nui-shadow-md']).toBe(TokenSample.Shadow);
-    expect(sizes['--nui-control-height-md']).toBe(TokenSample.Size);
-    expect(sizes['--nui-control-font-size-md']).toBe(TokenSample.FontSize);
-    expect(type['--nui-font-mono']).toBe(TokenSample.Font);
-    expect(type['--nui-font-weight-bold']).toBe(TokenSample.FontWeight);
-    expect(type['--nui-line-height']).toBe(TokenSample.None);
+    expect(samplesOf(TokenSection.Shape)['--radius-lg']).toBe(TokenSample.Radius);
+    expect(samplesOf(TokenSection.Effects)['--shadow-md']).toBe(TokenSample.Shadow);
+    expect(sizes['--spacing-control-md']).toBe(TokenSample.Size);
+    expect(sizes['--text-control-md']).toBe(TokenSample.FontSize);
+    expect(type['--font-mono']).toBe(TokenSample.Font);
+    expect(type['--font-weight-bold']).toBe(TokenSample.FontWeight);
+    expect(type['--leading-normal']).toBe(TokenSample.None);
+  });
+
+  it('shows a derived token with the base values of the kit, wherever the page is themed', () => {
+    expect(rowOf(TokenSection.States, '--color-ring')?.value).toBe(
+      rowOf(TokenSection.Tones, '--color-primary')?.value,
+    );
+
+    expect(rowOf(TokenSection.Tones, '--color-primary-soft')?.value).not.toContain('var(--');
+    expect(rowOf(TokenSection.Shape, '--radius-sm')?.value).toBe('calc(0.5rem / 2)');
   });
 });
