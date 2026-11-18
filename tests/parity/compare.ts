@@ -50,7 +50,7 @@ const canonicalValue = (property: string, value: string, grid: boolean): string 
     return withoutSingleRepeats(value);
   }
 
-  return grid ? gridAlignment(property, value) : canonicalLonghand(property, value);
+  return canonicalLonghand(property, grid ? gridAlignment(property, value) : value);
 };
 
 const sameValue = (property: string, [was, now]: readonly string[], grid: boolean): boolean =>

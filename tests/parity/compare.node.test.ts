@@ -47,6 +47,12 @@ const laidOut = (display: string, alignment: string, columns: string): StoredSce
     nodes: [[-1, 'div.nui-field:0', '0 0 320 64', [0, 1, 2]]],
   });
 
+const shadowedGrid = (shadow: string, duration: string): StoredScene =>
+  encodeScene('pg-light-1440/steps', ['display', 'box-shadow', 'transition-duration'], {
+    values: ['grid', shadow, duration],
+    nodes: [[-1, 'span.nui-stepper__indicator:0', '0 0 24 24', [0, 1, 2]]],
+  });
+
 const outlined = (style: string, color: string, duration: string): StoredScene =>
   encodeScene('pg-light-1440/buttons', ['outline-style', 'outline-color', 'transition-duration'], {
     values: [style, color, duration],
@@ -222,6 +228,24 @@ describe('scene comparison', () => {
 
     expect(findings.map(({ property, after }) => `${property} ${after}`)).toEqual([
       'align-content flex-start',
+    ]);
+  });
+
+  it('reads the values of a grid element as canonically as any other', () => {
+    const empty = 'rgba(0, 0, 0, 0) 0px 0px 0px 0px';
+    const halo = 'rgb(255, 0, 0) 0px 0px 0px 3px';
+
+    const findings = [
+      ...diffScenes(
+        shadowedGrid(halo, '0.12s, 0.12s'),
+        shadowedGrid(`${empty}, ${empty}, ${halo}`, '0.12s'),
+      ),
+      ...diffScenes(shadowedGrid(halo, '0.12s'), shadowedGrid(empty, '0.12s, 0.2s')),
+    ];
+
+    expect(findings.map(({ property, after }) => `${property} ${after}`)).toEqual([
+      `box-shadow ${empty}`,
+      'transition-duration 0.12s, 0.2s',
     ]);
   });
 
