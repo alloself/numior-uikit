@@ -175,8 +175,12 @@ const showsCheck = (): boolean =>
     list?.variant.value === NuiListVariant.Floating &&
     treeNode.value?.checked === undefined);
 
+const accented = computed(
+  () => current || (selected.value && list?.variant.value !== NuiListVariant.Floating),
+);
+
 const badgeLook = computed(() => ({
-  tone: current ? NuiTone.Primary : NuiTone.Neutral,
+  tone: accented.value ? NuiTone.Primary : NuiTone.Neutral,
   variant: NuiBadgeVariant.Solid,
 }));
 

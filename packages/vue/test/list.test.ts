@@ -121,6 +121,32 @@ describe('NuiList', () => {
     list.unmount();
   });
 
+  it('paints the count of a selected row in the accent of its fill and leaves it neutral in a floating list', () => {
+    const parts = [
+      { label: 'Orders', value: 'orders', badge: 12 },
+      { label: 'Products', value: 'products', badge: 12 },
+    ];
+
+    const list = ListDriver.mount({
+      props: { items: parts, selectable: 'single' },
+      modelValue: 'orders',
+    });
+
+    expect(list.badgeModifierOf('Orders', 'tone-primary')).toBe(true);
+    expect(list.badgeModifierOf('Products', 'tone-neutral')).toBe(true);
+
+    list.unmount();
+
+    const floating = ListDriver.mount({
+      props: { items: parts, selectable: 'single', variant: 'floating' },
+      modelValue: 'orders',
+    });
+
+    expect(floating.badgeModifierOf('Orders', 'tone-neutral')).toBe(true);
+
+    floating.unmount();
+  });
+
   it('marks the current page, carries badges and nests content inside a navigation list', () => {
     const list = ListDriver.mount({
       props: { variant: 'nav' },

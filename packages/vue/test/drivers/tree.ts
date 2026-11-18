@@ -195,6 +195,10 @@ export class TreeDriver extends ComponentDriver {
     return this.node(label).find('.nui-row__trailing').text();
   }
 
+  badgeModifierOf(label: string, modifier: string): boolean {
+    return this.node(label).find('.nui-badge').classes().includes(`nui-badge--${modifier}`);
+  }
+
   nodeId(label: string): string | undefined {
     return this.node(label).attributes('id');
   }

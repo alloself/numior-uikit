@@ -547,6 +547,18 @@ describe('NuiTree', () => {
     tree.unmount();
   });
 
+  it('paints the count of the selected node in the accent like the count of the current one', async () => {
+    const tree = TreeDriver.mount({ items: withTrailing() });
+    expect(tree.badgeModifierOf('src', 'tone-neutral')).toBe(true);
+
+    await tree.click('src');
+
+    expect(tree.value).toBe('src');
+    expect(tree.badgeModifierOf('src', 'tone-primary')).toBe(true);
+
+    tree.unmount();
+  });
+
   it('rests the cursor on the selected node when focus arrives and forgets it on blur', async () => {
     const tree = TreeDriver.mount({ modelValue: 'readme' });
     expect(tree.activeLabel).toBeUndefined();
