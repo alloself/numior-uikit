@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { sectionScope, wcagViolationsOf, type AxeViolations } from '../helpers/axe';
+import { kitButtonsOf, offGridButtons, type KitButton } from '../helpers/buttons';
 import {
   hideLayer,
   kitPixelsOf,
@@ -377,6 +378,24 @@ export class PlaygroundPage {
       boxes: measured.flatMap((part) => part.boxes),
       lines: measured.flatMap((part) => part.lines),
     });
+  }
+
+  async offGridButtons(): Promise<string[]> {
+    await motionSettled(this.page);
+
+    const measured: KitButton[][] = [await kitButtonsOf(this.page.locator('body'))];
+
+    for (const layer of await this.page.locator(LAYERS).all()) {
+      if (!(await showLayer(layer))) {
+        continue;
+      }
+
+      measured.push(await kitButtonsOf(layer));
+
+      await hideLayer(layer);
+    }
+
+    return offGridButtons(measured.flat());
   }
 
   hasHorizontalOverflow(): Promise<boolean> {

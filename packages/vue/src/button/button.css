@@ -92,7 +92,7 @@
 }
 
 .nui-button--size-inline {
-  --_height: round(1.75em, 2px);
+  --_height: round(1.75em, 4px);
   --_padding: 0.25em;
   --_font-size: round(0.875em, 1px);
 

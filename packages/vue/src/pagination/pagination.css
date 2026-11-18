@@ -57,7 +57,7 @@
   justify-content: center;
   min-inline-size: var(--_height);
   min-block-size: var(--_height);
-  padding: 0 var(--nui-space-2);
+  padding: 0;
   border: 1px solid transparent;
   border-radius: var(--nui-radius);
   background: transparent;
@@ -71,6 +71,9 @@
   transition:
     background-color var(--nui-duration-fast) var(--nui-easing),
     color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-pagination__page {
+  padding-inline: var(--nui-space-2);
 }
 .nui-pagination__control:hover:not(:disabled, .nui-link--disabled) {
   background: var(--_hover);

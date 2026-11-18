@@ -189,7 +189,7 @@
 }
 .nui-toggle-group--icon-only .nui-toggle-group__item {
   flex: none;
-  inline-size: var(--_height);
+  inline-size: calc(var(--_height) - 2 * var(--_inset));
   padding-inline: 0;
 }
 .nui-toggle-group--variant-segmented {
@@ -201,7 +201,7 @@
 .nui-toggle-group--variant-segmented .nui-toggle-group__item {
   --_rest: var(--nui-surface-muted);
 
-  min-block-size: calc(var(--_height) - 4px);
+  min-block-size: calc(var(--_height) - 2 * var(--_inset));
   margin: 0;
   border-color: transparent;
   border-radius: var(--nui-radius-sm);

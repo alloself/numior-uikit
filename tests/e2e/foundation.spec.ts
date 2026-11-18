@@ -169,6 +169,23 @@ test('kit boxes, icons and text lines sit on whole pixels in both densities', as
   expect(compact.filter(sizedByKit)).toEqual([]);
 });
 
+test('kit buttons keep a 4 px step and icon buttons stay square in both densities', async ({
+  playground,
+}) => {
+  test.slow();
+
+  await playground.open();
+
+  const comfortable = await playground.offGridButtons();
+
+  await playground.setDensity('compact');
+
+  const compact = await playground.offGridButtons();
+
+  expect(comfortable).toEqual([]);
+  expect(compact).toEqual([]);
+});
+
 test('light and dark playground have no automatically detectable WCAG AA violations', async ({
   playground,
 }) => {

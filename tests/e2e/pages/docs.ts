@@ -1,5 +1,6 @@
 import type { FrameLocator, Locator, Page } from '@playwright/test';
 import { wcagViolationsOf, type AxeViolations } from '../helpers/axe';
+import { kitButtonsOf, offGridButtons } from '../helpers/buttons';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { boxOf } from '../helpers/geometry';
 import { MainFrameNetwork } from '../helpers/network';
@@ -578,6 +579,10 @@ export class DocsSite {
 
   async resize(width: number): Promise<void> {
     await this.page.setViewportSize({ width, height: PHONE_HEIGHT });
+  }
+
+  async offGridButtons(): Promise<string[]> {
+    return offGridButtons(await kitButtonsOf(this.page.locator('body')));
   }
 
   misfits(): Promise<string[]> {

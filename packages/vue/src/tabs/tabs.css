@@ -133,7 +133,7 @@
 }
 
 .nui-tab-item {
-  --_close-size: round(calc(round(var(--_font-size) * 0.875, 1px) * 1.75), 2px);
+  --_close-size: round(calc(round(var(--_font-size) * 0.875, 1px) * 1.75), 4px);
   --_close-gap: calc(var(--_padding) / 2);
 
   display: inline-grid;
