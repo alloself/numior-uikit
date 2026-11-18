@@ -104,9 +104,9 @@
   --nui-prose-marker: disc;
   --nui-prose-marker-color: var(--nui-text-muted);
   --nui-measure: 65ch;
-  --nui-layout-rail: 3.75rem;
+  --nui-layout-rail: 3.25rem;
   --nui-layout-gutter: var(--nui-space-6);
-  --nui-layout-panel-inset: var(--nui-space-3);
+  --nui-layout-panel-inset: var(--nui-space-2);
   --nui-layout-layer-inset: var(--nui-space-1);
 
   --nui-surface-code: light-dark(oklch(0.967 0.001 286.38), oklch(0.17 0.006 285.89));

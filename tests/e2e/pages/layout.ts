@@ -138,25 +138,35 @@ export class LayoutSection {
   badgePainted(key: string): Promise<boolean> {
     return this.itemBadge(key).evaluate((badge) => {
       const box = badge.getBoundingClientRect();
+      const inset = 1.5;
 
-      const shown = (element: Element | null): boolean => {
-        if (element === null) {
-          return true;
-        }
-        const style = getComputedStyle(element);
-        const area = element.getBoundingClientRect();
-        const clips = style.overflowX !== 'visible' || style.overflowY !== 'visible';
+      const points = [
+        { x: box.left + inset, y: box.top + box.height / 2 },
+        { x: box.right - inset, y: box.top + box.height / 2 },
+        { x: box.left + box.width / 2, y: box.top + inset },
+        { x: box.left + box.width / 2, y: box.bottom - inset },
+      ];
 
-        const fits =
-          box.left >= area.left + parseFloat(style.borderLeftWidth) - 0.5 &&
-          box.right <= area.right - parseFloat(style.borderRightWidth) + 0.5 &&
-          box.top >= area.top + parseFloat(style.borderTopWidth) - 0.5 &&
-          box.bottom <= area.bottom - parseFloat(style.borderBottomWidth) + 0.5;
+      return (
+        box.width > 0 && points.every(({ x, y }) => badge.contains(document.elementFromPoint(x, y)))
+      );
+    });
+  }
 
-        return (!clips || fits) && shown(element.parentElement);
-      };
+  async badgePastPanelEdge(key: string): Promise<number> {
+    const [panel, badge] = await Promise.all([boxOf(this.sidebar), boxOf(this.itemBadge(key))]);
 
-      return shown(badge.parentElement);
+    return badge.x + badge.width - (panel.x + panel.width);
+  }
+
+  async scrollRailToEnd(): Promise<void> {
+    await this.sidebar.locator('.nui-sidebar__content').evaluate((content) => {
+      if (!(content instanceof HTMLElement)) {
+        return;
+      }
+
+      content.style.maxBlockSize = '6rem';
+      content.scrollTop = content.scrollHeight;
     });
   }
 

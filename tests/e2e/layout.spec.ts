@@ -140,6 +140,7 @@ test.describe('layout', () => {
     expect(Math.abs(count.fromButtonTop)).toBeLessThan(1);
     expect(await layout.badgePainted('overview')).toBe(true);
     expect(await layout.badgeClipped('overview')).toBe(false);
+    expect(await layout.badgePastPanelEdge('overview')).toBeGreaterThan(0);
 
     const dot = await layout.badgeOnButton('files');
     expect(dot.width).toBeCloseTo(dot.height, 1);
@@ -160,6 +161,23 @@ test.describe('layout', () => {
     await layout.trigger.click();
     await expect.poll(() => layout.sidebarWidth()).toBeGreaterThan(200);
     await expect(layout.itemBadge('files')).toHaveText('Новое');
+  });
+
+  test('a rail count leaves with its button when the rail list scrolls', async ({
+    playground,
+    layout,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'desktop rail');
+    await playground.open();
+    await layout.root.scrollIntoViewIfNeeded();
+    await layout.trigger.click();
+    await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
+    await expect.poll(() => layout.badgePainted('overview')).toBe(true);
+
+    await layout.scrollRailToEnd();
+
+    await expect.poll(() => layout.badgePainted('overview')).toBe(false);
   });
 
   test('the icons and the start edge of the item fills stay in place while the sidebar collapses to the icon rail and expands again', async ({

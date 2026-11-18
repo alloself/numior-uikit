@@ -316,6 +316,26 @@
   --_badge-corner: calc(50% + var(--_min-size) / 2);
   --_badge-reach: calc(50% - var(--_min-size) / 2 + var(--_padding) - var(--_rail-border));
 }
+@supports (position-anchor: --nui-rail-item) {
+  .nui-sidebar--rail .nui-list-item:not(.nui-sidebar-sub__flyout *) {
+    anchor-name: --nui-rail-item;
+    anchor-scope: --nui-rail-item;
+  }
+
+  .nui-sidebar--rail
+    .nui-list-item
+    .nui-row__trailing:not(.nui-sidebar-sub__flyout *):has(> .nui-badge) {
+    position: fixed;
+    position-anchor: --nui-rail-item;
+    position-visibility: anchors-visible;
+    inset: auto;
+    inset-inline-start: calc(anchor(center) + var(--_min-size) / 2);
+    inset-block-start: anchor(start);
+    z-index: 1;
+    inline-size: 0;
+    justify-content: center;
+  }
+}
 .nui-sidebar--rail .nui-list-item .nui-row__trailing:not(.nui-sidebar-sub__flyout *) > .nui-badge {
   flex: none;
   margin-inline: auto;
