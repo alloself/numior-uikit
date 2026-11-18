@@ -63,4 +63,20 @@ describe('TokenTable', () => {
     type.unmount();
     effects.unmount();
   });
+
+  it('puts the values under the name on a narrow screen, so the table fits the phone', async () => {
+    const table = await TokenTableDriver.mountNarrow(TOKENS, TokenSection.Surfaces);
+
+    expect(table.headers).toEqual(['Образец', 'Токен']);
+
+    expect(table.rows).toEqual([
+      [
+        '',
+        ['--color-surface', 'oklch(1 0 0)', 'В тёмной схеме: oklch(0.21 0.006 285.89)'].join(''),
+      ],
+      ['', ['--color-surface-ring', 'var(--color-surface)'].join('')],
+    ]);
+
+    table.unmount();
+  });
 });

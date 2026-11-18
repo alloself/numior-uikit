@@ -12,7 +12,14 @@
       <TokenSampleCell :row="row" />
     </template>
     <template #cell-name="{ row }">
-      <code>{{ row.name }}</code>
+      <span v-if="narrow" class="flex flex-col items-start gap-1">
+        <code>{{ row.name }}</code>
+        <code class="wrap-anywhere">{{ row.light }}</code>
+        <span v-if="row.dark !== undefined" class="text-subtle-foreground">
+          {{ texts.tokenDark }}: <code class="wrap-anywhere">{{ row.dark }}</code>
+        </span>
+      </span>
+      <code v-else>{{ row.name }}</code>
     </template>
     <template #cell-light="{ row }">
       <code>{{ row.light }}</code>
@@ -27,10 +34,15 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { NuiTable, type NuiTableColumn } from '@numior/table';
+import { useMediaQuery } from '@numior/vue';
 import type { TokenRow, TokenTableProps } from '../theme.types';
 import TokenSampleCell from './TokenSampleCell.vue';
 
+const NARROW_QUERY = '(max-width: 40rem)';
+
 const { rows, texts } = defineProps<TokenTableProps>();
+
+const narrow = useMediaQuery(NARROW_QUERY);
 
 const schemed = computed(() => rows.some((row) => row.dark !== undefined));
 
@@ -50,6 +62,13 @@ const textColumn = (
 });
 
 const columns = computed<NuiTableColumn<TokenRow>[]>(() => {
+  if (narrow.value) {
+    return [
+      textColumn('sample', texts.tokenSample, 84, (row) => row.sample),
+      { ...textColumn('name', texts.tokenName, 220, (row) => row.name), flex: 1 },
+    ];
+  }
+
   const leading = [
     textColumn('sample', texts.tokenSample, 90, (row) => row.sample),
     textColumn('name', texts.tokenName, 230, (row) => row.name),

@@ -1,4 +1,6 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
+import { vi } from 'vite-plus/test';
+import { nextTick } from 'vue';
 import type { TokenReference } from '../../.vitepress/reference/reference.types';
 import TokenTable from '../../.vitepress/theme/parts/TokenTable.vue';
 import { ru } from '../../.vitepress/theme/texts';
@@ -6,6 +8,15 @@ import type { TokenSection } from '../../.vitepress/theme/theme.types';
 import { tokenRowsOf } from '../../.vitepress/theme/token-sections';
 
 const SCHEME_CLASS = 'nui-theme--';
+
+const narrowList = (): Pick<
+  MediaQueryList,
+  'matches' | 'addEventListener' | 'removeEventListener'
+> => ({
+  matches: true,
+  addEventListener: () => undefined,
+  removeEventListener: () => undefined,
+});
 
 export const themeToken = (name: string, light: string, dark?: string): TokenReference => ({
   name: `--${name}`,
@@ -16,6 +27,19 @@ export const themeToken = (name: string, light: string, dark?: string): TokenRef
 
 export class TokenTableDriver {
   constructor(readonly wrapper: VueWrapper) {}
+
+  static async mountNarrow(
+    tokens: readonly TokenReference[],
+    section: TokenSection,
+  ): Promise<TokenTableDriver> {
+    vi.stubGlobal('matchMedia', narrowList);
+
+    const table = TokenTableDriver.mount(tokens, section);
+
+    await nextTick();
+
+    return table;
+  }
 
   static mount(tokens: readonly TokenReference[], section: TokenSection): TokenTableDriver {
     return new TokenTableDriver(
@@ -62,5 +86,6 @@ export class TokenTableDriver {
 
   unmount(): void {
     this.wrapper.unmount();
+    vi.unstubAllGlobals();
   }
 }
