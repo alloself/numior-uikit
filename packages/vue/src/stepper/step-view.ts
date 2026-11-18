@@ -1,13 +1,18 @@
 import type { IconAlias } from '@numior/primitives';
-import type { NuiStepperStatus, NuiStepperStep } from './stepper.types';
+import type { NuiStepperStatus, NuiStepperStepDescriptor } from './stepper.types';
 
 export interface StepView {
-  readonly step: NuiStepperStep;
+  readonly step: NuiStepperStepDescriptor;
   readonly current: boolean;
   readonly status: NuiStepperStatus;
   readonly clickable: boolean;
   readonly interactive: boolean;
   readonly mark: IconAlias | undefined;
+}
+
+export interface StepViewOptions {
+  readonly linear: boolean;
+  readonly readonly: boolean;
 }
 
 const MARKS: Record<NuiStepperStatus, IconAlias | undefined> = {
@@ -17,22 +22,22 @@ const MARKS: Record<NuiStepperStatus, IconAlias | undefined> = {
 };
 
 export const stepViews = (
-  steps: readonly NuiStepperStep[],
+  steps: readonly NuiStepperStepDescriptor[],
   currentIndex: number,
-  linear: boolean,
+  { linear, readonly }: StepViewOptions,
 ): StepView[] =>
   steps.map((step, index) => {
     const current = index === currentIndex;
     const status = step.status ?? (index < currentIndex ? 'complete' : 'upcoming');
     const reachable = linear ? index < currentIndex : true;
-    const clickable = !current && step.disabled !== true && reachable;
+    const clickable = !readonly && !current && step.disabled !== true && reachable;
 
     return {
       step,
       current,
       status,
       clickable,
-      interactive: clickable || current || step.disabled === true,
+      interactive: !readonly && (clickable || current || step.disabled === true),
       mark: MARKS[status],
     };
   });

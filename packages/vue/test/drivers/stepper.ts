@@ -1,21 +1,27 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
 import { nextTick } from 'vue';
-import type { NuiConfigOptions, NuiStepperProps, NuiStepperStep } from '../../src';
+import type { NuiConfigOptions, NuiStepperProps, NuiStepperStepDescriptor } from '../../src';
 import StepperScene from '../fixtures/StepperScene.vue';
+import StepperStepsScene from '../fixtures/StepperStepsScene.vue';
 import { configPlugins } from '../support/config';
 import { ComponentDriver } from './component';
 
 export interface StepperMountOptions {
-  readonly steps?: readonly NuiStepperStep[];
+  readonly steps?: readonly NuiStepperStepDescriptor[];
   readonly modelValue?: string;
   readonly props?: Partial<Omit<NuiStepperProps, 'steps'>>;
   readonly config?: NuiConfigOptions;
 }
 
+export interface StepperStepsMountOptions {
+  readonly props?: Partial<NuiStepperProps>;
+  readonly config?: NuiConfigOptions;
+}
+
 type StepperSceneWrapper = VueWrapper<InstanceType<typeof StepperScene>>;
 
-const STEPS: readonly NuiStepperStep[] = [
+const STEPS: readonly NuiStepperStepDescriptor[] = [
   { value: 'account', label: 'Account' },
   { value: 'profile', label: 'Profile', description: 'Name and photo' },
   { value: 'plan', label: 'Plan' },
@@ -57,7 +63,11 @@ export class StepperDriver extends ComponentDriver {
   }
 
   get label(): string | undefined {
-    return this.wrapper.find('nav').attributes('aria-label');
+    return this.root.attributes('aria-label');
+  }
+
+  get tag(): string {
+    return this.root.element.tagName.toLowerCase();
   }
 
   get listRole(): string | undefined {
@@ -139,5 +149,61 @@ export class StepperDriver extends ComponentDriver {
 
     await step.trigger('click');
     await nextTick();
+  }
+}
+
+export class StepperStepsDriver extends ComponentDriver {
+  protected readonly block = 'nui-stepper';
+
+  static mount({ props, config }: StepperStepsMountOptions = {}): StepperStepsDriver {
+    return new StepperStepsDriver(
+      mount(StepperStepsScene, {
+        props: { props: { readonly: true, ...props } },
+        global: { plugins: configPlugins(config) },
+      }),
+    );
+  }
+
+  get tag(): string {
+    return this.root.element.tagName.toLowerCase();
+  }
+
+  get label(): string | undefined {
+    return this.root.attributes('aria-label');
+  }
+
+  get items(): string[] {
+    return this.wrapper.findAll('.nui-stepper__list > li').map((item) => item.classes()[0] ?? '');
+  }
+
+  get titles(): string[] {
+    return this.wrapper.findAll('.nui-stepper-step__title').map((title) => title.text());
+  }
+
+  get headingIds(): string[] {
+    return this.wrapper
+      .findAll('.nui-stepper-step__title h3')
+      .map((heading) => heading.attributes('id') ?? '');
+  }
+
+  get contents(): string[] {
+    return this.wrapper
+      .findAll('.nui-stepper-step')
+      .map((step) => step.find('.nui-stepper-step__content'))
+      .map((content) => (content.exists() ? content.text() : ''));
+  }
+
+  get buttons(): number {
+    return this.wrapper.findAll('button').length;
+  }
+
+  get numerals(): string[] {
+    return this.wrapper
+      .findAll('.nui-stepper-step')
+      .map((step) =>
+        step.element instanceof HTMLElement
+          ? step.element.style.getPropertyValue('--_numerals')
+          : '',
+      );
   }
 }

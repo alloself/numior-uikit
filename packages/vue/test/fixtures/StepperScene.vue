@@ -4,14 +4,14 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiStepper, type NuiStepperProps, type NuiStepperStep } from '../../src';
+import { NuiStepper, type NuiStepperProps, type NuiStepperStepDescriptor } from '../../src';
 
 const {
   steps,
   initialValue,
   props = {},
 } = defineProps<{
-  steps: readonly NuiStepperStep[];
+  steps: readonly NuiStepperStepDescriptor[];
   initialValue: string;
   props?: Partial<Omit<NuiStepperProps, 'steps'>> | undefined;
 }>();

@@ -58,6 +58,7 @@ import SplitterScene from './fixtures/ssr/SplitterScene.vue';
 import TabsScene from './fixtures/ssr/TabsScene.vue';
 import TooltipScene from './fixtures/ssr/TooltipScene.vue';
 import NestedConfig from './fixtures/NestedConfig.vue';
+import StepperStepsScene from './fixtures/StepperStepsScene.vue';
 import { configPlugins } from './support/config';
 import { RouterStub } from './support/router-stub';
 import { labelTarget, popoverTarget } from './support/ssr';
@@ -1150,6 +1151,22 @@ describe('server rendering', () => {
     expect(markup).toContain(`id="${id}"`);
     expect(markup).toContain(`aria-describedby="${id}-description ${id}-error"`);
     expect(markup).toContain('nui-field--invalid');
+  });
+
+  it('renders readonly child steps with their headings and content on the server', async () => {
+    const html = await renderToString(StepperStepsScene);
+
+    expect(html).toMatch(
+      /^<div class="nui-stepper nui-stepper--orientation-vertical nui-stepper--readonly"/,
+    );
+
+    expect(html).toContain('<h3 id="add-the-plugin">Add the plugin</h3>');
+
+    expect(html.match(/<li class="nui-stepper-step" style="--_numerals:decimal;"/g)).toHaveLength(
+      3,
+    );
+
+    expect(html).not.toContain('<nav');
   });
 
   it('disables the hidden inputs of disabled controls so native forms skip their values', async () => {

@@ -125,6 +125,21 @@
         label="Настройки проекта"
         data-testid="nav-stepper-vertical"
       />
+      <NuiStepper readonly data-testid="nav-stepper-guide">
+        <NuiStepperStep title="Создайте проект">
+          <p>Название проекта видят все участники команды.</p>
+        </NuiStepperStep>
+        <NuiStepperStep>
+          <template #title>
+            <h3>Пригласите команду</h3>
+          </template>
+          <p>Приглашение приходит на почту и действует семь дней.</p>
+          <p>Роли можно поменять позже в настройках.</p>
+        </NuiStepperStep>
+        <NuiStepperStep
+          title="Подключите оплату, чтобы проект продолжил работать после пробного периода"
+        />
+      </NuiStepper>
     </div>
     <pre class="output" data-testid="navigation-output">{{ output }}</pre>
   </section>
@@ -145,12 +160,13 @@ import {
   NuiMenuSeparator,
   NuiMenuSub,
   NuiStepper,
+  NuiStepperStep,
   NuiTab,
   NuiTabList,
   NuiTabPanel,
   NuiTabs,
   type NuiBreadcrumbItem,
-  type NuiStepperStep,
+  type NuiStepperStepDescriptor,
   type NuiTabDescriptor,
   type NuiTabLinkDescriptor,
 } from '@numior/vue';
@@ -191,14 +207,14 @@ const path: NuiBreadcrumbItem[] = [
   { label: 'Оплата' },
 ];
 
-const signupSteps: NuiStepperStep[] = [
+const signupSteps: NuiStepperStepDescriptor[] = [
   { value: 'account', label: 'Аккаунт', description: 'Почта и пароль' },
   { value: 'profile', label: 'Профиль', description: 'Имя и фото' },
   { value: 'plan', label: 'Тариф' },
   { value: 'review', label: 'Проверка' },
 ];
 
-const settingsSteps: NuiStepperStep[] = [
+const settingsSteps: NuiStepperStepDescriptor[] = [
   { value: 'general', label: 'Основное', description: 'Название и адрес', status: 'complete' },
   { value: 'access', label: 'Доступ', description: 'Роли участников', status: 'error' },
   { value: 'billing', label: 'Оплата', description: 'Карта и реквизиты' },

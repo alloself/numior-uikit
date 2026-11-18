@@ -242,11 +242,13 @@ export type {
   NuiBreadcrumbsProps,
 } from './breadcrumbs/breadcrumbs.types';
 export { default as NuiStepper } from './stepper/NuiStepper.vue';
+export { default as NuiStepperStep } from './stepper/NuiStepperStep.vue';
 export {
   NuiStepperOrientation,
   type NuiStepperProps,
   NuiStepperStatus,
-  type NuiStepperStep,
+  type NuiStepperStepDescriptor,
+  type NuiStepperStepProps,
 } from './stepper/stepper.types';
 export { default as NuiSelect } from './select/NuiSelect.vue';
 export type { NuiSelectProps, NuiSelectValueSlot } from './select/select.types';

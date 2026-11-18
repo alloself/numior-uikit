@@ -1,8 +1,9 @@
 <template>
-  <nav
+  <component
+    :is="readonly ? 'div' : 'nav'"
     class="nui-stepper"
-    :class="`nui-stepper--orientation-${orientation}`"
-    :aria-label="texts.label"
+    :class="[`nui-stepper--orientation-${layout}`, { 'nui-stepper--readonly': readonly }]"
+    :aria-label="readonly ? undefined : texts.label"
   >
     <ol class="nui-stepper__list" role="list">
       <li
@@ -41,12 +42,13 @@
         </component>
         <span v-if="index < views.length - 1" class="nui-stepper__connector" aria-hidden="true" />
       </li>
+      <slot />
     </ol>
-    <p class="nui-stepper__summary" aria-hidden="true">
+    <p v-if="views.length > 0" class="nui-stepper__summary" aria-hidden="true">
       <span class="nui-stepper__summary-label">{{ currentLabel }}</span>
       <span class="nui-stepper__summary-count">{{ summaryText }}</span>
     </p>
-  </nav>
+  </component>
 </template>
 
 <script setup lang="ts">
@@ -54,14 +56,17 @@ import { computed } from 'vue';
 import { useLocale, useMessages } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiRow from '../row/NuiRow.vue';
+import { counterStyleOf } from './step-numerals';
 import { stepViews, type StepView } from './step-view';
+import { provideStepper } from './stepper-context';
 import { stepperMessages } from './stepper.messages';
 import { NuiStepperOrientation, NuiStepperStatus, type NuiStepperProps } from './stepper.types';
 
 const {
-  steps,
-  orientation = NuiStepperOrientation.Horizontal,
+  steps = [],
+  orientation,
   linear = true,
+  readonly = false,
   label,
   completeLabel,
   errorLabel,
@@ -69,13 +74,21 @@ const {
 
 const model = defineModel<string>();
 
+defineSlots<{ default?(): unknown }>();
+
 const locale = useLocale();
 const messages = useMessages(stepperMessages, locale);
 
 const numbers = computed(() => new Intl.NumberFormat(locale.value));
+const numerals = computed(() => counterStyleOf(numbers.value));
 const currentIndex = computed(() => steps.findIndex((step) => step.value === model.value));
-const views = computed(() => stepViews(steps, currentIndex.value, linear));
+const views = computed(() => stepViews(steps, currentIndex.value, { linear, readonly }));
 const currentLabel = computed(() => steps[currentIndex.value]?.label ?? '');
+
+const layout = computed(
+  () =>
+    orientation ?? (readonly ? NuiStepperOrientation.Vertical : NuiStepperOrientation.Horizontal),
+);
 
 const texts = computed(() => ({
   label: label ?? messages.value.label,
@@ -104,4 +117,6 @@ const select = (view: StepView): void => {
 
   model.value = view.step.value;
 };
+
+provideStepper({ readonly: () => readonly, numerals: () => numerals.value });
 </script>

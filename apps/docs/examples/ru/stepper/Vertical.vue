@@ -10,9 +10,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiStepper, type NuiStepperStep } from '@numior/kit';
+import { NuiStepper, type NuiStepperStepDescriptor } from '@numior/kit';
 
-const steps: NuiStepperStep[] = [
+const steps: NuiStepperStepDescriptor[] = [
   { value: 'details', label: 'Описание', description: 'Название и категория', status: 'complete' },
   { value: 'price', label: 'Цена', description: 'Не указана цена со скидкой', status: 'error' },
   { value: 'photos', label: 'Фото', description: 'До десяти снимков' },

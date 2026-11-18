@@ -114,6 +114,7 @@ const code = await importBuild('vue', [
   'NuiTabs',
   'NuiBreadcrumbs',
   'NuiStepper',
+  'NuiStepperStep',
   'NuiSelect',
   'NuiCombobox',
   'NuiChip',

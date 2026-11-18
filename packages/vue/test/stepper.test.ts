@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vite-plus/test';
-import { StepperDriver } from './drivers/stepper';
+import { describe, expect, it, vi } from 'vite-plus/test';
+import { StepperDriver, StepperStepsDriver } from './drivers/stepper';
 
 describe('NuiStepper', () => {
   it('lists the steps with the current one marked, completed ones before it and upcoming after', async () => {
@@ -79,5 +79,63 @@ describe('NuiStepper', () => {
 
     expect(labelled.label).toBe('Регистрация');
     expect(labelled.names[0]).toBe('Account, готово');
+  });
+
+  it('shows passed steps without letting any be chosen when readonly', async () => {
+    const stepper = StepperDriver.mount({ modelValue: 'plan', props: { readonly: true } });
+    await stepper.ready();
+
+    expect(stepper.tag).toBe('div');
+    expect(stepper.label).toBeUndefined();
+    expect(stepper.hasModifier('readonly')).toBe(true);
+    expect(stepper.hasModifier('orientation-vertical')).toBe(true);
+    expect(stepper.tags).toEqual(['span', 'span', 'span', 'span']);
+    expect(stepper.statuses).toEqual(['complete', 'complete', 'upcoming', 'upcoming']);
+    expect(stepper.current).toBe('Plan');
+
+    await stepper.clickStep('Account');
+
+    expect(stepper.value).toBe('plan');
+  });
+
+  it('lists child steps with their titles and content in a numbered column', () => {
+    const stepper = StepperStepsDriver.mount();
+
+    expect(stepper.tag).toBe('div');
+    expect(stepper.label).toBeUndefined();
+    expect(stepper.hasModifier('readonly')).toBe(true);
+    expect(stepper.hasModifier('orientation-vertical')).toBe(true);
+    expect(stepper.items).toEqual(['nui-stepper-step', 'nui-stepper-step', 'nui-stepper-step']);
+    expect(stepper.titles).toEqual(['Install the package', 'Add the plugin', 'Use the components']);
+    expect(stepper.headingIds).toEqual(['add-the-plugin']);
+
+    expect(stepper.contents).toEqual([
+      'Run the install command.',
+      'Register the plugin in the config.',
+      '',
+    ]);
+
+    expect(stepper.buttons).toBe(0);
+    expect(stepper.numerals).toEqual(['decimal', 'decimal', 'decimal']);
+  });
+
+  it('numbers child steps in the digits of the locale and keeps a requested row', () => {
+    const arabic = StepperStepsDriver.mount({ config: { locale: 'ar-EG' } });
+
+    expect(arabic.numerals).toEqual(['arabic-indic', 'arabic-indic', 'arabic-indic']);
+
+    const row = StepperStepsDriver.mount({ props: { orientation: 'horizontal' } });
+
+    expect(row.hasModifier('orientation-horizontal')).toBe(true);
+  });
+
+  it('refuses a child step outside a readonly stepper', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    expect(() => StepperStepsDriver.mount({ props: { readonly: false } })).toThrow(
+      'NuiStepperStep must be rendered inside a readonly NuiStepper',
+    );
+
+    warn.mockRestore();
   });
 });

@@ -134,6 +134,63 @@
       @apply flex;
     }
   }
+  .nui-stepper--readonly {
+    font: inherit;
+  }
+  .nui-stepper--readonly .nui-stepper__item,
+  .nui-stepper--readonly .nui-stepper__summary {
+    @apply font-sans text-(length:--text-sm) leading-label;
+  }
+  .nui-stepper--readonly .nui-stepper__list {
+    counter-reset: nui-stepper-step;
+  }
+  .nui-stepper--readonly.nui-stepper--orientation-vertical .nui-stepper__list {
+    @apply block;
+  }
+  .nui-stepper-step {
+    --_title-leading: var(--leading-control);
+    --_gap: --spacing(8);
+
+    @apply box-border relative block min-inline-0 ps-[calc(var(--_indicator)_+_--spacing(3))];
+    counter-increment: nui-stepper-step;
+  }
+  .nui-stepper-step + .nui-stepper-step {
+    @apply mbs-(--_gap);
+  }
+  .nui-stepper-step__indicator {
+    @apply box-border absolute inset-bs-0 inset-s-0 inline-grid place-items-center;
+    @apply inline-(--_indicator) block-(--_indicator) inset-ring inset-ring-border-strong;
+    @apply rounded-full bg-surface text-muted-foreground font-sans font-semibold;
+    @apply text-(length:--text-xs) leading-control;
+  }
+  .nui-stepper-step__indicator::before {
+    @apply content-[counter(nui-stepper-step,var(--_numerals,decimal))];
+  }
+  .nui-stepper-step__title {
+    @apply m-0 text-foreground text-(length:--text-lg) leading-(--_title-leading) font-semibold;
+    @apply pbs-[max(0px,calc((var(--_indicator)_-_var(--_title-leading))_/_2))];
+  }
+  .nui-stepper-step__title :where(h1, h2, h3, h4, h5, h6) {
+    @apply m-0 text-inherit;
+    font: inherit;
+  }
+  .nui-stepper-step__content {
+    @apply min-inline-0 mbs-3;
+  }
+  .nui-stepper-step__connector {
+    @apply absolute inline-[2px] rounded-full bg-border inset-s-[calc(var(--_indicator)_/_2_-_1px)];
+    @apply inset-bs-[calc(var(--_indicator)_+_var(--spacing))] inset-be-[calc(var(--spacing)_-_var(--_gap))];
+  }
+  .nui-stepper-step:last-child .nui-stepper-step__connector,
+  .nui-stepper--orientation-horizontal .nui-stepper-step__connector {
+    @apply hidden;
+  }
+  .nui-stepper--orientation-horizontal .nui-stepper-step {
+    @apply flex-[1_1_0];
+  }
+  .nui-stepper--orientation-horizontal .nui-stepper-step + .nui-stepper-step {
+    @apply mbs-0;
+  }
   @keyframes nui-stepper-mark {
     from {
       opacity: 0;

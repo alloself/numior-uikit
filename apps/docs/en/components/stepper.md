@@ -10,7 +10,7 @@ nothing itself: your app or a [Smart form](/en/components/smart-form) decides wh
 ## Installation
 
 ```ts
-import { NuiStepper } from '@numior/kit';
+import { NuiStepper, NuiStepperStep } from '@numior/kit';
 ```
 
 ## Usage
@@ -30,21 +30,33 @@ Add `status` and `description` to the steps.
 Steps before the current one count as complete and the ones after it as upcoming, until `status`
 sets another state such as `error`.
 
+### Show a guide
+
+Pass the steps as `NuiStepperStep` children and turn on `readonly`.
+
+<Example name="stepper/Guide" />
+
+Any content can sit under a step title. To put a step into the page outline, pass an `<h3>` heading
+to the `#title` slot.
+
 ## Behavior
 
 By default the user goes back only to the steps before the current one, and later steps are plain
 text. With `:linear="false"` every step except disabled ones opens. In a narrow container a
 horizontal stepper hides the labels and shows the current step with "Step 2 of 4" instead.
 
+With `readonly` no step can be chosen, and without `orientation` the steps form a column.
+
 ## Accessibility
 
 The stepper is a `nav` landmark with an ordered list, and the current step carries
 `aria-current="step"`. A screen reader reads the status with the name, such as "Cart, completed".
 
-Steps the user can open and the current step are buttons, so Tab reaches them one by one.
+Steps the user can open and the current step are buttons, so Tab reaches them one by one. With
+`readonly` the stepper is an ordered list without a landmark or buttons.
 
 <KeyboardReference name="NuiStepper" />
 
 ## API
 
-<ApiReference name="NuiStepper" />
+<ApiReference :names="['NuiStepper', 'NuiStepperStep']" />

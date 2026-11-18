@@ -396,6 +396,73 @@ test.describe('navigation', () => {
     );
   });
 
+  test('readonly steps put the number on the first title line, the content under the title and a line between numbers', async ({
+    playground,
+    navigation,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+
+    for (const direction of ['ltr', 'rtl'] as const) {
+      await playground.setDirection(direction);
+      await navigation.guideStepper.scrollIntoViewIfNeeded();
+
+      await expect(navigation.stepButtons(navigation.guideStepper)).toHaveCount(0);
+      await expect(navigation.guideSteps()).toHaveCount(3);
+
+      const steps = await Promise.all([0, 1, 2].map((index) => navigation.guideStep(index)));
+
+      const lines = await Promise.all(
+        [0, 1, 2].map((index) => navigation.guideTitleFirstLine(index)),
+      );
+
+      for (const [index, step] of steps.entries()) {
+        const center = step.indicator.y + step.indicator.height / 2;
+        const titleStart = direction === 'ltr' ? step.title.x : step.title.x + step.title.width;
+
+        const startSide =
+          direction === 'ltr'
+            ? step.indicator.x + step.indicator.width <= step.title.x
+            : step.indicator.x >= step.title.x + step.title.width;
+
+        expect(Math.abs(center - (lines[index] ?? Number.NaN))).toBeLessThanOrEqual(1);
+        expect(startSide).toBe(true);
+
+        if (!step.content) {
+          continue;
+        }
+
+        const contentStart =
+          direction === 'ltr' ? step.content.x : step.content.x + step.content.width;
+
+        expect(Math.abs(contentStart - titleStart)).toBeLessThanOrEqual(0.5);
+        expect(step.content.y).toBeGreaterThan(step.title.y + step.title.height);
+      }
+
+      for (const [index, step] of steps.slice(0, -1).entries()) {
+        const next = steps[index + 1];
+        const connector = step.connector;
+
+        expect(connector).toBeDefined();
+        expect(next).toBeDefined();
+
+        if (!connector || !next) {
+          continue;
+        }
+
+        expect(connector.y - (step.indicator.y + step.indicator.height)).toBeCloseTo(4, 0);
+        expect(next.indicator.y - (connector.y + connector.height)).toBeCloseTo(4, 0);
+
+        expect(connector.x + connector.width / 2).toBeCloseTo(
+          step.indicator.x + step.indicator.width / 2,
+          0,
+        );
+      }
+
+      expect(steps[2]?.connector).toBeUndefined();
+    }
+  });
+
   test('navigation has no automatically detectable WCAG AA violations', async ({
     playground,
     navigation,

@@ -12,9 +12,9 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiButton, NuiStepper, type NuiStepperStep } from '@numior/kit';
+import { NuiButton, NuiStepper, type NuiStepperStepDescriptor } from '@numior/kit';
 
-const steps: NuiStepperStep[] = [
+const steps: NuiStepperStepDescriptor[] = [
   { value: 'cart', label: 'Корзина', description: 'Комод и лампа' },
   { value: 'delivery', label: 'Доставка', description: 'Курьер или самовывоз' },
   { value: 'payment', label: 'Оплата', description: 'Картой или переводом' },

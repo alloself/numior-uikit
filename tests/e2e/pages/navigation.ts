@@ -12,6 +12,14 @@ import { ARROWS } from '../helpers/keyboard';
 
 export type NavigationOutput = Guarded<typeof isNavigationOutput>;
 
+export interface GuideStepBoxes {
+  readonly item: Box;
+  readonly indicator: Box;
+  readonly title: Box;
+  readonly content: Box | undefined;
+  readonly connector: Box | undefined;
+}
+
 const isNavigationOutput = shapeOf({
   menuOpen: isBoolean,
   gridOn: isBoolean,
@@ -43,6 +51,7 @@ export class NavigationSection {
   readonly shortCrumbs: Locator;
   readonly stepper: Locator;
   readonly verticalStepper: Locator;
+  readonly guideStepper: Locator;
   readonly stepperBack: Locator;
   readonly stepperNext: Locator;
   readonly output: Locator;
@@ -62,6 +71,7 @@ export class NavigationSection {
     this.shortCrumbs = page.getByTestId('nav-crumbs-short');
     this.stepper = page.getByTestId('nav-stepper');
     this.verticalStepper = page.getByTestId('nav-stepper-vertical');
+    this.guideStepper = page.getByTestId('nav-stepper-guide');
     this.stepperBack = page.getByTestId('nav-stepper-back');
     this.stepperNext = page.getByTestId('nav-stepper-next');
     this.output = page.getByTestId('navigation-output');
@@ -198,6 +208,44 @@ export class NavigationSection {
     ]);
 
     return summary.height - label.height;
+  }
+
+  guideSteps(): Locator {
+    return this.guideStepper.getByRole('listitem');
+  }
+
+  async guideStep(index: number): Promise<GuideStepBoxes> {
+    const step = this.guideSteps().nth(index);
+
+    const [item, indicator, title, content, connector] = await Promise.all([
+      boxOf(step),
+      boxOf(step.locator('.nui-stepper-step__indicator')),
+      boxOf(step.locator('.nui-stepper-step__title')),
+      step.locator('.nui-stepper-step__content').count(),
+      step.locator('.nui-stepper-step__connector').isVisible(),
+    ]);
+
+    return {
+      item,
+      indicator,
+      title,
+      content: content > 0 ? await boxOf(step.locator('.nui-stepper-step__content')) : undefined,
+      connector: connector ? await boxOf(step.locator('.nui-stepper-step__connector')) : undefined,
+    };
+  }
+
+  async guideTitleFirstLine(index: number): Promise<number> {
+    const title = this.guideSteps().nth(index).locator('.nui-stepper-step__title');
+
+    return title.evaluate((element) => {
+      const range = document.createRange();
+
+      range.selectNodeContents(element);
+
+      const line = [...range.getClientRects()].find((rect) => rect.height > 0);
+
+      return line ? line.top + line.height / 2 : Number.NaN;
+    });
   }
 
   async closeMenu(): Promise<void> {
