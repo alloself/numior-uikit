@@ -8,7 +8,7 @@ Hover a column or walk the columns with the arrow keys to see the value in a too
 
 ## Installation
 
-```ts install:packages
+```ts
 import { NuiChart } from '@numior/kit/charts';
 ```
 

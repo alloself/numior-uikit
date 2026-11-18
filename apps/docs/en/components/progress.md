@@ -9,7 +9,7 @@ is not known yet.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiProgress } from '@numior/kit';
 ```
 

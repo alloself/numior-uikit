@@ -8,7 +8,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiEmpty } from '@numior/kit';
 ```
 

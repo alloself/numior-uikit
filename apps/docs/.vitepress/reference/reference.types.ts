@@ -39,8 +39,6 @@ export interface ReferenceBlock {
 }
 
 export interface ReferenceStyles {
-  readonly import: string;
-  readonly importTokens?: readonly NuiCodeLine[] | undefined;
   readonly blocks: readonly ReferenceBlock[];
   readonly tokens: readonly string[];
 }
@@ -66,7 +64,6 @@ export interface ComponentReference {
   readonly family: string;
   readonly file: string;
   readonly styles: ReferenceStyles | undefined;
-  readonly stylesheets: readonly string[];
   readonly messages: string | undefined;
   readonly props: readonly ReferenceProp[];
   readonly models: readonly ReferenceModel[];
@@ -114,7 +111,6 @@ export interface ReferenceBundle {
   readonly declarations: readonly DeclarationReference[];
   readonly tokens: readonly TokenReference[];
   readonly icons: readonly IconReference[];
-  readonly stylesheets: readonly string[];
 }
 
 export type DescriptionMap = Readonly<Record<string, LocalizedText>>;
@@ -137,12 +133,10 @@ export interface ComponentEntry {
   readonly family: string;
   readonly file: string;
   readonly dir: string;
-  readonly styles?: string | undefined;
 }
 
 export interface FlatFamily {
   readonly family: string;
-  readonly styles: string;
 }
 
 export interface ReferenceEntry {

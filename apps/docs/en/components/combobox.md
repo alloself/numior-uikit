@@ -9,7 +9,7 @@ options whose label contains the typed text, in any letter case.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiCombobox } from '@numior/kit';
 ```
 

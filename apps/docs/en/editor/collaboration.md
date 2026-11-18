@@ -8,7 +8,7 @@ Type in one pane, and the text and the caret show up in the other.
 
 ## Installation
 
-```ts install:packages
+```ts
 import { NuiCollabPresence } from '@numior/kit/collaboration/vue';
 ```
 

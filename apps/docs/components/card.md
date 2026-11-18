@@ -6,7 +6,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiCard, NuiCardContent, NuiCardHeader, NuiCardTitle } from '@numior/kit';
 ```
 
@@ -56,8 +56,7 @@ import { NuiCard, NuiCardContent, NuiCardHeader, NuiCardTitle } from '@numior/ki
 
 <Example name="card/Loading" />
 
-Шапка не меняет высоту, когда приходят данные. Заглушкам нужны стили
-`@numior/kit/styles/skeleton.css`.
+Шапка не меняет высоту, когда приходят данные.
 
 ### Шапка без частей
 

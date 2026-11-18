@@ -9,7 +9,7 @@ model when the user leaves the field or presses Enter.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiNumberField } from '@numior/kit';
 ```
 

@@ -15,7 +15,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiFieldArray, NuiForm, NuiFormField, useForm } from '@numior/kit/forms';
 ```
 

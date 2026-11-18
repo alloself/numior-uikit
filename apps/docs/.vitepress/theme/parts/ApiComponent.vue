@@ -47,7 +47,6 @@
       :stacked="narrow"
       :default-label="texts.apiDefault"
     />
-    <ApiStyles v-if="component.styles" :styles="component.styles" :texts="texts" />
     <ApiTexts v-if="catalog" :catalog="catalog" :texts="texts" />
   </section>
 </template>
@@ -63,7 +62,6 @@ import type {
   ReferenceProp,
 } from '../../reference/reference.types';
 import type { ApiComponentProps, ApiRow } from '../theme.types';
-import ApiStyles from './ApiStyles.vue';
 import ApiTable from './ApiTable.vue';
 import ApiTexts from './ApiTexts.vue';
 

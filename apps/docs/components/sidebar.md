@@ -15,7 +15,7 @@ Sidebar всегда на экране и делит его с содержим�
 
 ## Установка
 
-```ts install
+```ts
 import { NuiSidebar, NuiSidebarContent, NuiSidebarGroup, NuiSidebarItem } from '@numior/kit';
 ```
 

@@ -8,7 +8,7 @@ Bind the open tab with `v-model`: it holds the `value` of that tab.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/kit';
 ```
 

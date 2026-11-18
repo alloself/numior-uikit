@@ -9,7 +9,7 @@ on Mac and Ctrl K on Windows and Linux.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiKbd } from '@numior/kit';
 ```
 

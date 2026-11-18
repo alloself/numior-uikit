@@ -8,7 +8,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiDatePicker } from '@numior/kit';
 ```
 

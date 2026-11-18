@@ -6,7 +6,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiCommand, NuiCommandDialog } from '@numior/kit';
 ```
 

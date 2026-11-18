@@ -9,7 +9,7 @@ parts follow the app language.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiTimeField } from '@numior/kit';
 ```
 

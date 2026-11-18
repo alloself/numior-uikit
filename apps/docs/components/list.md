@@ -9,7 +9,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiList, NuiListItem } from '@numior/kit';
 ```
 

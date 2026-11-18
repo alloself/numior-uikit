@@ -8,7 +8,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiAvatar, NuiAvatarGroup } from '@numior/kit';
 ```
 

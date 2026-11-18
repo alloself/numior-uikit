@@ -8,7 +8,6 @@ import type {
   ReferenceKey,
   TokenReference,
 } from '../reference/reference.types.ts';
-import { styleImportOf } from '../reference/stylesheet-paths.ts';
 import type { DocsTexts } from '../theme/theme.types.ts';
 
 type Row = readonly string[];
@@ -34,17 +33,11 @@ const tableOf = (head: Row, rows: readonly Row[]): string[] =>
 const sectionOf = (title: string, head: Row, rows: readonly Row[]): string[] =>
   rows.length === 0 ? [] : [`#### ${title}`, '', ...tableOf(head, rows)];
 
-const stylesOf = (component: ComponentReference): string[] =>
-  component.styles === undefined
-    ? []
-    : ['```css', styleImportOf(component.styles.import), '```', ''];
-
 const importOf = (component: ComponentReference): string[] => [
   '```ts',
   `import { ${component.name} } from '${component.package}';`,
   '```',
   '',
-  ...stylesOf(component),
 ];
 
 const catalogRows = (

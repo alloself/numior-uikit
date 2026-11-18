@@ -8,7 +8,7 @@ Put the button into the `trigger` slot and pass it the slot's `attrs` with `v-bi
 
 ## Installation
 
-```ts install
+```ts
 import { NuiPopover } from '@numior/kit';
 ```
 

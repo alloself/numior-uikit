@@ -10,7 +10,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiAppBar, NuiLayout } from '@numior/kit';
 ```
 

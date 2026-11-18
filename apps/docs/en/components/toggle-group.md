@@ -8,7 +8,7 @@ Describe the buttons in `items`, and `v-model` gets the value of the pressed one
 
 ## Installation
 
-```ts install
+```ts
 import { NuiToggleGroup } from '@numior/kit';
 ```
 

@@ -5,7 +5,7 @@ describe('ApiComponent', () => {
   it('renders one table per populated section in the page language', () => {
     const api = ApiComponentDriver.mount(referenceOf());
 
-    expect(api.sectionTitles).toEqual(['Свойства', 'Модели', 'События', 'Слоты', 'Стили']);
+    expect(api.sectionTitles).toEqual(['Свойства', 'Модели', 'События', 'Слоты']);
 
     expect(api.rows('Свойства')).toEqual([
       ['size', 'NuiSize | undefined', '"md"', 'Размер: sm, md или lg.'],
@@ -31,7 +31,7 @@ describe('ApiComponent', () => {
     expect(api.rows('Slots')).toEqual([['default', '{}', 'Content.']]);
   });
 
-  it('lists the dictionary texts and the style import without class or token lists', () => {
+  it('lists the dictionary texts without class or token lists', () => {
     const api = ApiComponentDriver.mount(referenceOf(), 'ru', false, {
       namespace: 'sample',
       texts: { empty: { ru: 'Пусто', en: 'Empty' } },
@@ -39,7 +39,6 @@ describe('ApiComponent', () => {
 
     expect(api.sectionTitles).toContain('Тексты');
     expect(api.rows('Тексты')).toEqual([['empty', 'Пусто', 'Empty']]);
-    expect(api.styleImport).toBe("@import '@numior/vue/styles/sample.css';");
     expect(api.requiredMarks).toEqual(['обязательно']);
     expect(api.nativeTitles).toEqual([]);
     expect(api.text).not.toContain('nui-sample');

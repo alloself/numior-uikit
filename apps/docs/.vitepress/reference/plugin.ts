@@ -6,7 +6,6 @@ import type { CodeLanguage } from '../markdown/languages.ts';
 import { tokenizeCode } from '../markdown/tokens.ts';
 import { parseBundle } from './bundle.ts';
 import type { ReferenceBundle } from './reference.types.ts';
-import { styleImportOf } from './stylesheet-paths.ts';
 
 export type SignatureTokenizer = (
   code: string,
@@ -47,26 +46,10 @@ const declarationModule = (
   return `export default ${JSON.stringify({ ...declaration, tokens: tokenize(declaration.signature, 'ts') })};\n`;
 };
 
-const componentModule = (
-  bundle: ReferenceBundle,
-  name: string,
-  tokenize: SignatureTokenizer,
-): string => {
+const componentModule = (bundle: ReferenceBundle, name: string): string => {
   const component = bundle.components[name];
 
-  if (component === undefined) {
-    return 'export default null;\n';
-  }
-
-  const styles =
-    component.styles === undefined
-      ? undefined
-      : {
-          ...component.styles,
-          importTokens: tokenize(styleImportOf(component.styles.import), 'css'),
-        };
-
-  return `export default ${JSON.stringify({ ...component, styles })};\n`;
+  return `export default ${JSON.stringify(component ?? null)};\n`;
 };
 
 const sliceModule = (
@@ -78,7 +61,7 @@ const sliceModule = (
 
   switch (kind) {
     case 'component':
-      return componentModule(bundle, name ?? '', tokenize);
+      return componentModule(bundle, name ?? '');
     case 'catalog':
       return `export default ${JSON.stringify(bundle.catalogs[name ?? ''] ?? null)};\n`;
     case 'declaration':

@@ -9,7 +9,7 @@ Pass the nodes in `items` and the nested ones in `children`. The selected node c
 
 ## Installation
 
-```ts install
+```ts
 import { NuiTree } from '@numior/kit';
 ```
 

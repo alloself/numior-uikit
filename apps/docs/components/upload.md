@@ -18,7 +18,7 @@ type NuiUploadAdapter<R> = (
 
 ## Установка
 
-```ts install
+```ts
 import { NuiUpload } from '@numior/kit';
 ```
 

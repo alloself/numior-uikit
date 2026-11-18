@@ -9,7 +9,7 @@ server it renders finished HTML, so the text is on the page before any script ru
 
 ## Installation
 
-```ts install:packages
+```ts
 import { NuiContent } from '@numior/kit/content';
 import { fromHTML } from '@numior/kit/editor-core';
 ```
@@ -28,8 +28,7 @@ Each view lives in an entry of its own, so a page loads only the ones it imports
 - `contentMediaViews` from `@numior/kit/content/media` opens images full size and shows file cards and
   video frames.
 
-The table view draws with NuiTable, so load `@numior/kit/table/styles.css` with it. Without the media
-views, an embedded video renders as a link.
+The table view draws with NuiTable. Without the media views, an embedded video renders as a link.
 
 A video shows as a frame only when its service is in `embeds`, the same list the editor takes.
 

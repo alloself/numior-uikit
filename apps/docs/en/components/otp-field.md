@@ -8,7 +8,7 @@ Set the number of characters in `length` and the size of the groups in `groupSiz
 
 ## Installation
 
-```ts install
+```ts
 import { NuiOtpField } from '@numior/kit';
 ```
 

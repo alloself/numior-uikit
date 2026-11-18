@@ -9,7 +9,7 @@ Put the panes into the `start` and `end` slots. The share of the first pane live
 
 ## Installation
 
-```ts install
+```ts
 import { NuiSplitter } from '@numior/kit';
 ```
 

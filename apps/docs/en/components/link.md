@@ -10,7 +10,7 @@ another link component.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiLink } from '@numior/kit';
 ```
 

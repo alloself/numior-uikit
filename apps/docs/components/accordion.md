@@ -6,7 +6,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiAccordion, NuiAccordionItem } from '@numior/kit';
 ```
 

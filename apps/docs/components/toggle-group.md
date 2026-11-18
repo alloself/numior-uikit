@@ -8,7 +8,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiToggleGroup } from '@numior/kit';
 ```
 

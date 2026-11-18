@@ -100,7 +100,7 @@ export default defineConfigWithTheme<DocsThemeConfig>({
   markdown: {
     headers: { level: [2, 3] },
     anchor: { permalink: headingPermalink },
-    config: (md) => docsMarkdown(md, highlighter, bundle),
+    config: (md) => docsMarkdown(md, highlighter),
   },
   vite: {
     resolve:

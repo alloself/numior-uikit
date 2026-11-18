@@ -8,7 +8,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiProgress } from '@numior/kit';
 ```
 

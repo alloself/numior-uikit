@@ -8,7 +8,7 @@
 
 ## Установка
 
-```ts install:packages
+```ts
 import { NuiCollabPresence } from '@numior/kit/collaboration/vue';
 ```
 

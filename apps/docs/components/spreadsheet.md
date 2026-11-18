@@ -12,7 +12,7 @@
 
 ## Установка
 
-```ts install:packages
+```ts
 import { NuiSpreadsheet } from '@numior/kit/spreadsheet';
 ```
 

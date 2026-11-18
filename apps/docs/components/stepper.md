@@ -9,7 +9,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiStepper } from '@numior/kit';
 ```
 

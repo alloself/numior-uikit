@@ -10,7 +10,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiSmartForm, formConfig, useForm } from '@numior/kit/forms';
 ```
 

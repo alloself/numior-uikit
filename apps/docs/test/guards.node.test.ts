@@ -11,7 +11,7 @@ import {
 import { exampleGuards, exampleTextsOf, vocabularyOf } from '../.vitepress/content/example-guards';
 import { GuardRule, type GuardProblem } from '../.vitepress/content/guard.types';
 import { collectGuardProblems } from '../.vitepress/content/guards';
-import { installGuards } from '../.vitepress/content/install-guards';
+import { styleGuards } from '../.vitepress/content/style-guards';
 import { kitCatalogGuards } from '../.vitepress/content/kit-catalog-guards';
 import { catalogPackageGuards, packageGuards } from '../.vitepress/content/package-guards';
 import { openingGuards, pageGuards } from '../.vitepress/content/page-guards';
@@ -222,63 +222,36 @@ describe('guards of the component pages', () => {
   });
 });
 
-describe('guards of the install blocks', () => {
-  const IMPORT = "import { NuiSelect } from '@numior/kit';";
-  const STYLE = "import '@numior/kit/styles/select.css';";
-  const MODULES: readonly string[] = ['@numior/kit/table/', '@numior/kit/charts/'];
-
-  it('accept a printed install block and a block of package styles alone', () => {
-    const source = page('Выбор из списка.', [
+describe('guards of the stylesheets in code blocks', () => {
+  it('accept the Tailwind entry with the theme and the styles of the whole kit', () => {
+    const source = page('Установка.', [
       '## Установка',
       '',
-      fence('ts install', [IMPORT]),
+      fence('ts', ["import { NuiSelect } from '@numior/kit';"]),
       '',
-      '## Стили',
-      '',
-      fence('ts', ["import '@numior/kit/styles.css';"]),
+      fence('css', [
+        "@import 'tailwindcss';",
+        "@import '@numior/kit/tailwind/theme.css';",
+        "@import '@numior/kit/styles.css';",
+      ]),
     ]);
 
-    expect(installGuards('components/select.md', source, MODULES)).toEqual([]);
+    expect(styleGuards('guide/tailwind.md', source)).toEqual([]);
   });
 
-  it('report stylesheets listed by hand and an install block that the build does not print', () => {
-    const source = page('Выбор из списка.', [
-      '## Установка',
-      '',
-      fence('ts install', [IMPORT, STYLE]),
-      '',
-      fence('ts', [IMPORT]),
-      '',
-      '## Примеры',
-      '',
-      fence('ts', [IMPORT, STYLE]),
-      '',
-      fence('ts', [IMPORT]),
-    ]);
-
-    expect(
-      textsOf(installGuards('components/select.md', source, MODULES), GuardRule.Install),
-    ).toEqual([
-      'an install block lists stylesheets by hand; the build prints them',
-      'an install block imports kit components without `ts install`',
-      'stylesheets of kit components are listed by hand; mark the block `ts install`',
-    ]);
-  });
-
-  it('report stylesheets of a module written by hand', () => {
+  it('report the styles of a component or a module imported by hand', () => {
     const source = page('Таблица.', [
-      '## Установка',
-      '',
-      fence('sh', ['pnpm add @numior/kit']),
-      '',
-      fence('ts', ["import '@numior/kit/styles.css';", "import '@numior/kit/charts/styles.css';"]),
+      fence('ts', ["import '@numior/kit/styles/select.css';"]),
       '',
       fence('css', ["@import '@numior/kit/table/styles.css';"]),
+      '',
+      fence('css', ["@import url('@numior/kit/editor/styles/editor.css');"]),
     ]);
 
-    expect(textsOf(installGuards('table/index.md', source, MODULES), GuardRule.Install)).toEqual([
-      'stylesheets of a kit module are listed by hand; mark the block `ts install:packages`',
-      'stylesheets of a kit module are listed by hand; mark the block `ts install:packages`',
+    expect(textsOf(styleGuards('table/index.md', source), GuardRule.Styles)).toEqual([
+      'a code block imports the styles of components or a module; @numior/kit/styles.css brings them',
+      'a code block imports the styles of components or a module; @numior/kit/styles.css brings them',
+      'a code block imports the styles of components or a module; @numior/kit/styles.css brings them',
     ]);
   });
 });

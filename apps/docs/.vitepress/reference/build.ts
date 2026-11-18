@@ -13,8 +13,7 @@ import { kitEntries, type KitEntries } from './kit-entries.ts';
 import { compiledKitCss, isLayered, THEME_FILE } from './kit-css.ts';
 import { componentReference } from './meta.ts';
 import { sceneProblems, type SceneSource } from './scenes.ts';
-import { componentEntries, familyFile, familyStyleImport } from './sources.ts';
-import { kitStylesheets, type KitStylesheets } from './stylesheets.ts';
+import { allEntries, ENTRIES, familyFile, packageEntry } from './sources.ts';
 import { parseThemeTokens } from './tokens.ts';
 import type {
   CatalogReference,
@@ -22,7 +21,6 @@ import type {
   ComponentReference,
   DocsMap,
   ReferenceBundle,
-  ReferenceEntry,
   ReferenceStyles,
 } from './reference.types.ts';
 
@@ -39,42 +37,6 @@ interface CollectedComponent {
   readonly catalog: CatalogReference | undefined;
   readonly problems: readonly string[];
 }
-
-const packageEntry = (name: string, dir: string): ReferenceEntry => ({
-  name,
-  source: `${dir}/src/index.ts`,
-  types: `${dir}/dist/index.d.ts`,
-});
-
-const COLLABORATION = 'packages/collaboration';
-
-const ENTRIES: readonly ReferenceEntry[] = [
-  packageEntry('@numior/vue', 'packages/vue'),
-  packageEntry('@numior/forms', 'packages/forms'),
-  packageEntry('@numior/table', 'packages/table'),
-  packageEntry('@numior/content', 'packages/content'),
-  packageEntry('@numior/editor-vue', 'packages/editor-vue'),
-  packageEntry('@numior/spreadsheet', 'packages/spreadsheet'),
-  packageEntry('@numior/charts', 'packages/charts'),
-  packageEntry('@numior/collaboration', COLLABORATION),
-  {
-    name: '@numior/collaboration/vue',
-    source: `${COLLABORATION}/src/vue/index.ts`,
-    types: `${COLLABORATION}/dist/vue/index.d.ts`,
-    flat: { family: 'collab', styles: '@numior/collaboration/styles.css' },
-  },
-  {
-    name: '@numior/collaboration/room',
-    source: `${COLLABORATION}/src/room/index.ts`,
-    types: `${COLLABORATION}/dist/room/index.d.ts`,
-  },
-  {
-    name: '@numior/collaboration/yjs',
-    source: `${COLLABORATION}/src/yjs/index.ts`,
-    types: `${COLLABORATION}/dist/yjs/index.d.ts`,
-  },
-  packageEntry('@numior/offline', 'packages/offline'),
-];
 
 const PRIMITIVES = packageEntry('@numior/primitives', 'packages/primitives');
 
@@ -99,14 +61,13 @@ const tokensOf = async (css: string): Promise<string[]> => {
 
 const stylesOf = async (entry: ComponentEntry): Promise<ReferenceStyles | undefined> => {
   const file = familyFile(entry, '.css');
-  const importPath = familyStyleImport(entry);
 
-  if (file === undefined || importPath === undefined) {
+  if (file === undefined) {
     return undefined;
   }
   const css = readFileSync(file, 'utf8');
 
-  return { import: importPath, blocks: parseBlocks(css), tokens: await tokensOf(css) };
+  return { blocks: parseBlocks(css), tokens: await tokensOf(css) };
 };
 
 const loadCatalog = async (file: string): Promise<CatalogReference | undefined> =>
@@ -118,7 +79,6 @@ const collectComponent = async (
   docs: DocsMap,
   members: ReadonlyMap<string, string>,
   sceneOf: SceneSource,
-  sheets: KitStylesheets,
 ): Promise<CollectedComponent> => {
   const messagesFile = familyFile(entry, '.messages.ts');
   const catalog = messagesFile === undefined ? undefined : await loadCatalog(messagesFile);
@@ -127,7 +87,6 @@ const collectComponent = async (
     entry,
     checker.getComponentMeta(entry.file),
     await stylesOf(entry),
-    sheets.of(entry.file),
     catalog?.namespace,
     members,
   );
@@ -150,11 +109,6 @@ const collectComponent = async (
 const kitFacing = (component: ComponentReference, kit: KitEntries): ComponentReference => ({
   ...component,
   package: kit.module(component.package),
-  styles:
-    component.styles === undefined
-      ? undefined
-      : { ...component.styles, import: kit.sheet(component.styles.import) },
-  stylesheets: component.stylesheets.map(kit.sheet),
 });
 
 const MEMBER_DEFAULT = /^[A-Z]\w*\.[A-Z]\w*$/;
@@ -178,9 +132,6 @@ const sceneSourceOf =
     return entry === undefined ? undefined : readFileSync(entry, 'utf8');
   };
 
-const allEntries = (root: string): ComponentEntry[] =>
-  ENTRIES.flatMap((entry) => componentEntries(join(root, entry.source), entry.name, entry.flat));
-
 export const buildReference = async (
   root: string,
   docs: DocsMap,
@@ -194,11 +145,10 @@ export const buildReference = async (
   const catalogs: Record<string, CatalogReference> = {};
   const problems: string[] = [];
   const sceneOf = sceneSourceOf(root);
-  const sheets = kitStylesheets(root);
   const kit = kitEntries(root);
 
   for (const entry of allEntries(root)) {
-    const collected = await collectComponent(checker, entry, docs, members, sceneOf, sheets);
+    const collected = await collectComponent(checker, entry, docs, members, sceneOf);
 
     components[entry.name] = kitFacing(
       { ...collected.component, file: relative(root, entry.file) },
@@ -229,7 +179,6 @@ export const buildReference = async (
       icons: parseIconAliases(
         readFileSync(join(root, 'packages/primitives/src/icons/icon-aliases.ts'), 'utf8'),
       ),
-      stylesheets: sheets.order.map(kit.sheet),
     },
     problems,
     undocumented: Object.keys(components).filter((name) => docs[name] === undefined),

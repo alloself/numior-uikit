@@ -18,7 +18,7 @@ file stops its request. The returned value becomes the `result` of the file in t
 
 ## Installation
 
-```ts install
+```ts
 import { NuiUpload } from '@numior/kit';
 ```
 

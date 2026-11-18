@@ -9,7 +9,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiNumberField } from '@numior/kit';
 ```
 

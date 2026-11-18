@@ -9,7 +9,7 @@ Windows и Linux.
 
 ## Установка
 
-```ts install
+```ts
 import { NuiKbd } from '@numior/kit';
 ```
 

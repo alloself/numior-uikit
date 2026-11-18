@@ -9,7 +9,7 @@ Numior UI inputs take `label`, `description` and `error` themselves, so wrap a c
 
 ## Installation
 
-```ts install
+```ts
 import { NuiField } from '@numior/kit';
 ```
 

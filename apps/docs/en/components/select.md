@@ -8,7 +8,7 @@ Pass the options to `options` as `{ value, label }` entries.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiSelect } from '@numior/kit';
 ```
 

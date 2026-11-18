@@ -15,7 +15,7 @@ Choose what collapsing does in `collapsible`:
 
 ## Installation
 
-```ts install
+```ts
 import { NuiSidebar, NuiSidebarContent, NuiSidebarGroup, NuiSidebarItem } from '@numior/kit';
 ```
 

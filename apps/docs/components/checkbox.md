@@ -9,7 +9,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiCheckbox, NuiCheckboxGroup } from '@numior/kit';
 ```
 

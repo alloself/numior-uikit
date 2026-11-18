@@ -8,7 +8,7 @@ For a field that opens a calendar in a popover, use a [Date picker](/en/componen
 
 ## Installation
 
-```ts install
+```ts
 import { NuiCalendar } from '@numior/kit';
 ```
 

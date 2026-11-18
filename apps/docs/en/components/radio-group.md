@@ -9,7 +9,7 @@ one.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiRadio, NuiRadioGroup } from '@numior/kit';
 ```
 

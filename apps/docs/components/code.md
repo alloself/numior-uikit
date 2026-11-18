@@ -6,7 +6,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiCode } from '@numior/kit';
 ```
 

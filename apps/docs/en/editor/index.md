@@ -8,7 +8,7 @@ Type `/` at the start of a line to turn it into another block, or press + in the
 
 ## Installation
 
-```ts install:packages
+```ts
 import { NuiEditor } from '@numior/kit/editor';
 import type { DocJSON } from '@numior/kit/editor-core';
 ```

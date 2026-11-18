@@ -14,7 +14,7 @@ and with `height` it scrolls and renders only the visible rows and columns.
 
 ## Installation
 
-```ts install:packages
+```ts
 import { NuiTable } from '@numior/kit/table';
 ```
 

@@ -14,7 +14,7 @@ The last step names the current page and does not link anywhere.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiBreadcrumbs } from '@numior/kit';
 ```
 

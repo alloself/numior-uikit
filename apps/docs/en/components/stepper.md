@@ -9,7 +9,7 @@ nothing itself: your app or a [Smart form](/en/components/smart-form) decides wh
 
 ## Installation
 
-```ts install
+```ts
 import { NuiStepper } from '@numior/kit';
 ```
 

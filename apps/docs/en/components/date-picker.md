@@ -8,7 +8,7 @@ The model holds the date as a `YYYY-MM-DD` string.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiDatePicker } from '@numior/kit';
 ```
 

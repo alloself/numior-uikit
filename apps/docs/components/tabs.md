@@ -8,7 +8,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/kit';
 ```
 

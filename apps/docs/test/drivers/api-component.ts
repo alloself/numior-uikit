@@ -13,11 +13,9 @@ export const referenceOf = (overrides: Partial<ComponentReference> = {}): Compon
   family: 'sample',
   file: '/packages/vue/src/sample/NuiSample.vue',
   styles: {
-    import: '@numior/vue/styles/sample.css',
     blocks: [{ name: 'nui-sample', parts: ['label'], modifiers: ['size-sm', '__label--muted'] }],
     tokens: ['--color-primary'],
   },
-  stylesheets: ['@numior/vue/styles/sample.css'],
   messages: undefined,
   props: [
     {
@@ -130,9 +128,5 @@ export class ApiComponentDriver {
 
   get text(): string {
     return this.wrapper.text();
-  }
-
-  get styleImport(): string {
-    return this.wrapper.find('.nui-code__code').text();
   }
 }

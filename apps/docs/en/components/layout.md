@@ -10,7 +10,7 @@ Put a [Sidebar](/en/components/sidebar) into the `sidebar` slot and a `NuiAppBar
 
 ## Installation
 
-```ts install
+```ts
 import { NuiAppBar, NuiLayout } from '@numior/kit';
 ```
 

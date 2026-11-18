@@ -4,7 +4,6 @@ import { createMarkdownRenderer, type MarkdownRenderer } from 'vitepress';
 import { createHighlighter } from 'shiki';
 import { docsMarkdown } from '../.vitepress/markdown';
 import { headingPermalink } from '../.vitepress/markdown/anchors';
-import type { InstallSource } from '../.vitepress/markdown/markdown.types';
 import {
   isBoolean,
   isNumber,
@@ -35,21 +34,16 @@ const decodeAttribute = (value: string): string =>
     .replaceAll('&#39;', "'")
     .replaceAll('&amp;', '&');
 
-const CODE_BLOCK_RE = /<div class="mb-5"><NuiCode v-bind='([^']*)'><\/NuiCode><\/div>/g;
+const CODE_BLOCK_RE = /<div class="mb-5"><NuiCode v-bind='([^']*)'><\/NuiCode><\/div>/;
 
 const codeProps = (html: string) => {
-  const match = new RegExp(CODE_BLOCK_RE.source).exec(html);
+  const match = CODE_BLOCK_RE.exec(html);
 
   if (match?.[1] === undefined) {
     throw new Error(`No code block in: ${html}`);
   }
   return parseAs(decodeAttribute(match[1]), isCodeProps, 'code props');
 };
-
-const codeBlocks = (html: string) =>
-  [...html.matchAll(CODE_BLOCK_RE)].map(([, props = '']) =>
-    parseAs(decodeAttribute(props), isCodeProps, 'code props'),
-  );
 
 const codeGroup = (html: string) => {
   const match = /<CodeGroup :items='([^']*)'><\/CodeGroup>/.exec(html);
@@ -61,29 +55,6 @@ const codeGroup = (html: string) => {
 };
 
 const pageEnv = (relativePath: string) => ({ path: relativePath, relativePath, cleanUrls: true });
-
-const INSTALL: InstallSource = {
-  components: {
-    NuiSelect: {
-      stylesheets: [
-        '@numior/kit/styles/icon.css',
-        '@numior/kit/styles/field.css',
-        '@numior/kit/styles/select.css',
-      ],
-    },
-    NuiTable: {
-      stylesheets: ['@numior/kit/styles/icon.css', '@numior/kit/table/styles/table.css'],
-    },
-  },
-  stylesheets: [
-    '@numior/kit/styles.css',
-    '@numior/kit/styles/icon.css',
-    '@numior/kit/styles/field.css',
-    '@numior/kit/styles/select.css',
-    '@numior/kit/table/styles.css',
-    '@numior/kit/table/styles/table.css',
-  ],
-};
 
 const RU = pageEnv('components/button.md');
 const EN = pageEnv('en/components/button.md');
@@ -99,7 +70,7 @@ describe('docs markdown', () => {
       {
         headers: { level: [2, 3] },
         anchor: { permalink: headingPermalink },
-        config: (renderer) => docsMarkdown(renderer, highlighter, INSTALL),
+        config: (renderer) => docsMarkdown(renderer, highlighter),
       },
       '/',
     );
@@ -143,49 +114,6 @@ describe('docs markdown', () => {
     expect(variants[1]?.code.highlight).toEqual([1]);
     expect(codeProps(html).code).toBe('const c = 3;');
     expect(html.match(/<NuiCode /g)).toHaveLength(1);
-  });
-
-  it('prints every stylesheet that the components of an install block render', () => {
-    const files = codeBlocks(
-      md.render("```ts install\nimport { NuiTable, NuiSelect } from '@numior/kit';\n```\n", RU),
-    );
-
-    expect(files.map(({ language, code }) => [language, code])).toEqual([
-      ['ts', "import { NuiTable, NuiSelect } from '@numior/kit';"],
-      [
-        'css',
-        [
-          "@import '@numior/kit/styles/icon.css';",
-          "@import '@numior/kit/styles/field.css';",
-          "@import '@numior/kit/styles/select.css';",
-          "@import '@numior/kit/table/styles/table.css';",
-        ].join('\n'),
-      ],
-    ]);
-
-    const packages = codeBlocks(
-      md.render("```ts install:packages\nimport { NuiTable } from '@numior/kit/table';\n```\n", RU),
-    );
-
-    expect(packages.map(({ code }) => code)).toEqual([
-      "import { NuiTable } from '@numior/kit/table';",
-      ["@import '@numior/kit/styles.css';", "@import '@numior/kit/table/styles.css';"].join('\n'),
-    ]);
-  });
-
-  it('prints no install command: the kit holds every module', () => {
-    const html = md.render(
-      "```ts install:packages\nimport { NuiTable } from '@numior/kit/table';\n```\n",
-      RU,
-    );
-
-    expect(html).not.toContain('<CodeGroup');
-  });
-
-  it('refuses an install block that imports no component with styles', () => {
-    expect(() =>
-      md.render("```ts install\nimport { useToast } from '@numior/kit';\n```\n", RU),
-    ).toThrow('imports no kit component with styles');
   });
 
   it('keeps plain fences without a language or tokens', () => {

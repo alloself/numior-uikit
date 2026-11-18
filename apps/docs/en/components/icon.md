@@ -8,7 +8,7 @@ Each icon loads separately, the first time it is needed.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiIcon } from '@numior/kit';
 ```
 

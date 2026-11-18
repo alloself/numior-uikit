@@ -6,7 +6,7 @@ A placeholder that holds the place of content while it loads.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiSkeleton } from '@numior/kit';
 ```
 

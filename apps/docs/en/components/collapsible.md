@@ -8,7 +8,7 @@ To stack several sections, use an [Accordion](/en/components/accordion).
 
 ## Installation
 
-```ts install
+```ts
 import { NuiCollapsible } from '@numior/kit';
 ```
 

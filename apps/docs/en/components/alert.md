@@ -9,7 +9,7 @@ For a short notice that appears over the page and goes away by itself, use a
 
 ## Installation
 
-```ts install
+```ts
 import { NuiAlert } from '@numior/kit';
 ```
 

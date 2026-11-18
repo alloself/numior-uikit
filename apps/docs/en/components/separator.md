@@ -6,7 +6,7 @@ A line between blocks of a page or between buttons of a toolbar.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiSeparator } from '@numior/kit';
 ```
 

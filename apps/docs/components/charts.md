@@ -8,7 +8,7 @@
 
 ## Установка
 
-```ts install:packages
+```ts
 import { NuiChart } from '@numior/kit/charts';
 ```
 

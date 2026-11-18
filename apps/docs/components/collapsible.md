@@ -8,7 +8,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiCollapsible } from '@numior/kit';
 ```
 

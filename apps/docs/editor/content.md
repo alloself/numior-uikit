@@ -9,7 +9,7 @@
 
 ## Установка
 
-```ts install:packages
+```ts
 import { NuiContent } from '@numior/kit/content';
 import { fromHTML } from '@numior/kit/editor-core';
 ```
@@ -23,8 +23,7 @@ import { fromHTML } from '@numior/kit/editor-core';
 
 <Example name="content/Views" />
 
-Таблица выводится так же, как в редакторе, с сортировкой и фильтрами автора. Для неё подключите
-`@numior/kit/table/styles.css`.
+Таблица выводится так же, как в редакторе, с сортировкой и фильтрами автора.
 
 Вид картинки открывает её на весь экран по клику. Видео выводится окном, если его сервис
 перечислен в `embeds`, а без вида встраивания остаётся ссылкой.

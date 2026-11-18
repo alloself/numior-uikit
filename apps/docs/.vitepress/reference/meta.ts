@@ -93,7 +93,6 @@ export const componentReference = (
   entry: ComponentEntry,
   meta: ComponentMeta,
   styles: ReferenceStyles | undefined,
-  stylesheets: readonly string[],
   messages: string | undefined,
   members: ReadonlyMap<string, string> = NO_MEMBERS,
 ): ComponentReference => {
@@ -114,7 +113,6 @@ export const componentReference = (
     family: entry.family,
     file: entry.file,
     styles,
-    stylesheets,
     messages,
     props: own.reduce<ReferenceProp[]>((found, prop) => {
       if (!modelProps.has(prop.name)) {

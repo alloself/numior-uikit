@@ -10,7 +10,7 @@ in the [plain form](/en/components/form) validates and submits them.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiSmartForm, formConfig, useForm } from '@numior/kit/forms';
 ```
 

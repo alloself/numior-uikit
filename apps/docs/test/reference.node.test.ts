@@ -13,7 +13,7 @@ import { parseIconAliases } from '../.vitepress/reference/icons';
 import { kitEntries } from '../.vitepress/reference/kit-entries';
 import { componentReference } from '../.vitepress/reference/meta';
 import { loadReferenceModule, resolveReferenceId } from '../.vitepress/reference/plugin';
-import { componentEntries, familyStyleImport } from '../.vitepress/reference/sources';
+import { componentEntries } from '../.vitepress/reference/sources';
 import { parseThemeTokens } from '../.vitepress/reference/tokens';
 import { parseBundle } from '../.vitepress/reference/bundle';
 import type { ComponentReference, ReferenceBundle } from '../.vitepress/reference/reference.types';
@@ -71,33 +71,27 @@ describe('docs reference', () => {
     button = componentReference(
       entry,
       checker.getComponentMeta(entry.file),
-      { import: familyStyleImport(entry) ?? '', blocks: [], tokens: [] },
-      [],
+      { blocks: [], tokens: [] },
       undefined,
       enumerationMembers(`${ROOT}packages/vue/dist/index.d.ts`),
     );
   }, 30_000);
 
-  it('lists exported components with their package, family and style import', () => {
+  it('lists exported components with their package and family', () => {
     const entry = buttonEntry();
 
     expect(entry.family).toBe('button');
     expect(entry.file.endsWith('packages/vue/src/button/NuiButton.vue')).toBe(true);
-    expect(familyStyleImport(entry)).toBe('@numior/vue/styles/button.css');
   });
 
-  it('gives components of a flat entry the family and the stylesheet of that entry', () => {
+  it('gives components of a flat entry the family of that entry', () => {
     const entry = componentEntries(
       `${ROOT}packages/collaboration/src/vue/index.ts`,
       '@numior/collaboration/vue',
-      { family: 'collab', styles: '@numior/collaboration/styles.css' },
+      { family: 'collab' },
     ).find((item) => item.name === 'NuiCollabPresence');
 
     expect(entry).toMatchObject({ package: '@numior/collaboration/vue', family: 'collab' });
-
-    expect(entry === undefined ? undefined : familyStyleImport(entry)).toBe(
-      '@numior/collaboration/styles.css',
-    );
   });
 
   it('turns component meta into typed props, models, slots and defaults', () => {
@@ -130,7 +124,6 @@ describe('docs reference', () => {
       entry,
       checker.getComponentMeta(entry.file),
       undefined,
-      [],
       undefined,
     );
 
@@ -300,8 +293,6 @@ describe('docs reference', () => {
     expect(bundle.components.NuiSelect?.messages).toBe('select');
     expect(bundle.catalogs.select?.texts.empty?.ru).toBeTypeOf('string');
     expect(bundle.components.NuiForm?.package).toBe('@numior/kit/forms');
-    expect(bundle.components.NuiTable?.stylesheets).toContain('@numior/kit/table/styles/table.css');
-    expect(bundle.stylesheets[0]).toBe('@numior/kit/styles.css');
     expect(bundle.components.NuiButton?.file).toBe('packages/vue/src/button/NuiButton.vue');
     expect(JSON.stringify(bundle)).not.toContain(ROOT);
     expect(JSON.stringify(bundle)).not.toMatch(/@numior\/(?!kit\b)/u);
@@ -328,7 +319,6 @@ describe('docs reference', () => {
       ],
       tokens: [],
       icons: [],
-      stylesheets: [],
     };
 
     const current = (): ReferenceBundle => bundle;
@@ -342,14 +332,6 @@ describe('docs reference', () => {
 
     expect(loadReferenceModule(current, '\0virtual:nui-reference/component/NuiButton')).toContain(
       '"name":"NuiButton"',
-    );
-
-    expect(
-      loadReferenceModule(current, '\0virtual:nui-reference/component/NuiButton', (code) => [
-        [{ text: code, scope: 'string' }],
-      ]),
-    ).toContain(
-      '"importTokens":[[{"text":"@import \'@numior/vue/styles/button.css\';","scope":"string"}]]',
     );
 
     expect(loadReferenceModule(current, '\0virtual:nui-reference/component/nope')).toBe(

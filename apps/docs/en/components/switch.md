@@ -9,7 +9,7 @@ For a choice that applies only after the form is submitted, use a
 
 ## Installation
 
-```ts install
+```ts
 import { NuiSwitch } from '@numior/kit';
 ```
 

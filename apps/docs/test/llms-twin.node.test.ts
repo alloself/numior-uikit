@@ -24,8 +24,7 @@ const BUNDLE: ReferenceBundle = {
       package: '@numior/kit',
       family: 'button',
       file: 'packages/vue/src/button/NuiButton.vue',
-      styles: { import: '@numior/kit/styles/button.css', blocks: [], tokens: [] },
-      stylesheets: ['@numior/kit/styles/icon.css', '@numior/kit/styles/button.css'],
+      styles: { blocks: [], tokens: [] },
       messages: 'button',
       props: [
         {
@@ -64,7 +63,6 @@ const BUNDLE: ReferenceBundle = {
       family: 'select',
       file: 'packages/vue/src/select/NuiSelect.vue',
       styles: undefined,
-      stylesheets: [],
       messages: undefined,
       props: [],
       models: [],
@@ -97,11 +95,6 @@ const BUNDLE: ReferenceBundle = {
     { name: '--color-surface', group: 'color', light: '#fff', dark: '#111' },
   ],
   icons: [{ alias: 'copy', icon: 'Copy' }],
-  stylesheets: [
-    '@numior/kit/styles.css',
-    '@numior/kit/styles/icon.css',
-    '@numior/kit/styles/button.css',
-  ],
 };
 
 const contextOf = (locale: 'ru' | 'en' = 'ru'): TwinContext => ({
@@ -145,45 +138,10 @@ describe('markdown twin of a page', () => {
     expect(pageTwin(page, contextOf())).toBe('До.\n\nПосле.\n');
   });
 
-  it('prints the stylesheets of an install block the way the page shows them', () => {
-    const page = "## Установка\n\n```ts install\nimport { NuiButton } from '@numior/kit';\n```\n";
+  it('prints the install block as the import alone', () => {
+    const page = "## Установка\n\n```ts\nimport { NuiButton } from '@numior/kit';\n```\n";
 
-    expect(pageTwin(page, contextOf())).toBe(
-      [
-        '## Установка',
-        '',
-        '```ts',
-        "import { NuiButton } from '@numior/kit';",
-        '```',
-        '',
-        '```css',
-        "@import '@numior/kit/styles/icon.css';",
-        "@import '@numior/kit/styles/button.css';",
-        '```',
-        '',
-      ].join('\n'),
-    );
-  });
-
-  it('prints no install command for a module of the kit', () => {
-    const page =
-      "## Установка\n\n```ts install\nimport { NuiButton } from '@numior/kit/forms';\n```\n";
-
-    expect(pageTwin(page, contextOf())).toBe(
-      [
-        '## Установка',
-        '',
-        '```ts',
-        "import { NuiButton } from '@numior/kit/forms';",
-        '```',
-        '',
-        '```css',
-        "@import '@numior/kit/styles/icon.css';",
-        "@import '@numior/kit/styles/button.css';",
-        '```',
-        '',
-      ].join('\n'),
-    );
+    expect(pageTwin(page, contextOf())).toBe(page);
   });
 
   it('fences a source that holds a fence itself with a longer fence', () => {
@@ -204,9 +162,7 @@ describe('markdown twin of a page', () => {
 
     expect(twin).toContain('### NuiButton');
 
-    expect(twin).toContain(
-      "import { NuiButton } from '@numior/kit';\n```\n\n```css\n@import '@numior/kit/styles/button.css';",
-    );
+    expect(twin).toContain("```ts\nimport { NuiButton } from '@numior/kit';\n```\n\n#### Props");
 
     expect(twin).toContain('#### Props\n\n| Name | Type | Default | Description |');
 

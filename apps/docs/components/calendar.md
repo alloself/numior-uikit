@@ -8,7 +8,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiCalendar } from '@numior/kit';
 ```
 

@@ -8,7 +8,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiTooltip } from '@numior/kit';
 ```
 
@@ -28,7 +28,7 @@ import { NuiTooltip } from '@numior/kit';
 
 ### Показать сочетание клавиш
 
-Задайте `shortcut` и подключите `@numior/kit/styles/kbd.css`.
+Задайте `shortcut`.
 
 <Example name="tooltip/Shortcut" />
 

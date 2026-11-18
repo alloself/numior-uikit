@@ -14,13 +14,10 @@ const claim = (shown: Set<string>, key: string | undefined): boolean => {
 };
 
 export const withoutRepeats = (entries: readonly ApiEntry[]): ApiEntry[] => {
-  const styles = new Set<string>();
   const catalogs = new Set<string>();
 
   return entries.map((entry) => ({
-    component: claim(styles, entry.component.styles?.import)
-      ? entry.component
-      : { ...entry.component, styles: undefined },
+    component: entry.component,
     catalog: claim(catalogs, entry.component.messages) ? entry.catalog : undefined,
   }));
 };

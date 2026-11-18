@@ -6,7 +6,7 @@ A code block with a copy button, line numbers and syntax highlighting.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiCode } from '@numior/kit';
 ```
 

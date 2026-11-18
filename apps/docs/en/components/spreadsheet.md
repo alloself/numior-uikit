@@ -12,7 +12,7 @@ the sheet is shown. Otherwise the component creates its own.
 
 ## Installation
 
-```ts install:packages
+```ts
 import { NuiSpreadsheet } from '@numior/kit/spreadsheet';
 ```
 

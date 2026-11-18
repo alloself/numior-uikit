@@ -6,7 +6,7 @@ A command palette with search.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiCommand, NuiCommandDialog } from '@numior/kit';
 ```
 

@@ -9,7 +9,7 @@ nested levels.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiToc } from '@numior/kit';
 ```
 

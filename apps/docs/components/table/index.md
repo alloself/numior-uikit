@@ -13,7 +13,7 @@
 
 ## Установка
 
-```ts install:packages
+```ts
 import { NuiTable } from '@numior/kit/table';
 ```
 

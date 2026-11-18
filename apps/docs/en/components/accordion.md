@@ -6,7 +6,7 @@ Sections stacked under each other, with one or several open at a time.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiAccordion, NuiAccordionItem } from '@numior/kit';
 ```
 

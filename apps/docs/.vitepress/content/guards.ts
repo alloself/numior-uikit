@@ -14,9 +14,8 @@ import {
 import { exampleGuards, vocabularyOf } from './example-guards.ts';
 import type { ExampleContext, GuardProblem } from './guard.types.ts';
 import { navigationTexts } from '../navigation.ts';
-import { installGuards } from './install-guards.ts';
+import { styleGuards } from './style-guards.ts';
 import { kitCatalogGuards } from './kit-catalog-guards.ts';
-import { kitEntries } from '../reference/kit-entries.ts';
 import { catalogPackageGuards, packageGuards } from './package-guards.ts';
 import { openingGuards, pageGuards } from './page-guards.ts';
 
@@ -180,12 +179,11 @@ export const collectGuardProblems = async (
   repoRoot: string,
 ): Promise<GuardProblem[]> => {
   const pages = pagesOf(docsRoot);
-  const { modules } = kitEntries(repoRoot);
 
   return [
     ...Object.entries(pages).flatMap(([page, source]) => [
       ...pageGuards(page, source),
-      ...installGuards(page, source, modules),
+      ...styleGuards(page, source),
       ...packageGuards(page, source),
     ]),
     ...sampleSources(docsRoot).flatMap((file) =>

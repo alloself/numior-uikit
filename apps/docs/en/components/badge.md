@@ -8,7 +8,7 @@ For a label the user can remove, use a [Chip](/en/components/chip).
 
 ## Installation
 
-```ts install
+```ts
 import { NuiBadge } from '@numior/kit';
 ```
 

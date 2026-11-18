@@ -8,7 +8,7 @@ Set the height in lines with `rows`.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiTextarea } from '@numior/kit';
 ```
 

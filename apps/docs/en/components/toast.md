@@ -17,7 +17,7 @@ Then call `useToast()` in any component, and its toasts appear in this toaster.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiToaster, useToast } from '@numior/kit';
 ```
 

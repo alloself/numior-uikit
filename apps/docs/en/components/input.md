@@ -8,7 +8,7 @@ The label, the hint and the error work as described on the [Field](/en/component
 
 ## Installation
 
-```ts install
+```ts
 import { NuiInput } from '@numior/kit';
 ```
 

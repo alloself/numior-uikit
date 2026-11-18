@@ -15,7 +15,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiMenu, NuiMenuItem } from '@numior/kit';
 ```
 

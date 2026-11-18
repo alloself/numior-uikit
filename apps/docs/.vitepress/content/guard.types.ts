@@ -41,5 +41,5 @@ export const GuardRule = {
   Dump: 'label-dump',
   Names: 'demo-names',
   Imports: 'imports',
-  Install: 'install-styles',
+  Styles: 'component-styles',
 } as const;

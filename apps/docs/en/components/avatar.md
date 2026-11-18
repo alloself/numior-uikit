@@ -8,7 +8,7 @@ Pass the photo in `src` and the name in `name`: without a photo the avatar shows
 
 ## Installation
 
-```ts install
+```ts
 import { NuiAvatar, NuiAvatarGroup } from '@numior/kit';
 ```
 

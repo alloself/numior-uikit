@@ -17,7 +17,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiToaster, useToast } from '@numior/kit';
 ```
 

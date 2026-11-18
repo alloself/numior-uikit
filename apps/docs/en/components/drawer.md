@@ -8,7 +8,7 @@ For an app menu that stays on screen, use a [Sidebar](/en/components/sidebar).
 
 ## Installation
 
-```ts install
+```ts
 import { NuiDrawer } from '@numior/kit';
 ```
 

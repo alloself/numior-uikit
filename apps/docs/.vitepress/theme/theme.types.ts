@@ -12,7 +12,6 @@ import type {
   LocalizedText,
   ReferenceKey,
   ReferenceProp,
-  ReferenceStyles,
   TokenReference,
 } from '../reference/reference.types';
 
@@ -149,7 +148,6 @@ export interface DocsTexts {
   readonly apiSlots: string;
   readonly apiExposed: string;
   readonly apiKeyboard: string;
-  readonly apiStyles: string;
   readonly apiTexts: string;
   readonly apiName: string;
   readonly apiType: string;
@@ -359,11 +357,6 @@ export interface ApiTableProps<T extends ApiRow> {
 export interface ApiKeyboardProps {
   keys: readonly ReferenceKey[];
   locale: ExampleLocale;
-  texts: DocsTexts;
-}
-
-export interface ApiStylesProps {
-  styles: ReferenceStyles;
   texts: DocsTexts;
 }
 

@@ -14,7 +14,7 @@
 
 ## Установка
 
-```ts install
+```ts
 import { NuiBreadcrumbs } from '@numior/kit';
 ```
 

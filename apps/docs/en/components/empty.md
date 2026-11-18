@@ -8,7 +8,7 @@ Put the reason in `title` and `description`, and the next step in the `actions` 
 
 ## Installation
 
-```ts install
+```ts
 import { NuiEmpty } from '@numior/kit';
 ```
 

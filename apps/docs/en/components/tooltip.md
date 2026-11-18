@@ -8,7 +8,7 @@ Put the element into the `trigger` slot the same way as in a [Popover](/en/compo
 
 ## Installation
 
-```ts install
+```ts
 import { NuiTooltip } from '@numior/kit';
 ```
 
@@ -28,7 +28,7 @@ Keep `aria-label` on the button: the tooltip becomes its description, not its na
 
 ### Show a keyboard shortcut
 
-Set `shortcut` and import `@numior/kit/styles/kbd.css`.
+Set `shortcut`.
 
 <Example name="tooltip/Shortcut" />
 

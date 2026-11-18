@@ -9,7 +9,7 @@ the pressed one.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiDialog } from '@numior/kit';
 ```
 

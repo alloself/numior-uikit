@@ -9,7 +9,7 @@ becomes a link, and a row with `interactive` a button.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiList, NuiListItem } from '@numior/kit';
 ```
 

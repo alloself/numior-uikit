@@ -8,7 +8,7 @@ For a status or a count, use a [Badge](/en/components/badge).
 
 ## Installation
 
-```ts install
+```ts
 import { NuiChip } from '@numior/kit';
 ```
 

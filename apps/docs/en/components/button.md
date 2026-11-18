@@ -6,7 +6,7 @@ A button for actions on the page.
 
 ## Installation
 
-```ts install
+```ts
 import { NuiButton } from '@numior/kit';
 ```
 

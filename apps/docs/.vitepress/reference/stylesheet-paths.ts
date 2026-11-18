@@ -5,9 +5,7 @@ const SHEET_RE = /\/styles\/[^/]+\.css$/;
 
 const isBundle = (path: string): boolean => path.endsWith(`/${BUNDLE_FILE}`);
 
-export const bundleOf = (path: string): string => path.replace(SHEET_RE, `/${BUNDLE_FILE}`);
-
-export const styleImportOf = (path: string): string => `@import '${path}';`;
+const bundleOf = (path: string): string => path.replace(SHEET_RE, `/${BUNDLE_FILE}`);
 
 export const orderedStylesheets = (
   paths: readonly string[],
