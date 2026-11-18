@@ -336,6 +336,29 @@
     justify-content: center;
   }
 }
+@supports (position-anchor: --nui-rail-item) and (animation-timeline: view()) {
+  .nui-sidebar--rail .nui-list-item:not(.nui-sidebar-sub__flyout *) {
+    view-timeline: --nui-rail-view block;
+  }
+
+  .nui-sidebar--rail
+    .nui-list-item
+    .nui-row__trailing:not(.nui-sidebar-sub__flyout *):has(> .nui-badge) {
+    animation: nui-rail-count-shown linear both;
+    animation-timeline: --nui-rail-view;
+    animation-range: entry 0% exit 0%;
+  }
+}
+@keyframes nui-rail-count-shown {
+  0%,
+  100% {
+    visibility: hidden;
+  }
+  0.001%,
+  99.999% {
+    visibility: visible;
+  }
+}
 .nui-sidebar--rail .nui-list-item .nui-row__trailing:not(.nui-sidebar-sub__flyout *) > .nui-badge {
   flex: none;
   margin-inline: auto;

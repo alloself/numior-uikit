@@ -185,6 +185,10 @@ const LAYERS = '[popover], dialog';
 
 const PANELS = '.nui-sidebar:not(.nui-sidebar--rail), .nui-tree.nui-list--variant-outline';
 
+const PANEL_LAYERS = '.nui-sidebar-drawer';
+
+const ROW_LAYERS = `:is(${LAYERS}):not(${PANEL_LAYERS})`;
+
 export class PlaygroundPage {
   readonly workspace: Locator;
   readonly resolvedScheme: Locator;
@@ -411,17 +415,28 @@ export class PlaygroundPage {
       found.push(...(await rowInsetFaultsOf(panel, PANEL_INSET)));
     }
 
-    for (const layer of await this.page.locator(LAYERS).all()) {
+    found.push(
+      ...(await this.rowInsetFaultsInLayers(PANEL_LAYERS, PANEL_INSET)),
+      ...(await this.rowInsetFaultsInLayers(ROW_LAYERS, LAYER_INSET)),
+    );
+
+    return [...new Set(found)].toSorted();
+  }
+
+  private async rowInsetFaultsInLayers(selector: string, token: string): Promise<string[]> {
+    const found: string[] = [];
+
+    for (const layer of await this.page.locator(selector).all()) {
       if (!(await showLayer(layer))) {
         continue;
       }
 
-      found.push(...(await rowInsetFaultsOf(layer, LAYER_INSET)));
+      found.push(...(await rowInsetFaultsOf(layer, token)));
 
       await hideLayer(layer);
     }
 
-    return [...new Set(found)].toSorted();
+    return found;
   }
 
   rowTransitionFaults(): Promise<string[]> {
