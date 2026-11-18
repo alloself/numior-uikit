@@ -28,25 +28,6 @@ const linesOf = (scope: Locator): Promise<Edges> =>
     };
   });
 
-const linkEdgesOf = (scope: Locator): Promise<Edges> =>
-  scope.evaluate((root) =>
-    [...root.querySelectorAll('a')].reduce(
-      (edges, link) => {
-        const box = link.getBoundingClientRect();
-
-        if (box.width === 0 || !link.checkVisibility()) {
-          return edges;
-        }
-
-        return {
-          start: Math.min(edges.start, Math.round(box.left)),
-          end: Math.max(edges.end, Math.round(box.right)),
-        };
-      },
-      { start: Number.POSITIVE_INFINITY, end: Number.NEGATIVE_INFINITY },
-    ),
-  );
-
 export class DocsExample {
   readonly root: Locator;
   readonly previewToggle: Locator;
@@ -347,7 +328,10 @@ export class DocsSite {
   }
 
   async headerAndFooterEdges(): Promise<{ header: Edges; footer: Edges }> {
-    return { header: await linesOf(this.header), footer: await linkEdgesOf(this.footer) };
+    return {
+      header: await linesOf(this.header),
+      footer: await linesOf(this.footer.locator(':scope > div')),
+    };
   }
 
   async follow(link: string): Promise<void> {
