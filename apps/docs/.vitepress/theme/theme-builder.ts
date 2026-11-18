@@ -8,13 +8,12 @@ import {
   type ThemeModel,
   type ThemeSources,
 } from './theme.types';
+import { cssDeclarationsOf } from './theme-css';
 
 type Declarations = ReadonlyMap<string, string>;
 
-const DECLARATION_RE = /(--[a-z0-9-]+):\s*([^;{}]+);/gu;
 const STATIC_THEME_RE = /@theme static\s*\{([^}]*)\}/u;
 const HOOK_RE = /(--[a-z0-9-]+):\s*var\(\s*(--color-theme-[a-z0-9-]+)\s*,/gu;
-const SPACE_RE = /\s+/gu;
 const UNSET = 'initial';
 const COLOR_PREFIX = '--color-';
 const RADIUS = '--radius-base';
@@ -36,16 +35,8 @@ export const THEME_IMPORTS = [
   "@import '@numior/kit/styles.css';",
 ] as const;
 
-const declarationsOf = (body: string): Declarations =>
-  new Map(
-    Array.from(body.matchAll(DECLARATION_RE), ([, name = '', value = '']) => [
-      name,
-      value.replace(SPACE_RE, ' ').trim(),
-    ]),
-  );
-
 const ruleOf = (css: string, selector: string): Declarations =>
-  declarationsOf(
+  cssDeclarationsOf(
     new RegExp(`${escapeRegExp(selector)}\\s*\\{([^}]*)\\}`, 'u').exec(css)?.[1] ?? '',
   );
 
@@ -69,7 +60,7 @@ const entriesWhere = (
 ): Declarations => new Map([...declarations].filter(keep));
 
 export const createThemeModel = (sources: ThemeSources): ThemeModel => {
-  const kit = declarationsOf(STATIC_THEME_RE.exec(sources.kit)?.[1] ?? '');
+  const kit = cssDeclarationsOf(STATIC_THEME_RE.exec(sources.kit)?.[1] ?? '');
   const site = ruleOf(sources.site, `.${SITE_THEME_CLASS}`);
   const siteColors = entriesWhere(site, isColor);
   const siteDetails = entriesWhere(site, isDetail);
@@ -140,13 +131,23 @@ export const createThemeModel = (sources: ThemeSources): ThemeModel => {
         .map(([key, value]) => [hooks.get(key) ?? key, value]),
     );
 
-  const preview = (choice: ThemeChoice): Readonly<Record<string, string>> => {
-    const values = chosen(choice);
+  const hookOf = new Map([...hooks].map(([hook, key]) => [key, hook]));
+
+  const previewOf = (declarations: Declarations): Readonly<Record<string, string>> => {
+    const values = new Map(
+      [...declarations].map(([key, value]) => [hookOf.get(key) ?? key, value]),
+    );
 
     return Object.fromEntries(
-      [...scoped].map((key) => [key, values.get(key) ?? kit.get(key) ?? UNSET]),
+      [...new Set([...scoped, ...values.keys()])].map((key) => [
+        key,
+        values.get(key) ?? kit.get(key) ?? UNSET,
+      ]),
     );
   };
+
+  const preview = (choice: ThemeChoice): Readonly<Record<string, string>> =>
+    previewOf(chosen(choice));
 
   const css = (choice: ThemeChoice): string => {
     const keys = [...overrides(choice)].map(([key, value]) => `  ${key}: ${value};`);
@@ -155,5 +156,5 @@ export const createThemeModel = (sources: ThemeSources): ThemeModel => {
     return [...THEME_IMPORTS, ...theme].join('\n');
   };
 
-  return { presets, radii: RADII, overrides, preview, css };
+  return { presets, radii: RADII, overrides, preview, previewOf, css };
 };

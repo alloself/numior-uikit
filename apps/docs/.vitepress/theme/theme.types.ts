@@ -284,7 +284,19 @@ export interface ThemeModel {
   readonly radii: readonly string[];
   readonly overrides: (choice: ThemeChoice) => ReadonlyMap<string, string>;
   readonly preview: (choice: ThemeChoice) => Readonly<Record<string, string>>;
+  readonly previewOf: (
+    declarations: ReadonlyMap<string, string>,
+  ) => Readonly<Record<string, string>>;
   readonly css: (choice: ThemeChoice) => string;
+}
+
+export interface ThemeStepProps {
+  theme: Readonly<Record<string, string>>;
+}
+
+export interface ThemeStepViewProps extends ThemeStepProps {
+  locale: ExampleLocale;
+  texts: DocsTexts;
 }
 
 export interface ThemeBuilderProps {

@@ -11,6 +11,7 @@ import {
   listOf,
   optional,
   parseAs,
+  recordOf,
   shapeOf,
 } from '../../../packages/primitives/test/support/guards';
 
@@ -26,6 +27,8 @@ const isCodeProps = shapeOf({
 });
 
 const isCodeGroup = listOf(shapeOf({ label: isString, code: isCodeProps }));
+
+const isTheme = recordOf(isString);
 
 const decodeAttribute = (value: string): string =>
   value
@@ -53,6 +56,13 @@ const codeGroup = (html: string) => {
   }
   return parseAs(decodeAttribute(match[1]), isCodeGroup, 'code group');
 };
+
+const THEME_STEP_RE = /<ThemeStep :theme='([^']*)' \/>/g;
+
+const themeSteps = (html: string) =>
+  Array.from(html.matchAll(THEME_STEP_RE), ([, theme = '']) =>
+    parseAs(decodeAttribute(theme), isTheme, 'theme step'),
+  );
 
 const pageEnv = (relativePath: string) => ({ path: relativePath, relativePath, cleanUrls: true });
 
@@ -98,6 +108,30 @@ describe('docs markdown', () => {
     expect(props.lineNumbers).toBe(true);
     expect(props.tokens).toHaveLength(2);
     expect(props.tokens?.[0]?.[0]).toEqual({ text: 'const', scope: 'keyword' });
+  });
+
+  it('shows a css preview fence on a live example with the keys of the preview fences above it', () => {
+    const html = md.render(
+      [
+        '```css preview\n@theme {\n  --color-primary: red;\n}\n```',
+        '```css\n@theme {\n  --color-border: blue;\n}\n```',
+        '```css preview\n@theme {\n  --radius-base: 0;\n  --color-primary: green;\n}\n```',
+      ].join('\n\n'),
+      pageEnv('guide/custom-theme.md'),
+    );
+
+    const next = md.render(
+      '```css preview\n@theme {\n  --radius-base: 1rem;\n}\n```\n',
+      pageEnv('en/guide/custom-theme.md'),
+    );
+
+    expect(themeSteps(html)).toEqual([
+      { '--color-primary': 'red' },
+      { '--color-primary': 'green', '--radius-base': '0' },
+    ]);
+
+    expect(html.match(/<NuiCode /g)).toHaveLength(3);
+    expect(themeSteps(next)).toEqual([{ '--radius-base': '1rem' }]);
   });
 
   it('gathers the fences of a code group into labelled variants of one block', () => {

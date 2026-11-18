@@ -59,6 +59,22 @@ describe('theme builder', () => {
     expect(numior['--color-primary']).toBe('light-dark(#ae3f10, #e0561a)');
   });
 
+  it('previews keys written for an app theme over the kit defaults', () => {
+    const preview = model.previewOf(
+      new Map([
+        ['--color-primary', 'red'],
+        ['--color-primary-soft-foreground', 'maroon'],
+      ]),
+    );
+
+    expect(preview['--color-primary']).toBe('red');
+    expect(preview['--color-theme-soft-foreground']).toBe('maroon');
+    expect(preview['--color-surface']).toBe(model.preview(model.presets.base)['--color-surface']);
+    expect(preview['--caption-open']).toBe("''");
+    expect(preview['--color-theme-syntax-highlight']).toBe('initial');
+    expect(preview['--radius-base']).toBe('0.5rem');
+  });
+
   it('writes the chosen radius and keeps the details of the preset with another palette', () => {
     const choice = {
       preset: ThemePreset.Numior,

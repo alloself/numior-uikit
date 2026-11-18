@@ -74,7 +74,24 @@ export class DocsExample {
 }
 
 export class DocsThemeCompare {
-  constructor(private readonly page: Page) {}
+  readonly steps: Locator;
+
+  constructor(private readonly page: Page) {
+    this.steps = page.getByRole('figure', { name: 'Превью темы' });
+  }
+
+  async stepLook(index: number, name: string): Promise<ButtonLook> {
+    const step = this.steps.nth(index);
+
+    await step.scrollIntoViewIfNeeded();
+
+    return lookOf(step.getByRole('button', { name }));
+  }
+
+  async frameLook(label: string, name: string): Promise<ButtonLook> {
+    return lookOf(await this.button(label, name));
+  }
+
 
   screen(label: string): FrameLocator {
     return this.page.frameLocator(`iframe[title="${label}"]`);

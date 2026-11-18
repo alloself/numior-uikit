@@ -13,6 +13,7 @@ import Layout from './Layout.vue';
 import ApiReference from './parts/ApiReference.vue';
 import DocsBlock from './parts/DocsBlock.vue';
 import DocsThemeBuilder from './parts/DocsThemeBuilder.vue';
+import DocsThemeStep from './parts/DocsThemeStep.vue';
 import DocsThemeCompare from './parts/DocsThemeCompare.vue';
 import DocsCodeGroup from './parts/DocsCodeGroup.vue';
 import DocsConfigurator from './parts/DocsConfigurator.vue';
@@ -58,6 +59,7 @@ export default {
     app.component('KeyboardReference', DocsKeyboard);
     app.component('SignatureReference', DocsSignature);
     app.component('ThemeBuilder', DocsThemeBuilder);
+    app.component('ThemeStep', DocsThemeStep);
     app.component('ThemeCompare', DocsThemeCompare);
     app.component('TokenReference', DocsTokens);
   },

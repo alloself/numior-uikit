@@ -1,36 +1,50 @@
 # Custom theme
 
-How to build your own theme on top of the base one. This site wears such a theme: the steps
-that produced it are below, followed by the whole file.
+A Numior UI theme is the keys of an `@theme` block in the CSS file with Tailwind: colors, radius,
+font and a few details. The steps below build the theme of this site, and each step shows what it
+changes. You can also put a theme together in the [builder](/en/theme/).
 
-<ThemeCompare name="GuideTheme" />
+:::: steps
 
-The same example is shown in the base theme and in the theme of this site.
+### Add the theme block
 
-## Create a theme file
-
-Set the values of theme keys in the `@theme` block of the CSS file that loads Tailwind. The
-block goes after the Numior UI theme:
+The `@theme` block goes into the CSS file that loads Tailwind, after the Numior UI theme:
 
 ```css
 @import 'tailwindcss';
 @import '@numior/kit/tailwind/theme.css';
+@import '@numior/kit/styles.css';
 
 @theme {
-  --color-primary: light-dark(#ae3f10, #e0561a);
-  --color-primary-foreground: light-dark(#f3f2ef, #030304);
 }
 ```
 
-Components and Tailwind classes such as `bg-primary` get the new values. Parts of a page with
-their own light or dark theme get them too.
+While the block is empty, components look like the base theme. The keys from the next steps reach
+both the components and Tailwind classes such as `bg-primary`.
 
-## Set the colors
+### Set the accent
 
-Write every color as a pair inside `light-dark()`: the first value applies in the light theme,
-the second in the dark one.
+A role color is a pair: `--color-primary` for the fill and `--color-primary-foreground` for the
+text on it. Each value goes into `light-dark()`: the first for the light scheme, the second for the
+dark one.
 
-```css
+```css preview
+@theme {
+  --color-primary: light-dark(#ae3f10, #e0561a);
+  --color-primary-foreground: light-dark(#f3f2ef, #030304);
+  --color-primary-soft-foreground: light-dark(#7a2c04, #f2662f);
+}
+```
+
+Hover, press, focus and the soft fill follow from the pair on their own. When a computed shade
+does not fit, set its key: that is how the site theme darkens the text on the soft fill.
+
+### Set surfaces and text
+
+The page, card and field backgrounds, the text colors and the borders are pairs for both schemes
+too:
+
+```css preview
 @theme {
   --color-surface: light-dark(#f3f2ef, #030304);
   --color-surface-muted: light-dark(#e9e8e5, #151414);
@@ -41,18 +55,14 @@ the second in the dark one.
 }
 ```
 
-A role color has two keys: `--color-primary` for the background and
-`--color-primary-foreground` for the text on it. The shades for hover, press, focus and the
-soft background are computed from that pair.
+The remaining keys for surfaces, text and secondary roles are in the
+[theme file of this site](#the-theme-file-of-this-site).
 
-When a computed shade does not fit, set its key in the same `@theme`. The theme of this site
-darkens the text on the soft background this way: `--color-primary-soft-foreground`.
+### Set the radius and the font
 
-## Set the shape and the font
+All radii follow one key, and another key names the font:
 
-One key drives the corner radii, another names the font:
-
-```css
+```css preview
 @theme {
   --radius-base: 0.25rem;
   --font-sans: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
@@ -60,15 +70,15 @@ One key drives the corner radii, another names the font:
 }
 ```
 
-The other radii follow `--radius-base`: `sm` is half of it, `lg` is one and a half times
-larger, `xl` is twice as large. Load the font files yourself, the theme only names the family.
+The other radii follow `--radius-base`: `sm` is half of it, `lg` one and a half times, `xl` twice
+as large. The theme only names the family, and the font files come from a package such as
+`@fontsource-variable/manrope`.
 
-## Tune the details
+### Tune the details
 
-Group captions in lists and the sidebar, the list marker in prose and the focus frame of
-fields are theme keys too:
+Group captions in lists, the list marker in text and the focus ring of fields are theme keys too:
 
-```css
+```css preview
 @theme {
   --caption-transform: uppercase;
   --tracking-caption: 0.16em;
@@ -80,9 +90,18 @@ fields are theme keys too:
 ```
 
 With `--field-ring-width: 0px` a focused field changes its border color and draws no ring
-outside. The full key list is in [Theming](/en/guide/theming#tokens).
+outside. Every key is listed in the [token reference](/en/theme/tokens).
 
-## Tailwind
+::::
+
+## Compare with the base theme
+
+<ThemeCompare name="GuideTheme" />
+
+On the left is the example without your keys, on the right the same example in the theme of this
+site.
+
+## Tailwind classes
 
 The theme is the Tailwind setup, so there is nothing to repeat. The classes
 `bg-surface-elevated`, `text-muted-foreground`, `border` and `rounded-lg` in the example above

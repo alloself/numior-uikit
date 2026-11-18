@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import type { MarkdownRenderer } from 'vitepress';
 import type { Highlighter } from 'shiki';
 import type { NuiCodeProps } from '@numior/vue';
+import { cssDeclarationsOf } from '../theme/theme-css.ts';
 import { tokenizeCode } from './tokens.ts';
 
 interface FenceToken {
@@ -21,6 +22,7 @@ const HIGHLIGHT_RE = /\{([\d,-]+)\}/;
 const TITLE_RE = /title="([^"]*)"/;
 const LABEL_RE = /\[([^\]]+)\]/;
 const PLAIN_LANGUAGES = new Set(['', 'txt', 'text']);
+const PREVIEW_RE = /^css\s(?:.*\s)?preview(?:\s|$)/u;
 
 const highlightedLines = (info: string): number[] => {
   const spec = HIGHLIGHT_RE.exec(info)?.[1];
@@ -113,12 +115,26 @@ export const fenceCode = (
   env: unknown,
 ): NuiCodeProps => fenceProps(highlighter, token.info, fenceContent(token, env));
 
+const pageThemes = new WeakMap<object, ReadonlyMap<string, string>>();
+
+const themePreview = (token: FenceToken, env: unknown): string => {
+  if (!PREVIEW_RE.test(token.info.trim()) || typeof env !== 'object' || env === null) {
+    return '';
+  }
+
+  const theme = new Map([...(pageThemes.get(env) ?? []), ...cssDeclarationsOf(token.content)]);
+
+  pageThemes.set(env, theme);
+
+  return `<ThemeStep :theme='${attributeJson(Object.fromEntries(theme))}' />\n`;
+};
+
 export const codeFence = (md: MarkdownRenderer, highlighter: Highlighter): void => {
   md.renderer.rules.fence = (tokens, idx, _options, env) => {
     const token = tokens[idx];
 
     return token === undefined
       ? ''
-      : `<div class="mb-5"><NuiCode v-bind='${attributeJson(fenceCode(highlighter, token, env))}'></NuiCode></div>\n`;
+      : `<div class="mb-5"><NuiCode v-bind='${attributeJson(fenceCode(highlighter, token, env))}'></NuiCode></div>\n${themePreview(token, env)}`;
   };
 };

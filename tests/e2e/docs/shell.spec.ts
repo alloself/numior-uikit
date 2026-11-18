@@ -62,16 +62,28 @@ test('a focused field shows its frame without an outer ring and a button keeps t
   await expect(docs.searchButton).toHaveCSS('outline-width', '2px');
 });
 
-test('the custom theme guide shows the base theme next to Numior and prints the theme file', async ({
+test('the custom theme guide builds the site theme step by step and compares it with the base theme', async ({
   docs,
 }) => {
   await docs.open('/guide/custom-theme');
-  const compare = docs.themeCompare();
+  const guide = docs.themeCompare();
 
-  await expect.poll(() => compare.radiusOf('Базовая тема', 'Подтвердить заказ')).toBe('8px');
-  await expect.poll(() => compare.radiusOf('Тема Numior', 'Подтвердить заказ')).toBe('4px');
-  expect(await compare.fontOf('Тема Numior', 'Подтвердить заказ')).toContain('Manrope');
-  expect(await compare.fontOf('Базовая тема', 'Подтвердить заказ')).not.toContain('Manrope');
+  await expect(guide.steps).toHaveCount(4);
+
+  const accent = await guide.stepLook(0, 'Подтвердить заказ');
+  const shape = await guide.stepLook(2, 'Подтвердить заказ');
+
+  expect(accent.radius).toBe('8px');
+  expect(accent.font).not.toContain('Manrope');
+  expect(shape.fill).toBe(accent.fill);
+  expect(shape.radius).toBe('4px');
+  expect(shape.font).toContain('Manrope');
+
+  await expect.poll(() => guide.radiusOf('Базовая тема', 'Подтвердить заказ')).toBe('8px');
+  await expect.poll(() => guide.radiusOf('Тема Numior', 'Подтвердить заказ')).toBe('4px');
+  expect(await guide.fontOf('Тема Numior', 'Подтвердить заказ')).toContain('Manrope');
+  expect(await guide.fontOf('Базовая тема', 'Подтвердить заказ')).not.toContain('Manrope');
+  expect((await guide.frameLook('Базовая тема', 'Подтвердить заказ')).fill).not.toBe(accent.fill);
 
   await expect(
     docs.printedText('--color-primary: light-dark(#ae3f10, #e0561a);').last(),
