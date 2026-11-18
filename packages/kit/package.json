@@ -151,7 +151,10 @@
       "types": "./dist/vite/index.d.ts",
       "import": "./dist/vite/index.js"
     },
-    "./manifest.json": "./dist/manifest.json",
+    "./manifest.json": {
+      "@numior/source": "./dist/manifest.json",
+      "default": "./dist/manifest.json"
+    },
     "./styles.css": {
       "@numior/source": "./src/styles.css",
       "default": "./dist/styles.css"
