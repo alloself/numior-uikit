@@ -71,11 +71,6 @@ describe('get_component', () => {
     expect(reply.json()).toMatchObject({
       name: 'NuiSelect',
       import: "import { NuiSelect } from '@numior/kit';",
-      stylesheets: [
-        '@numior/kit/styles/field.css',
-        '@numior/kit/styles/list.css',
-        '@numior/kit/styles/select.css',
-      ],
       models: [{ name: 'v-model', prop: 'modelValue', description: 'Selected value.' }],
       events: [{ name: 'load', payload: '[]', description: 'Asks for more.' }],
       tokens: ['--nui-border', '--nui-radius'],

@@ -32,10 +32,9 @@ const manyIcons: McpData = {
   },
 };
 
-const STYLED = `
+const SCRIPT = `
 <script setup lang="ts">
 import { NuiButton, NuiSelect } from '@numior/kit';
-import '@numior/kit/styles.css';
 </script>
 `;
 
@@ -45,7 +44,7 @@ describe('check_usage', () => {
   <NuiButton variant="soft" tone="error" icon="trash" icon-only aria-label="Delete" @click="remove" />
   <NuiSelect v-model="city" :options="cities" size="sm" @load="more" />
 </template>
-${STYLED}
+${SCRIPT}
 <style scoped>
 .toolbar { display: flex; }
 .toolbar > .action { margin: 0; }
@@ -74,7 +73,6 @@ ${STYLED}
 <script setup lang="ts">
 import NuiFancy from './NuiFancy.vue';
 import { NuiButton as Action } from '@numior/kit';
-import '@numior/kit/styles.css';
 </script>`);
 
     expect(file.messages).toEqual(['`NuiButton` has no prop `varient`.']);
@@ -84,7 +82,7 @@ import '@numior/kit/styles.css';
     const file = CheckedFile.of(`<template>
   <NuiButton varient="soft" :tonee="color" type="submit" data-test="save" class="w-full" />
 </template>
-${STYLED}`);
+${SCRIPT}`);
 
     expect(file.codes).toEqual(['unknown-prop', 'unknown-prop']);
     expect(file.severities).toEqual(['warning', 'warning']);
@@ -107,7 +105,7 @@ ${STYLED}`);
   <NuiSelect :options="[]" @lod="more" @update:model-value="pick" @focusin="track" />
   <NuiDialog @closed="reset" />
 </template>
-${STYLED}`);
+${SCRIPT}`);
 
     expect(file.codes).toEqual(['unknown-event', 'unknown-event']);
     expect(file.hints).toEqual(['Did you mean `load`?', 'Did you mean `close`?']);
@@ -118,7 +116,7 @@ ${STYLED}`);
   <NuiButton variant="primary" />
   <NuiButton :variant="'outlne'" icon="delete" />
 </template>
-${STYLED}`);
+${SCRIPT}`);
 
     expect(file.codes).toEqual(['invalid-value', 'invalid-value', 'invalid-value']);
     expect(file.messages[0]).toBe('`NuiButton` does not accept `variant="primary"`.');
@@ -134,18 +132,14 @@ ${STYLED}`);
     const file = CheckedFile.of(`<template>
   <NuiTable row-height="40" />
   <NuiTable :row-height="40" />
-</template>
-<script setup lang="ts">
-import '@numior/kit/styles.css';
-import '@numior/kit/table/styles.css';
-</script>`);
+</template>`);
 
     expect(file.hints).toEqual(['Use one of: `auto`. Bind a number as `:rowHeight="40"`.']);
   });
 
   it('points to the reference instead of printing a long enumeration', () => {
     const file = CheckedFile.of(
-      `<template><NuiButton icon="sav" /></template>${STYLED}`,
+      `<template><NuiButton icon="sav" /></template>${SCRIPT}`,
       {},
       manyIcons,
     );
@@ -173,44 +167,40 @@ import * as kit from '@numior/kit';
     ]);
   });
 
-  it('warns once per component whose stylesheets this file does not import', () => {
+  it('warns about kit CSS imported from a script or a style block and leaves other CSS alone', () => {
     const file = CheckedFile.of(`<template>
-  <NuiSelect :options="[]" />
-  <NuiSelect :options="[]" />
   <NuiButton />
 </template>
 <script setup lang="ts">
-import '@numior/kit/styles/field.css';
-import '@numior/kit/styles/button.css';
-</script>`);
-
-    expect(file.codes).toEqual(['missing-styles']);
-    expect(file.lines).toEqual([2]);
-    expect(file.messages).toEqual(['The styles of `NuiSelect` are not imported in this file.']);
-
-    expect(file.hints[0]).toBe(
-      'Import `@numior/kit/styles/list.css`, `@numior/kit/styles/select.css` or `@numior/kit/styles.css`. If the app entry (main.ts or a global CSS file) already imports them, ignore this warning.',
-    );
-  });
-
-  it('takes the stylesheets from a style block import and from the package bundles', () => {
-    const file = CheckedFile.of(`<template>
-  <NuiSelect :options="[]" />
-  <NuiTable />
-</template>
+import '@numior/kit/styles.css';
+import './local.css';
+</script>
 <style>
-@import '@numior/kit/styles.css';
-@import url('@numior/kit/table/styles.css');
+@import '@numior/kit/table/styles.css';
+@import url('~@numior/kit/styles/select.css');
+@import './theme.css';
 </style>`);
 
-    expect(file.diagnostics).toEqual([]);
+    expect(file.codes).toEqual(['misplaced-styles', 'misplaced-styles', 'misplaced-styles']);
+    expect(file.severities).toEqual(['warning', 'warning', 'warning']);
+    expect(file.lines).toEqual([5, 9, 10]);
+
+    expect(file.messages).toEqual([
+      '`@numior/kit/styles.css` is imported from a script.',
+      '`@numior/kit/table/styles.css` is imported from a <style> block.',
+      '`~@numior/kit/styles/select.css` is imported from a <style> block.',
+    ]);
+
+    expect(file.hints[0]).toBe(
+      "Kit CSS goes into the Tailwind entry file, next to `@import 'tailwindcss';`; the styles of the components come in one line: `@import '@numior/kit/styles.css';`.",
+    );
   });
 
   it('warns about selectors that restyle a block, a part or a modifier of the kit', () => {
     const file = CheckedFile.of(`<template>
   <div class="toolbar"><slot /></div>
 </template>
-${STYLED}
+${SCRIPT}
 <style scoped>
 .toolbar :deep(.nui-select__trigger) { border-radius: 0; }
 .nui-button--loading { opacity: 1; }
@@ -229,7 +219,7 @@ ${STYLED}
       'style-override',
     ]);
 
-    expect(file.lines).toEqual([11, 12, 13, 16]);
+    expect(file.lines).toEqual([10, 11, 12, 15]);
 
     expect(file.messages).toEqual([
       '`.toolbar :deep(.nui-select__trigger)` restyles the part `nui-select__trigger` of `NuiSelect` from outside.',
@@ -301,13 +291,10 @@ import { qwertyuiop } from '@numior/kit';
 <style>
 .nui-dialog__panel { color: red; }
 </style>`,
-      {},
-      { ...fixtureData, packageStyles: {} },
     );
 
     expect(file.hints).toEqual([
       'list_components shows the available components.',
-      'Import `@numior/kit/styles/button.css`. If the app entry (main.ts or a global CSS file) already imports them, ignore this warning.',
       'get_component NuiButton lists its props and models.',
       'get_component NuiButton lists its events.',
       '`NuiButton` has no models.',
@@ -317,18 +304,22 @@ import { qwertyuiop } from '@numior/kit';
   });
 
   it('speaks Russian when asked', () => {
-    const file = CheckedFile.of('<template><NuiButton varient="soft" /></template>', {
-      locale: McpLocale.Ru,
-    });
+    const file = CheckedFile.of(
+      `<template><NuiButton varient="soft" /></template>
+<script setup lang="ts">
+import '@numior/kit/styles.css';
+</script>`,
+      { locale: McpLocale.Ru },
+    );
 
     expect(file.messages).toEqual([
-      'Стили `NuiButton` не подключены в этом файле.',
       'У `NuiButton` нет свойства `varient`.',
+      '`@numior/kit/styles.css` подключён из скрипта.',
     ]);
 
     expect(file.hints).toEqual([
-      'Подключите `@numior/kit/styles/button.css` или `@numior/kit/styles.css`. Если их уже подключает точка входа (main.ts или общий CSS-файл), предупреждение можно не учитывать.',
       'Возможно, имелось в виду `variant`.',
+      "CSS кита подключается во входном файле Tailwind, рядом с `@import 'tailwindcss';`; стили компонентов — одной строкой `@import '@numior/kit/styles.css';`.",
     ]);
   });
 
@@ -350,22 +341,18 @@ import Kit from '@numior/kit';
 .bar .nui-button { height: 1px; }
 </style>`,
       { locale: McpLocale.Ru },
-      { ...fixtureData, packageStyles: {} },
     );
 
     expect(file.messages).toEqual([
       'В Numior UI нет компонента `NuiButon`.',
       'В Numior UI нет компонента `NuiQuantumFlux`.',
-      'Стили `NuiButton` не подключены в этом файле.',
       'У `NuiButton` нет свойства `zzzzzzzz`.',
       '`NuiButton` не принимает `variant="primary"`.',
       '`NuiButton` не принимает `variant="outlne"`.',
       'У `NuiButton` нет события `qqqqqqqq`.',
       'У `NuiButton` нет `v-model:shown`.',
-      'Стили `NuiSelect` не подключены в этом файле.',
       'У `NuiSelect` нет `v-model:shown`.',
       'У `NuiSelect` нет события `lod`.',
-      'Стили `NuiTable` не подключены в этом файле.',
       '`NuiTable` не принимает `rowHeight="40"`.',
       'В `@numior/kit` нет экспорта `NuiForm`.',
       'В `@numior/kit` нет экспорта `NuiButon`.',
@@ -378,16 +365,13 @@ import Kit from '@numior/kit';
     expect(file.hints).toEqual([
       'Возможно, имелся в виду `NuiButton`.',
       'Список компонентов показывает list_components.',
-      'Подключите `@numior/kit/styles/button.css`. Если их уже подключает точка входа (main.ts или общий CSS-файл), предупреждение можно не учитывать.',
       'Свойства и модели `NuiButton` показывает get_component.',
       'Допустимые значения: `solid`, `soft`, `outline`. `primary` — значение свойства `tone`.',
       'Допустимые значения: `solid`, `soft`, `outline`. Возможно, имелось в виду `outline`.',
       'События `NuiButton` показывает get_component.',
       'У `NuiButton` нет моделей.',
-      'Подключите `@numior/kit/styles/field.css`, `@numior/kit/styles/list.css`, `@numior/kit/styles/select.css`. Если их уже подключает точка входа (main.ts или общий CSS-файл), предупреждение можно не учитывать.',
       'Модели компонента: `v-model`.',
       'Возможно, имелось в виду `load`.',
-      'Подключите `@numior/kit/styles.css`, `@numior/kit/table/styles.css`, `@numior/kit/table/styles/table.css`. Если их уже подключает точка входа (main.ts или общий CSS-файл), предупреждение можно не учитывать.',
       'Допустимые значения: `auto`. Число передайте привязкой: `:rowHeight="40"`.',
       '`NuiForm` экспортирует `@numior/kit/forms`.',
       'Возможно, имелось в виду `NuiButton`.',

@@ -20,7 +20,6 @@ describe('the data built from the documentation', () => {
 </template>
 <script setup lang="ts">
 import { NuiButton } from '@numior/kit';
-import '@numior/kit/styles.css';
 </script>`,
     });
 

@@ -14,7 +14,6 @@ import {
 import { diagnosticAt } from './diagnostic';
 import { scriptFacts } from './script';
 import { styleFacts } from './styles';
-import { missingStyles } from './stylesheets';
 import { templateFacts } from './template';
 
 const DEFAULT_FILENAME = 'Component.vue';
@@ -62,10 +61,6 @@ export const checkUsage = (data: McpData, input: CheckInput): CheckReport => {
         ...script.diagnostics,
         ...template.diagnostics,
         ...styles.diagnostics,
-        ...missingStyles(data, texts, template.used, [
-          ...script.stylesheets,
-          ...styles.stylesheets,
-        ]),
       ],
       ['line', 'column'],
     ),

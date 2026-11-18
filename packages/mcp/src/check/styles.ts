@@ -6,18 +6,19 @@ import type { McpComponent, McpData, McpProp } from '../data.types';
 import {
   DiagnosticCode,
   DiagnosticSeverity,
+  StylePlace,
   StyleTarget,
   type CheckTexts,
   type Diagnostic,
   type StyleFacts,
 } from './check.types';
 import { diagnosticAt } from './diagnostic';
+import { isKitStylesheet, misplacedStyles } from './misplaced-styles';
 
 interface StyleContext {
   readonly texts: CheckTexts;
   readonly blocks: ReadonlyMap<string, readonly McpComponent[]>;
   readonly block: SFCStyleBlock;
-  readonly stylesheets: string[];
   readonly diagnostics: Diagnostic[];
 }
 
@@ -225,11 +226,18 @@ const checkRule = (context: StyleContext, rule: Rule): void => {
 const collectImport = (context: StyleContext, rule: AtRule): void => {
   const path = IMPORT_PATH.exec(rule.params.trim())?.[1];
 
-  if (path === undefined) {
+  if (path === undefined || !isKitStylesheet(path)) {
     return;
   }
 
-  context.stylesheets.push(path);
+  context.diagnostics.push(
+    misplacedStyles(
+      context.texts,
+      { line: lineOf(context, rule.source?.start?.line), column: rule.source?.start?.column ?? 1 },
+      path,
+      StylePlace.Style,
+    ),
+  );
 };
 
 const readable = (block: SFCStyleBlock): string =>
@@ -268,11 +276,10 @@ export const styleFacts = (
   blocks: readonly SFCStyleBlock[],
 ): StyleFacts => {
   const index = blockIndex(data);
-  const stylesheets: string[] = [];
   const diagnostics: Diagnostic[] = [];
 
   for (const block of blocks) {
-    checkBlock({ texts, blocks: index, block, stylesheets, diagnostics });
+    checkBlock({ texts, blocks: index, block, diagnostics });
   }
-  return { stylesheets, diagnostics };
+  return { diagnostics };
 };

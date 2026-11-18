@@ -73,7 +73,6 @@ const componentView = (data: McpData, component: McpComponent, locale: McpLocale
   name: component.name,
   package: component.package,
   import: `import { ${component.name} } from '${component.package}';`,
-  stylesheets: component.stylesheets,
   props: component.props.map((prop) => ({
     name: prop.name,
     type: prop.type,

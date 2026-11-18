@@ -87,16 +87,16 @@ Other MCP clients start the server with the same command.
 
 ### Tools
 
-| Tool              | What it returns                                                                     |
-| ----------------- | ----------------------------------------------------------------------------------- |
-| `list_components` | Components with their package, page and summary; filter by package                  |
-| `get_component`   | Props, models, events, slots, keys and stylesheets of a component, with a page copy |
-| `get_example`     | The files of a docs example by name, such as `select/Basic`                         |
-| `get_page`        | The Markdown copy of a page by its address, such as `/guide/theming`                |
-| `search`          | Pages that match words in their titles, summaries and text, best matches first      |
-| `list_tokens`     | Theme tokens with their light and dark values; filter by group                      |
-| `list_icons`      | Icon names; filter by text                                                          |
-| `check_usage`     | Mistakes in SFC code, each with a line number and a hint                            |
+| Tool              | What it returns                                                                |
+| ----------------- | ------------------------------------------------------------------------------ |
+| `list_components` | Components with their package, page and summary; filter by package             |
+| `get_component`   | Props, models, events, slots and keys of a component, with a page copy         |
+| `get_example`     | The files of a docs example by name, such as `select/Basic`                    |
+| `get_page`        | The Markdown copy of a page by its address, such as `/guide/theming`           |
+| `search`          | Pages that match words in their titles, summaries and text, best matches first |
+| `list_tokens`     | Theme tokens with their light and dark values; filter by group                 |
+| `list_icons`      | Icon names; filter by text                                                     |
+| `check_usage`     | Mistakes in SFC code, each with a line number and a hint                       |
 
 Tools that return text take `locale`: `en` by default, or `ru`.
 
@@ -104,8 +104,8 @@ Tools that return text take `locale`: `en` by default, or `ru`.
 
 Ask your assistant to call `check_usage` on every component it writes. The tool reports unknown
 components, props and events, values outside a prop's list and imports of names a package does
-not export. It also warns about stylesheets the file does not import and about selectors that
-restyle Numior UI components from outside.
+not export. It also warns about Numior UI styles imported from a script or a component style block
+and about selectors that restyle the components from outside.
 
 ```vue
 <NuiButton variant="primary">Save</NuiButton>
@@ -122,5 +122,3 @@ Each finding has a line number and a hint:
   "hint": "Use one of: `solid`, `soft`, `outline`, `ghost`, `plain`, `link`. `primary` is a value of `tone`."
 }
 ```
-
-Skip the stylesheet warning when the app entry already imports the styles.

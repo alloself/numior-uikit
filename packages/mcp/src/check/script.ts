@@ -4,14 +4,15 @@ import { nearest } from '../nearest';
 import {
   DiagnosticCode,
   DiagnosticSeverity,
+  StylePlace,
   type CheckTexts,
   type Diagnostic,
   type NamedImport,
   type ScriptFacts,
 } from './check.types';
 import { diagnosticAt } from './diagnostic';
+import { isKitStylesheet, misplacedStyles } from './misplaced-styles';
 
-const STYLESHEET = /\.(?:css|scss|sass|less|styl)$/u;
 const KIT_SOURCE = /^@numior\//u;
 const DEFAULT_IMPORT = 'default';
 const NAMESPACE_IMPORT = '*';
@@ -108,19 +109,17 @@ export const scriptFacts = (
   texts: CheckTexts,
   blocks: readonly SFCScriptBlock[],
 ): ScriptFacts =>
-  blocks.reduce<{ imports: NamedImport[]; stylesheets: string[]; diagnostics: Diagnostic[] }>(
+  blocks.reduce<{ imports: NamedImport[]; diagnostics: Diagnostic[] }>(
     (facts, block) => {
       try {
         for (const entry of blockImports(block)) {
           facts.imports.push(entry);
 
-          if (STYLESHEET.test(entry.source)) {
-            facts.stylesheets.push(entry.source);
-          }
-
-          const problem = KIT_SOURCE.test(entry.source)
-            ? exportProblem(data, texts, entry)
-            : undefined;
+          const problem = isKitStylesheet(entry.source)
+            ? misplacedStyles(texts, entry, entry.source, StylePlace.Script)
+            : KIT_SOURCE.test(entry.source)
+              ? exportProblem(data, texts, entry)
+              : undefined;
 
           if (problem === undefined) {
             continue;
@@ -133,5 +132,5 @@ export const scriptFacts = (
       }
       return facts;
     },
-    { imports: [], stylesheets: [], diagnostics: [] },
+    { imports: [], diagnostics: [] },
   );

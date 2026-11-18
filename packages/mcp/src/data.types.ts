@@ -42,7 +42,6 @@ export interface McpBlock {
 }
 
 export interface McpStyles {
-  readonly import: string;
   readonly blocks: readonly McpBlock[];
   readonly tokens: readonly string[];
 }
@@ -51,7 +50,6 @@ export interface McpComponent {
   readonly name: string;
   readonly package: string;
   readonly styles?: McpStyles | undefined;
-  readonly stylesheets: readonly string[];
   readonly messages?: string | undefined;
   readonly props: readonly McpProp[];
   readonly models: readonly McpModel[];
@@ -94,7 +92,6 @@ export interface McpData {
   readonly components: Readonly<Record<string, McpComponent>>;
   readonly catalogs: Readonly<Record<string, Readonly<Record<string, McpText>>>>;
   readonly exports: Readonly<Record<string, readonly string[]>>;
-  readonly packageStyles: Readonly<Record<string, string>>;
   readonly tokens: readonly McpToken[];
   readonly icons: readonly McpIcon[];
   readonly pages: Readonly<Record<McpLocale, readonly McpPage[]>>;

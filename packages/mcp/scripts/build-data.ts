@@ -11,7 +11,6 @@ import {
 import { llmsEntries } from '../../../apps/docs/.vitepress/llms/files.ts';
 import type { LlmsEntry, LlmsSource } from '../../../apps/docs/.vitepress/llms/llms.types.ts';
 import { parseBundle } from '../../../apps/docs/.vitepress/reference/bundle.ts';
-import { kitEntries } from '../../../apps/docs/.vitepress/reference/kit-entries.ts';
 import type {
   ComponentReference,
   ReferenceBundle,
@@ -34,8 +33,6 @@ const OUT_FILE = fileURLToPath(new URL('../dist/data.json', import.meta.url));
 const LOCALE_PREFIX = /^\/en(?=\/|$)/u;
 const TRAILING_SLASH = /(?<=.)\/$/u;
 const API_HEADING = /^### (Nui\w+)$/gmu;
-const KIT = '@numior/kit';
-const BUNDLE = 'styles.css';
 
 const pagePathOf = (link: string): string =>
   link.replace(LOCALE_PREFIX, '').replace(TRAILING_SLASH, '') || '/';
@@ -77,11 +74,9 @@ const componentOf = (component: ComponentReference, paths: readonly string[]): M
     component.styles === undefined
       ? undefined
       : {
-          import: component.styles.import,
           blocks: component.styles.blocks,
           tokens: component.styles.tokens,
         },
-  stylesheets: component.stylesheets,
   messages: component.messages,
   props: component.props,
   models: component.models,
@@ -101,15 +96,6 @@ const exportsOf = (bundle: ReferenceBundle): Record<string, string[]> => {
   return Object.fromEntries(
     [...names].map(([entry, list]) => [entry, [...new Set(list)].toSorted()]),
   );
-};
-
-const packageStylesOf = (): Record<string, string> => {
-  const { modules } = kitEntries(ROOT);
-
-  return Object.fromEntries([
-    [KIT, `${KIT}/${BUNDLE}`],
-    ...modules.map((folder) => [folder.slice(0, -1), `${folder}${BUNDLE}`]),
-  ]);
 };
 
 const catalogsOf = (bundle: ReferenceBundle): Record<string, Readonly<Record<string, McpText>>> =>
@@ -138,7 +124,6 @@ const collectData = (): McpData => {
     ),
     catalogs: catalogsOf(bundle),
     exports: exportsOf(bundle),
-    packageStyles: packageStylesOf(),
     tokens: bundle.tokens,
     icons: bundle.icons,
     pages,

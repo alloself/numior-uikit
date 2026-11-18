@@ -1,10 +1,12 @@
-import type { McpComponent, McpLocale } from '../data.types';
+import type { McpLocale } from '../data.types';
 
 export type DiagnosticCode = (typeof DiagnosticCode)[keyof typeof DiagnosticCode];
 
 export type DiagnosticSeverity = (typeof DiagnosticSeverity)[keyof typeof DiagnosticSeverity];
 
 export type StyleTarget = (typeof StyleTarget)[keyof typeof StyleTarget];
+
+export type StylePlace = (typeof StylePlace)[keyof typeof StylePlace];
 
 export interface Diagnostic {
   readonly line: number;
@@ -47,11 +49,6 @@ export interface ValueSuggestion {
   readonly bindNumber: boolean;
 }
 
-export interface MissingSheets {
-  readonly sheets: readonly string[];
-  readonly bundles: readonly string[];
-}
-
 export interface Override {
   readonly selector: string;
   readonly className: string;
@@ -75,7 +72,7 @@ export interface CheckTexts {
   ) => Finding;
   readonly unknownExport: (source: string, name: string, suggestion: ExportSuggestion) => Finding;
   readonly noDefaultExport: (source: string) => Finding;
-  readonly missingStyles: (component: string, missing: MissingSheets) => Finding;
+  readonly misplacedStyles: (path: string, place: StylePlace) => Finding;
   readonly styleOverride: (override: Override) => Finding;
   readonly parseError: (block: string, reason: string) => Finding;
 }
@@ -88,21 +85,14 @@ export interface NamedImport extends Position {
 
 export interface ScriptFacts {
   readonly imports: readonly NamedImport[];
-  readonly stylesheets: readonly string[];
   readonly diagnostics: readonly Diagnostic[];
 }
 
-export interface UsedComponent extends Position {
-  readonly component: McpComponent;
-}
-
 export interface TemplateFacts {
-  readonly used: readonly UsedComponent[];
   readonly diagnostics: readonly Diagnostic[];
 }
 
 export interface StyleFacts {
-  readonly stylesheets: readonly string[];
   readonly diagnostics: readonly Diagnostic[];
 }
 
@@ -112,7 +102,7 @@ export const DiagnosticCode = {
   UnknownEvent: 'unknown-event',
   InvalidValue: 'invalid-value',
   UnknownExport: 'unknown-export',
-  MissingStyles: 'missing-styles',
+  MisplacedStyles: 'misplaced-styles',
   StyleOverride: 'style-override',
   ParseError: 'parse-error',
 } as const;
@@ -120,3 +110,5 @@ export const DiagnosticCode = {
 export const DiagnosticSeverity = { Error: 'error', Warning: 'warning' } as const;
 
 export const StyleTarget = { Block: 'block', Part: 'part', Modifier: 'modifier' } as const;
+
+export const StylePlace = { Script: 'script', Style: 'style' } as const;

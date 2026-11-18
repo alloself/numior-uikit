@@ -17,7 +17,6 @@ import {
   type NamedImport,
   type Position,
   type TemplateFacts,
-  type UsedComponent,
 } from './check.types';
 import { diagnosticAt } from './diagnostic';
 import {
@@ -36,7 +35,6 @@ interface TemplateContext {
   readonly texts: CheckTexts;
   readonly aliases: ReadonlyMap<string, string>;
   readonly locals: ReadonlySet<string>;
-  readonly used: UsedComponent[];
   readonly diagnostics: Diagnostic[];
 }
 
@@ -275,7 +273,6 @@ const visitElement = (context: TemplateContext, element: ElementNode): void => {
     return;
   }
 
-  context.used.push({ ...positionOf(element), component });
   checkAttributes(context, component, element);
 };
 
@@ -319,11 +316,10 @@ export const templateFacts = (
     data,
     texts,
     ...importedNames(imports),
-    used: [],
     diagnostics: [],
   };
 
   walk(context, root?.children ?? []);
 
-  return { used: context.used, diagnostics: context.diagnostics };
+  return { diagnostics: context.diagnostics };
 };

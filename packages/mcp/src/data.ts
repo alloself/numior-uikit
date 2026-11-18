@@ -15,7 +15,6 @@ const isMcpData = (value: unknown): value is McpData =>
   isRecord(value.components) &&
   isRecord(value.catalogs) &&
   isRecord(value.exports) &&
-  isRecord(value.packageStyles) &&
   Array.isArray(value.tokens) &&
   Array.isArray(value.icons) &&
   isLocalized(value.pages) &&

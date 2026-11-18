@@ -1,5 +1,5 @@
 import type { McpLocale } from '../data.types';
-import { StyleTarget, type CheckTexts, type MissingSheets, type Override } from './check.types';
+import { StylePlace, StyleTarget, type CheckTexts, type Override } from './check.types';
 import { DEFAULT_MODEL } from './vue-names';
 
 const MAX_LISTED_VALUES = 12;
@@ -26,15 +26,18 @@ const RU_TARGETS: Readonly<Record<StyleTarget, string>> = {
   [StyleTarget.Modifier]: 'модификатор',
 };
 
-const enStyles = (missing: MissingSheets): string =>
-  missing.bundles.length === 0
-    ? `Import ${codes(missing.sheets)}.`
-    : `Import ${codes(missing.sheets)} or ${codes(missing.bundles)}.`;
+const TAILWIND_IMPORT = code("@import 'tailwindcss';");
+const KIT_STYLES_IMPORT = code("@import '@numior/kit/styles.css';");
 
-const ruStyles = (missing: MissingSheets): string =>
-  missing.bundles.length === 0
-    ? `Подключите ${codes(missing.sheets)}.`
-    : `Подключите ${codes(missing.sheets)} или ${codes(missing.bundles)}.`;
+const EN_PLACES: Readonly<Record<StylePlace, string>> = {
+  [StylePlace.Script]: 'a script',
+  [StylePlace.Style]: 'a <style> block',
+};
+
+const RU_PLACES: Readonly<Record<StylePlace, string>> = {
+  [StylePlace.Script]: 'скрипта',
+  [StylePlace.Style]: 'блока <style>',
+};
 
 const enOverrideHint = (override: Override): string =>
   sentences(
@@ -113,12 +116,9 @@ const en: CheckTexts = {
     message: `${code(source)} has no default export.`,
     hint: `Import names in braces: ${code(`import { … } from '${source}'`)}.`,
   }),
-  missingStyles: (component, missing) => ({
-    message: `The styles of ${code(component)} are not imported in this file.`,
-    hint: sentences(
-      enStyles(missing),
-      'If the app entry (main.ts or a global CSS file) already imports them, ignore this warning.',
-    ),
+  misplacedStyles: (path, place) => ({
+    message: `${code(path)} is imported from ${EN_PLACES[place]}.`,
+    hint: `Kit CSS goes into the Tailwind entry file, next to ${TAILWIND_IMPORT}; the styles of the components come in one line: ${KIT_STYLES_IMPORT}.`,
   }),
   styleOverride: (override) => ({
     message: `${code(override.selector)} restyles the ${EN_TARGETS[override.target]} ${code(override.className)} of ${codes(override.components)} from outside.`,
@@ -187,12 +187,9 @@ const ru: CheckTexts = {
     message: `В ${code(source)} нет экспорта по умолчанию.`,
     hint: `Импортируйте имена в фигурных скобках: ${code(`import { … } from '${source}'`)}.`,
   }),
-  missingStyles: (component, missing) => ({
-    message: `Стили ${code(component)} не подключены в этом файле.`,
-    hint: sentences(
-      ruStyles(missing),
-      'Если их уже подключает точка входа (main.ts или общий CSS-файл), предупреждение можно не учитывать.',
-    ),
+  misplacedStyles: (path, place) => ({
+    message: `${code(path)} подключён из ${RU_PLACES[place]}.`,
+    hint: `CSS кита подключается во входном файле Tailwind, рядом с ${TAILWIND_IMPORT}; стили компонентов — одной строкой ${KIT_STYLES_IMPORT}.`,
   }),
   styleOverride: (override) => ({
     message: `${code(override.selector)} стилизует снаружи ${RU_TARGETS[override.target]} ${code(override.className)} компонента ${codes(override.components)}.`,

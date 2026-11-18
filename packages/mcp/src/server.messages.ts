@@ -4,7 +4,7 @@ export const SERVER_INSTRUCTIONS =
 export const TOOL_DESCRIPTIONS = {
   listComponents: 'List Numior UI components with their package, docs page and short description.',
   getComponent:
-    'Get the API reference of one component (props, models, events, slots, keyboard, stylesheets) and the Markdown copy of its docs page.',
+    'Get the API reference of one component (props, models, events, slots, keyboard) and the Markdown copy of its docs page.',
   getExample:
     'Get the source files of a docs example by name, such as select/Basic, ready to copy.',
   getPage: 'Get the Markdown copy of a docs page by its address, such as /components/button.',
@@ -12,7 +12,7 @@ export const TOOL_DESCRIPTIONS = {
   listTokens: 'List theme tokens (CSS custom properties) with light and dark values.',
   listIcons: 'List icon aliases the kit resolves and the Lucide icons behind them.',
   checkUsage:
-    'Check a Vue SFC for Numior UI mistakes: unknown components, props, events, enumeration values and imports, missing stylesheets, kit styles overridden from outside.',
+    'Check a Vue SFC for Numior UI mistakes: unknown components, props, events, enumeration values and imports, kit CSS imported from a script or a <style> block, kit styles overridden from outside.',
 } as const;
 
 export const PARAM_DESCRIPTIONS = {

@@ -6,13 +6,11 @@ export const fixtureButton: McpComponent = {
   name: 'NuiButton',
   package: '@numior/kit',
   styles: {
-    import: '@numior/kit/styles/button.css',
     blocks: [
       { name: 'nui-button', parts: ['content', 'spinner'], modifiers: ['loading', 'variant-soft'] },
     ],
     tokens: ['--nui-control-height-md', '--nui-primary', '--nui-radius', '--nui-radius-full'],
   },
-  stylesheets: ['@numior/kit/styles/button.css'],
   props: [
     {
       name: 'variant',
@@ -58,15 +56,9 @@ const select: McpComponent = {
   name: 'NuiSelect',
   package: '@numior/kit',
   styles: {
-    import: '@numior/kit/styles/select.css',
     blocks: [{ name: 'nui-select', parts: ['trigger', 'value'], modifiers: ['open'] }],
     tokens: ['--nui-border', '--nui-radius'],
   },
-  stylesheets: [
-    '@numior/kit/styles/field.css',
-    '@numior/kit/styles/list.css',
-    '@numior/kit/styles/select.css',
-  ],
   props: [
     {
       name: 'size',
@@ -98,14 +90,12 @@ const dialog: McpComponent = {
   name: 'NuiDialog',
   package: '@numior/kit',
   styles: {
-    import: '@numior/kit/styles/dialog.css',
     blocks: [
       { name: 'nui-dialog', parts: ['panel'], modifiers: [] },
       { name: 'nui-button', parts: ['content'], modifiers: [] },
     ],
     tokens: ['--nui-surface-elevated'],
   },
-  stylesheets: ['@numior/kit/styles/dialog.css'],
   messages: 'dialog',
   props: [],
   models: [{ name: 'v-model:open', prop: 'open', event: 'update:open', type: 'boolean' }],
@@ -120,15 +110,9 @@ const table: McpComponent = {
   name: 'NuiTable',
   package: '@numior/kit/table',
   styles: {
-    import: '@numior/kit/table/styles/table.css',
     blocks: [{ name: 'nui-table', parts: ['cell'], modifiers: [] }],
     tokens: [],
   },
-  stylesheets: [
-    '@numior/kit/styles.css',
-    '@numior/kit/table/styles.css',
-    '@numior/kit/table/styles/table.css',
-  ],
   props: [
     {
       name: 'rowHeight',
@@ -162,10 +146,6 @@ export const fixtureData: McpData = {
     '@numior/kit': ['NuiButton', 'NuiButtonVariant', 'NuiDialog', 'NuiSelect'],
     '@numior/kit/table': ['NuiTable'],
     '@numior/kit/forms': ['NuiForm', 'useForm'],
-  },
-  packageStyles: {
-    '@numior/kit': '@numior/kit/styles.css',
-    '@numior/kit/table': '@numior/kit/table/styles.css',
   },
   tokens: [
     {
