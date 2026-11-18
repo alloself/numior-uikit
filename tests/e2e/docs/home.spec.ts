@@ -9,9 +9,7 @@ test('the home page copies the install line and leads to the guide', async ({ do
 
   await home.copyInstall.click();
 
-  await expect
-    .poll(async () => (await docs.copiedTexts()).at(-1))
-    .toBe('pnpm add @numior/kit');
+  await expect.poll(async () => (await docs.copiedTexts()).at(-1)).toBe('pnpm add @numior/kit');
 
   await home.start.click();
   await expect(page).toHaveURL(/\/guide\/getting-started$/);
