@@ -9,16 +9,74 @@ import {
 import { boxOf, type Box } from '../helpers/geometry';
 import { sectionScope } from '../helpers/axe';
 import { ARROWS } from '../helpers/keyboard';
+import type { Direction } from './playground';
 
 export type NavigationOutput = Guarded<typeof isNavigationOutput>;
 
-export interface GuideStepBoxes {
-  readonly item: Box;
+interface GuideStepBoxes {
   readonly indicator: Box;
   readonly title: Box;
   readonly content: Box | undefined;
   readonly connector: Box | undefined;
 }
+
+export interface GuideNumber {
+  readonly offFirstLine: number;
+  readonly atStart: boolean;
+}
+
+export interface GuideContent {
+  readonly offTitleStart: number;
+  readonly belowTitle: boolean;
+}
+
+export interface GuideLine {
+  readonly gapAbove: number;
+  readonly gapBelow: number;
+  readonly offNumberCentre: number;
+}
+
+export interface GuideLayout {
+  readonly numbers: readonly GuideNumber[];
+  readonly contents: readonly GuideContent[];
+  readonly lines: readonly GuideLine[];
+  readonly lastHasLine: boolean;
+}
+
+const SIGN: Readonly<Record<Direction, number>> = { ltr: 1, rtl: -1 };
+
+const startOf = (box: Box, direction: Direction): number =>
+  direction === 'ltr' ? box.x : box.x + box.width;
+
+const endOf = (box: Box, direction: Direction): number =>
+  direction === 'ltr' ? box.x + box.width : box.x;
+
+const bottomOf = (box: Box): number => box.y + box.height;
+
+const centreXOf = (box: Box): number => box.x + box.width / 2;
+
+const centreYOf = (box: Box): number => box.y + box.height / 2;
+
+const contentOf = ({ title, content }: GuideStepBoxes, direction: Direction): GuideContent[] =>
+  content === undefined
+    ? []
+    : [
+        {
+          offTitleStart: Math.abs(startOf(content, direction) - startOf(title, direction)),
+          belowTitle: content.y > bottomOf(title),
+        },
+      ];
+
+const lineOf = (step: GuideStepBoxes, next: GuideStepBoxes | undefined): GuideLine[] =>
+  step.connector === undefined || next === undefined
+    ? []
+    : [
+        {
+          gapAbove: step.connector.y - bottomOf(step.indicator),
+          gapBelow: next.indicator.y - bottomOf(step.connector),
+          offNumberCentre: centreXOf(step.connector) - centreXOf(step.indicator),
+        },
+      ];
 
 const isNavigationOutput = shapeOf({
   menuOpen: isBoolean,
@@ -214,11 +272,28 @@ export class NavigationSection {
     return this.guideStepper.getByRole('listitem');
   }
 
-  async guideStep(index: number): Promise<GuideStepBoxes> {
+  async guideLayout(direction: Direction): Promise<GuideLayout> {
+    const indexes = Array.from({ length: await this.guideSteps().count() }, (_, index) => index);
+    const steps = await Promise.all(indexes.map((index) => this.guideStep(index)));
+    const lines = await Promise.all(indexes.map((index) => this.guideTitleFirstLine(index)));
+
+    return {
+      numbers: steps.map((step, index) => ({
+        offFirstLine: Math.abs(centreYOf(step.indicator) - (lines[index] ?? Number.NaN)),
+        atStart:
+          (startOf(step.title, direction) - endOf(step.indicator, direction)) * SIGN[direction] >=
+          0,
+      })),
+      contents: steps.flatMap((step) => contentOf(step, direction)),
+      lines: steps.flatMap((step, index) => lineOf(step, steps[index + 1])),
+      lastHasLine: steps.at(-1)?.connector !== undefined,
+    };
+  }
+
+  private async guideStep(index: number): Promise<GuideStepBoxes> {
     const step = this.guideSteps().nth(index);
 
-    const [item, indicator, title, content, connector] = await Promise.all([
-      boxOf(step),
+    const [indicator, title, content, connector] = await Promise.all([
       boxOf(step.locator('.nui-stepper-step__indicator')),
       boxOf(step.locator('.nui-stepper-step__title')),
       step.locator('.nui-stepper-step__content').count(),
@@ -226,7 +301,6 @@ export class NavigationSection {
     ]);
 
     return {
-      item,
       indicator,
       title,
       content: content > 0 ? await boxOf(step.locator('.nui-stepper-step__content')) : undefined,
@@ -234,7 +308,7 @@ export class NavigationSection {
     };
   }
 
-  async guideTitleFirstLine(index: number): Promise<number> {
+  private async guideTitleFirstLine(index: number): Promise<number> {
     const title = this.guideSteps().nth(index).locator('.nui-stepper-step__title');
 
     return title.evaluate((element) => {

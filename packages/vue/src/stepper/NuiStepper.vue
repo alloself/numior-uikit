@@ -1,9 +1,9 @@
 <template>
   <component
-    :is="readonly ? 'div' : 'nav'"
+    :is="root.tag"
     class="nui-stepper"
     :class="[`nui-stepper--orientation-${layout}`, { 'nui-stepper--readonly': readonly }]"
-    :aria-label="readonly ? undefined : texts.label"
+    :aria-label="root.label"
   >
     <ol class="nui-stepper__list" role="list">
       <li
@@ -20,9 +20,9 @@
         ]"
       >
         <component
-          :is="view.interactive ? 'button' : 'span'"
+          :is="view.trigger.tag"
           class="nui-stepper__step"
-          :type="view.interactive ? 'button' : undefined"
+          :type="view.trigger.type"
           :aria-current="view.current ? 'step' : undefined"
           :disabled="view.step.disabled || undefined"
           @click="select(view)"
@@ -95,6 +95,10 @@ const texts = computed(() => ({
   complete: completeLabel ?? messages.value.complete,
   error: errorLabel ?? messages.value.error,
 }));
+
+const root = computed(() =>
+  readonly ? { tag: 'div', label: undefined } : { tag: 'nav', label: texts.value.label },
+);
 
 const summaryText = computed(() =>
   messages.value.summary({
