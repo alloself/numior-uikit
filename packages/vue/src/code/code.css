@@ -67,7 +67,7 @@
     @apply box-border m-0 py-(--_padding) overflow-x-auto whitespace-pre scrollbar-thin tab-[2];
   }
   .nui-code__pre:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring -outline-offset-(--focus-ring-offset);
   }
   .nui-code--wrap .nui-code__pre {
     @apply whitespace-pre-wrap wrap-anywhere;
@@ -136,7 +136,7 @@
     @apply bg-hover text-foreground;
   }
   .nui-code__expand:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring -outline-offset-(--focus-ring-offset);
   }
   .nui-code__expand-icon {
     @apply inline-icon-sm block-icon-sm transition-[rotate] duration-normal ease-nui;

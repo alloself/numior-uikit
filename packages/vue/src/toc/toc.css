@@ -45,7 +45,7 @@
     @apply text-foreground;
   }
   .nui-toc__link:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring -outline-offset-(--focus-ring-offset);
   }
   .nui-toc__item--current > .nui-toc__link {
     @apply border-s-(--_current-line) text-(--_current) font-medium;

@@ -82,6 +82,19 @@ export class KitBuild {
     }, []);
   }
 
+  selectorsEndingWith(property: string, value: string): string[] {
+    return this.rules.reduce<string[]>((found, rule) => {
+      const declared = rule.declarations.findLast((declaration) => {
+        return declaration.property === property;
+      });
+
+      if (declared?.value === value) {
+        found.push(rule.selector);
+      }
+      return found;
+    }, []);
+  }
+
   valueOf(selector: string, property: string): string | undefined {
     return this.rules.reduce<string | undefined>((value, rule) => {
       const declared = rule.declarations.findLast((declaration) => {

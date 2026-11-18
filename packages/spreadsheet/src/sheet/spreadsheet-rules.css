@@ -51,7 +51,7 @@
     @apply opacity-100;
   }
   .nui-spreadsheet-rules__grip:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-spreadsheet-rules__grip:disabled {
     @apply invisible;
@@ -189,6 +189,6 @@
     @apply shadow-[0_0_0_2px_var(--color-surface-elevated),0_0_0_4px_var(--color-primary)];
   }
   .nui-spreadsheet-swatches__swatch:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring outline-offset-(--focus-ring-offset);
   }
 }

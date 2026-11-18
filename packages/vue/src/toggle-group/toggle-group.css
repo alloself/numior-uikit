@@ -123,14 +123,14 @@
     @apply bg-(--_pressed) duration-instant;
   }
   .nui-toggle-group__item:focus-visible {
-    @apply z-2 outline-(length:--focus-ring-width) outline-ring;
+    @apply z-2 outline-(length:--focus-ring-width) outline-solid outline-ring;
     @apply -outline-offset-(--focus-ring-offset);
   }
   .nui-toggle-group__item:disabled {
     @apply cursor-not-allowed;
   }
   .nui-toggle-group--icon-only .nui-toggle-group__item {
-    @apply flex-none px-0 inline-[calc(var(--_height)_-_2*var(--_inset))];
+    @apply flex-none px-0 inline-[calc(var(--_height)_-_2_*_var(--_inset))];
   }
   .nui-toggle-group--variant-segmented {
     --_gap: 2px;
@@ -141,7 +141,7 @@
   .nui-toggle-group--variant-segmented .nui-toggle-group__item {
     --_rest: var(--color-surface-muted);
 
-    @apply m-0 border-transparent rounded-sm bg-transparent min-block-[calc(var(--_height)_-_2*var(--_inset))];
+    @apply m-0 border-transparent rounded-sm bg-transparent min-block-[calc(var(--_height)_-_2_*_var(--_inset))];
   }
   .nui-toggle-group--variant-segmented .nui-toggle-group__item--selected {
     --_rest: var(--color-surface-elevated);

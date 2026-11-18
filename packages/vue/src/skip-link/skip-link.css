@@ -6,7 +6,7 @@
     @apply transition-[translate,opacity] duration-normal ease-nui;
   }
   .nui-skip-link:focus-visible {
-    @apply translate-0 opacity-100 outline-(length:--focus-ring-width) outline-ring;
+    @apply translate-0 opacity-100 outline-(length:--focus-ring-width) outline-solid outline-ring;
     @apply outline-offset-(--focus-ring-offset);
   }
 }

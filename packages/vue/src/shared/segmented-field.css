@@ -38,7 +38,7 @@
   }
   .nui-date-picker:focus-within,
   .nui-time-field:focus-within {
-    @apply border-ring outline-(length:--field-ring-width) outline-ring;
+    @apply border-ring outline-(length:--field-ring-width) outline-solid outline-ring;
     @apply outline-offset-(--focus-ring-offset);
   }
   .nui-date-picker--invalid,

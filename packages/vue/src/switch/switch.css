@@ -52,7 +52,7 @@
     @apply scale-x-115 scale-y-90;
   }
   .nui-switch__control:focus-visible + .nui-switch__track {
-    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-switch--invalid .nui-switch__track {
     @apply bg-error;

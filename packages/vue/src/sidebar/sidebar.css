@@ -144,7 +144,7 @@
     @apply text-foreground;
   }
   .nui-sidebar-group__toggle:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring -outline-offset-(--focus-ring-offset);
   }
   .nui-sidebar-group__chevron {
     @apply inline-icon-sm block-icon-sm transition-[rotate] duration-normal ease-nui delay-0;
@@ -225,7 +225,7 @@
     --_badge-reach: calc(var(--_rail-shift) - var(--_rail-border) + var(--_padding));
 
     @apply absolute inset-bs-0 inset-s-[calc(var(--_badge-corner)_-_var(--_badge-reach))];
-    @apply inline-[calc(2*var(--_badge-reach))] block-0 flex-row-reverse justify-start;
+    @apply inline-[calc(2_*_var(--_badge-reach))] block-0 flex-row-reverse justify-start;
   }
   .nui-sidebar--rail.nui-sidebar--variant-plain
     .nui-list-item

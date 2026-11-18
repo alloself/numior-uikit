@@ -52,7 +52,7 @@
     @apply border-primary;
   }
   .nui-radio__control:focus-visible + .nui-radio__dot {
-    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-radio--invalid .nui-radio__dot {
     @apply border-error;

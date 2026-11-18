@@ -4,6 +4,7 @@ import { KitBuild, kitCss } from './drivers/kit-build';
 const ROOT = ':root, :host';
 const VIOLET = 'oklch(0.5 0.2 300)';
 const COMPACT = '.nui-theme--density-compact';
+const BROKEN_VARIABLE = /var\(--\s/;
 
 describe('@numior/tailwind', () => {
   it('builds the kit in the components layer, so a utility on a component wins', async () => {
@@ -74,5 +75,17 @@ describe('@numior/tailwind', () => {
         'background-color',
       ),
     ).toBe('var(--color-surface)');
+  });
+
+  it('keeps the name of every variable in the arbitrary values of the kit', async () => {
+    const css = await kitCss();
+
+    expect(css.split('\n').filter((line) => BROKEN_VARIABLE.test(line))).toEqual([]);
+  });
+
+  it('names the outline style in every rule that draws an outline', async () => {
+    const kit = new KitBuild(await kitCss());
+
+    expect(kit.selectorsEndingWith('outline-style', 'var(--tw-outline-style)')).toEqual([]);
   });
 });

@@ -199,7 +199,7 @@
     @apply opacity-85;
   }
   .nui-avatar-upload__trigger:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring;
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring;
     @apply outline-offset-[calc(var(--focus-ring-offset)_+_var(--_ring)_+_var(--_ring-gap))];
   }
   .nui-avatar-upload__avatar {
@@ -238,7 +238,7 @@
     @apply opacity-0;
   }
   .nui-avatar-upload--dragging .nui-avatar-upload__trigger {
-    @apply outline-(length:--focus-ring-width) outline-primary;
+    @apply outline-(length:--focus-ring-width) outline-solid outline-primary;
     @apply outline-offset-[calc(var(--focus-ring-offset)_+_var(--_ring)_+_var(--_ring-gap))];
   }
   .nui-avatar-upload--invalid .nui-avatar-upload__badge {

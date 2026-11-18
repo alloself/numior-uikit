@@ -66,7 +66,7 @@
     @apply bg-hover;
   }
   .nui-spreadsheet-pivot__chip:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-spreadsheet-pivot__chip[aria-expanded='true'] {
     @apply border-border-strong bg-hover;

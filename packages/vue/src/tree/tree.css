@@ -79,7 +79,7 @@
     }
   }
   .nui-tree:focus-visible .nui-list-item--active {
-    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-width);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring -outline-offset-(--focus-ring-width);
   }
   .nui-tree__controls {
     @apply inline-flex flex-none items-center gap-2 ms-[calc(var(--_indent)_*_(var(--_level)_-_1))];

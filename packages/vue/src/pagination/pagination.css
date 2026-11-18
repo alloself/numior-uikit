@@ -58,7 +58,7 @@
     @apply bg-primary-soft;
   }
   .nui-pagination__control:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-pagination__control:disabled,
   .nui-pagination__control.nui-link--disabled {

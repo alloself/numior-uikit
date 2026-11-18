@@ -249,7 +249,7 @@
     @apply bg-pressed bg-none bg-clip-border scale-97;
   }
   .nui-content__toggle-button:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-content__toggle-mark {
     --spacing-icon: round(calc(var(--text-control-sm) * 1.15), 2px);
@@ -300,7 +300,7 @@
     @apply opacity-92;
   }
   .nui-content__zoom:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-content__lightbox {
     @apply block object-contain max-inline-[calc(100vw_-_--spacing(8))];
@@ -324,7 +324,7 @@
     );
   }
   .nui-content__file:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-content__file-icon {
     --spacing-icon: var(--spacing-icon-sm);
@@ -382,7 +382,7 @@
     @apply decoration-2;
   }
   .nui-content__link:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-content__bold {
     @apply font-semibold;
@@ -485,7 +485,7 @@
     );
   }
   .nui-content__bookmark-link:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-content__bookmark-body {
     @apply flex flex-1 flex-col gap-1 min-inline-0 p-3 leading-normal text-[length:0.875em];

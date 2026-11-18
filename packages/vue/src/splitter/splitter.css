@@ -47,7 +47,7 @@
     @apply bg-primary;
   }
   .nui-splitter__divider:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring rounded-sm;
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring rounded-sm;
   }
   .nui-splitter--dragging .nui-splitter__pane {
     @apply pointer-events-none;

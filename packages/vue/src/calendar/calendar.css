@@ -63,7 +63,7 @@
   .nui-calendar__title-button:focus-visible,
   .nui-calendar__day:focus-visible,
   .nui-calendar__option:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-width);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring -outline-offset-(--focus-ring-width);
   }
   .nui-calendar__grid {
     @apply border-separate table-fixed border-spacing-0;

@@ -116,7 +116,7 @@
     --_tone: var(--color-error);
   }
   .nui-toast:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-toast__icon {
     @apply text-(--_tone) mbs-[calc((var(--_line)_-_var(--spacing-icon))_/_2)];

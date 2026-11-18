@@ -66,7 +66,7 @@
     @apply bg-hover;
   }
   .nui-stepper__step:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-width);
+    @apply outline-(length:--focus-ring-width) outline-solid outline-ring -outline-offset-(--focus-ring-width);
   }
   .nui-stepper__indicator {
     @apply box-border inline-grid flex-none place-items-center inline-(--_indicator);
