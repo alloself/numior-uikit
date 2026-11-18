@@ -10,9 +10,9 @@
     --_remove: round(calc(round(var(--_font-size) * 0.875, 1px) * 1.75), 4px);
 
     @apply box-border inline-flex items-center gap-1 max-inline-full block-(--_height);
-    @apply px-(--_padding) border border-transparent rounded-full bg-(--_tone-soft);
+    @apply px-[calc(var(--_padding)_+_1px)] rounded-full bg-(--_tone-soft);
     @apply text-(--_tone-soft-foreground) font-sans text-(length:--_font-size) leading-control;
-    @apply whitespace-nowrap font-medium transition-[background-color,border-color,color];
+    @apply whitespace-nowrap font-medium transition-[background-color,box-shadow,color];
     @apply duration-fast ease-nui;
   }
   .nui-chip--size-sm {
@@ -57,14 +57,13 @@
     --_tone-soft-foreground: --theme(--color-info-soft-foreground inline);
   }
   .nui-chip--variant-outline {
-    @apply bg-transparent;
-    border-color: color-mix(in oklab, var(--_tone) 50%, var(--color-border));
+    @apply bg-transparent inset-ring inset-ring-[color-mix(in_oklab,var(--_tone)_50%,var(--color-border))];
   }
   .nui-chip--variant-solid {
     @apply bg-(--_tone) text-(--_tone-foreground);
   }
   .nui-chip--removable {
-    @apply pe-[calc((var(--_height)_-_var(--_remove))_/_2_-_1px)];
+    @apply pe-[calc((var(--_height)_-_var(--_remove))_/_2)];
   }
   .nui-chip--disabled {
     @apply opacity-disabled;

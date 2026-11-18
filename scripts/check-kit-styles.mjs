@@ -324,6 +324,30 @@ const inlineIcons = sources.flatMap((file) =>
       ),
 );
 
+const FULL_ROUND =
+  /(?:^|\s)rounded-(?:full|\[(?:50%|9999px)\])(?=[\s;]|$)|\bborder-radius\s*:\s*(?:50%|9999px|calc\(\s*infinity)/u;
+
+const BORDER_WIDTH =
+  /(?:^|\s)border(?:-(?:[xysetblr]|bs|be))?(?:-(?:[1-9]\d*|\[\d[^\]]*\]|\(length:[^)]*\)))?(?=[\s;]|$)|\bborder(?:-(?:block|inline|top|right|bottom|left)(?:-(?:start|end))?)?(?:-width)?\s*:\s*(?!(?:0|none)\s*(?:;|$))/mu;
+
+const roundBorders = sources.flatMap((file) =>
+  file.consumer
+    ? []
+    : stylesOf(file.path, file.source).flatMap((style) =>
+        [
+          ...style.text
+            .replace(/\/\*[\s\S]*?\*\//gu, (comment) => ' '.repeat(comment.length))
+            .matchAll(/([^{};]+)\{([^{}]*)\}/gu),
+        ].flatMap((rule) =>
+          FULL_ROUND.test(rule[2]) && BORDER_WIDTH.test(rule[2])
+            ? [
+                `${relative(ROOT, file.path)}:${lineOf(file.source, style.offset + (rule.index ?? 0) + rule[1].search(/\S/u))} ${rule[1].trim()}`,
+              ]
+            : [],
+        ),
+      ),
+);
+
 const UTILITY_SKIPPED = /\/packages\/(?:tokens|tailwind)\//u;
 
 const declared = utilityFindings(
@@ -450,6 +474,16 @@ if (inlineIcons.length > 0) {
   process.exitCode = 1;
 } else {
   console.log('kit styles: icons come from the registry');
+}
+
+if (roundBorders.length > 0) {
+  console.error(
+    `A border on a fully rounded box snaps to whole device pixels and breaks into steps at 125 and 150 %; draw the ring as an inset shadow (@apply inset-ring inset-ring-<colour>):\n${roundBorders.join('\n')}`,
+  );
+
+  process.exitCode = 1;
+} else {
+  console.log('kit styles: round rings are drawn as inset shadows');
 }
 
 if (declared.length > 0) {

@@ -70,10 +70,10 @@
   }
   .nui-stepper__indicator {
     @apply box-border inline-grid flex-none place-items-center inline-(--_indicator);
-    @apply block-(--_indicator) border border-(--_ring) border-solid rounded-full bg-(--_fill);
+    @apply block-(--_indicator) inset-ring inset-ring-(--_ring) rounded-full bg-(--_fill);
     @apply text-(--_ink) text-(length:--text-xs) leading-control;
     @apply shadow-[0_0_0_3px_var(--_halo)] font-semibold;
-    @apply transition-[background-color,border-color,box-shadow,color] duration-normal ease-nui;
+    @apply transition-[background-color,box-shadow,color] duration-normal ease-nui;
   }
   .nui-stepper__mark {
     @apply inline-[1rem] block-[1rem];

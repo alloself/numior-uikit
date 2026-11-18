@@ -30,8 +30,8 @@
   }
   .nui-radio__dot {
     @apply box-border pointer-events-none inline-grid flex-none place-items-center inline-(--_size);
-    @apply block-(--_size) border border-border-strong rounded-full bg-surface;
-    @apply mbs-[calc((1lh_-_var(--_size))_/_2)] transition-[border-color,scale] duration-fast;
+    @apply block-(--_size) inset-ring inset-ring-border-strong rounded-full bg-surface;
+    @apply mbs-[calc((1lh_-_var(--_size))_/_2)] transition-[box-shadow,scale] duration-fast;
     @apply ease-nui;
   }
   .nui-radio__dot::after {
@@ -39,7 +39,7 @@
     @apply transition-[scale] duration-normal ease-nui;
   }
   .nui-radio__control:checked + .nui-radio__dot {
-    @apply border-primary;
+    @apply inset-ring-primary;
   }
   .nui-radio__control:checked + .nui-radio__dot::after {
     @apply scale-100;
@@ -49,13 +49,13 @@
   }
   .nui-radio:hover:not(.nui-radio--disabled, .nui-radio--readonly, .nui-radio--invalid)
     .nui-radio__dot {
-    @apply border-primary;
+    @apply inset-ring-primary;
   }
   .nui-radio__control:focus-visible + .nui-radio__dot {
     @apply outline-(length:--focus-ring-width) outline-solid outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-radio--invalid .nui-radio__dot {
-    @apply border-error;
+    @apply inset-ring-error;
   }
   .nui-radio--invalid .nui-radio__control:focus-visible + .nui-radio__dot {
     @apply outline-error;
