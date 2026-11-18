@@ -2,15 +2,22 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { recordOf } from './kit-packages.ts';
 
+export interface KitScript {
+  readonly specifier: string;
+  readonly file: string;
+}
+
 export interface KitEntries {
   readonly module: (specifier: string) => string;
   readonly sheet: (path: string) => string;
   readonly modules: readonly string[];
+  readonly scripts: readonly KitScript[];
 }
 
 const KIT = '@numior/kit';
 const KIT_DIR = 'packages/kit';
 const SOURCE_CONDITION = '@numior/source';
+const SCRIPT_SUFFIX = '.ts';
 const FORWARD_RE = /^(?:export \* from|@import) '(@numior\/[^']+)';$/gmu;
 const BUNDLE = 'styles.css';
 const SHEETS = 'styles/*.css';
@@ -50,6 +57,7 @@ export const kitEntries = (root: string): KitEntries => {
   const manifest = recordOf(JSON.parse(readFileSync(join(root, KIT_DIR, 'package.json'), 'utf8')));
   const exports = recordOf(manifest.exports);
   const forwards = new Map<string, string>();
+  const scripts: KitScript[] = [];
 
   for (const [key, entry] of Object.entries(exports)) {
     const source = sourceOf(entry);
@@ -57,8 +65,13 @@ export const kitEntries = (root: string): KitEntries => {
     if (source === undefined) {
       continue;
     }
+    const file = join(root, KIT_DIR, source);
 
-    for (const specifier of forwardsOf(join(root, KIT_DIR, source))) {
+    if (source.endsWith(SCRIPT_SUFFIX)) {
+      scripts.push({ specifier: kitSpecifier(key), file });
+    }
+
+    for (const specifier of forwardsOf(file)) {
       forwards.set(specifier, kitSpecifier(key));
     }
   }
@@ -83,5 +96,10 @@ export const kitEntries = (root: string): KitEntries => {
     return folder === undefined ? [] : [`${KIT}/${folder}/`];
   });
 
-  return { module: (specifier) => forwards.get(specifier) ?? missing(specifier), sheet, modules };
+  return {
+    module: (specifier) => forwards.get(specifier) ?? missing(specifier),
+    sheet,
+    modules,
+    scripts,
+  };
 };

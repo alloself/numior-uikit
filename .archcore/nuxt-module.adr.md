@@ -25,18 +25,22 @@ status: accepted
   компонент ссылки) живёт в `app.config.ts` под ключом `numior`, потому что app config
   бандлится и допускает несериализуемые значения. Плагин читает `locale`, `dir` и `messages`
   через геттеры, поэтому смена значений в app config реактивна и побеждает `nuxt.config`.
-- Компоненты и композаблы регистрируются через `addComponent`/`addImports` по реальным
-  экспортам `@numior/vue`, `@numior/forms` и `@numior/table` (таблица добавлена 2026-09-29) с
-  путями кита `@numior/kit`, `@numior/kit/forms`, `@numior/kit/table`: приложение ставит только
-  кит, и строгий pnpm отдаёт ему только эти имена. Проверка артефактов держит, что вход кита
-  отдаёт те же объекты, что пакет:
-  имена `Nui*` со `setup`/`render` или функциональные компоненты с `props`, функции `use*`.
+- Компоненты регистрируются через `addComponent` по манифесту кита (`dist/manifest.json`, с
+  2026-11-18): все компоненты всех модулей с подпутём, который их отдаёт. Композаблы — через
+  `addImports` по реальным экспортам `@numior/vue`, `@numior/forms` и `@numior/table` с путями кита
+  `@numior/kit`, `@numior/kit/forms`, `@numior/kit/table`: приложение ставит только кит, и строгий
+  pnpm отдаёт ему только эти имена. Проверка артефактов держит, что вход кита отдаёт те же объекты,
+  что пакет: функции `use*`.
   Списки не дублируются вручную; `NuiFormError` и правила форм в автоимпорт не попадают.
   Автоимпорты композаблов идут с `priority: -1`: при совпадении имён (`useLayout` самого Nuxt,
   `useMediaQuery` из `@vueuse/nuxt`) побеждает чужой, без предупреждения о дублях, а композабл
   кита импортируется явно.
-- CSS токенов, компонентов, форм и таблицы (`@numior/kit/theme.css`, `base.css`, `styles.css`,
-  `forms/styles.css`, `table/styles.css`) добавляется в `nuxt.options.css` при `css: true`. Скрипт
+- CSS при `css: true` — созданный вход `numior/kit.css` (порядок слоёв, тема в `layer(theme)`,
+  `base.css` в `layer(components)`, `@numior/kit/styles.css`); модуль ставит плагин `numior()` без
+  замены компонентов, и `styles.css` получает стили только найденных в проекте компонентов
+  (@.archcore/modular-foundation.adr.md, раздел 2026-11-18). Поиск идёт от `rootDir`, корень Vite
+  в Nuxt — `srcDir`. До 2026-11-18 модуль добавлял `theme.css`, `base.css`, `styles.css`,
+  `forms/styles.css` и `table/styles.css` целиком. Скрипт
   `colorSchemeScript(storageKey, initial)` уходит в `app.head.script` и ставит сохранённую схему
   или `initial` до первой отрисовки: класс `nui-theme--<схема>` на `<html>` (с 2026-11-14,
   раньше атрибут `data-nui-theme`). `htmlAttrs` для схемы не используется: unhead владеет

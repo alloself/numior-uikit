@@ -11,15 +11,11 @@ describe('@numior/kit/nuxt', () => {
       expect.stringMatching(/\/assets\/theme\.css$/),
     ]);
 
-    expect(host.templateOptions('numior/kit.css')).toEqual({
-      sheets: [
-        '@numior/kit/styles.css',
-        '@numior/kit/forms/styles.css',
-        '@numior/kit/table/styles.css',
-      ],
-    });
+    expect(await host.vitePlugins()).toEqual(
+      expect.arrayContaining(['numior:styles', '@tailwindcss/vite:generate:build']),
+    );
 
-    expect(await host.vitePlugins()).toContain('@tailwindcss/vite:generate:build');
+    expect(await host.vitePlugins()).not.toContain('numior:components');
     expect(host.headScripts).toEqual([host.expectedScript('light')]);
     expect(host.lang).toBe('ru');
 
@@ -36,6 +32,8 @@ describe('@numior/kit/nuxt', () => {
     expect(components.NuiFieldFrame).toBe('@numior/kit#NuiFieldFrame');
     expect(components.NuiForm).toBe('@numior/kit/forms#NuiForm');
     expect(components.NuiTable).toBe('@numior/kit/table#NuiTable');
+    expect(components.NuiEditor).toBe('@numior/kit/editor#NuiEditor');
+    expect(components.NuiChart).toBe('@numior/kit/charts#NuiChart');
     expect(components.NuiFormError).toBeUndefined();
 
     const imports = await host.imports();
@@ -71,15 +69,12 @@ describe('@numior/kit/nuxt', () => {
     await host.close();
   });
 
-  it('writes one Tailwind entry for the kit theme and the styles of every installed package', () => {
-    expect(
-      kitEntry(['@numior/kit/styles.css', '@numior/kit/table/styles.css']).split('\n'),
-    ).toEqual([
+  it('writes one Tailwind entry for the kit theme and the kit styles', () => {
+    expect(kitEntry().split('\n')).toEqual([
       '@layer theme, base, components, utilities;',
       "@import '@numior/kit/theme.css' layer(theme);",
       "@import '@numior/kit/base.css' layer(components);",
       "@import '@numior/kit/styles.css';",
-      "@import '@numior/kit/table/styles.css';",
     ]);
   });
 });

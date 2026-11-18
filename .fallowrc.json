@@ -43,11 +43,13 @@
     "apps/docs/scripts/check-dist.ts",
     "packages/kit/src/nuxt/module.ts",
     "packages/kit/src/nuxt/runtime/plugin.ts",
+    "packages/kit/scripts/*.ts",
     "packages/kit/vitest.config.ts",
     "packages/kit/test/fixture/nuxt.config.ts",
     "packages/kit/test/fixture/app/app.config.ts",
     "packages/kit/test/fixture/app/assets/theme.css",
     "packages/kit/test/fixture/app/**/*.vue",
+    "packages/kit/test/vite-fixture/src/main.ts",
     "packages/kit/test/**/*.test.ts",
     "packages/mcp/src/index.ts",
     "packages/mcp/src/main.ts",
@@ -180,6 +182,10 @@
         "patterns": ["packages/offline/**"]
       },
       {
+        "name": "kit-scripts",
+        "patterns": ["packages/kit/scripts/**"]
+      },
+      {
         "name": "kit",
         "patterns": ["packages/kit/**"]
       },
@@ -307,6 +313,10 @@
           "collaboration-server",
           "collaboration-test"
         ]
+      },
+      {
+        "from": "kit-scripts",
+        "allow": ["apps", "kit", "kit-scripts"]
       },
       {
         "from": "kit",

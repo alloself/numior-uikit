@@ -31,6 +31,7 @@ const ENTRIES = [
   'collaboration/room',
   'offline',
   'nuxt/module',
+  'vite/index',
   'nuxt/runtime/plugin',
 ];
 
@@ -53,7 +54,16 @@ export default defineConfig({
     },
     sourcemap: true,
     rolldownOptions: {
-      external: [/^@numior\//, /^@tailwindcss\//, /^nuxt\//, '#components', 'vue', /^node:/],
+      external: [
+        /^@numior\//,
+        /^@tailwindcss\//,
+        /^nuxt\//,
+        '#components',
+        'vue',
+        'lodash-es',
+        'magic-string',
+        /^node:/,
+      ],
     },
   },
 });

@@ -38,11 +38,19 @@ interface ModuleDraft {
   readonly reExports: ReExport[];
   readonly stars: string[];
   readonly locals: Set<string>;
+  readonly bindings: Map<string, ImportBinding>;
+  readonly named: ReExport[];
+}
+
+interface ImportBinding {
+  readonly specifier: string;
+  readonly original: string;
 }
 
 export interface KitStylesheets {
   readonly order: readonly string[];
   readonly of: (file: string) => string[];
+  readonly exports: (file: string) => ReadonlyMap<string, string>;
 }
 
 const MODULE_SUFFIXES = ['', '.ts', '.vue', '/index.ts'];
@@ -170,6 +178,27 @@ const importEdge = (statement: ts.ImportDeclaration): ImportEdge | undefined => 
   return { specifier, names: clause === undefined ? [] : namedImports(clause), whole };
 };
 
+const bindingsOf = (statement: ts.ImportDeclaration): [string, ImportBinding][] => {
+  const clause = statement.importClause;
+
+  if (clause === undefined || clause.isTypeOnly || !ts.isStringLiteral(statement.moduleSpecifier)) {
+    return [];
+  }
+  const specifier = statement.moduleSpecifier.text;
+  const bindings = clause.namedBindings;
+  const named = bindings !== undefined && ts.isNamedImports(bindings) ? bindings.elements : [];
+
+  return [
+    ...(clause.name === undefined
+      ? []
+      : [[clause.name.text, { specifier, original: 'default' }] satisfies [string, ImportBinding]]),
+    ...named.map((element): [string, ImportBinding] => [
+      element.name.text,
+      { specifier, original: (element.propertyName ?? element.name).text },
+    ]),
+  ];
+};
+
 const reExportsOf = (statement: ts.ExportDeclaration, specifier: string): ReExport[] => {
   const clause = statement.exportClause;
 
@@ -231,7 +260,19 @@ const dynamicImports = (node: ts.Node, found: ImportEdge[]): ImportEdge[] => {
 
 const addLocalExports = (draft: ModuleDraft, statement: ts.ExportDeclaration): void => {
   for (const entry of reExportsOf(statement, '')) {
-    draft.locals.add(entry.exported);
+    draft.named.push(entry);
+  }
+};
+
+const settleNamed = (draft: ModuleDraft): void => {
+  for (const entry of draft.named) {
+    const binding = draft.bindings.get(entry.original);
+
+    if (binding === undefined) {
+      draft.locals.add(entry.exported);
+      continue;
+    }
+    draft.reExports.push({ ...binding, exported: entry.exported });
   }
 };
 
@@ -263,6 +304,9 @@ const addStatement = (draft: ModuleDraft, statement: ts.Statement): void => {
   if (ts.isImportDeclaration(statement)) {
     const edge = importEdge(statement);
 
+    for (const [local, binding] of bindingsOf(statement)) {
+      draft.bindings.set(local, binding);
+    }
     if (edge !== undefined) {
       draft.imports.push(edge);
     }
@@ -296,14 +340,26 @@ const scriptOf = (file: string, source: string): { script: string; template: str
 const readModule = (file: string): ModuleInfo => {
   const { script, template } = scriptOf(file, readFileSync(file, 'utf8'));
   const source = ts.createSourceFile(file, script, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const draft: ModuleDraft = { imports: [], reExports: [], stars: [], locals: new Set() };
+
+  const draft: ModuleDraft = {
+    imports: [],
+    reExports: [],
+    stars: [],
+    locals: new Set(),
+    bindings: new Map(),
+    named: [],
+  };
 
   for (const statement of source.statements) {
     addStatement(draft, statement);
   }
+  settleNamed(draft);
+
   return {
-    ...draft,
     imports: dynamicImports(source, draft.imports),
+    reExports: draft.reExports,
+    stars: draft.stars,
+    locals: draft.locals,
     blocks: uniq([...template.matchAll(BLOCK_RE)].map((match) => match[1] ?? '')),
   };
 };
@@ -512,5 +568,32 @@ export const kitStylesheets = (root: string): KitStylesheets => {
       order,
     );
 
-  return { order, of };
+  const exportedNames = (file: string, seen: ReadonlySet<string>): string[] => {
+    if (seen.has(file)) {
+      return [];
+    }
+    const info = moduleOf(file);
+    const next = new Set([...seen, file]);
+
+    return uniq([
+      ...info.locals,
+      ...info.reExports.map((entry) => entry.exported),
+      ...info.stars.flatMap((specifier) => {
+        const target = resolve(file, specifier);
+
+        return target === undefined ? [] : exportedNames(target, next);
+      }),
+    ]);
+  };
+
+  const exports = (file: string): ReadonlyMap<string, string> =>
+    new Map(
+      exportedNames(file, new Set()).flatMap((name) => {
+        const defined = exportOf(file, name, new Set());
+
+        return defined === undefined ? [] : [[name, defined]];
+      }),
+    );
+
+  return { order, of, exports };
 };

@@ -73,4 +73,12 @@ describe('stylesheets of the kit components', () => {
       '@numior/charts/styles/chart.css',
     );
   });
+
+  it('names the file that defines each export of an entry, through imports it exports again', () => {
+    const media = sheets.exports(fileOf('content/src/media/index.ts'));
+
+    expect(media.get('NuiContentImage')).toBe(fileOf('content/src/media/NuiContentImage.vue'));
+    expect(media.get('contentMediaViews')).toBe(fileOf('content/src/media/index.ts'));
+    expect(media.has('NuiContentMessages')).toBe(false);
+  });
 });

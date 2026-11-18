@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { componentNames, composableNames } from '../src/nuxt/exports';
+import { composableNames } from '../src/nuxt/exports';
 
 const functional = (): null => null;
 
@@ -21,11 +21,7 @@ const namespace = {
 };
 
 describe('exports', () => {
-  it('lists Nui components whether they are setup objects or functional components', () => {
-    expect(componentNames(namespace)).toEqual(['NuiButton', 'NuiFieldFrame', 'NuiTable']);
-  });
-
-  it('lists use-prefixed functions as composables', () => {
+  it('lists use-prefixed functions as composables and leaves components and helpers out', () => {
     expect(composableNames(namespace)).toEqual(['useForm', 'useToast']);
   });
 });

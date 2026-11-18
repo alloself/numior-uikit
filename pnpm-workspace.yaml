@@ -2,6 +2,7 @@ packages:
   - packages/*
   - apps/*
   - packages/kit/test/fixture
+  - packages/kit/test/vite-fixture
 
 onlyBuiltDependencies:
   - esbuild
