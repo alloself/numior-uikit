@@ -76,9 +76,31 @@ export type TokenSample = (typeof TokenSample)[keyof typeof TokenSample];
 export type TokenSection = (typeof TokenSection)[keyof typeof TokenSection];
 export type BlockViewport = (typeof BlockViewport)[keyof typeof BlockViewport];
 
+export interface TokenLine extends TokenReference {
+  readonly value: string;
+}
+
+export type TokenDerivationKind = (typeof TokenDerivationKind)[keyof typeof TokenDerivationKind];
+
+export interface TokenAlias {
+  readonly kind: typeof TokenDerivationKind.Alias;
+  readonly source: string;
+}
+
+export interface TokenMix {
+  readonly kind: typeof TokenDerivationKind.Mix;
+  readonly source: string;
+  readonly share: string;
+  readonly over: string | undefined;
+}
+
+export type TokenDerivation = TokenAlias | TokenMix;
+
 export interface TokenRow extends TokenReference {
   readonly sample: TokenSample;
   readonly value: string;
+  readonly derivation?: TokenDerivation | undefined;
+  readonly lineHeight?: TokenLine | undefined;
 }
 
 export type DocsAccent = (typeof DocsAccent)[keyof typeof DocsAccent];
@@ -151,6 +173,11 @@ export interface DocsTexts {
   readonly tokenName: string;
   readonly tokenValue: string;
   readonly tokenDark: string;
+  readonly tokenEquals: string;
+  readonly tokenPercentOf: string;
+  readonly tokenOver: string;
+  readonly tokenOverSurface: string;
+  readonly tokenFormula: string;
   readonly icons: string;
   readonly iconSearch: string;
   readonly iconGlyph: string;
@@ -326,6 +353,11 @@ export interface TokenSampleProps {
   row: TokenRow;
 }
 
+export interface TokenValueProps {
+  row: TokenRow;
+  texts: DocsTexts;
+}
+
 export interface IconTableProps {
   icons: readonly IconReference[];
   texts: DocsTexts;
@@ -468,6 +500,11 @@ export const TokenSample = {
   FontSize: 'font-size',
   FontWeight: 'font-weight',
   None: 'none',
+} as const;
+
+export const TokenDerivationKind = {
+  Alias: 'alias',
+  Mix: 'mix',
 } as const;
 
 export const BlockViewport = {

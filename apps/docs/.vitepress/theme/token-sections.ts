@@ -1,6 +1,13 @@
 import { sortBy } from 'lodash-es';
 import type { TokenReference } from '../reference/reference.types';
-import { TokenSample, TokenSection, type TokenRow } from './theme.types.ts';
+import {
+  TokenDerivationKind,
+  TokenSample,
+  TokenSection,
+  type TokenDerivation,
+  type TokenLine,
+  type TokenRow,
+} from './theme.types.ts';
 
 interface SectionRule {
   readonly section: TokenSection;
@@ -59,7 +66,14 @@ const TONE_ORDER = ['primary', 'secondary', 'success', 'warning', 'error', 'info
 const TONE_PARTS = ['', '-foreground', '-soft', '-soft-foreground', '-muted', '-muted-foreground'];
 
 const COLOR_VALUE_RE = /^(?:oklch|oklab|rgb|hsl|color-mix|light-dark|#)/;
+const VAR_NAME_RE = /var\(\s*(--[\w-]+)/gu;
+const ALIAS_RE = /^var\(\s*(--[\w-]+)\s*\)$/u;
+const MIX_RE = /^color-mix\(in oklab,\s*var\((--[\w-]+)\)\s+([^,]+),\s*(.+)\)$/u;
+const RELATIVE_PREFIX = 'oklab(from ';
+const TRANSPARENT = 'transparent';
+const PERCENT = '%';
 const PREFIX = '--';
+const LINE_HEIGHT_SUFFIX = '--line-height';
 
 const shortName = (token: TokenReference): string => token.name.slice(PREFIX.length);
 
@@ -135,6 +149,89 @@ const expanded = (
   return `${value.slice(0, start)}${replacement}${expanded(value.slice(end + 1), byName, depth)}`;
 };
 
+const knownNameIn = (
+  value: string,
+  byName: ReadonlyMap<string, TokenReference>,
+): string | undefined =>
+  Array.from(value.matchAll(VAR_NAME_RE), ([, name = '']) => name).find((name) => byName.has(name));
+
+const fallbackOf = (value: string, byName: ReadonlyMap<string, TokenReference>): string => {
+  const whole =
+    value.startsWith(VAR_OPEN) && closingOf(value, VAR_OPEN.length - 1) === value.length - 1;
+
+  if (!whole) {
+    return value;
+  }
+
+  const inner = value.slice(VAR_OPEN.length, -1);
+  const comma = inner.indexOf(',');
+  const hook = comma !== -1 && !byName.has(inner.slice(0, comma).trim());
+
+  return hook ? fallbackOf(inner.slice(comma + 1).trim(), byName) : value;
+};
+
+const mixCallOf = (value: string): string => {
+  if (!value.startsWith(RELATIVE_PREFIX)) {
+    return value;
+  }
+
+  const open = value.indexOf('(', RELATIVE_PREFIX.length);
+
+  return value.slice(RELATIVE_PREFIX.length, closingOf(value, open) + 1);
+};
+
+const mixOf = (
+  value: string,
+  byName: ReadonlyMap<string, TokenReference>,
+): TokenDerivation | undefined => {
+  const mix = MIX_RE.exec(value);
+
+  if (mix === null) {
+    return undefined;
+  }
+
+  const [, source = '', share = '', base = ''] = mix;
+
+  return {
+    kind: TokenDerivationKind.Mix,
+    source,
+    share: expanded(share.trim(), byName, EXPANSION_DEPTH).replace(PERCENT, ''),
+    over: base.trim() === TRANSPARENT ? undefined : knownNameIn(base, byName),
+  };
+};
+
+const derivationOf = (
+  token: TokenReference,
+  sample: TokenSample,
+  byName: ReadonlyMap<string, TokenReference>,
+): TokenDerivation | undefined => {
+  if (sample !== TokenSample.Color) {
+    return undefined;
+  }
+
+  const value = mixCallOf(fallbackOf(token.light.trim(), byName));
+  const [, alias = ''] = ALIAS_RE.exec(value) ?? [];
+
+  return byName.has(alias)
+    ? { kind: TokenDerivationKind.Alias, source: alias }
+    : mixOf(value, byName);
+};
+
+const isLineHeight = (token: TokenReference, byName: ReadonlyMap<string, TokenReference>) =>
+  token.name.endsWith(LINE_HEIGHT_SUFFIX) &&
+  byName.has(token.name.slice(0, -LINE_HEIGHT_SUFFIX.length));
+
+const lineHeightOf = (
+  token: TokenReference,
+  byName: ReadonlyMap<string, TokenReference>,
+): TokenLine | undefined => {
+  const line = byName.get(`${token.name}${LINE_HEIGHT_SUFFIX}`);
+
+  return line === undefined
+    ? undefined
+    : { ...line, value: expanded(fullValueOf(line), byName, EXPANSION_DEPTH) };
+};
+
 export const tokenRowsOf = (
   tokens: readonly TokenReference[],
   section: TokenSection,
@@ -142,13 +239,22 @@ export const tokenRowsOf = (
   const byName = new Map(tokens.map((token) => [token.name, token]));
 
   const rows = tokens.reduce<TokenRow[]>((found, token) => {
-    if (tokenSectionOf(token) !== section) {
+    const skipped = tokenSectionOf(token) !== section || isLineHeight(token, byName);
+
+    if (skipped) {
       return found;
     }
 
     const value = expanded(fullValueOf(token), byName, EXPANSION_DEPTH);
+    const sample = sampleOf(token, value);
 
-    found.push({ ...token, sample: sampleOf(token, value), value });
+    found.push({
+      ...token,
+      sample,
+      value,
+      derivation: derivationOf(token, sample, byName),
+      lineHeight: lineHeightOf(token, byName),
+    });
 
     return found;
   }, []);

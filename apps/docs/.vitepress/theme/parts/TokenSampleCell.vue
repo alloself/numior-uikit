@@ -16,7 +16,7 @@
   >
     <span
       v-if="row.sample === TokenSample.Radius"
-      class="block size-6 border border-border-strong bg-surface-muted"
+      class="block size-10 border border-border-strong bg-surface-muted"
       :style="{ borderRadius: row.value }"
     />
     <span

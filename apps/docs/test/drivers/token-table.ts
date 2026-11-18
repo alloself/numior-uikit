@@ -18,6 +18,12 @@ const narrowList = (): Pick<
   removeEventListener: () => undefined,
 });
 
+const visibleText = (cell: DOMWrapper<Element>): string =>
+  cell
+    .findAll('[role="tooltip"]')
+    .reduce((text, tooltip) => text.replace(tooltip.text(), ''), cell.text())
+    .trim();
+
 export const themeToken = (name: string, light: string, dark?: string): TokenReference => ({
   name: `--${name}`,
   group: name.split('-')[0] ?? name,
@@ -57,20 +63,36 @@ export class TokenTableDriver {
   get rows(): string[][] {
     return this.wrapper
       .findAll('.nui-table__body [role="row"]')
-      .map((row) => row.findAll('[role="gridcell"]').map((cell) => cell.text()));
+      .map((row) => row.findAll('[role="gridcell"]').map(visibleText));
   }
 
-  private sampleCell(name: string): DOMWrapper<Element> {
+  private row(name: string): DOMWrapper<Element> {
     const row = this.wrapper
       .findAll('.nui-table__body [role="row"]')
       .find((candidate) => candidate.find('code').text() === `--${name}`);
 
-    const cell = row?.find('[role="gridcell"]');
-
-    if (cell === undefined) {
+    if (row === undefined) {
       throw new Error(`No token "${name}" in the table`);
     }
-    return cell;
+    return row;
+  }
+
+  private sampleCell(name: string): DOMWrapper<Element> {
+    return this.row(name).find('[role="gridcell"]');
+  }
+
+  formulaOf(name: string): string {
+    const tooltip = this.row(name).find('[role="tooltip"]');
+
+    return tooltip.exists() ? tooltip.text() : '';
+  }
+
+  formulaButtonOf(name: string): string | undefined {
+    return (
+      this.row(name)
+        .find('[role="tooltip"]')
+        .element.previousElementSibling?.getAttribute('aria-label') ?? undefined
+    );
   }
 
   swatchSchemes(name: string): string[] {

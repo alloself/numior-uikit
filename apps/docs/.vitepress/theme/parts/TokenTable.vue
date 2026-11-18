@@ -14,15 +14,25 @@
     <template #cell-name="{ row }">
       <span v-if="narrow" class="flex flex-col items-start gap-1">
         <code>{{ row.name }}</code>
-        <code class="wrap-anywhere">{{ row.light }}</code>
+        <TokenValueCell :row="row" :texts="texts" />
         <span v-if="row.dark !== undefined" class="text-subtle-foreground">
           {{ texts.tokenDark }}: <code class="wrap-anywhere">{{ row.dark }}</code>
         </span>
+        <template v-if="row.lineHeight !== undefined">
+          <code>{{ row.lineHeight.name }}</code>
+          <code>{{ row.lineHeight.value }}</code>
+        </template>
       </span>
-      <code v-else>{{ row.name }}</code>
+      <span v-else class="flex flex-col items-start gap-1">
+        <code>{{ row.name }}</code>
+        <code v-if="row.lineHeight !== undefined">{{ row.lineHeight.name }}</code>
+      </span>
     </template>
     <template #cell-light="{ row }">
-      <code>{{ row.light }}</code>
+      <span class="flex flex-col items-start gap-1">
+        <TokenValueCell :row="row" :texts="texts" />
+        <code v-if="row.lineHeight !== undefined">{{ row.lineHeight.value }}</code>
+      </span>
     </template>
     <template #cell-dark="{ row }">
       <code v-if="row.dark !== undefined">{{ row.dark }}</code>
@@ -37,6 +47,7 @@ import { NuiTable, type NuiTableColumn } from '@numior/table';
 import { useMediaQuery } from '@numior/vue';
 import type { TokenRow, TokenTableProps } from '../theme.types';
 import TokenSampleCell from './TokenSampleCell.vue';
+import TokenValueCell from './TokenValueCell.vue';
 
 const NARROW_QUERY = '(max-width: 40rem)';
 

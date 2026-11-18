@@ -673,7 +673,11 @@ export class DocsSite {
   tokenRow(name: string): Locator {
     return this.article
       .getByRole('row')
-      .filter({ has: this.page.locator('code').getByText(name, { exact: true }) });
+      .filter({ has: this.tokenNames.getByText(name, { exact: true }) });
+  }
+
+  private get tokenNames(): Locator {
+    return this.page.locator('[role="gridcell"][aria-colindex="2"] > * > span > code');
   }
 
   tokenSwatches(name: string): Locator {

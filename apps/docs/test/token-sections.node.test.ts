@@ -79,6 +79,72 @@ describe('token sections', () => {
     expect(type['--leading-normal']).toBe(TokenSample.None);
   });
 
+  it('reads how a derived colour is made: a share of a token over a surface or a plain reference', () => {
+    expect(rowOf(TokenSection.Tones, '--color-primary-soft')?.derivation).toEqual({
+      kind: 'mix',
+      source: '--color-primary',
+      share: '14',
+      over: '--color-surface',
+    });
+
+    expect(rowOf(TokenSection.Tones, '--color-neutral-muted')?.derivation).toEqual({
+      kind: 'mix',
+      source: '--color-neutral',
+      share: '65',
+      over: '--color-surface',
+    });
+
+    expect(rowOf(TokenSection.States, '--color-hover')?.derivation).toEqual({
+      kind: 'mix',
+      source: '--color-foreground',
+      share: '8',
+      over: undefined,
+    });
+
+    expect(rowOf(TokenSection.Code, '--color-syntax-highlight')?.derivation).toEqual({
+      kind: 'mix',
+      source: '--color-primary',
+      share: '6',
+      over: '--color-surface-code',
+    });
+
+    expect(rowOf(TokenSection.Tones, '--color-primary-soft-foreground')?.derivation).toEqual({
+      kind: 'alias',
+      source: '--color-primary',
+    });
+
+    expect(rowOf(TokenSection.Tones, '--color-primary')?.derivation).toBeUndefined();
+    expect(rowOf(TokenSection.Shape, '--radius-sm')?.derivation).toBeUndefined();
+  });
+
+  it('puts in words every colour of the theme that is made from another token', () => {
+    const rows = Object.values(TokenSection).flatMap((section) => tokenRowsOf(THEME, section));
+
+    const unread = rows.reduce<string[]>((names, row) => {
+      const made = row.sample === TokenSample.Color && row.light.includes('var(');
+
+      if (made && row.derivation === undefined) {
+        names.push(row.name);
+      }
+
+      return names;
+    }, []);
+
+    expect(unread).toEqual([]);
+  });
+
+  it('carries the line height of a text size in the row of that size', () => {
+    expect(rowOf(TokenSection.Type, '--text-xs')?.lineHeight).toMatchObject({
+      name: '--text-xs--line-height',
+      value: '1.5',
+    });
+
+    expect(rowOf(TokenSection.Type, '--text-4xl')?.lineHeight?.value).toBe('1.25');
+    expect(namesOf(TokenSection.Type).filter((name) => name.endsWith('--line-height'))).toEqual([]);
+
+    expect(rowOf(TokenSection.Type, '--leading-normal')?.lineHeight).toBeUndefined();
+  });
+
   it('shows a derived token with the base values of the kit, wherever the page is themed', () => {
     expect(rowOf(TokenSection.States, '--color-ring')?.value).toBe(
       rowOf(TokenSection.Tones, '--color-primary')?.value,

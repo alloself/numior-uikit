@@ -8,7 +8,7 @@ import type {
   ReferenceKey,
   TokenReference,
 } from '../reference/reference.types.ts';
-import type { DocsTexts } from '../theme/theme.types.ts';
+import type { DocsTexts, TokenRow } from '../theme/theme.types.ts';
 
 type Row = readonly string[];
 
@@ -134,10 +134,20 @@ export const signatureBlock = (declaration: DeclarationReference): string[] => [
   '',
 ];
 
-export const tokenTable = (tokens: readonly TokenReference[], texts: DocsTexts): string[] =>
+const tokenCells = (token: TokenReference): string[] => [
+  code(token.name),
+  code(token.light),
+  code(token.dark),
+];
+
+export const tokenTable = (rows: readonly TokenRow[], texts: DocsTexts): string[] =>
   tableOf(
     [texts.tokenName, texts.tokenValue, texts.tokenDark],
-    tokens.map((token) => [code(token.name), code(token.light), code(token.dark)]),
+    rows.flatMap((row) =>
+      row.lineHeight === undefined
+        ? [tokenCells(row)]
+        : [tokenCells(row), tokenCells(row.lineHeight)],
+    ),
   );
 
 export const iconTable = (icons: readonly IconReference[], texts: DocsTexts): string[] =>
