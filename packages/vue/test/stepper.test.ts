@@ -99,30 +99,30 @@ describe('NuiStepper', () => {
   });
 
   it('lists child steps with their titles and content in a numbered column', () => {
-    const stepper = StepperStepsDriver.mount();
+    const guide = StepperStepsDriver.mount();
 
-    expect(stepper.tag).toBe('div');
-    expect(stepper.label).toBeUndefined();
-    expect(stepper.hasModifier('readonly')).toBe(true);
-    expect(stepper.hasModifier('orientation-vertical')).toBe(true);
-    expect(stepper.items).toEqual(['nui-stepper-step', 'nui-stepper-step', 'nui-stepper-step']);
-    expect(stepper.titles).toEqual(['Install the package', 'Add the plugin', 'Use the components']);
-    expect(stepper.headingIds).toEqual(['add-the-plugin']);
+    expect(guide.tag).toBe('div');
+    expect(guide.label).toBeUndefined();
+    expect(guide.hasModifier('readonly')).toBe(true);
+    expect(guide.hasModifier('orientation-vertical')).toBe(true);
+    expect(guide.items).toEqual(['nui-stepper-step', 'nui-stepper-step', 'nui-stepper-step']);
+    expect(guide.titles).toEqual(['Install the package', 'Add the plugin', 'Use the components']);
+    expect(guide.headingIds).toEqual(['add-the-plugin']);
 
-    expect(stepper.contents).toEqual([
+    expect(guide.contents).toEqual([
       'Run the install command.',
       'Register the plugin in the config.',
       '',
     ]);
 
-    expect(stepper.buttons).toBe(0);
-    expect(stepper.numerals).toEqual(['decimal', 'decimal', 'decimal']);
+    expect(guide.buttons).toBe(0);
+    expect(guide.numerals).toEqual(['decimal', 'decimal', 'decimal']);
   });
 
   it('numbers child steps in the digits of the locale and keeps a requested row', () => {
-    const arabic = StepperStepsDriver.mount({ config: { locale: 'ar-EG' } });
+    const arabicGuide = StepperStepsDriver.mount({ config: { locale: 'ar-EG' } });
 
-    expect(arabic.numerals).toEqual(['arabic-indic', 'arabic-indic', 'arabic-indic']);
+    expect(arabicGuide.numerals).toEqual(['arabic-indic', 'arabic-indic', 'arabic-indic']);
 
     const row = StepperStepsDriver.mount({ props: { orientation: 'horizontal' } });
 
