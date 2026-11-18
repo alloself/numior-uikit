@@ -20,7 +20,7 @@ test('the components on the home page change their look and leave the site as it
 }) => {
   await docs.open('/');
   const home = docs.home();
-  await expect(home.screen.getByRole('button', { name: 'Оформить заказ' })).toBeVisible();
+  await expect(home.screen.getByRole('button', { name: 'Купить' })).toBeVisible();
 
   const numior = await home.screenLook();
 

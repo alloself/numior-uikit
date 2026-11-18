@@ -257,7 +257,7 @@ export class DocsHome {
   }
 
   screenLook(): Promise<ScreenLook> {
-    return this.screen.getByRole('button', { name: 'Оформить заказ' }).evaluate((button) => ({
+    return this.screen.getByRole('button', { name: 'Купить' }).evaluate((button) => ({
       fill: getComputedStyle(button).backgroundColor,
       font: getComputedStyle(button).fontFamily,
     }));

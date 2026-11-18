@@ -67,6 +67,8 @@ const textColumn = (
   label,
   type: 'text',
   filter: false,
+  sortable: false,
+  reorderable: false,
   width,
   wrap: true,
   value,

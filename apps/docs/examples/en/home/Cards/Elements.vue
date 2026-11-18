@@ -2,7 +2,7 @@
   <NuiCard>
     <NuiCardContent class="flex flex-col gap-5">
       <div class="flex flex-wrap gap-2">
-        <NuiButton>Check out</NuiButton>
+        <NuiButton>Buy</NuiButton>
         <NuiButton variant="soft">Add to cart</NuiButton>
         <NuiButton variant="outline" tone="neutral" :icon="Heart" aria-label="Save for later" />
       </div>
