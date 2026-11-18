@@ -1,10 +1,13 @@
 # Начало работы
 
-Как установить и настроить Numior UI в проекте на Vue 3.5+.
+Как подключить Numior UI к приложению на Vue 3.5+ и Vite. В Nuxt шаги другие, они описаны в
+руководстве [SSR и Nuxt](/guide/ssr#nuxt).
 
 ## Установка
 
-Установите Numior UI:
+:::: steps
+
+### Установите пакет
 
 ::: code-group
 
@@ -26,81 +29,60 @@ bun add @numior/kit
 
 :::
 
-Модули лежат в том же пакете, каждый в своём подпути, например `@numior/kit/table` или
-`@numior/kit/editor`. Модули, которые приложение не импортирует, в сборку не попадают.
+В пакете все компоненты и модули, а модуль вроде `@numior/kit/table` попадает в сборку, только
+если приложение его импортирует.
 
-## Стили
+### Добавьте плагин Vite
 
-Подключите стили в точке входа приложения:
+Плагин подключает Tailwind 4 и оставляет в CSS стили только тех компонентов, что есть в коде:
 
 ```ts
-import '@numior/kit/theme.css';
-import '@numior/kit/base.css';
-import '@numior/kit/styles.css';
+import vue from '@vitejs/plugin-vue';
+import { numior } from '@numior/kit/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [vue(), numior()],
+});
 ```
 
-Если стили приложения собираются в CSS-файле, подключите их там:
+### Подключите стили
+
+Добавьте Tailwind и Numior UI в CSS-файл приложения, например `src/style.css`:
 
 ```css
-@import '@numior/kit/theme.css';
-@import '@numior/kit/base.css';
+@import 'tailwindcss';
+@import '@numior/kit/tailwind/theme.css';
 @import '@numior/kit/styles.css';
 ```
 
-В `theme.css` лежат цвета, отступы и скругления светлой и тёмной темы. `base.css` задаёт странице
-фон, шрифт и цвет текста. `styles.css` содержит стили всех компонентов.
+### Подключите CSS и плагин Vue
 
-Чтобы не грузить лишнее, подключите вместо `styles.css` файлы только нужных компонентов, например
-`@numior/kit/styles/button.css`. Составным компонентам нужны и файлы их частей, поэтому в разделе
-«Установка» на странице компонента перечислены все его файлы.
-
-## Первый компонент
-
-Импортируйте компоненты из `@numior/kit` и используйте их в шаблоне:
-
-<Example name="guide/First" />
-
-Свойство `variant` меняет оформление компонента, `tone` — цвет, `size` — размер. Атрибуты и
-обработчики событий, которые вы передаёте компоненту, попадают на его корневой элемент.
-
-Поля ввода выводят подпись, подсказку и текст ошибки из свойств `label`, `description` и `error`.
-Обёртка `NuiField` нужна, только если подпись свёрстана своей разметкой или в поле несколько
-контролов.
-
-## Плагин
-
-Подключите плагин `createNuiConfig`, чтобы задать язык встроенных подписей вроде «Закрыть» и
-«Нет вариантов», тему, иконки и направление текста:
+Плагин `createNuiConfig` задаёт язык встроенных подписей, остальные его настройки описаны в
+[Конфигурации](/guide/configuration):
 
 ```ts
 import { createApp } from 'vue';
 import { createNuiConfig } from '@numior/kit';
 import App from './App.vue';
+import './style.css';
 
 createApp(App)
-  .use(createNuiConfig({ locale: 'ru-RU', colorScheme: { storageKey: 'theme' } }))
+  .use(createNuiConfig({ locale: 'ru-RU' }))
   .mount('#app');
 ```
 
-С такой настройкой подписи будут на русском, а тема, которую выберет пользователь, сохранится в
-`localStorage` под ключом `theme`. Без плагина компоненты тоже работают: подписи на английском,
-тема как в системе.
+### Используйте компоненты
 
-## Тема и плотность
+Импортируйте компоненты из `@numior/kit` и используйте их в шаблоне:
 
-Тему и плотность задают классы на `<html>`:
+<Example name="guide/First" />
 
-```html
-<html class="nui-theme--dark nui-theme--density-compact"></html>
-```
-
-Тему выбирают `nui-theme--light`, `nui-theme--dark` и `nui-theme--system`, где `system`
-повторяет настройку системы, как и `<html>` без класса. `nui-theme--density-compact` уменьшает
-высоту контролов и отступы. Классы работают на любом элементе, и тогда тема или плотность
-меняются только внутри него.
+::::
 
 ## Дальше
 
+- [Tailwind](/guide/tailwind) — как устроены стили и как настроить тему.
 - [Button](/components/button) — кнопка с живым конфигуратором и полным API.
-- [Темы оформления](/guide/theming) — токены, акценты и свои темы.
+- [Темы оформления](/guide/theming) — светлая и тёмная схема, акценты и плотность.
 - [Локализация](/guide/localization) — словари и переводы встроенных подписей.

@@ -250,8 +250,24 @@ describe('guards of the stylesheets in code blocks', () => {
 
     expect(textsOf(styleGuards('table/index.md', source), GuardRule.Styles)).toEqual([
       'a code block imports the styles of components or a module; @numior/kit/styles.css brings them',
+      'a code block imports kit CSS from a script or a component style block; it belongs in the Tailwind entry',
       'a code block imports the styles of components or a module; @numior/kit/styles.css brings them',
       'a code block imports the styles of components or a module; @numior/kit/styles.css brings them',
+    ]);
+  });
+
+  it('report kit CSS imported from a script or from the style block of a component', () => {
+    const source = page('Начало работы.', [
+      fence('ts', ["import '@numior/kit/styles.css';", "import '@numior/kit/theme.css';"]),
+      '',
+      fence('vue', ['<style>', "@import '@numior/kit/prose.css';", '</style>']),
+      '',
+      fence('ts', ["import './style.css';"]),
+    ]);
+
+    expect(textsOf(styleGuards('guide/getting-started.md', source), GuardRule.Styles)).toEqual([
+      'a code block imports kit CSS from a script or a component style block; it belongs in the Tailwind entry',
+      'a code block imports kit CSS from a script or a component style block; it belongs in the Tailwind entry',
     ]);
   });
 });

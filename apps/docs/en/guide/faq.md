@@ -19,9 +19,9 @@ is in the [SSR and Nuxt](/en/guide/ssr) guide.
 
 ## Can I include only the components I use?
 
-Yes. Your bundler keeps only the components you import, because the packages mark CSS as their
-only side effect. Styles come as files per component too, and each component page lists the files
-it needs.
+Yes. Your bundler keeps only the components you import, because the packages mark CSS as their only
+side effect. The `numior()` plugin picks the styles: the CSS carries only the components found in
+your code.
 
 ## How do I change the language of the labels?
 

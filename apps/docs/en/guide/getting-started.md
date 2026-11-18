@@ -1,10 +1,13 @@
 # Getting started
 
-Install and configure Numior UI in a Vue 3.5+ project.
+Add Numior UI to a Vue 3.5+ app built with Vite. Nuxt takes different steps, covered in
+[SSR and Nuxt](/en/guide/ssr#nuxt).
 
 ## Installation
 
-Install Numior UI:
+:::: steps
+
+### Install the package
 
 ::: code-group
 
@@ -26,81 +29,61 @@ bun add @numior/kit
 
 :::
 
-The modules are in the same package, each under its own subpath, such as `@numior/kit/table` or
-`@numior/kit/editor`. Modules your app does not import stay out of the bundle.
+The package holds every component and module, and a module such as `@numior/kit/table` reaches
+the bundle only when the app imports it.
 
-## Styles
+### Add the Vite plugin
 
-Load the styles in the entry point of your app:
+The plugin brings in Tailwind 4 and keeps in the CSS only the styles of the components your code
+uses:
 
 ```ts
-import '@numior/kit/theme.css';
-import '@numior/kit/base.css';
-import '@numior/kit/styles.css';
+import vue from '@vitejs/plugin-vue';
+import { numior } from '@numior/kit/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [vue(), numior()],
+});
 ```
 
-If your app builds its styles from a CSS file, load them there:
+### Import the styles
+
+Add Tailwind and Numior UI to the CSS file of the app, for example `src/style.css`:
 
 ```css
-@import '@numior/kit/theme.css';
-@import '@numior/kit/base.css';
+@import 'tailwindcss';
+@import '@numior/kit/tailwind/theme.css';
 @import '@numior/kit/styles.css';
 ```
 
-`theme.css` holds the colors, spacing and radii of the light and dark themes. `base.css` sets the
-page background, font and text color. `styles.css` contains the styles of every component.
+### Import the CSS and the Vue plugin
 
-To load less, use the files of the components you need instead of `styles.css`, for example
-`@numior/kit/styles/button.css`. Composite components also need the files of their parts, so the
-Installation section of each component page lists all of them.
-
-## First component
-
-Import components from `@numior/kit` and use them in a template:
-
-<Example name="guide/First" />
-
-The `variant` prop changes the style of a component, `tone` its color and `size` its size.
-Attributes and event listeners you pass to a component land on its root element.
-
-Inputs render the label, hint and error text from the `label`, `description` and `error` props.
-You need the `NuiField` wrapper only when the label is your own markup or a field holds several
-controls.
-
-## Plugin
-
-Install the `createNuiConfig` plugin to set the language of built-in labels such as "Close" and
-"No options", the theme, icons and the writing direction:
+The `createNuiConfig` plugin sets the language of built-in labels, and
+[Configuration](/en/guide/configuration) covers the rest of its options:
 
 ```ts
 import { createApp } from 'vue';
 import { createNuiConfig } from '@numior/kit';
 import App from './App.vue';
+import './style.css';
 
 createApp(App)
-  .use(createNuiConfig({ locale: 'en-US', colorScheme: { storageKey: 'theme' } }))
+  .use(createNuiConfig({ locale: 'en-US' }))
   .mount('#app');
 ```
 
-With this setup the labels are in English and the theme the user picks is kept in `localStorage`
-under the `theme` key. Components work without the plugin too: labels are in English and the
-theme follows the system.
+### Use the components
 
-## Theme and density
+Import components from `@numior/kit` and use them in a template:
 
-Classes on `<html>` set the theme and density:
+<Example name="guide/First" />
 
-```html
-<html class="nui-theme--dark nui-theme--density-compact"></html>
-```
-
-`nui-theme--light`, `nui-theme--dark` and `nui-theme--system` pick the theme, where `system`
-follows the system setting, as does `<html>` without a class. `nui-theme--density-compact` makes
-controls shorter and spacing tighter. The classes work on any element, and then the theme or
-density changes only inside it.
+::::
 
 ## Next
 
+- [Tailwind](/en/guide/tailwind) — how the styles are built and how to set up the theme.
 - [Button](/en/components/button) — the button with a live configurator and the full API.
-- [Theming](/en/guide/theming) — tokens, accents and custom themes.
+- [Theming](/en/guide/theming) — light and dark schemes, accents and density.
 - [Localization](/en/guide/localization) — dictionaries and translations of built-in labels.

@@ -63,7 +63,7 @@ status: accepted
   использованию через плагин кита (`@import '@numior/kit/styles.css'` во входе Tailwind объясняет
   «Начало работы»), команды установки модуля нет: всё ставит `pnpm add @numior/kit`. Блок кода,
   который подключает CSS отдельных компонентов или модуля, проверка `component-styles` не
-  пропускает.
+  пропускает, как и CSS кита из скрипта или блока `<style>`.
 - Пакеты называются так, как их видит приложение: `@numior/kit` и его подпути
   (`@numior/kit/table`, `@numior/kit/editor`), `@numior/mcp`. Внутренние пакеты репозитория
   (`@numior/vue`, `@numior/primitives`, `@numior/table` и другие) в доке не встречаются.

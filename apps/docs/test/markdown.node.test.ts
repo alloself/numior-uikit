@@ -116,6 +116,44 @@ describe('docs markdown', () => {
     expect(html.match(/<NuiCode /g)).toHaveLength(1);
   });
 
+  it('turns numbered steps into a readonly stepper with a step per heading', () => {
+    const html = md.render(
+      ':::: steps\n\n### Установите пакет\n\n::: code-group\n\n```sh [pnpm]\npnpm add @numior/kit\n```\n\n:::\n\n### Подключите стили\n\n<Example name="guide/First" />\n\n::::\n\n## Дальше\n',
+      RU,
+    );
+
+    const stepper = html.slice(0, html.indexOf('</NuiStepper>'));
+    const [, first = '', second = ''] = stepper.split('<NuiStepperStep>\n');
+
+    expect(
+      html.startsWith('<NuiStepper readonly>\n<NuiStepperStep>\n<template #title>\n<h3 '),
+    ).toBe(true);
+
+    expect(stepper.match(/<h3 [^>]*class="scroll-mt-20"/g)).toHaveLength(2);
+    expect(stepper.match(/<\/NuiStepperStep>/g)).toHaveLength(2);
+
+    expect(first).toMatch(
+      /^<template #title>\n<h3 [^]*Установите пакет[^]*<\/h3>\n<\/template>\n<CodeGroup/,
+    );
+
+    expect(second).toMatch(
+      /^<template #title>\n<h3 [^]*Подключите стили[^]*<\/h3>\n<\/template>\n/,
+    );
+
+    expect(second).toContain('<Example name="guide/First" />');
+    expect(html.slice(html.indexOf('</NuiStepper>'))).toContain('<h2 ');
+  });
+
+  it('leaves a steps mark as text when it is not closed or does not start with a step heading', () => {
+    const unclosed = md.render(':::: steps\n\n### Шаг\n', RU);
+    const headless = md.render(':::: steps\n\nТекст\n\n### Шаг\n\n::::\n', RU);
+
+    expect(unclosed).not.toContain('<NuiStepper');
+    expect(unclosed).toContain(':::: steps');
+    expect(headless).not.toContain('<NuiStepper');
+    expect(headless).toContain(':::: steps');
+  });
+
   it('keeps plain fences without a language or tokens', () => {
     expect(codeProps(md.render('```text\nplain\n```\n', RU))).toEqual({ code: 'plain' });
     expect(codeProps(md.render('```\nbare\n```\n', RU))).toEqual({ code: 'bare' });

@@ -12,9 +12,9 @@ which one applies.
 
 ## Setup
 
-The theme comes with the `@numior/kit/tailwind/theme.css` preset; the [Tailwind](/en/guide/tailwind#installation)
-guide shows how to add it. Import the accent classes in the same CSS file after the preset, into
-the `theme` layer:
+The theme comes with the `@numior/kit/tailwind/theme.css` preset; the [Getting
+started](/en/guide/getting-started#installation) guide shows how to add it. Import the accent
+classes in the same CSS file after the preset, into the `theme` layer:
 
 ```css
 @import 'tailwindcss';

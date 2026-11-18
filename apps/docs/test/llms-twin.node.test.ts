@@ -144,6 +144,14 @@ describe('markdown twin of a page', () => {
     expect(pageTwin(page, contextOf())).toBe(page);
   });
 
+  it('drops the marks of numbered steps and keeps their headings', () => {
+    const page = ':::: steps\n\n### Установите пакет\n\n```sh\npnpm add @numior/kit\n```\n\n::::\n';
+
+    expect(pageTwin(page, contextOf())).toBe(
+      '### Установите пакет\n\n```sh\npnpm add @numior/kit\n```\n',
+    );
+  });
+
   it('fences a source that holds a fence itself with a longer fence', () => {
     const twin = pageTwin('<Example name="code/Fenced" />\n', contextOf());
 
