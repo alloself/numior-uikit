@@ -31,7 +31,7 @@
           :aria-label="texts.homeScreen"
           :dir="direction"
           class="bg-surface p-4 font-sans text-foreground sm:p-6"
-          :class="`nui-theme--${scheme}`"
+          :class="schemeClass"
           :style="look"
         >
           <component :is="screen" />
@@ -73,6 +73,10 @@ const scheme = computed<ResolvedColorScheme>({
     pickedScheme.value = value;
   },
 });
+
+const schemeClass = computed(() =>
+  pickedScheme.value === undefined ? undefined : `nui-theme--${pickedScheme.value}`,
+);
 
 const accent = computed<string | null>({
   get: () => pickedAccent.value ?? palette.choice.value,

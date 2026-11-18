@@ -15,6 +15,18 @@ test('the home page copies the install line and leads to the guide', async ({ do
   await expect(page).toHaveURL(/\/guide\/getting-started$/);
 });
 
+test('the components on the home page follow a dark system scheme from the first paint', async ({
+  docs,
+}) => {
+  await docs.emulate({ colorScheme: 'dark' });
+
+  await docs.open('/');
+  const home = docs.home();
+
+  await expect.poll(() => home.screenTone()).toBe('dark');
+  await expect(home.shownScheme).toHaveAccessibleName('Тёмная');
+});
+
 test('the components on the home page change their look and leave the site as it was', async ({
   docs,
 }) => {

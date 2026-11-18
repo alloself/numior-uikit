@@ -311,6 +311,11 @@ export const rgbDelta = (a: Rgb, b: Rgb): number =>
 
 export const channelSumOf = (rgb: Rgb): number => rgb.reduce((sum, channel) => sum + channel, 0);
 
+const MID_GREY_SUM = 3 * 128;
+
+export const toneOf = (rgb: Rgb): 'dark' | 'light' =>
+  channelSumOf(rgb) < MID_GREY_SUM ? 'dark' : 'light';
+
 export const liesBetween = (value: Rgb, from: Rgb, to: Rgb, tolerance = 1): boolean =>
   value.every((channel, i) => {
     const low = Math.min(from[i] ?? 0, to[i] ?? 0);

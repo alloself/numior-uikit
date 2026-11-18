@@ -46,3 +46,16 @@ test('the Numior preset exports the theme of this site with its own surfaces', a
   expect(css).toContain("--caption-open: '[ ';");
   expect(css).toContain('--radius-base: 0.25rem;');
 });
+
+test('the preview follows a dark system scheme until a scheme is picked', async ({ docs }) => {
+  await docs.emulate({ colorScheme: 'dark' });
+
+  await docs.open('/theme/');
+  const builder = docs.themeBuilder();
+
+  await expect.poll(() => builder.previewTone()).toBe('dark');
+
+  await builder.pick('Светлая');
+
+  await expect.poll(() => builder.previewTone()).toBe('light');
+});

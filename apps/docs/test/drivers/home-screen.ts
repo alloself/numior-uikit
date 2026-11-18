@@ -41,6 +41,13 @@ export class HomeScreenDriver {
     return this.screen.classes().filter((name) => name.startsWith(SCHEME_PREFIX));
   }
 
+  shownIn(group: string): string[] {
+    return this.wrapper
+      .find(`.nui-toggle-group[aria-label="${group}"]`)
+      .findAll('button[aria-pressed="true"], button[aria-checked="true"]')
+      .map((button) => button.attributes('aria-label') ?? button.text());
+  }
+
   themeKey(name: string): string {
     return this.screen.element.style.getPropertyValue(name);
   }

@@ -2,6 +2,7 @@ import type { FrameLocator, Locator, Page } from '@playwright/test';
 import { wcagViolationsOf, type AxeViolations } from '../helpers/axe';
 import { kitButtonsOf, offGridButtons } from '../helpers/buttons';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
+import { rgbOf, toneOf } from '../helpers/color';
 import { boxOf } from '../helpers/geometry';
 import { MainFrameNetwork } from '../helpers/network';
 import { accentOf, schemeOf } from '../helpers/theme';
@@ -252,6 +253,14 @@ export class DocsHome {
     return schemeOf(this.screen);
   }
 
+  async screenTone(): Promise<'dark' | 'light'> {
+    return toneOf(await rgbOf(this.screen, 'background-color'));
+  }
+
+  get shownScheme(): Locator {
+    return this.options.getByRole('radio', { checked: true });
+  }
+
   screenDirection(): Promise<string | null> {
     return this.screen.getAttribute('dir');
   }
@@ -344,6 +353,10 @@ export class DocsThemeBuilder {
 
   previewScheme(): Promise<string | null> {
     return schemeOf(this.preview);
+  }
+
+  async previewTone(): Promise<'dark' | 'light'> {
+    return toneOf(await rgbOf(this.preview, 'background-color'));
   }
 }
 

@@ -27,7 +27,8 @@ describe('HomeScreen', () => {
     const home = HomeScreenDriver.mount();
 
     expect(home.screen.text()).toBe('Кнопка');
-    expect(home.schemes).toEqual(['nui-theme--light']);
+    expect(home.schemes).toEqual([]);
+    expect(home.shownIn(ru.theme)).toEqual([ru.light]);
     expect(home.direction).toBe('ltr');
     expect(home.accent).toBe('Numior');
     expect(home.themeKey('--color-primary')).toBe(NUMIOR['--color-primary']);

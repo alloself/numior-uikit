@@ -81,7 +81,7 @@
           role="region"
           :aria-label="texts.themePreview"
           class="bg-surface p-4 font-sans text-foreground sm:p-6"
-          :class="`nui-theme--${scheme}`"
+          :class="schemeClass"
           :style="previewStyle"
         >
           <component :is="preview" />
@@ -190,6 +190,10 @@ const scheme = computed<ResolvedColorScheme>({
     pickedScheme.value = value;
   },
 });
+
+const schemeClass = computed(() =>
+  pickedScheme.value === undefined ? undefined : `nui-theme--${pickedScheme.value}`,
+);
 
 const presets = computed<readonly NuiToggleItem<ThemePreset>[]>(() =>
   Object.values(ThemePreset).map((value) => ({ value, label: texts.themePresets[value] })),
