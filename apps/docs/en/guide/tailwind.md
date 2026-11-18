@@ -34,6 +34,16 @@ The `numior()` plugin looks for components in the project code. The `@import
 '@numior/kit/styles.css'` line then brings in the styles of the ones it found. A component you add
 to the code gets its styles without a dev server restart.
 
+Code outside the Vite root, such as a shared package of a monorepo, is found through `@source` in
+the file with this import. Tailwind reads the same line when it looks for classes:
+
+```css
+@import 'tailwindcss';
+@import '@numior/kit/tailwind/theme.css';
+@import '@numior/kit/styles.css';
+@source '../../shared/src';
+```
+
 ## Theme
 
 The Numior UI theme is the `@theme` block of the `@numior/kit/tailwind/theme.css` preset. It holds

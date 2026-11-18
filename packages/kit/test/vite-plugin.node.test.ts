@@ -5,7 +5,7 @@ import { describe, expect, it, onTestFinished } from 'vitest';
 import { importKitComponents } from '../src/vite/components';
 import { stylesheetPath, tailwindAlias } from '../src/vite/index';
 import { parseManifest } from '../src/vite/manifest';
-import { namesIn, sourceFiles } from '../src/vite/scan';
+import { namesIn, projectSource, sourceFiles, sourcesIn } from '../src/vite/scan';
 import { createStylesheet } from '../src/vite/stylesheet';
 import { sheetImports, usedSheets } from '../src/vite/styles';
 import { KNOWN, MANIFEST, SHEETS } from './harness/kit-manifest';
@@ -102,13 +102,15 @@ describe('@numior/kit/vite', () => {
       'node_modules/lib/index.js': 'NuiTable',
     });
 
-    expect(sourceFiles(root).map((file) => file.slice(root.length + 1))).toEqual(
+    const files = sourceFiles([projectSource(root)]);
+
+    expect(files.map((file) => file.slice(root.length + 1))).toEqual(
       expect.arrayContaining(['src/App.vue']),
     );
 
-    expect(sourceFiles(root).some((file) => file.includes('NuiTable'))).toBe(false);
-    expect(sourceFiles(root).some((file) => file.includes('/dist/'))).toBe(false);
-    expect(sourceFiles(root).some((file) => file.includes('/node_modules/'))).toBe(false);
+    expect(files.some((file) => file.includes('NuiTable'))).toBe(false);
+    expect(files.some((file) => file.includes('/dist/'))).toBe(false);
+    expect(files.some((file) => file.includes('/node_modules/'))).toBe(false);
   });
 
   it('writes the sheets of the components of the project and grows when a file adds one', async () => {
@@ -124,6 +126,46 @@ describe('@numior/kit/vite', () => {
     expect(await sheet.grow(join(root, 'src/Orders.vue'))).toBe(true);
     expect(await sheet.grow(join(root, 'src/Orders.vue'))).toBe(false);
     expect(await sheet.grow(join(root, 'src/style.css'))).toBe(false);
+
+    expect(await readFile(sheet.path, 'utf8')).toBe(
+      sheetImports([SHEETS.ICON, SHEETS.BUTTON, SHEETS.BADGE, SHEETS.TABLE]),
+    );
+  });
+
+  it('reads the @source lines of a Tailwind entry and leaves inline class lists out', () => {
+    const css = [
+      "@import 'tailwindcss';",
+      '@source "../../shared";',
+      "@source not '../../shared/legacy';",
+      '@source inline("underline");',
+    ].join('\n');
+
+    expect(sourcesIn(css, '/app/src')).toEqual([
+      { base: '/app/src', pattern: '../../shared', negated: false },
+      { base: '/app/src', pattern: '../../shared/legacy', negated: true },
+    ]);
+  });
+
+  it('adds the components of the folders a Tailwind entry names with @source', async () => {
+    const root = await projectWith({
+      'app/src/App.vue': '<NuiBadge>3</NuiBadge>',
+      'shared/Orders.vue': '<NuiTable />',
+      'shared/legacy/media.ts': "import { contentMediaViews } from '@numior/kit/content/media';",
+    });
+
+    const sheet = createStylesheet(MANIFEST, join(root, 'app'), join(root, 'app/.vite/styles.css'));
+
+    const sources = sourcesIn(
+      "@source '../../shared';\n@source not '../../shared/legacy';",
+      join(root, 'app/src'),
+    );
+
+    await sheet.ready();
+
+    expect(await readFile(sheet.path, 'utf8')).toBe(sheetImports([SHEETS.BADGE]));
+
+    expect(await sheet.include(sources)).toBe(true);
+    expect(await sheet.include(sources)).toBe(false);
 
     expect(await readFile(sheet.path, 'utf8')).toBe(
       sheetImports([SHEETS.ICON, SHEETS.BUTTON, SHEETS.BADGE, SHEETS.TABLE]),

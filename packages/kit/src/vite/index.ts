@@ -1,15 +1,19 @@
 import { createRequire } from 'node:module';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import tailwindcss from '@tailwindcss/vite';
 import type { Alias, Plugin, UserConfig, ViteDevServer } from 'vite';
 import { importKitComponents } from './components';
 import { readManifest } from './manifest';
+import { sourcesIn } from './scan';
 import { createStylesheet } from './stylesheet';
 import type { KitManifest, KitStylesheet, NumiorOptions } from './vite.types';
 
 export type { KitComponent, KitManifest, NumiorOptions } from './vite.types';
 
 const VUE_MODULE = /\.vue(?:$|\?)/u;
+const CSS_MODULE = /\.css(?:$|\?)/u;
+const QUERY = /\?.*$/u;
+const KIT_STYLES_IMPORT = '@numior/kit/styles.css';
 const RESOLVED_CALL = '_resolveComponent(';
 const KIT_STYLES = /^@numior\/kit\/styles\.css$/u;
 const TAILWIND_IMPORT = /^tailwindcss$/u;
@@ -62,6 +66,14 @@ export const kitStyles = (manifest: KitManifest, root?: string): Plugin => {
     },
     buildStart: async () => {
       await sheet?.ready();
+    },
+    transform: {
+      filter: { id: CSS_MODULE, code: KIT_STYLES_IMPORT },
+      handler: async (code, id) => {
+        await sheet?.include(sourcesIn(code, dirname(id.replace(QUERY, ''))));
+
+        return null;
+      },
     },
     configureServer: (server) => {
       for (const event of WATCHED_EVENTS) {

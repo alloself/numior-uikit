@@ -15,8 +15,15 @@ export interface NumiorOptions {
   readonly styles?: boolean;
 }
 
+export interface ScanSource {
+  readonly base: string;
+  readonly pattern: string;
+  readonly negated: boolean;
+}
+
 export interface KitStylesheet {
   readonly path: string;
   readonly ready: () => Promise<void>;
   readonly grow: (file: string) => Promise<boolean>;
+  readonly include: (sources: readonly ScanSource[]) => Promise<boolean>;
 }

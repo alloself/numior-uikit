@@ -32,6 +32,16 @@ Numior UI написан на Tailwind 4, и его тема — это тема
 подключает стили только найденных. Компонент, добавленный в код, получает свои стили без перезапуска
 dev-сервера.
 
+Код вне корня Vite, например общий пакет монорепо, плагин находит по `@source` в файле с этим
+импортом. Ту же строку читает Tailwind, когда ищет классы:
+
+```css
+@import 'tailwindcss';
+@import '@numior/kit/tailwind/theme.css';
+@import '@numior/kit/styles.css';
+@source '../../shared/src';
+```
+
 ## Тема
 
 Тема Numior UI — блок `@theme` в пресете `@numior/kit/tailwind/theme.css`: цвета светлой и

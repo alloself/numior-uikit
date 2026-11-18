@@ -1,8 +1,9 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { namesIn, namesInFiles, sourceFiles, textOf } from './scan';
+import { isEqual } from 'lodash-es';
+import { namesIn, namesInFiles, projectSource, sourceFiles, textOf } from './scan';
 import { knownNames, sheetImports, usedSheets } from './styles';
-import type { KitManifest, KitStylesheet } from './vite.types';
+import type { KitManifest, KitStylesheet, ScanSource } from './vite.types';
 
 const CSS_FILE = /\.css$/u;
 const NODE_MODULES = '/node_modules/';
@@ -15,11 +16,15 @@ export const createStylesheet = (
   path: string,
 ): KitStylesheet => {
   const known = knownNames(manifest);
+  let extra: readonly ScanSource[] = [];
   let used: Promise<Set<string>> | undefined;
   let written: Promise<void> | undefined;
 
+  const scan = (): Promise<Set<string>> =>
+    namesInFiles(sourceFiles([projectSource(root), ...extra]), known);
+
   const usedNames = (): Promise<Set<string>> => {
-    used ??= namesInFiles(sourceFiles(root), known);
+    used ??= scan();
     return used;
   };
 
@@ -51,6 +56,25 @@ export const createStylesheet = (
       }
       for (const name of added) {
         current.add(name);
+      }
+      written = write();
+      await written;
+
+      return true;
+    },
+    include: async (sources) => {
+      if (isEqual(sources, extra)) {
+        return false;
+      }
+      await written;
+      extra = sources;
+
+      const before = await usedNames();
+
+      used = scan();
+
+      if (isEqual(await used, before)) {
+        return false;
       }
       written = write();
       await written;

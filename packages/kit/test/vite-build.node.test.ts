@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildFixture, startFixture } from './harness/vite-app';
+import { buildFixture, buildWithSharedFolder, startFixture } from './harness/vite-app';
 
 describe('an app built with numior()', () => {
   it('ships the styles and the code of the kit components its templates use and no others', async () => {
@@ -21,6 +21,17 @@ describe('an app built with numior()', () => {
     expect(app.css).toContain('.nui-button');
     expect(app.css).toContain('.nui-table');
     expect(app.js).toContain('resolveComponent("NuiButton")');
+  });
+
+  it('ships the styles of a component outside the Vite root once the Tailwind entry names its folder with @source', async () => {
+    const unnamed = await buildWithSharedFolder('');
+    const named = await buildWithSharedFolder("@source '../../shared';\n");
+
+    expect(unnamed.css).toContain('.nui-badge');
+    expect(unnamed.css).not.toContain('.nui-table');
+
+    expect(named.css).toContain('.nui-badge');
+    expect(named.css).toContain('.nui-table');
   });
 
   it('grows the styles on the dev server when a new file starts using a kit component', async () => {

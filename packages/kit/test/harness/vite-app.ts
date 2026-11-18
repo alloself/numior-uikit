@@ -1,4 +1,4 @@
-import { copyFile, mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,22 +42,55 @@ const joined = (parts: readonly (Rollup.OutputAsset | Rollup.OutputChunk)[], ext
     }, [])
     .join('\n');
 
-export const buildFixture = async (options: NumiorOptions = {}): Promise<BuiltApp> => {
+const buildApp = async (root: string, options: NumiorOptions = {}): Promise<BuiltApp> => {
   const result = await build({
-    root: FIXTURE,
+    root,
     configFile: false,
     logLevel: 'silent',
     plugins: [vue(), ...kitPlugins(readManifest(), options)],
     build: {
       write: false,
       minify: false,
-      rolldownOptions: { input: `${FIXTURE}src/main.ts` },
+      rolldownOptions: { input: join(root, 'src/main.ts') },
     },
   });
 
   const output = isOutput(result) ? result.output : [];
 
   return { css: joined(output, '.css'), js: joined(output, '.js') };
+};
+
+export const buildFixture = (options: NumiorOptions = {}): Promise<BuiltApp> =>
+  buildApp(FIXTURE, options);
+
+const SHARED_APP = [
+  '<template><NuiBadge>3</NuiBadge><Orders /></template>',
+  '<script setup lang="ts">',
+  "import Orders from '../../shared/Orders.vue';",
+  '</script>',
+].join('\n');
+
+const SHARED_ORDERS = '<template><NuiTable :rows="[]" :columns="[]" /></template>';
+
+export const buildWithSharedFolder = async (entryTail: string): Promise<BuiltApp> => {
+  const top = await mkdtemp(join(tmpdir(), 'numior-kit-shared-'));
+
+  await mkdir(join(top, 'app/src'), { recursive: true });
+  await mkdir(join(top, 'shared'));
+  await symlink(join(FIXTURE, 'node_modules'), join(top, 'node_modules'));
+  await copyFile(join(FIXTURE, 'src/main.ts'), join(top, 'app/src/main.ts'));
+  await writeFile(join(top, 'app/src/App.vue'), SHARED_APP);
+  await writeFile(join(top, 'shared/Orders.vue'), SHARED_ORDERS);
+
+  const entry = await readFile(join(FIXTURE, 'src/style.css'), 'utf8');
+
+  await writeFile(join(top, 'app/src/style.css'), `${entry}${entryTail}`);
+
+  try {
+    return await buildApp(join(top, 'app'));
+  } finally {
+    await rm(top, { recursive: true, force: true });
+  }
 };
 
 const FIXTURE_FILES = ['src/main.ts', 'src/App.vue', 'src/style.css'];
