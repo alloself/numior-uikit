@@ -7,9 +7,44 @@ import { MainFrameNetwork } from '../helpers/network';
 
 export type DocsScheme = 'light' | 'dark' | 'system';
 
+export interface Edges {
+  readonly start: number;
+  readonly end: number;
+}
+
 const PREVIEW_FRAMES = '[role="group"][aria-label="Превью"], [role="group"][aria-label="Preview"]';
 
 const PHONE_HEIGHT = 844;
+
+const linesOf = (scope: Locator): Promise<Edges> =>
+  scope.evaluate((root) => {
+    const box = root.getBoundingClientRect();
+    const style = getComputedStyle(root);
+
+    return {
+      start: Math.round(box.left + Number.parseFloat(style.paddingInlineStart)),
+      end: Math.round(box.right - Number.parseFloat(style.paddingInlineEnd)),
+    };
+  });
+
+const linkEdgesOf = (scope: Locator): Promise<Edges> =>
+  scope.evaluate((root) =>
+    [...root.querySelectorAll('a')].reduce(
+      (edges, link) => {
+        const box = link.getBoundingClientRect();
+
+        if (box.width === 0 || !link.checkVisibility()) {
+          return edges;
+        }
+
+        return {
+          start: Math.min(edges.start, Math.round(box.left)),
+          end: Math.max(edges.end, Math.round(box.right)),
+        };
+      },
+      { start: Number.POSITIVE_INFINITY, end: Number.NEGATIVE_INFINITY },
+    ),
+  );
 
 export class DocsExample {
   readonly root: Locator;
@@ -266,6 +301,10 @@ export class DocsSite {
 
   async homeLinkStart(): Promise<number> {
     return Math.round((await boxOf(this.header.getByRole('link').first())).x);
+  }
+
+  async headerAndFooterEdges(): Promise<{ header: Edges; footer: Edges }> {
+    return { header: await linesOf(this.header), footer: await linkEdgesOf(this.footer) };
   }
 
   async follow(link: string): Promise<void> {

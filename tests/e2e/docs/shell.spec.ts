@@ -111,6 +111,15 @@ test('the footer closes a page with the license and the sections of the site', a
   await expect(docs.footer).toBeAttached();
 });
 
+test('the footer stands on the lines of the header', async ({ docs }) => {
+  await docs.open('/components/kbd');
+
+  const { header, footer } = await docs.headerAndFooterEdges();
+
+  expect(footer.start).toBe(header.start);
+  expect(footer.end).toBe(header.end);
+});
+
 test('the site header keeps its place on a page whose example has an icon rail', async ({
   docs,
 }) => {
