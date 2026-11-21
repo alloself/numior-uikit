@@ -225,6 +225,12 @@ describe('formula parser', () => {
     expect(failureOf('=A1:Sheet1!B2')).toEqual({ position: 4, reason: 'reference' });
   });
 
+  it('takes a quoted span of sheets for the reference across sheets it is, not for a sheet name', () => {
+    expect(failureOf("=SUM('Jan 1:Dec'!B2)")).toMatchObject({ position: 5, reason: 'reference' });
+    expect(failureOf("=SUM('[1]Jan:Dec'!B2)")).toMatchObject({ position: 5, reason: 'reference' });
+    expect(failureOf('=SUM(Jan:Dec!B2)')).toMatchObject({ reason: 'reference' });
+  });
+
   it('keeps missing arguments and reads array constants', () => {
     expect(astOf('=IF(A1,,)')).toEqual({
       kind: 'call',

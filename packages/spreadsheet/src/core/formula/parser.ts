@@ -576,8 +576,9 @@ const lostReference = (place: SheetPlace, token: Token): FormulaNode | undefined
 const placeOf = (token: Token, books: ParseOptions['books']): SheetPlace | undefined => {
   const sheet = token.text === '' ? {} : { sheet: token.text };
   const book = token.book === undefined ? token.value : books?.(token.book);
+  const acrossSheets = token.text.includes(FormulaChar.Colon);
 
-  if (book === undefined) {
+  if (book === undefined || acrossSheets) {
     return undefined;
   }
   return book > 0 ? { book, ...sheet } : sheet;
