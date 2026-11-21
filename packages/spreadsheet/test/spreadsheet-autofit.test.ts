@@ -101,13 +101,14 @@ describe('NuiSpreadsheet column width by content', () => {
     await driver.resetColumnEdge('B');
 
     const fitted = [widthInBook(book, 1), driver.columnWidth('B'), driver.changes.length];
-    const told = driver.announcement;
+    const told = [driver.announcement, driver.gridAnnouncement];
 
     await driver.focus(1, 0);
     await driver.press('z', { ctrl: true });
 
     expect(fitted).toEqual([TITLE.length * CHAR, `${String(TITLE.length * CHAR)}px`, 1]);
-    expect(told).toBe('The column width fits its content');
+    expect(told[0]).toBe('The column width fits its content');
+    expect(told[1]).not.toContain('width reset');
     expect(driver.columnWidth('B')).toBe('64px');
   });
 
@@ -169,7 +170,8 @@ describe('NuiSpreadsheet column width by content', () => {
     await driver.resetColumnEdge('D');
 
     expect([widthInBook(book, 3), driver.columnWidth('D')]).toEqual([undefined, '64px']);
-    expect(driver.announcement).not.toBe('The column width fits its content');
+    expect(driver.announcement).toBe('Column width reset');
+    expect(driver.gridAnnouncement).not.toContain('width reset');
   });
 
   it('fits every selected column to its own content as one change', async () => {
@@ -235,5 +237,6 @@ describe('NuiSpreadsheet column width by content', () => {
     await driver.resetColumnEdge('B');
 
     expect([widthInBook(book, 1), driver.changes]).toEqual([undefined, []]);
+    expect(driver.gridAnnouncement).toBe('Column B width reset');
   });
 });

@@ -46,7 +46,7 @@
               part="band"
               :head="header.head"
               @resize="resize.start"
-              @reset-size="resize.reset"
+              @reset-size="fitColumn"
             >
               <template #default="{ column }">
                 <span class="nui-table__text">{{ bands.labels.get(column) }}</span>
@@ -60,7 +60,7 @@
               :marks="columnMarks"
               :head="header.head"
               @resize="resize.start"
-              @reset-size="resize.reset"
+              @reset-size="fitColumn"
             >
               <template #utility="{ column }">
                 <NuiTableUtilityCell v-bind="headUtility(column)" @toggle="selection.toggleAll()" />
@@ -1166,6 +1166,23 @@ const resize = useTableResize<T>({
     emit('columnResize', changes);
   },
 });
+
+const fitColumn = (key: string): void => {
+  let taken = false;
+
+  emit('columnFit', {
+    key,
+    preventDefault: () => {
+      taken = true;
+    },
+  });
+
+  if (taken) {
+    return;
+  }
+
+  resize.reset(key);
+};
 
 const order = useTableColumnOrder<T>({
   order: columnOrder,

@@ -126,6 +126,7 @@
         @pick="references.onPick"
         @update:row-heights="lineSizes.setHeights"
         @column-resize="lineSizes.commitWidths"
+        @column-fit="lineSizes.fitWidth"
         @row-resize="lineSizes.commitHeights"
         @window="lineSizes.setWindow"
       >

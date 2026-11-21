@@ -44,6 +44,7 @@ import {
   type NuiTablePins,
   type NuiTableWidths,
   type NuiTableColumnOrder,
+  type NuiTableColumnFit,
   type NuiTableColumnResize,
   type NuiTableRowResize,
   type NuiTableReorderEvent,
@@ -93,6 +94,7 @@ export interface TableMountOptions<T> {
   readonly slots?: TableSlotViews;
   readonly width?: number;
   readonly onEdit?: (event: NuiTableEditEvent<T>) => void;
+  readonly onColumnFit?: (event: NuiTableColumnFit) => void;
   readonly height?: number;
   readonly auto?: boolean;
   readonly dir?: 'ltr' | 'rtl';
@@ -166,6 +168,7 @@ export interface TableHostListeners<T> {
   readonly onRowClick: (row: T) => void;
   readonly onReorder: (event: NuiTableReorderEvent<T>) => void;
   readonly onColumnResize: (changes: readonly NuiTableColumnResize[]) => void;
+  readonly onColumnFit: (event: NuiTableColumnFit) => void;
   readonly onRowResize: (changes: readonly NuiTableRowResize[]) => void;
   readonly onWindow: (next: NuiTableWindow) => void;
   readonly onPick: (range: NuiTableRange) => void;
@@ -184,6 +187,7 @@ interface TableEvents<T> {
   readonly clicks: T[];
   readonly reorders: NuiTableReorderEvent<T>[];
   readonly resizes: (readonly NuiTableColumnResize[])[];
+  readonly fits: string[];
   readonly rowResizes: (readonly NuiTableRowResize[])[];
   readonly edits: NuiTableEditEvent<T>[];
   readonly refusals: NuiTableEditRefusal<T>[];
@@ -432,6 +436,7 @@ export class TableDriver<T> {
       clicks: [],
       reorders: [],
       resizes: [],
+      fits: [],
       rowResizes: [],
       edits: [],
       refusals: [],
@@ -454,6 +459,10 @@ export class TableDriver<T> {
       },
       onColumnResize: (changes) => {
         events.resizes.push(changes);
+      },
+      onColumnFit: (event) => {
+        events.fits.push(event.key);
+        settings.onColumnFit?.(event);
       },
       onRowResize: (changes) => {
         events.rowResizes.push(changes);
@@ -1178,6 +1187,10 @@ export class TableDriver<T> {
 
   get resizes(): readonly (readonly NuiTableColumnResize[])[] {
     return this.events.resizes;
+  }
+
+  get fits(): readonly string[] {
+    return this.events.fits;
   }
 
   get rowResizes(): readonly (readonly NuiTableRowResize[])[] {

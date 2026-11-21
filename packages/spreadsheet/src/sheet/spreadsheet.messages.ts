@@ -55,6 +55,7 @@ export interface NuiSpreadsheetMessages {
   readonly cellGone: string;
   readonly linesTooMany: (params: { readonly limit: number }) => string;
   readonly widthsFitted: string;
+  readonly widthsReset: string;
   readonly widthsFittedPartly: string;
   readonly pivotCells: string;
   readonly actionRefused: string;
@@ -272,6 +273,7 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     linesTooMany: ({ limit }) =>
       `Too many rows are selected to size them at once. Select up to ${limit.toLocaleString('en-US')} rows or the whole sheet`,
     widthsFitted: 'The column width fits its content',
+    widthsReset: 'Column width reset',
     widthsFittedPartly:
       'The width fits the cells on screen and the first ones from the top: there are too many cells to measure them all',
     pivotCells: 'Cells of a pivot table cannot be changed',
@@ -397,6 +399,7 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     linesTooMany: ({ limit }) =>
       `Выделено слишком много строк, чтобы изменить их размер за раз. Выделите до ${limit.toLocaleString('ru-RU')} строк или весь лист`,
     widthsFitted: 'Ширина колонки подобрана по содержимому',
+    widthsReset: 'Ширина колонки сброшена',
     widthsFittedPartly:
       'Ширина подобрана по ячейкам на экране и первым сверху: ячеек слишком много, чтобы измерить все',
     pivotCells: 'Ячейки сводной таблицы изменить нельзя',

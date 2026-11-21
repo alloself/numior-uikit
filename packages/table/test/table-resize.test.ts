@@ -120,6 +120,21 @@ describe('NuiTable column widths', () => {
     expect(grid.announcement).toBe('Ширина колонки «Имя» сброшена');
   });
 
+  it('leaves a double click on the header handle to its owner when the owner takes it', async () => {
+    const grid = mountPeople({
+      onColumnFit: (event) => {
+        event.preventDefault();
+      },
+    });
+
+    await grid.settle();
+    await grid.dragResizer(1, 60);
+    await grid.resetResizer(1);
+
+    expect([grid.fits, grid.widths, grid.resizes.length]).toEqual([['name'], { name: 220 }, 1]);
+    expect(grid.announcement).not.toContain('сброшена');
+  });
+
   it('stops sharing the free width through flex once a column was resized by hand', async () => {
     const grid = mountPeople({
       columns: PEOPLE_COLUMNS.map((column) =>

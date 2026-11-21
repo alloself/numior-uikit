@@ -21,7 +21,12 @@ column menu. The number of a sort key takes room while the table sorts by severa
 While the table fits its width, a column grows at the expense of its neighbor. Once a horizontal
 scroll appears, only the column itself grows.
 
-On the keyboard `Alt` with the arrows changes the width, and the column menu resets it.
+On the keyboard `Alt` with the arrows changes the width, and the column menu or a double click on
+the header edge resets it.
+
+Before a reset by a double click the table sends a `columnFit` event with the column key. After
+`preventDefault()` on it the table keeps the width and announces nothing. Then you set the width,
+for example from `fitWidth` on the table ref.
 
 ## Column and row order
 

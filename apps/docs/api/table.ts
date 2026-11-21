@@ -309,6 +309,10 @@ const docs: DocsMap = {
         ru: 'Ширину колонки поменяли: перетаскивание закончилось, сделан шаг с клавиатуры или ширина сброшена. Передаёт список `{ key, width }`; `width: undefined` значит сброс. Во время перетаскивания меняется только `v-model:widths`.',
         en: 'A column width changed: a drag ended, a keyboard step was made or the width was reset. Carries a list of `{ key, width }`; `width: undefined` means a reset. During a drag only `v-model:widths` changes.',
       },
+      columnFit: {
+        ru: 'Двойной клик по краю заголовка колонки, до сброса ширины. Передаёт `{ key, preventDefault }`: после `preventDefault()` таблица не сбрасывает ширину и не объявляет сброс — ширину ставит владелец.',
+        en: 'A double click on the edge of a column header, before the width is reset. Carries `{ key, preventDefault }`: after `preventDefault()` the table neither resets the width nor announces a reset, and the owner sets the width.',
+      },
       rowResize: {
         ru: 'Высоту строки поменяли: перетаскивание закончилось, сделан шаг с клавиатуры или высота сброшена. Передаёт список `{ key, height }`, где `key` — ключ строки строкой; `height: undefined` значит сброс. Во время перетаскивания меняется только `v-model:rowHeights`.',
         en: 'A row height changed: a drag ended, a keyboard step was made or the height was reset. Carries a list of `{ key, height }` with the row key as a string; `height: undefined` means a reset. During a drag only `v-model:rowHeights` changes.',

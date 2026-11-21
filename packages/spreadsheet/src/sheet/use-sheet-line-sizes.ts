@@ -1,4 +1,5 @@
 import type {
+  NuiTableColumnFit,
   NuiTableColumnResize,
   NuiTableRanges,
   NuiTableRowHeights,
@@ -30,6 +31,7 @@ export interface SheetLineSizes {
   readonly heights: ComputedRef<NuiTableRowHeights>;
   setHeights(next: NuiTableRowHeights): void;
   commitWidths(changes: readonly NuiTableColumnResize[]): void;
+  fitWidth(event: NuiTableColumnFit): void;
   commitHeights(changes: readonly NuiTableRowResize[]): void;
   setWindow(window: NuiTableWindow): void;
   forget(): void;
@@ -271,12 +273,12 @@ export const useSheetLineSizes = (options: SheetLineSizesOptions): SheetLineSize
     options.announce(texts.widthsFitted);
   };
 
-  const commit = (axis: LineAxis, changes: readonly LineSize[]): void => {
+  const commit = (axis: LineAxis, changes: readonly LineSize[]): Autofit | undefined => {
     const sheet = options.sheet();
     const cells = options.cells();
 
     if (sheet === undefined || cells === undefined || options.readonly()) {
-      return;
+      return undefined;
     }
 
     const place = placeOf(cells, axis);
@@ -290,7 +292,7 @@ export const useSheetLineSizes = (options: SheetLineSizesOptions): SheetLineSize
       );
 
       forget();
-      return;
+      return undefined;
     }
 
     const fit =
@@ -306,11 +308,30 @@ export const useSheetLineSizes = (options: SheetLineSizesOptions): SheetLineSize
     const step = layoutStepOf(sheet, layout);
 
     if (step !== undefined && !options.editing.apply([step])) {
-      return;
+      return undefined;
     }
 
     forget();
     told(fit);
+    return fit;
+  };
+
+  const fitWidth = (event: NuiTableColumnFit): void => {
+    const position = columnIndex(event.key);
+
+    if (position === undefined || options.readonly()) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const fit = commit(LineAxis.Cols, [{ position, size: undefined }]);
+
+    if (fit === undefined || fit.fitted > 0) {
+      return;
+    }
+
+    options.announce(options.messages.value.widthsReset);
   };
 
   return {
@@ -319,6 +340,7 @@ export const useSheetLineSizes = (options: SheetLineSizesOptions): SheetLineSize
     setHeights: (next) => {
       draft.value = next;
     },
+    fitWidth,
     commitWidths: (changes) => {
       commit(LineAxis.Cols, widthChanges(changes));
     },

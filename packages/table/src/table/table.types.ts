@@ -725,6 +725,7 @@ export interface NuiTableEvents<T> {
   window: [window: NuiTableWindow];
   pick: [range: NuiTableRange];
   columnResize: [changes: readonly NuiTableColumnResize[]];
+  columnFit: [event: NuiTableColumnFit];
   rowResize: [changes: readonly NuiTableRowResize[]];
 }
 
@@ -745,6 +746,11 @@ export type NuiTableWidths = Readonly<Record<string, number>>;
 export interface NuiTableColumnResize {
   readonly key: string;
   readonly width: number | undefined;
+}
+
+export interface NuiTableColumnFit {
+  readonly key: string;
+  readonly preventDefault: () => void;
 }
 
 export interface NuiTableRowResize {

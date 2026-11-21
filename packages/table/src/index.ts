@@ -35,6 +35,7 @@ export type {
   NuiTableCellStyler,
   NuiTableDetailSlot,
   NuiTableEvents,
+  NuiTableColumnFit,
   NuiTableColumnResize,
   NuiTableRowResize,
   NuiTableReorderEvent,
