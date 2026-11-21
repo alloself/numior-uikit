@@ -1050,6 +1050,60 @@ export interface NuiTableRowProps {
   plainText?: ((position: number, key: string) => string | undefined) | undefined;
 }
 
+export interface TableRowRead {
+  readonly part: TableRowPart;
+  readonly position: number | undefined;
+  readonly active: number;
+  readonly heading: boolean;
+  readonly wrapsText: boolean;
+  readonly ranged: TableRowRanges | undefined;
+  readonly rangedAt: ((position: number) => TableRowRanges | undefined) | undefined;
+  readonly marks: readonly TableSpan[] | undefined;
+  readonly ally: NuiTableCellPosition | undefined;
+  readonly head: ((key: string) => TableHeadState | undefined) | undefined;
+  readonly paints: TableRowPaint | undefined;
+  readonly plain: ReadonlyMap<string, string> | undefined;
+  readonly sizable: boolean;
+  readonly sizing: boolean;
+}
+
+export interface TableRowGap {
+  readonly gap: true;
+  readonly key: string;
+  readonly tag: 'th' | 'td';
+  readonly className: string;
+  readonly colspan: number | undefined;
+  readonly style: Readonly<Record<string, string>> | undefined;
+}
+
+export interface TableRowCell {
+  readonly gap: false;
+  readonly key: string;
+  readonly handle: string;
+  readonly tag: 'th' | 'td';
+  readonly className: string;
+  readonly role: 'columnheader' | 'rowheader' | 'gridcell';
+  readonly scope: 'col' | 'colgroup' | 'row' | undefined;
+  readonly rowspan: number | undefined;
+  readonly colspan: number | undefined;
+  readonly colIndex: number;
+  readonly colSpan: number | undefined;
+  readonly sort: 'ascending' | 'descending' | undefined;
+  readonly selected: 'true' | undefined;
+  readonly tabindex: number | undefined;
+  readonly style: unknown;
+  readonly bare: string | undefined;
+  readonly piece: string | undefined;
+  readonly pieceClass: string;
+  readonly pieceHidden: 'true' | undefined;
+  readonly slot: 'default' | 'utility';
+  readonly merge: TableLeadSpan | undefined;
+  readonly icon: NuiTableCellIcon | undefined;
+  readonly resizer: NuiTableResizerProps | undefined;
+}
+
+export type TableRowCellView = TableRowGap | TableRowCell;
+
 export interface NuiTableDetailRowProps {
   rowIndex: number;
   span: number;
