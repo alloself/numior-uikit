@@ -14,6 +14,7 @@ import {
   type LineChange,
   type ReferenceSpan,
 } from '../src/core';
+import { offsetText } from '../src/core/formula/spans';
 
 const texts = (text: string, spans: readonly ReferenceSpan[]): string[] =>
   spans.map((span) => text.slice(span.start, span.end));
@@ -166,5 +167,17 @@ describe('a formula being typed while lines move', () => {
     );
 
     expect(places).toEqual([0, 1, 2, 4, 5, 6, 7]);
+  });
+
+  it('moves the relative references of a formula it does not read as a copy of it would', () => {
+    expect(offsetText("SUM('Sales:Rates'!B2,$B$2)+B$3", 2, 0)).toBe(
+      "SUM('Sales:Rates'!B4,$B$2)+B$3",
+    );
+
+    expect(offsetText('A1+$A1+A$1+B2:C3', 0, 2)).toBe('C1+$A1+C$1+D2:E3');
+    expect(offsetText('SUM(A:A)+SUM(3:3)', 1, 1)).toBe('SUM(B:B)+SUM(4:4)');
+    expect(offsetText('Rates!B1+[1]Other!C3&"B1"', 1, 0)).toBe('Rates!B2+[1]Other!C4&"B1"');
+    expect(offsetText('A1048576+XFD1+B2', 1, 1)).toBe('#REF!+#REF!+C3');
+    expect(offsetText('Rates!#REF!+LOG10(4)', 1, 1)).toBe('Rates!#REF!+LOG10(4)');
   });
 });

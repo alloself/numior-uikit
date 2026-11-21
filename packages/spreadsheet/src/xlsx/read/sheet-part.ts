@@ -41,6 +41,7 @@ import { CellCapture, FormulaKind } from './read.types';
 import { CellTypeCode, OoxmlElement } from '../ooxml.types';
 import { FormatCode } from '../../core/format/format.types';
 import { parseFileFormula } from './file-formula';
+import { offsetText } from '../../core/formula/spans';
 
 export interface SheetContext {
   readonly book: Workbook;
@@ -71,6 +72,12 @@ export interface SheetCounts {
   protection: number;
   externalTables: number;
   readonly unknown: Set<string>;
+}
+
+interface SharedOpaque {
+  readonly text: string;
+  readonly row: number;
+  readonly col: number;
 }
 
 interface Cell {
@@ -219,6 +226,7 @@ export const readSheetPart = async (
   const { calculator, sheet } = context;
   const counts = emptyCounts();
   const shared = new Map<string, FormulaNode>();
+  const sharedOpaque = new Map<string, SharedOpaque>();
   let row = -1;
   let col = -1;
   let cell: Cell | undefined;
@@ -237,6 +245,26 @@ export const readSheetPart = async (
   let depth = 0;
   let inData = false;
 
+  const sharedOf = (key: string, current: Cell): FormulaNode | undefined => {
+    const parsed = shared.get(key);
+    const opaque = sharedOpaque.get(key);
+
+    if (parsed !== undefined || opaque === undefined) {
+      return parsed;
+    }
+    return {
+      kind: 'opaque',
+      text: offsetText(opaque.text, current.row - opaque.row, current.col - opaque.col),
+    };
+  };
+
+  const opaqueOf = (current: Cell, text: string, key: string | undefined): FormulaNode => {
+    if (key !== undefined) {
+      sharedOpaque.set(key, { text, row: current.row, col: current.col });
+    }
+    return { kind: 'opaque', text };
+  };
+
   const astOf = (current: Cell): FormulaNode | undefined => {
     const formula = current.formula;
 
@@ -244,13 +272,14 @@ export const readSheetPart = async (
       return undefined;
     }
     if (formula.text === '' && formula.shared !== undefined) {
-      return shared.get(formula.shared);
+      return sharedOf(formula.shared, current);
     }
 
     const parsed = parseFileFormula(formula.text, current);
+    const key = formula.kind === FormulaKind.Shared ? formula.shared : undefined;
 
     if (!parsed.ok) {
-      return formula.text.trim() === '' ? undefined : { kind: 'opaque', text: formula.text };
+      return formula.text.trim() === '' ? undefined : opaqueOf(current, formula.text, key);
     }
 
     const ast =

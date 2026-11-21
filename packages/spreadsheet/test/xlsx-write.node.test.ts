@@ -859,6 +859,16 @@ describe('writing xlsx', () => {
     });
   });
 
+  it('writes every cell of a shared formula it could not read with its own text', async () => {
+    const sheet = SALES_SHEET.replace('>B2*2<', ">SUM('Sales:Rates'!B2,$B$2)+B$3<");
+    const read = await opened(await xlsxPackage({ 'xl/worksheets/sheet1.xml': sheet }));
+    const text = await partOf(await written(read, read.source), 'xl/worksheets/sheet1.xml');
+
+    [2, 3, 4].forEach((row) => {
+      expect(text).toContain(`<f>SUM('Sales:Rates'!B${String(row)},$B$2)+B$3</f>`);
+    });
+  });
+
   it('moves the sheet view, validations, links, breaks and filters with lines and sheet names', async () => {
     const validations = `<dataValidations count="2"><dataValidation type="list" sqref="B2:B4"><formula1>$A$2:$A$4</formula1></dataValidation><dataValidation type="whole" sqref="H9"><formula1>B2</formula1></dataValidation></dataValidations>`;
     const links = `<hyperlinks><hyperlink ref="A2" r:id="rId2"/><hyperlink ref="A4" location="Rates!B1" display="Rate"/></hyperlinks>`;

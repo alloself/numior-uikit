@@ -354,27 +354,7 @@ const editOf = (
     : { from: span.address, to: span.end, text: address };
 };
 
-export const followLines = (
-  text: string,
-  changes: readonly LineChange[],
-  sheet: string,
-  locale: FormulaLocale = EN_FORMULAS,
-): TextShift | undefined => {
-  const spans = changes.length === 0 ? [] : referenceSpans(text, locale);
-
-  const edits = spans.reduce<TextEdit[]>((found, span) => {
-    const edit = editOf(text, span, changes, sheet);
-
-    if (edit !== undefined) {
-      found.push(edit);
-    }
-    return found;
-  }, []);
-
-  if (edits.length === 0) {
-    return undefined;
-  }
-
+const editedText = (text: string, edits: readonly TextEdit[]): string => {
   const built = edits.reduce(
     (joined, edit) => ({
       text: `${joined.text}${text.slice(joined.at, edit.from)}${edit.text}`,
@@ -383,7 +363,92 @@ export const followLines = (
     { text: '', at: 0 },
   );
 
-  return { text: `${built.text}${text.slice(built.at)}`, edits };
+  return `${built.text}${text.slice(built.at)}`;
+};
+
+const editsOf = (
+  spans: readonly ReferenceSpan[],
+  edit: (span: ReferenceSpan) => TextEdit | undefined,
+): TextEdit[] =>
+  spans.reduce<TextEdit[]>((found, span) => {
+    const made = edit(span);
+
+    if (made !== undefined) {
+      found.push(made);
+    }
+    return found;
+  }, []);
+
+export const followLines = (
+  text: string,
+  changes: readonly LineChange[],
+  sheet: string,
+  locale: FormulaLocale = EN_FORMULAS,
+): TextShift | undefined => {
+  const spans = changes.length === 0 ? [] : referenceSpans(text, locale);
+  const edits = editsOf(spans, (span) => editOf(text, span, changes, sheet));
+
+  return edits.length === 0 ? undefined : { text: editedText(text, edits), edits };
+};
+
+const inSheet = (index: number, size: number): boolean => index >= 0 && index < size;
+
+const movedEndpoint = (endpoint: Endpoint, rows: number, cols: number): string | undefined => {
+  switch (endpoint.kind) {
+    case EndpointKind.Cell: {
+      const row = endpoint.ref.rowAbsolute ? endpoint.ref.row : endpoint.ref.row + rows;
+      const col = endpoint.ref.colAbsolute ? endpoint.ref.col : endpoint.ref.col + cols;
+
+      return inSheet(row, MAX_ROWS) && inSheet(col, MAX_COLS)
+        ? placed(endpoint, row, col)
+        : undefined;
+    }
+    case EndpointKind.Column: {
+      const col = endpoint.absolute ? endpoint.index : endpoint.index + cols;
+
+      return inSheet(col, MAX_COLS) ? placed(endpoint, 0, col) : undefined;
+    }
+    default: {
+      const row = endpoint.absolute ? endpoint.index : endpoint.index + rows;
+
+      return inSheet(row, MAX_ROWS) ? placed(endpoint, row, 0) : undefined;
+    }
+  }
+};
+
+const movedSpan = (text: string, span: ReferenceSpan, rows: number, cols: number): TextEdit => {
+  const moved = text
+    .slice(span.address, span.end)
+    .split(FormulaChar.Colon)
+    .reduce<string[] | undefined>((parts, part) => {
+      const endpoint = endpointText(part);
+      const place = endpoint === undefined ? undefined : movedEndpoint(endpoint, rows, cols);
+
+      if (parts === undefined || place === undefined) {
+        return undefined;
+      }
+      parts.push(place);
+      return parts;
+    }, []);
+
+  return {
+    from: span.address,
+    to: span.end,
+    text: moved === undefined ? CellError.Ref : moved.join(FormulaChar.Colon),
+  };
+};
+
+export const offsetText = (
+  text: string,
+  rows: number,
+  cols: number,
+  locale: FormulaLocale = EN_FORMULAS,
+): string => {
+  const source = `${FORMULA_START}${text}`;
+  const spans = rows === 0 && cols === 0 ? [] : referenceSpans(source, locale);
+  const edits = editsOf(spans, (span) => movedSpan(source, span, rows, cols));
+
+  return editedText(source, edits).slice(FORMULA_START.length);
 };
 
 export const shiftOffset = (shift: TextShift, offset: number): number =>

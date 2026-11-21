@@ -335,9 +335,11 @@ describe('reading xlsx', () => {
 
     expect(
       (
-        await opened({ 'xl/worksheets/sheet1.xml': SALES_SHEET.replace('B2*2', 'B2*(') })
+        await opened({
+          'xl/worksheets/sheet1.xml': SALES_SHEET.replace('si="0">B2*2</f>', 'si="1"/>'),
+        })
       ).report.items.find((item) => item.code === 'formula-syntax'),
-    ).toMatchObject({ severity: 'read-only', count: 2, sheets: ['Sales'] });
+    ).toMatchObject({ severity: 'read-only', count: 3, sheets: ['Sales'] });
   });
 
   it('keeps a formula it cannot read with the value saved in the file', async () => {
@@ -361,6 +363,28 @@ describe('reading xlsx', () => {
     ]);
 
     expect(['C2', 'C3', 'C4'].map(sales.shown)).toEqual(['75.0%', '100.0%', '#REF!']);
+  });
+
+  it('keeps every cell of a shared formula whose first cell it cannot read', async () => {
+    const read = await opened({
+      'xl/worksheets/sheet1.xml': SALES_SHEET.replace('>B2*2<', ">SUM('Sales:Rates'!B2,$B$2)+B$3<"),
+    });
+
+    const sales = viewOf(read);
+
+    expect(read.kind).toBe('editable');
+
+    expect(['D2', 'D3', 'D4'].map(sales.input)).toEqual([
+      "=SUM('Sales:Rates'!B2,$B$2)+B$3",
+      "=SUM('Sales:Rates'!B3,$B$2)+B$3",
+      "=SUM('Sales:Rates'!B4,$B$2)+B$3",
+    ]);
+
+    expect(['D2', 'D3', 'D4'].map(sales.shown)).toEqual(['6', '2', '4']);
+
+    expect(read.report.items.find((item) => item.code === 'formula-kept')).toMatchObject({
+      count: 3,
+    });
   });
 
   it('keeps the original bytes and tells parsed parts from opaque ones', async () => {
