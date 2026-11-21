@@ -228,7 +228,9 @@ const shownIndex = computed(() => (hiddenRow.value ? undefined : rowIndex));
 const busy = computed(() => loading || undefined);
 
 const wrapsText = computed(
-  () => part === TableRowPart.Body || (part === TableRowPart.Foot && wraps),
+  () =>
+    part === TableRowPart.Body ||
+    ((part === TableRowPart.Foot || part === TableRowPart.Pinned) && wraps),
 );
 
 const rowClass = computed(() => [

@@ -101,6 +101,17 @@ describe('NuiTable rows sized by content in a window', () => {
     expect(grid.ranges).toEqual([{ from: { row: 2, col: 1 }, to: { row: 3, col: 1 } }]);
   });
 
+  it('wraps the pinned rows of a table without a height and keeps them on one line in a window', async () => {
+    const pinned = { pinnedRows: people(1002).slice(1000) };
+    const flowing = mountPeople({ rows: people(5), auto: true, props: pinned });
+    const windowed = mountPeople({ props: pinned });
+    await windowed.settle();
+
+    expect(flowing.cellWraps(0, NOTE)).toBe(true);
+    expect(windowed.cellWraps(0, NOTE)).toBe(false);
+    expect(windowed.cellWraps(2, NOTE)).toBe(true);
+  });
+
   it('keeps one row size without a height and with a fixed row height', async () => {
     const flowing = mountPeople({ rows: people(5), auto: true });
     const fixed = mountPeople({ props: { rowHeight: 32 } });

@@ -3,7 +3,7 @@ import { BenchEditor } from './pages/bench-editor';
 import { CollabRoom } from './pages/collab';
 import { CollabLab } from './pages/collab-lab';
 import { DocsSite } from './pages/docs';
-import { DocsGroupsTable } from './pages/docs-table';
+import { DocsGroupsTable, DocsPeersTable } from './pages/docs-table';
 import { NuxtApp } from './pages/nuxt-app';
 import { PlaygroundPage } from './pages/playground';
 import { ThemeLab } from './pages/theme-lab';
@@ -15,6 +15,7 @@ export interface PageObjects {
   readonly collabLab: CollabLab;
   readonly docs: DocsSite;
   readonly docsGroups: DocsGroupsTable;
+  readonly docsPeers: DocsPeersTable;
   readonly app: NuxtApp;
   readonly themeLab: ThemeLab;
   readonly buttons: PlaygroundPage['buttons'];
@@ -57,6 +58,9 @@ export const test = base.extend<PageObjects>({
   },
   docsGroups: async ({ page }, use) => {
     await use(new DocsGroupsTable(page));
+  },
+  docsPeers: async ({ page }, use) => {
+    await use(new DocsPeersTable(page));
   },
   benchEditor: async ({ page }, use) => {
     await use(new BenchEditor(page));

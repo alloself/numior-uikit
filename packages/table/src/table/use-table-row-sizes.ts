@@ -2,14 +2,16 @@ import {
   computed,
   onMounted,
   onScopeDispose,
+  shallowRef,
   watch,
   type ComputedRef,
   type ShallowRef,
   type WatchSource,
 } from 'vue';
 import { createSizeIndex, type ItemSize, type VirtualSize } from '@numior/primitives';
+import { sum, times } from 'lodash-es';
 import { TableNodeKind, type TableEngine, type TableNodeId } from '../engine';
-import { OWN_BODY_ROWS, OWN_DETAIL_ROWS, rowPositionOf } from './table-dom';
+import { OWN_BODY_ROWS, OWN_DETAIL_ROWS, OWN_PINNED_ROWS, rowPositionOf } from './table-dom';
 import { TableRowMode, type NuiTableRowHeights, type TableDetailSpot } from './table.types';
 
 export interface TableRowSizesOptions<T> {
@@ -21,6 +23,7 @@ export interface TableRowSizesOptions<T> {
   readonly count: () => number;
   readonly pageStart: () => number;
   readonly leading: () => number;
+  readonly pinned: () => number;
   readonly spots: () => readonly TableDetailSpot[];
   readonly heights: () => NuiTableRowHeights;
   readonly arrangement: () => number;
@@ -30,10 +33,12 @@ export interface TableRowSizesOptions<T> {
 
 export interface TableRowSizes {
   readonly itemSize: ComputedRef<ItemSize>;
+  readonly pinnedSize: ComputedRef<number>;
 }
 
 const DETAIL_ROWS = 4;
 const NO_POSITIONS: ReadonlyMap<string, number> = new Map();
+const NO_SIZES: ReadonlyMap<number, number> = new Map();
 
 const measuredRows = (
   mode: TableRowMode,
@@ -42,11 +47,22 @@ const measuredRows = (
 ): string | undefined => {
   switch (mode) {
     case TableRowMode.Flow:
-      return measured ? OWN_BODY_ROWS : undefined;
+      return measured ? `${OWN_PINNED_ROWS}, ${OWN_BODY_ROWS}` : undefined;
     case TableRowMode.Fixed:
       return details === 0 ? undefined : OWN_DETAIL_ROWS;
     case TableRowMode.Fluid:
-      return OWN_BODY_ROWS;
+      return `${OWN_PINNED_ROWS}, ${OWN_BODY_ROWS}`;
+  }
+};
+
+const measuresPinned = (mode: TableRowMode, measured: boolean): boolean => {
+  switch (mode) {
+    case TableRowMode.Flow:
+      return measured;
+    case TableRowMode.Fixed:
+      return false;
+    case TableRowMode.Fluid:
+      return true;
   }
 };
 
@@ -68,6 +84,13 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
   let detailEstimate: number | undefined;
   let observer: ResizeObserver | undefined;
   let heights = options.heights();
+  const pinnedSizes = shallowRef<ReadonlyMap<number, number>>(new Map());
+
+  const pinnedSize = computed(() => {
+    const sizes = measuresPinned(options.mode(), options.measured()) ? pinnedSizes.value : NO_SIZES;
+
+    return sum(times(options.pinned(), (index) => sizes.get(index) ?? options.rowSize()));
+  });
 
   const sizedKeys = computed(() => Object.keys(options.heights()).toSorted().join('\u0000'));
 
@@ -141,21 +164,39 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
     detailEstimate = size;
   };
 
+  const notePinned = (found: readonly VirtualSize[]): void => {
+    if (found.length === 0) {
+      return;
+    }
+
+    pinnedSizes.value = new Map([...pinnedSizes.value, ...found]);
+  };
+
   const onResize = (entries: readonly ResizeObserverEntry[]): void => {
     const leading = options.leading();
+    const pinned = options.pinned();
     const sizes: VirtualSize[] = [];
+    const pinnedFound: VirtualSize[] = [];
 
     for (const entry of entries) {
       const size = sizeOf(entry);
       const position = positionOf(entry.target, leading);
+      const inPinned = position < 0 && position >= -pinned;
 
-      if (size <= 0 || !Number.isInteger(position) || position < 0) {
+      if (size <= 0 || !Number.isInteger(position) || (position < 0 && !inPinned)) {
+        continue;
+      }
+      if (inPinned) {
+        pinnedFound.push([position + pinned, size]);
         continue;
       }
 
       sizes.push([position, size]);
       remember(position, size);
     }
+
+    notePinned(pinnedFound);
+
     if (sizes.length === 0) {
       return;
     }
@@ -217,5 +258,5 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
     observer?.disconnect();
   });
 
-  return { itemSize };
+  return { itemSize, pinnedSize };
 };

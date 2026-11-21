@@ -3,6 +3,7 @@
     ref="tasks-table"
     :columns="columns"
     :rows="tasks"
+    :pinned-rows="shared"
     :get-key="keyOf"
     :column-menu="false"
     gridlines
@@ -46,13 +47,29 @@ const tasks: Task[] = [
   { id: 't4', title: 'Monthly report', owner: 'Boris', hours: 4 },
 ];
 
+const shared: Task[] = [
+  {
+    id: 't0',
+    title: 'Shared work: calls, code reviews and help for the other teams',
+    owner: 'Team',
+    hours: 10,
+  },
+];
+
 const people: readonly Person[] = [
   { id: 'anna', name: 'Anna', colour: 2, at: { row: 't3', column: 'hours' } },
   { id: 'boris', name: 'Boris', colour: 5, at: { row: 't1', column: 'title' } },
 ];
 
 const columns: NuiTableColumn<Task>[] = [
-  { key: 'title', label: 'Task', type: 'text', width: 200, value: (row) => row.title },
+  {
+    key: 'title',
+    label: 'Task',
+    type: 'text',
+    width: 200,
+    wrap: true,
+    value: (row) => row.title,
+  },
   { key: 'owner', label: 'Owner', type: 'text', width: 140, value: (row) => row.owner },
   { key: 'hours', label: 'Hours', type: 'number', width: 100, value: (row) => row.hours },
 ];

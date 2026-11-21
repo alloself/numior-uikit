@@ -74,3 +74,50 @@ export class DocsGroupsTable {
     );
   }
 }
+
+export class DocsPeersTable {
+  readonly root: Locator;
+  private readonly viewport: Locator;
+
+  constructor(page: Page) {
+    this.root = page.locator('.nui-table').filter({ hasText: /Задачи спринта|Sprint tasks/ });
+    this.viewport = this.root.locator('.nui-table__viewport');
+  }
+
+  frame(name: string): Locator {
+    return this.viewport.locator('.nui-table__pane--body .nui-table-peers__cell', {
+      hasText: name,
+    });
+  }
+
+  private bodyCell(row: number, col: number): Locator {
+    return this.viewport
+      .locator('.nui-table__body > [role="row"]')
+      .nth(row)
+      .locator('[role="gridcell"]')
+      .nth(col);
+  }
+
+  async pinnedRise(): Promise<number> {
+    const [pinned, body] = await Promise.all([
+      boxOf(this.viewport.locator('.nui-table__pinned > [role="row"]').first()),
+      boxOf(this.viewport.locator('.nui-table__body > [role="row"]').first()),
+    ]);
+
+    return pinned.height - body.height;
+  }
+
+  async frameDrift(name: string, row: number, col: number): Promise<number> {
+    const [frame, cell] = await Promise.all([
+      boxOf(this.frame(name)),
+      boxOf(this.bodyCell(row, col)),
+    ]);
+
+    return Math.max(
+      Math.abs(frame.x - cell.x),
+      Math.abs(frame.y - cell.y),
+      Math.abs(frame.width - cell.width),
+      Math.abs(frame.height - cell.height),
+    );
+  }
+}

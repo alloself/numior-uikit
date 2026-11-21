@@ -17,6 +17,8 @@ export const rowPositionOf = (row: Element | null | undefined, leading: number):
 
 export const OWN_BODY_ROWS = `${OWN_GRID} > .nui-table__body > [role="row"]`;
 
+export const OWN_PINNED_ROWS = `${OWN_GRID} > .nui-table__pinned > [role="row"]`;
+
 export const OWN_DATA_ROWS = `${OWN_GRID} > .nui-table__body > .nui-table__row--body`;
 
 export const OWN_SPANNING_CELLS = `${OWN_DATA_ROWS} > [rowspan]`;

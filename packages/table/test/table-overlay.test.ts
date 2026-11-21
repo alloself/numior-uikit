@@ -171,6 +171,33 @@ describe('NuiTable overlay', () => {
     });
   });
 
+  it('places the marks below pinned rows as tall as they were measured', async () => {
+    const grid = mountStaff({
+      slots: { overlay: RangeMarks },
+      rows: staff(20),
+      auto: true,
+      props: { pinnedRows: staff(21).slice(20) },
+    });
+
+    await grid.settle();
+    await grid.measureRows({ 0: 72 });
+
+    expect(grid.overlayMarks[0]?.top).toBe('152px');
+  });
+
+  it('places the marks below measured pinned rows in a table of fixed height with rows of their own height', async () => {
+    const grid = mountStaff({
+      slots: { overlay: RangeMarks },
+      rows: staff(20),
+      props: { rowHeight: 'auto', pinnedRows: staff(21).slice(20) },
+    });
+
+    await grid.settle();
+    await grid.measureRows({ 0: 72 });
+
+    expect(grid.overlayMarks[0]?.top).toBe('152px');
+  });
+
   it('reports the rendered window and finds the data cell under a point', async () => {
     const grid = mountStaff();
     await grid.settle();

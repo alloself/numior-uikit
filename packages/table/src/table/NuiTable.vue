@@ -92,6 +92,7 @@
               :row-index="item.index + headRows + 1"
               part="pinned"
               :position="item.index"
+              :wraps="!windowed"
               :paint="pinnedPaint"
               :active="focus.activeIn(item.index)"
               :revision="revision"
@@ -879,10 +880,11 @@ const rowSizes = useTableRowSizes({
   count: () => visibleRows.value,
   pageStart: () => pageStart.value,
   leading: () => headRows.value + pinnedCount.value,
+  pinned: () => pinnedCount.value,
   spots: () => detailSpots.value,
   heights: () => sizedHeights.value,
   arrangement: () => arrangement.value,
-  rendered: () => [bodyRows.value, rowCells.value],
+  rendered: () => [bodyRows.value, rowCells.value, pinnedRows],
   resize: (sizes) => {
     rowWindow.resize(sizes);
   },
@@ -904,7 +906,7 @@ const rowWindow = useVirtualList(viewport, {
   pinned: activeRow,
   frozen: frozenCount,
   maxSize: CANVAS_LIMIT,
-  inset: () => rowSize.value * (headRows.value + pinnedCount.value + footRows.value),
+  inset: () => rowSize.value * (headRows.value + footRows.value) + rowSizes.pinnedSize.value,
   listen: false,
 });
 
@@ -1012,7 +1014,8 @@ const bodySpan = computed(() =>
   Math.max(
     0,
     rowWindow.viewport.value -
-      rowSize.value * (headRows.value + pinnedCount.value + footRows.value) -
+      rowSize.value * (headRows.value + footRows.value) -
+      rowSizes.pinnedSize.value -
       frozenSize.value,
   ),
 );
@@ -3125,7 +3128,7 @@ const overlay = useTableOverlay({
   layout: () => layout.value,
   dataKeys: () => dataKeys.value,
   rowCount: () => visibleRows.value,
-  headSize: () => rowSize.value * (headRows.value + pinnedCount.value),
+  headSize: () => rowSize.value * headRows.value + rowSizes.pinnedSize.value,
   headRows: () => headRows.value,
   pinnedRows: () => pinnedCount.value,
   frozenRows: () => frozenCount.value,

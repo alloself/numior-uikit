@@ -40,7 +40,8 @@ With `multiple` the header gets a checkbox that selects all rows on screen.
 
 A column aligns its text by `align`: without it numbers sit at the end of the cell and the rest at
 the start. `wrap` wraps the text of a column when the table has no `height` or has
-`rowHeight="auto"`, and the row grows with the text.
+`rowHeight="auto"`, and the row grows with the text. The `pinnedRows` of a table with `height` stay
+on one line.
 
 The `gridlines` prop draws lines between the columns, and the `cellStyle` function styles single
 cells. It receives `{ row, column, position, pinned }` and returns a `fill`, a text `color`, an

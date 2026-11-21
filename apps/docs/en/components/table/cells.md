@@ -82,7 +82,7 @@ cell under a point on screen.
 
 The layer takes row heights from `rowHeight` and the `rowHeights` model. In a table without
 `height` and with `rowHeight="auto"` it places marks by the measured rows, including rows that grew
-because of wrapped text. Pinned rows of a table without `height` are not measured.
+because of wrapped text. In a table without `height` the `pinnedRows` are measured too.
 
 <Example name="table/Overlay" />
 
