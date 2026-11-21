@@ -15,6 +15,7 @@ import {
   type SignatureOf,
 } from '../formula/formula.types';
 import { EN_LOCALE, type BookLocale } from '../locale';
+import { withYear } from '../format/number-locale';
 import { shiftIndex } from '../lines';
 import { ORIGIN, referenceRange } from '../formula/origin';
 import { parseFormula } from '../formula/parser';
@@ -111,6 +112,7 @@ export interface Calculator {
   evaluateAt(sheet: Sheet, row: number, col: number, ast: FormulaNode): CellValue;
   setLocale(locale: BookLocale): void;
   readonly locale: BookLocale;
+  readonly clock: () => Date;
   readonly functions: FunctionRegistry;
   readonly signatures: SignatureOf;
   readonly pending: number;
@@ -491,7 +493,9 @@ export const createCalculator = (
   const nameUsers = new Map<string, Set<number>>();
   let current: Run | undefined;
   let locale = initialLocale;
-  let now = serialOf(clock());
+  let moment = clock();
+  let now = serialOf(moment);
+  let numbers = withYear(locale.numbers, moment.getFullYear());
   let evaluating: FormulaPlace | undefined;
   const dynamic: Precedent[] = [];
 
@@ -565,7 +569,9 @@ export const createCalculator = (
       workbook,
       sheet,
       functions,
-      locale: locale.numbers,
+      get locale() {
+        return numbers;
+      },
       lookup,
       unknown: (name) => unknown.add(name),
       spillRange: (target, row, col) => {
@@ -1310,11 +1316,13 @@ export const createCalculator = (
     setLocale: (next) => {
       interrupt();
       locale = next;
+      numbers = withYear(next.numbers, moment.getFullYear());
       contexts.clear();
       formulas.forEach((_record, key) => pending.add(key));
     },
     functions,
     signatures,
+    clock,
     get locale() {
       return locale;
     },
@@ -1326,7 +1334,9 @@ export const createCalculator = (
     },
     recalculate: (options = {}) => {
       interrupt();
-      now = serialOf(clock());
+      moment = clock();
+      now = serialOf(moment);
+      numbers = withYear(locale.numbers, moment.getFullYear());
       if (options.volatile !== false) {
         volatiles.forEach((key) => pending.add(key));
       }

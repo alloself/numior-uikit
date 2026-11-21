@@ -12,6 +12,12 @@ interface Clock {
   readonly format: string;
 }
 
+interface DateRead {
+  readonly serial: number;
+  readonly format: string;
+  readonly timed: string;
+}
+
 const TIME = /^(\d{1,2}):(\d{1,2})(?::(\d{1,2}(?:[.,]\d+)?))?\s*([ap]\.?m\.?)?$/iu;
 
 const TIME_TAIL = /\s+(\d{1,2}:\d{1,2}(?::\d{1,2}(?:[.,]\d+)?)?(?:\s*[ap]\.?m\.?)?)$/iu;
@@ -25,6 +31,12 @@ const DAY_NAMED = /^(\d{1,2})[-\s.]+(\p{L}+)\.?[-\s.,]+(\d{2,4})$/iu;
 const NAMED_DAY = /^(\p{L}+)\.?\s+(\d{1,2}),?\s+(\d{2,4})$/iu;
 
 const MONTH_YEAR = /^(\p{L}+)\.?[-\s.]+(\d{4})$/iu;
+
+const DAY_MONTH = /^(\d{1,2})\s*([./-])\s*(\d{1,2})$/u;
+
+const DAY_NAME = /^(\d{1,2})[-\s.]*(\p{L}+)$/iu;
+
+const NAME_DAY = /^(\p{L}+)\.?\s+(\d{1,2})$/iu;
 
 const fullYear = (text: string): number => {
   const year = Number(text);
@@ -62,20 +74,22 @@ const validDate = (year: number, month: number | undefined, day: number): number
     ? undefined
     : serialOfDate(year, month, day);
 
+const inOrder = (
+  year: number,
+  first: number,
+  second: number,
+  locale: NumberLocale,
+): number | undefined =>
+  locale.dateOrder === DateOrder.Mdy
+    ? validDate(year, first, second)
+    : validDate(year, second, first);
+
 const numericDate = (text: string, locale: NumberLocale): number | undefined => {
   const found = NUMERIC.exec(text);
 
-  if (found === null) {
-    return undefined;
-  }
-
-  const first = Number(found[1]);
-  const second = Number(found[3]);
-  const year = fullYear(found[4] ?? '');
-
-  return locale.dateOrder === DateOrder.Mdy
-    ? validDate(year, first, second)
-    : validDate(year, second, first);
+  return found === null
+    ? undefined
+    : inOrder(fullYear(found[4] ?? ''), Number(found[1]), Number(found[3]), locale);
 };
 
 const namedDay = (text: string, locale: NumberLocale): number | undefined => {
@@ -106,7 +120,35 @@ const monthYear = (text: string, locale: NumberLocale): number | undefined => {
     : validDate(Number(found[2]), monthOf(found[1] ?? '', locale), 1);
 };
 
-const dateOf = (text: string, locale: NumberLocale): readonly [number, string] | undefined => {
+const namedInYear = (text: string, year: number, locale: NumberLocale): number | undefined => {
+  const dayName = DAY_NAME.exec(text);
+  const nameDay =
+    dayName === null && locale.dateOrder === DateOrder.Mdy ? NAME_DAY.exec(text) : null;
+
+  if (dayName !== null) {
+    return validDate(year, monthOf(dayName[2] ?? '', locale), Number(dayName[1]));
+  }
+  return nameDay === null
+    ? undefined
+    : validDate(year, monthOf(nameDay[1] ?? '', locale), Number(nameDay[2]));
+};
+
+const dateInYear = (text: string, locale: NumberLocale): number | undefined => {
+  const year = locale.year;
+  const numeric = DAY_MONTH.exec(text);
+
+  if (year === undefined) {
+    return undefined;
+  }
+  return numeric === null
+    ? namedInYear(text, year, locale)
+    : inOrder(year, Number(numeric[1]), Number(numeric[3]), locale);
+};
+
+const read = (serial: number | undefined, format: string, timed = format): DateRead | undefined =>
+  serial === undefined ? undefined : { serial, format, timed };
+
+const dateOf = (text: string, locale: NumberLocale): DateRead | undefined => {
   const iso = ISO.exec(text);
 
   const numeric =
@@ -114,19 +156,12 @@ const dateOf = (text: string, locale: NumberLocale): readonly [number, string] |
       ? numericDate(text, locale)
       : validDate(Number(iso[1]), Number(iso[2]), Number(iso[3]));
 
-  if (numeric !== undefined) {
-    return [numeric, locale.shortDate];
-  }
-
-  const named = namedDate(text, locale);
-
-  if (named !== undefined) {
-    return [named, locale.namedDate];
-  }
-
-  const month = monthYear(text, locale);
-
-  return month === undefined ? undefined : [month, locale.monthDate];
+  return (
+    read(numeric, locale.shortDate) ??
+    read(namedDate(text, locale), locale.namedDate) ??
+    read(monthYear(text, locale), locale.monthDate) ??
+    read(dateInYear(text, locale), locale.dayMonth, locale.shortDate)
+  );
 };
 
 const MAX_HOURS = 9999;
@@ -176,8 +211,8 @@ export const readDateText = (raw: string, locale: NumberLocale): DateText | unde
     return undefined;
   }
   return {
-    date: date[0],
+    date: date.serial,
     time: tailClock?.time,
-    format: tailClock === undefined ? date[1] : `${date[1]} ${tailClock.format}`,
+    format: tailClock === undefined ? date.format : `${date.timed} ${tailClock.format}`,
   };
 };

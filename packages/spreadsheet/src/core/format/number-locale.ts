@@ -31,6 +31,7 @@ export const EN_NUMBERS: NumberLocale = {
   shortDate: 'm/d/yyyy',
   namedDate: 'd-mmm-yy',
   monthDate: 'mmm-yy',
+  dayMonth: 'd-mmm',
   longDate: 'dddd, mmmm d, yyyy',
   shortTime: 'h:mm AM/PM',
   longTime: 'h:mm:ss AM/PM',
@@ -70,6 +71,7 @@ export const RU_NUMBERS: NumberLocale = {
   shortDate: 'dd.mm.yyyy',
   namedDate: 'dd.mmm.yy',
   monthDate: 'mmm.yy',
+  dayMonth: 'dd.mmm',
   longDate: '[$-FC19]d mmmm yyyy "г."',
   shortTime: 'h:mm',
   longTime: 'h:mm:ss',
@@ -77,6 +79,21 @@ export const RU_NUMBERS: NumberLocale = {
   currencyNegative: '-#\\ "₽"',
   currencySymbols: ['₽', 'руб.', 'р.'],
   generalName: 'Основной',
+};
+
+const DATED = new WeakMap<NumberLocale, NumberLocale>();
+
+export const withYear = (locale: NumberLocale, year: number): NumberLocale => {
+  const known = locale.year === year ? locale : DATED.get(locale);
+
+  if (known?.year === year) {
+    return known;
+  }
+
+  const dated = { ...locale, year };
+
+  DATED.set(locale, dated);
+  return dated;
 };
 
 const RU_GENITIVE_NUMBERS: NumberLocale = {

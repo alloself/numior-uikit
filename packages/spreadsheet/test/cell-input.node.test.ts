@@ -28,13 +28,15 @@ const range = (address: string): CellRange => {
   return found;
 };
 
-const openEditor = () => {
+const AUTUMN_2026 = new Date(2026, 9, 21, 9);
+
+const openEditor = (today = AUTUMN_2026, locale = RU_LOCALE) => {
   const book = createWorkbook();
   const sheet = book.addSheet();
 
   const calculator = createCalculator(book, {
-    locale: RU_LOCALE,
-    clock: () => new Date(2026, 9, 21, 9),
+    locale,
+    clock: () => today,
   });
 
   const editor = createCellEditor(book, calculator);
@@ -49,6 +51,7 @@ const openEditor = () => {
       return editor.shown(sheet, row, col).text;
     },
     input: (row: number, col: number) => editor.inputText(sheet, row, col),
+    value: (row: number, col: number) => sheet.cells.get(row, col),
     format: (row: number, col: number) => editor.formatAt(sheet, row, col),
     setFormat: (address: string, code: string) => {
       editor.setFormat(sheet, range(address), code);
@@ -276,6 +279,92 @@ describe('cell editor', () => {
     expect(sheet.shown(0, 0)).toBe('0123');
     expect(sheet.input(0, 0)).toBe('0123');
     expect(sheet.shown(0, 1)).toBe('0123');
+  });
+
+  it('reads a date typed without a year in the year of the clock, as Excel does', () => {
+    const sheet = openEditor();
+
+    const typed = ['15.03', '15/03', '15-03', '15. 03', '1.1', '15 мар', '15мар', '1 Январь'];
+
+    typed.forEach((text, row) => {
+      sheet.enter(row, 0, text);
+    });
+
+    expect(typed.map((_text, row) => sheet.value(row, 0))).toEqual(
+      [46096, 46096, 46096, 46096, 46023, 46096, 46096, 46023].map(numberValue),
+    );
+
+    expect(typed.map((_text, row) => sheet.format(row, 0))).toEqual(typed.map(() => 'dd.mmm'));
+    expect(sheet.shown(0, 0)).toBe('15.мар');
+    expect(sheet.input(0, 0)).toBe('15.03.2026');
+
+    sheet.enter(10, 0, '15.03 10:30');
+
+    expect([sheet.value(10, 0), sheet.format(10, 0)]).toEqual([
+      numberValue(46096.4375),
+      'dd.mm.yyyy h:mm',
+    ]);
+  });
+
+  it('keeps as text a date without a year that the year of the clock does not have', () => {
+    const sheet = openEditor();
+    const kept = ['15 марта', '15.03.', '29.02', '31.02', '15.13', '15 Mar'];
+
+    kept.forEach((text, row) => {
+      sheet.enter(row, 0, text);
+    });
+
+    expect(kept.map((_text, row) => sheet.value(row, 0))).toEqual(kept.map(textValue));
+
+    const leap = openEditor(new Date(2028, 0, 10));
+
+    leap.enter(0, 0, '29.02');
+
+    expect(leap.value(0, 0)).toEqual(numberValue(46812));
+  });
+
+  it('reads a date without a year in the order of an English book', () => {
+    const sheet = openEditor(AUTUMN_2026, EN_LOCALE);
+    const typed = ['3/15', '3-15', '15-Mar', '15 Mar', 'Mar 15'];
+
+    typed.forEach((text, row) => {
+      sheet.enter(row, 0, text);
+    });
+
+    expect(typed.map((_text, row) => sheet.value(row, 0))).toEqual(
+      typed.map(() => numberValue(46096)),
+    );
+
+    expect(typed.map((_text, row) => sheet.format(row, 0))).toEqual(typed.map(() => 'd-mmm'));
+
+    sheet.enter(6, 0, '15/3');
+
+    expect(sheet.value(6, 0)).toEqual(textValue('15/3'));
+  });
+
+  it('reads a date without a year in a formula and marks such text when it is edited', () => {
+    const sheet = openEditor();
+
+    sheet.enter(0, 0, '=ДАТАЗНАЧ("15.03")');
+    sheet.enter(1, 0, '="15.03"+0');
+    sheet.enter(2, 0, '="15 мар"*1');
+    sheet.enter(3, 0, '=ДАТАЗНАЧ("29.02")');
+    sheet.enter(4, 0, "'15.03");
+
+    expect([0, 1, 2, 3].map((row) => sheet.shown(row, 0))).toEqual([
+      '15.03.2026',
+      '46096',
+      '46096',
+      '#ЗНАЧ!',
+    ]);
+
+    expect(sheet.input(4, 0)).toBe("'15.03");
+
+    expect(readInput('15.03', RU_NUMBERS)).toEqual({
+      kind: 'value',
+      value: textValue('15.03'),
+      format: undefined,
+    });
   });
 
   it('reports a formula that does not parse and leaves the cell as it was', () => {

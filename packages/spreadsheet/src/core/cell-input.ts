@@ -16,7 +16,7 @@ import {
   type FormatToken,
   type NumberLocale,
 } from './format/format.types';
-import { currencyFormat } from './format/number-locale';
+import { currencyFormat, withYear } from './format/number-locale';
 import { readValueText } from './format/read-value';
 import {
   FormulaNodeKind,
@@ -355,6 +355,9 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
   const formatAt = (sheet: Sheet, row: number, col: number): string =>
     book.formats.code(sheet.formats.get(row, col));
 
+  const typedIn = (locale: BookLocale): NumberLocale =>
+    withYear(locale.numbers, calculator.clock().getFullYear());
+
   const formulaEdit = (
     sheet: Sheet,
     position: CellAddress,
@@ -397,7 +400,7 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
     const read =
       (formatAt(sheet, row, col) === TEXT_FORMAT || inHeader(sheet, row, col)) && text !== ''
         ? plainText(text)
-        : readInput(text, locale.numbers);
+        : readInput(text, typedIn(locale));
 
     switch (read.kind) {
       case CellInputKind.Empty:
@@ -515,7 +518,7 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
       const formula = calculator.formulaAt(sheet, row, col);
 
       return formula === undefined
-        ? editText(sheet.cells.get(row, col), formatAt(sheet, row, col), locale.numbers)
+        ? editText(sheet.cells.get(row, col), formatAt(sheet, row, col), typedIn(locale))
         : `=${printFormula(formula.ast, locale.formulas, { row, col }, bookLabels(book))}`;
     },
     shown,

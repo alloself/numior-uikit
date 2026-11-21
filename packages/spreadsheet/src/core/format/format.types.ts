@@ -19,6 +19,7 @@ export interface NumberLocale {
   readonly shortDate: string;
   readonly namedDate: string;
   readonly monthDate: string;
+  readonly dayMonth: string;
   readonly longDate: string;
   readonly shortTime: string;
   readonly longTime: string;
@@ -26,6 +27,7 @@ export interface NumberLocale {
   readonly currencyNegative: string;
   readonly currencySymbols: readonly string[];
   readonly generalName: string;
+  readonly year?: number | undefined;
 }
 
 export type FormatCondition = {
