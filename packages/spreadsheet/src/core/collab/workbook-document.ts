@@ -55,7 +55,7 @@ export const createWorkbookDocument = ({
   };
 
   const applied = (step: WorkbookStep): StepResult => {
-    settleForStep(calculator, step);
+    settleForStep(book, calculator, step);
     return raw.apply(step);
   };
 

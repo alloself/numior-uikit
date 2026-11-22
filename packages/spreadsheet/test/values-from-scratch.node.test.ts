@@ -11,6 +11,7 @@ import {
   printFormula,
   type Calculator,
   type CellEdit,
+  type CellRange,
   type Sheet,
   type Workbook,
   type WorkbookStep,
@@ -65,6 +66,19 @@ type Move =
 
 type Slice = (typeof Slice)[keyof typeof Slice];
 
+interface Area {
+  readonly sheet: number;
+  readonly top: number;
+  readonly left: number;
+  readonly height: number;
+  readonly width: number;
+}
+
+interface ReachTurn {
+  readonly move: Move;
+  readonly area: Area;
+}
+
 interface Turn {
   readonly move: Move;
   readonly slice: Slice;
@@ -109,6 +123,10 @@ const SLICED_RUNS = 60;
 const SLICED_MOVES = 40;
 
 const DRAIN_ROUNDS = 10_000;
+
+const REACH_RUNS = 150;
+
+const REACH_MOVES = 30;
 
 const SEED_TOP = 12;
 
@@ -207,6 +225,17 @@ const MOVE: fc.Arbitrary<Move> = fc.oneof(
 const TURN: fc.Arbitrary<Turn> = fc.record({
   move: MOVE,
   slice: fc.constantFrom(Slice.Running, Slice.Ticks, Slice.Cancel, Slice.Settle),
+});
+
+const REACH_TURN: fc.Arbitrary<ReachTurn> = fc.record({
+  move: MOVE,
+  area: fc.record({
+    sheet: SHEET,
+    top: fc.integer({ min: 0, max: 9 }),
+    left: COLUMN,
+    height: fc.integer({ min: 0, max: 3 }),
+    width: fc.integer({ min: 0, max: 3 }),
+  }),
 });
 
 const desk = (): Desk => {
@@ -379,6 +408,27 @@ const differencesOf = (live: Map<string, string>, fresh: Map<string, string>): D
     return found;
   }, []);
 
+const rangeOf = (area: Area): CellRange => ({
+  top: area.top,
+  left: area.left,
+  bottom: area.top + area.height,
+  right: area.left + area.width,
+});
+
+const keysIn = (sheet: Sheet, range: CellRange): ReadonlySet<string> => {
+  const keys = new Set<string>();
+
+  for (let row = range.top; row <= range.bottom; row += 1) {
+    for (let col = range.left; col <= range.right; col += 1) {
+      keys.add(`${sheet.name}!${columnName(col)}${String(row + 1)}`);
+    }
+  }
+  return keys;
+};
+
+const shownIn = (values: Map<string, string>, keys: ReadonlySet<string>): Map<string, string> =>
+  new Map([...values].filter(([cell]) => keys.has(cell)));
+
 const seedText = (row: number, col: number): string =>
   row === SEED_TOP
     ? `=SUM(A1:F10)+${String(col)}`
@@ -482,6 +532,42 @@ describe('values of formulas after a recalculation cut into slices', () => {
           },
         ),
         { numRuns: SLICED_RUNS },
+      );
+    },
+    PROPERTY_TIMEOUT,
+  );
+});
+
+describe('values a range shows after only what reaches it is settled', () => {
+  it(
+    'equal the values calculated from scratch inside the range, and everywhere once the rest is settled',
+    () => {
+      fc.assert(
+        fc.property(fc.array(REACH_TURN, { maxLength: REACH_MOVES, size: 'max' }), (turns) => {
+          const table = desk();
+
+          turns.forEach(({ move, area }) => {
+            play(table, move);
+
+            const sheet = sheetAt(table, area.sheet);
+            const range = rangeOf(area);
+            const keys = keysIn(sheet, range);
+
+            table.calculator.recalculate({ ...SETTLED, reaching: { sheet, range } });
+
+            expect(
+              differencesOf(
+                shownIn(valuesOf(table.calculator), keys),
+                shownIn(fromScratch(table), keys),
+              ),
+            ).toEqual([]);
+          });
+
+          table.calculator.recalculate(SETTLED);
+
+          expect(differencesOf(valuesOf(table.calculator), fromScratch(table))).toEqual([]);
+        }),
+        { numRuns: REACH_RUNS },
       );
     },
     PROPERTY_TIMEOUT,

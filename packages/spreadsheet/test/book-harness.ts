@@ -115,6 +115,18 @@ export const openBook = (locale = EN_LOCALE) => {
       calculator.recalculate({ budgetMs: Number.POSITIVE_INFINITY, volatile: false });
       return editor.shown(sheetNamed(sheet), row, col).text;
     },
+    settleFor: (range: string, sheet = 'Sheet1'): void => {
+      calculator.recalculate({
+        budgetMs: Number.POSITIVE_INFINITY,
+        volatile: false,
+        reaching: { sheet: sheetNamed(sheet), range: rangeAt(range) },
+      });
+    },
+    seen: (address: string, sheet = 'Sheet1'): string => {
+      const { row, col } = at(address);
+
+      return editor.shown(sheetNamed(sheet), row, col).text;
+    },
     input: (address: string, sheet = 'Sheet1'): string => {
       const { row, col } = at(address);
 

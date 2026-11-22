@@ -64,6 +64,7 @@ import {
   type RecalcPlanner,
 } from './graph';
 import { signaturesOf } from './excel-signatures';
+import { dependentsWithin, reachOf } from './reach';
 import { createFunctionRegistry } from './registry';
 import { createTreeSharing } from './shared-trees';
 import { nextTask } from './tasks';
@@ -152,6 +153,7 @@ interface ShiftPlan {
 interface Run {
   planner: RecalcPlanner | undefined;
   readonly viewport: RecalcOptions['viewport'];
+  readonly reaching: RecalcOptions['reaching'];
   marked: number;
   queue: readonly number[];
   cycles: ReadonlySet<number>;
@@ -165,6 +167,13 @@ interface Run {
   finished: boolean;
   cancelled: boolean;
   dropped: boolean;
+}
+
+interface KeptReach {
+  readonly sheet: number;
+  readonly range: CellRange;
+  readonly wiring: number;
+  readonly reached: ReadonlySet<number>;
 }
 
 interface LookupIndex {
@@ -201,6 +210,12 @@ const DEFAULT_BUDGET = 8;
 const CHECK_EVERY = 32;
 
 const MAX_PASSES = 16;
+
+const sameArea = (left: CellRange, right: CellRange): boolean =>
+  left.top === right.top &&
+  left.left === right.left &&
+  left.bottom === right.bottom &&
+  left.right === right.right;
 
 const PLAN_STEPS = 16_384;
 
@@ -557,6 +572,8 @@ export const createCalculator = (
   }: CalculatorOptions = {},
 ): Calculator => {
   const graph = createDependencyGraph();
+  let lastReach: KeptReach | undefined;
+
   const trees = createTreeSharing();
   const signatures = signaturesOf(functions);
 
@@ -920,13 +937,53 @@ export const createCalculator = (
     record.cell.state = 'stale';
   };
 
-  const plan = (viewport: RecalcOptions['viewport']) => {
+  const reachedBy = (reaching: NonNullable<RecalcOptions['reaching']>): ReadonlySet<number> => {
+    const sheet = reaching.sheet.id;
+    const { range } = reaching;
+
+    if (
+      lastReach?.wiring === graph.version &&
+      lastReach.sheet === sheet &&
+      sameArea(lastReach.range, range)
+    ) {
+      return lastReach.reached;
+    }
+
+    const reached = reachOf(
+      { cellsOf: (id) => positions.get(id), precedentsOf: (key) => graph.precedentsOf(key) },
+      { sheet, range },
+    );
+
+    lastReach = { sheet, range, wiring: graph.version, reached };
+    return reached;
+  };
+
+  const pendingIn = (reached: ReadonlySet<number>): number[] =>
+    pending.size <= reached.size
+      ? [...pending].filter((key) => reached.has(key))
+      : [...reached].filter((key) => pending.has(key));
+
+  const reachOfRun = (run: Run): ReadonlySet<number> | undefined =>
+    run.reaching === undefined || pending.size === 0 ? undefined : reachedBy(run.reaching);
+
+  const plannerOf = (run: Run): RecalcPlanner => {
+    const reached = reachOfRun(run);
+
+    return reached === undefined
+      ? createPlanner(run.reaching === undefined ? pending : [], graph, locate)
+      : createPlanner(pendingIn(reached), dependentsWithin(graph, reached, markStale), locate);
+  };
+
+  const plan = (run: Run) => {
     relinkMoved();
 
-    const planned = planRecalc(pending, graph, locate);
+    const planned = plannerOf(run).advance(() => false, 0) ?? {
+      order: [],
+      cycles: new Set<number>(),
+    };
 
     planned.order.forEach(markStale);
-    return { queue: prioritised(planned.order, viewport), cycles: planned.cycles };
+    return { queue: planned.order, cycles: planned.cycles };
   };
 
   const marked = (run: Run, started: number): boolean => {
@@ -967,7 +1024,7 @@ export const createCalculator = (
     if (pending.size === 0 || run.passes >= MAX_PASSES) {
       return false;
     }
-    const next = plan(undefined);
+    const next = plan(run);
 
     run.queue = next.queue;
     run.marked = next.queue.length;
@@ -975,7 +1032,7 @@ export const createCalculator = (
     run.index = 0;
     run.passes += 1;
     run.total += next.queue.length;
-    return true;
+    return next.queue.length > 0;
   };
 
   const slice = (run: Run, started: number): boolean => {
@@ -1144,6 +1201,10 @@ export const createCalculator = (
   };
 
   const relinkMoved = (): void => {
+    if (relocated.size === 0) {
+      return;
+    }
+
     relocated.forEach((key) => linkAgain(key));
     relocated.clear();
   };
@@ -1490,8 +1551,9 @@ export const createCalculator = (
       relinkMoved();
 
       const run: Run = {
-        planner: createPlanner(pending, graph, locate),
+        planner: undefined,
         viewport: options.viewport,
+        reaching: options.reaching,
         marked: 0,
         queue: [],
         cycles: new Set(),
@@ -1507,6 +1569,7 @@ export const createCalculator = (
         dropped: false,
       };
 
+      run.planner = plannerOf(run);
       current = run;
       const settled = step(run) ? Promise.resolve() : proceed(run, options.yieldTo ?? nextTask);
 

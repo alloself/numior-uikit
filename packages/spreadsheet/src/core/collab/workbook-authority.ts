@@ -34,7 +34,7 @@ export const workbookAuthority = (
   let shot: WorkbookSnapshot | undefined;
 
   const applyOne = (step: WorkbookStep): WorkbookStep | undefined => {
-    settleForStep(calculator, step);
+    settleForStep(book, calculator, step);
 
     const result = stepper.apply(step);
 

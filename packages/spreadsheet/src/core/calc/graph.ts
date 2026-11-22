@@ -8,6 +8,7 @@ export interface Precedent {
 }
 
 export interface DependencyGraph {
+  readonly version: number;
   set(key: number, precedents: readonly Precedent[]): void;
   remove(key: number): void;
   precedentsOf(key: number): readonly Precedent[];
@@ -199,6 +200,7 @@ const removeFrom = <K, V>(map: Map<K, Set<V>>, key: K, value: V): void => {
 
 export const createDependencyGraph = (): DependencyGraph => {
   const singles = new Map<number, Map<number, Dependents>>();
+  let version = 0;
 
   const singlesOf = (sheet: number): Map<number, Dependents> => {
     const known = singles.get(sheet);
@@ -367,8 +369,15 @@ export const createDependencyGraph = (): DependencyGraph => {
   };
 
   return {
-    shift,
+    get version() {
+      return version;
+    },
+    shift: (sheet, change) => {
+      version += 1;
+      shift(sheet, change);
+    },
     set: (key, list) => {
+      version += 1;
       remove(key);
       precedents.set(key, list);
 
@@ -376,7 +385,10 @@ export const createDependencyGraph = (): DependencyGraph => {
         link(key, precedent);
       });
     },
-    remove,
+    remove: (key) => {
+      version += 1;
+      remove(key);
+    },
     precedentsOf: (key) => precedents.get(key) ?? [],
     forEachDependent: (sheet, row, col, visit) => {
       visitDependents(singles.get(sheet)?.get(cellIndex(row, col)), visit);
@@ -395,7 +407,7 @@ export const createDependencyGraph = (): DependencyGraph => {
 
 export const createPlanner = (
   seeds: Iterable<number>,
-  graph: DependencyGraph,
+  graph: Pick<DependencyGraph, 'forEachDependent'>,
   locate: (key: number) => GraphPlace | undefined,
 ): RecalcPlanner => {
   const roots = [...seeds];
@@ -510,7 +522,7 @@ export const createPlanner = (
 
 export const planRecalc = (
   seeds: Iterable<number>,
-  graph: DependencyGraph,
+  graph: Pick<DependencyGraph, 'forEachDependent'>,
   locate: (key: number) => GraphPlace | undefined,
 ): RecalcPlan => {
   const plan = createPlanner(seeds, graph, locate).advance(() => false, 0);

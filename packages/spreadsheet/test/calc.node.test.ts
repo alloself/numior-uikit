@@ -761,6 +761,106 @@ describe('whole lines after an insert before them', () => {
   });
 });
 
+describe('settling only what a range shows', () => {
+  it('settles the formulas the range reads and leaves the others to the next recalculation', () => {
+    const sheet = openBook();
+
+    sheet.type('A1', '1');
+    sheet.type('B1', '=A1*2');
+    sheet.type('C1', '=A1*3');
+
+    expect(sheet.shown('C1')).toBe('3');
+
+    sheet.type('A1', '5');
+    sheet.settleFor('B1:B1');
+
+    expect([sheet.seen('B1'), sheet.seen('C1'), sheet.calculator.pending > 0]).toEqual([
+      '10',
+      '3',
+      true,
+    ]);
+
+    expect(sheet.shown('C1')).toBe('15');
+  });
+
+  it('leaves waiting a formula outside the range that reads a formula the range settled', () => {
+    const sheet = openBook();
+
+    sheet.type('A1', '1');
+    sheet.type('B1', '=A2*2');
+
+    expect(sheet.shown('B1')).toBe('0');
+
+    sheet.type('A2', '=A1+1');
+    sheet.settleFor('A1:A2');
+
+    expect([sheet.seen('A2'), sheet.calculator.pending]).toEqual(['2', 1]);
+    expect(sheet.shown('B1')).toBe('4');
+  });
+
+  it('settles an array that spills into the range from above it', () => {
+    const sheet = openBook();
+
+    sheet.type('A1', '3');
+    sheet.type('B1', '=SEQUENCE(A1)');
+
+    expect(sheet.shown('B3')).toBe('3');
+
+    sheet.type('A1', '5');
+    sheet.settleFor('B4:B6');
+
+    expect([sheet.seen('B4'), sheet.seen('B5')]).toEqual(['4', '5']);
+  });
+
+  it('settles a chain of formulas on another sheet that the range reads', () => {
+    const sheet = openBook();
+
+    sheet.type('A1', '2', 'Rates');
+    sheet.type('B1', '=A1*10', 'Rates');
+    sheet.type('A1', '=Rates!B1+1');
+
+    expect(sheet.shown('A1')).toBe('21');
+
+    sheet.type('A1', '3', 'Rates');
+    sheet.settleFor('A1:A1');
+
+    expect(sheet.seen('A1')).toBe('31');
+  });
+
+  it('settles an array on another sheet that grows over a cell the range reads', () => {
+    const sheet = openBook();
+
+    sheet.type('Z1', '3', 'Rates');
+    sheet.type('A1', '=SEQUENCE(Z1)', 'Rates');
+    sheet.type('A1', '=Rates!A5*2');
+
+    expect(sheet.shown('A1')).toBe('0');
+
+    sheet.type('Z1', '6', 'Rates');
+    sheet.settleFor('A1:A1');
+
+    expect(sheet.seen('A1')).toBe('10');
+  });
+
+  it('settles a formula that an INDIRECT in the range starts to read', () => {
+    const sheet = openBook();
+
+    sheet.type('B1', '=A1*2', 'Rates');
+    sheet.type('A2', '1', 'Rates');
+    sheet.type('B2', '=A2*5', 'Rates');
+    sheet.type('Z1', '1');
+    sheet.type('A1', '=INDIRECT("Rates!B"&Z1)');
+
+    expect(sheet.shown('A1')).toBe('0');
+
+    sheet.type('A2', '2', 'Rates');
+    sheet.type('Z1', '2');
+    sheet.settleFor('A1:A1');
+
+    expect(sheet.seen('A1')).toBe('10');
+  });
+});
+
 describe('values after lines move', () => {
   it('sums a whole column again after a row with a value is deleted', () => {
     const sheet = openBook();

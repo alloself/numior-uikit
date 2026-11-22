@@ -115,6 +115,7 @@ export interface RecalcOptions {
   readonly budgetMs?: number | undefined;
   readonly yieldTo?: (() => Promise<void>) | undefined;
   readonly viewport?: { readonly sheet: Sheet; readonly range: CellRange } | undefined;
+  readonly reaching?: { readonly sheet: Sheet; readonly range: CellRange } | undefined;
   readonly volatile?: boolean | undefined;
   readonly imported?: boolean | undefined;
 }
