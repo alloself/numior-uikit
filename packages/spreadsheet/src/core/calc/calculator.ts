@@ -16,7 +16,7 @@ import {
 } from '../formula/formula.types';
 import { EN_LOCALE, type BookLocale } from '../locale';
 import { withYear } from '../format/number-locale';
-import { shiftIndex } from '../lines';
+import { coversAxis, shiftIndex } from '../lines';
 import { ORIGIN, referenceRange } from '../formula/origin';
 import { parseFormula } from '../formula/parser';
 import { changesMeaning, shiftFormula, shiftSpan, type LineChange } from '../formula/rewrite';
@@ -414,9 +414,8 @@ const shiftPrecedent = (
   const rows = change.axis === LineAxis.Rows;
   const first = rows ? range.top : range.left;
   const last = rows ? range.bottom : range.right;
-  const whole = first === 0 && last === (rows ? MAX_ROWS : MAX_COLS) - 1;
 
-  if (precedent.sheet !== sheet || whole || last < change.at) {
+  if (precedent.sheet !== sheet || coversAxis(range, change.axis) || last < change.at) {
     return precedent;
   }
 
@@ -432,6 +431,20 @@ const shiftPrecedent = (
       : { ...range, left: span[0], right: span[1] },
   };
 };
+
+const readsAcross = (
+  precedents: readonly Precedent[],
+  sheet: number,
+  change: LineChange,
+): boolean =>
+  precedents.some(
+    (precedent) => precedent.sheet === sheet && coversAxis(precedent.range, change.axis),
+  );
+
+const readsFrom = (precedents: readonly Precedent[], sheet: number, change: LineChange): boolean =>
+  precedents.some(
+    (precedent) => precedent.sheet === sheet && lastLine(precedent.range, change.axis) >= change.at,
+  );
 
 const shiftPrecedents = (
   precedents: readonly Precedent[],
@@ -1123,6 +1136,14 @@ export const createCalculator = (
         graph.remove(record.id);
         forget(record.sheet, record.row, record.col);
         return;
+      }
+
+      const contentsMove =
+        readsAcross(record.precedents, sheet.id, change) ||
+        (record.dynamic && readsFrom(graph.precedentsOf(record.id), sheet.id, change));
+
+      if (contentsMove) {
+        markStale(record.id);
       }
 
       const ast = shiftFormula(record.cell.ast, change, onSheet, record);

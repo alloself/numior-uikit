@@ -13,6 +13,8 @@ const STALE_BUDGET_MS = 20;
 
 const LONG_ROWS = 150_000;
 
+const MANY_ROWS = 100_000;
+
 describe('formula evaluation', () => {
   it('computes operators with the Excel coercions', () => {
     expect(evaluated('=1+2*3')).toEqual(numberValue(7));
@@ -672,5 +674,112 @@ describe('whole lines after an insert before them', () => {
     sheet.type('A2', '100');
 
     expect(sheet.shown('G6')).toBe('110');
+  });
+});
+
+describe('values after lines move', () => {
+  it('sums a whole column again after a row with a value is deleted', () => {
+    const sheet = openBook();
+
+    sheet.type('A2', '3');
+    sheet.type('A6', '4');
+    sheet.type('C1', '=SUM(A:A)');
+    sheet.type('D9', '=SUM(A:A)');
+    sheet.type('A1', '=SUM(Sheet1!A:A)', 'Rates');
+
+    expect(sheet.shown('C1')).toBe('7');
+
+    sheet.remove('6');
+
+    expect(sheet.shown('C1')).toBe('3');
+    expect(sheet.shown('D8')).toBe('3');
+    expect(sheet.shown('A1', 'Rates')).toBe('3');
+  });
+
+  it('sums a whole row again after a column with a value is deleted', () => {
+    const sheet = openBook();
+
+    sheet.type('B2', '3');
+    sheet.type('E2', '4');
+    sheet.type('A1', '=SUM(Sheet1!2:2)', 'Rates');
+
+    expect(sheet.shown('A1', 'Rates')).toBe('7');
+
+    sheet.remove('E');
+
+    expect(sheet.shown('A1', 'Rates')).toBe('3');
+  });
+
+  it('counts and finds in a whole column again after rows move under it', () => {
+    const sheet = openBook();
+
+    sheet.type('A2', '3');
+    sheet.type('A6', '4');
+    sheet.type('A1', '=COUNTIF(Sheet1!A:A,">0")', 'Rates');
+    sheet.type('A2', '=MATCH(4,Sheet1!A:A,0)', 'Rates');
+    sheet.type('A3', '=INDEX(Sheet1!A:A,6)', 'Rates');
+
+    expect([
+      sheet.shown('A1', 'Rates'),
+      sheet.shown('A2', 'Rates'),
+      sheet.shown('A3', 'Rates'),
+    ]).toEqual(['2', '6', '4']);
+
+    sheet.insert('1');
+
+    expect([sheet.shown('A2', 'Rates'), sheet.shown('A3', 'Rates')]).toEqual(['7', '0']);
+
+    sheet.remove('3');
+
+    expect([sheet.shown('A1', 'Rates'), sheet.shown('A2', 'Rates')]).toEqual(['1', '6']);
+  });
+
+  it('sums a name over a whole column again after a row with a value is deleted', () => {
+    const sheet = openBook();
+
+    sheet.type('A2', '3');
+    sheet.type('A6', '4');
+    sheet.name('Total', '=Sheet1!$A:$A');
+    sheet.type('A1', '=SUM(Total)', 'Rates');
+
+    expect(sheet.shown('A1', 'Rates')).toBe('7');
+
+    sheet.remove('6');
+
+    expect(sheet.shown('A1', 'Rates')).toBe('3');
+  });
+
+  it('reads again a cell that OFFSET and INDIRECT find after rows are inserted above it', () => {
+    const sheet = openBook();
+
+    sheet.type('A5', '4');
+    sheet.type('A1', '=OFFSET(Sheet1!A1,4,0)', 'Rates');
+    sheet.type('A2', '=INDIRECT("Sheet1!A5")', 'Rates');
+
+    expect([sheet.settled('A1', 'Rates'), sheet.settled('A2', 'Rates')]).toEqual(['4', '4']);
+
+    sheet.insert('3');
+
+    expect([sheet.settled('A1', 'Rates'), sheet.settled('A2', 'Rates')]).toEqual(['0', '0']);
+  });
+
+  it('leaves formulas over single cells waiting for nothing after a row is inserted among them', async () => {
+    const sheet = openBook();
+
+    const entries = Array.from({ length: MANY_ROWS }, (_, row): LoadEntry => ({
+      row,
+      col: 2,
+      formula: `=A${String(row + 1)}+B${String(row + 1)}`,
+    }));
+
+    await loadCells(sheet.calculator, sheet.first, entries, {
+      budgetMs: Number.POSITIVE_INFINITY,
+    }).settled;
+
+    sheet.calculator.recalculate({ budgetMs: Number.POSITIVE_INFINITY });
+
+    sheet.insert(String(MANY_ROWS / 2));
+
+    expect(sheet.calculator.pending).toBe(0);
   });
 });
