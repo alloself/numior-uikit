@@ -272,7 +272,6 @@ import {
   createSourceEngine,
   createTableEngine,
   TableNodeKind,
-  type TableDetailNode,
   type TableEngine,
   type TableFilter,
   type TableNode,
@@ -286,14 +285,7 @@ import NuiTableRow from './NuiTableRow.vue';
 import NuiTableTracks from './NuiTableTracks.vue';
 import NuiTableUtilityCell from './NuiTableUtilityCell.vue';
 import { tableMessages } from './table.messages';
-import {
-  countBelow,
-  detailsBefore,
-  detailSpotsOf,
-  NO_DETAILS,
-  NO_SPOTS,
-  sameSpots,
-} from './table-detail';
+import { countBelow, detailsBefore } from './table-detail';
 import {
   anchorOf,
   consecutiveRuns,
@@ -325,7 +317,6 @@ import { columnTreeOf, headerBandsOf } from './table-columns';
 import { orderLeaves } from './table-order';
 import {
   centreIndexOf,
-  dataKeyAt,
   dataKeysOf,
   pinsFit,
   revealOffset,
@@ -346,6 +337,7 @@ import NuiTableHeaderMarks from './NuiTableHeaderMarks.vue';
 import { useTableFocus } from './use-table-focus';
 import { useCellMenuArea } from './areas/cell-menu-area';
 import { useClipboardArea } from './areas/clipboard-area';
+import { useGroupsArea } from './areas/groups-area';
 import { useHeaderArea } from './areas/header-area';
 import { useOverlayArea } from './areas/overlay-area';
 import { useRowMovesArea } from './areas/row-moves-area';
@@ -360,7 +352,6 @@ import { ruleFailure } from './table-rules';
 import { boxOf, clampPosition, columnSpansOf, type RangeBox } from './table-ranges';
 import { useTableRanges } from './use-table-ranges';
 import { pageRowsOf, pageStepOf } from './table-keys';
-import { useTableExpansion } from './use-table-expansion';
 import type { TableFilterTarget } from './use-table-header';
 import { headFrameOf, headToolsOf, leastWidthOf } from './table-head-tools';
 import { useTableColumnOrder } from './use-table-column-order';
@@ -371,7 +362,6 @@ import { provideTableHandles } from './table-handles';
 import { nodeIdsOf, useTableRowPlaces } from './use-table-row-places';
 import { keepEqual } from './table-values';
 import { useTableRowSizes } from './use-table-row-sizes';
-import { useTableTotals } from './use-table-totals';
 import { useTableSelection, type TableSelectionKey } from './use-table-selection';
 import {
   NuiTableColumnType,
@@ -389,7 +379,6 @@ import {
   type NuiTableCellValue,
   type NuiTableColumn,
   type NuiTableColumnOrder,
-  type NuiTableDetailSlot,
   type NuiTableDraft,
   type NuiTableEdgeDirection,
   type NuiTableEvents,
@@ -420,7 +409,6 @@ import {
   type NuiTableCellPosition,
   type TableCellSpan,
   type TableCellView,
-  type TableDetailSpot,
   type TableLeadSpan,
   type TableMergeLayout,
   type TableMergeSlot,
@@ -437,7 +425,6 @@ import {
 const ROW_SIZES = { sm: 32, md: 40, lg: 48 } as const;
 const CANVAS_LIMIT = 15_000_000;
 const STILL_FRAME: VirtualFrame = { lead: 0, rest: 0, clampStart: 0, clampEnd: 0 };
-const NO_GROUPS: readonly string[] = [];
 const NO_COLUMNS: readonly number[] = [];
 
 const awaited = (
@@ -675,16 +662,28 @@ const table: TableContext<T> = {
 
 const selectOn = computed(() => selectable !== undefined);
 
-const treeOn = computed(() =>
-  source === undefined ? getChildren !== undefined : source.children !== undefined,
-);
-
-const detailOn = computed(() => slots.detail !== undefined && !treeOn.value);
-const grouping = computed(() => (treeOn.value ? NO_GROUPS : groupByNow.value));
-
-const detailPositions = computed(() =>
-  revision.read(() => (detailOn.value ? engine.value.details() : NO_DETAILS)),
-);
+const {
+  treeOn,
+  grouping,
+  hierarchical,
+  detailPositions,
+  detailSpots,
+  detailScope,
+  treeKey,
+  totals,
+  expansion,
+  levelOf,
+  expandedOf,
+} = useGroupsArea(table, {
+  tree: () => (source === undefined ? getChildren !== undefined : source.children !== undefined),
+  detailSlot: () => slots.detail !== undefined,
+  groupBy: () => groupByNow.value,
+  expanded,
+  leaves: () => tree.value.leaves,
+  treeColumn: () => treeColumn,
+  totalsLabel: () => totalsLabel,
+  locale: () => resolvedLocale.value,
+});
 
 const pageWindow = computed(() =>
   paginationProps.value === undefined || remote
@@ -741,17 +740,6 @@ const queryFilters = (): readonly TableFilter[] => {
     ? filtersNow.value
     : [...filtersNow.value, { kind: 'quick', value: text, keys: quickKeys.value }];
 };
-
-const totals = useTableTotals({
-  engine,
-  columns: () => tree.value.leaves,
-  keys: () => dataKeysOf(layout.value),
-  columnAt: (key) => columnAt(key),
-  locale: () => resolvedLocale.value,
-  messages,
-  label: () => totalsLabel,
-  rowCount: () => (loadingNow.value ? undefined : engine.value.rowCount()),
-});
 
 const currentQuery = (): TableQuery => {
   const list = queryFilters();
@@ -879,8 +867,6 @@ const centreWidths = computed(() => layout.value.centre.map((column) => column.w
 
 const footRows = computed(() => (totals.enabled.value ? 1 : 0));
 
-const hierarchical = computed(() => treeOn.value || detailOn.value || grouping.value.length > 0);
-
 const frozenCount = computed(() =>
   windowed.value && !hierarchical.value && !loadingNow.value && source === undefined
     ? clamp(Math.floor(frozenRows) || 0, 0, visibleRows.value)
@@ -888,16 +874,6 @@ const frozenCount = computed(() =>
 );
 
 const gridRole = computed(() => (hierarchical.value ? 'treegrid' : 'grid'));
-
-const detailSpots = computed<readonly TableDetailSpot[]>((previous) => {
-  const next = loadingNow.value
-    ? NO_SPOTS
-    : revision.read(() =>
-        detailSpotsOf(engine.value, detailPositions.value, pageStart.value, visibleRows.value),
-      );
-
-  return previous !== undefined && sameSpots(previous, next) ? previous : next;
-});
 
 const rowSizes = useTableRowSizes({
   viewport,
@@ -1166,20 +1142,6 @@ const rowAt = (position: number): T => {
   return node.row;
 };
 
-const detailAt = (position: number): TableDetailNode<T> => {
-  const node = engine.value.nodeAt(pageStart.value + position);
-
-  if (node?.kind !== TableNodeKind.Detail) {
-    throw new Error(`NuiTable has no detail at position ${position}`);
-  }
-  return node;
-};
-
-const detailScope = (position: number): NuiTableDetailSlot<T> => ({
-  row: detailAt(position).row,
-  position: position - 1,
-});
-
 const inDetail = (event: Event): boolean => ownDetailOf(event.target, viewport.value) !== null;
 
 const resize = useTableResize<T>({
@@ -1322,39 +1284,8 @@ const rowUtility = (item: TableBodyRow, column: string): NuiTableUtilityCellProp
 const gripLabel = (item: TableBodyRow): string =>
   dragLabel?.(rowAt(item.index)) ?? messages.value.dragRow({ row: labelOf(rowAt(item.index)) });
 
-const treeKey = computed(() =>
-  treeOn.value || detailOn.value ? (treeColumn ?? dataKeysOf(layout.value)[0]) : undefined,
-);
-
-const expansion = useTableExpansion({
-  engine,
-  expanded,
-  revision,
-  offset: () => pageStart.value,
-  keys: () => dataKeysOf(layout.value),
-  keyAt: (visual) => dataKeyAt(layout.value, visual),
-  treeKey: () => treeKey.value,
-  columnAt,
-  locale: () => resolvedLocale.value,
-  messages,
-  announce: (text) => {
-    announcement.value = text;
-  },
-  load: (row) => {
-    emit('load', row);
-  },
-});
-
-const levelOf = (node: TableNode<T> | undefined): number | undefined =>
-  hierarchical.value && node !== undefined ? node.level + 1 : undefined;
-
 const selectedOf = (node: TableNode<T> | undefined): boolean | undefined =>
   selectOn.value && node?.kind === TableNodeKind.Row ? selection.has(node.row) : undefined;
-
-const expandedOf = (node: TableNode<T> | undefined): boolean | undefined =>
-  node?.kind === TableNodeKind.Group || (node?.kind === TableNodeKind.Row && node.expandable)
-    ? node.expanded
-    : undefined;
 
 const sizedOf = (node: TableNode<T> | undefined): Readonly<Record<string, string>> | undefined => {
   const pixels = node?.kind === TableNodeKind.Row ? sizedHeights.value[String(node.id)] : undefined;
