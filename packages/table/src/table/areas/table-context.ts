@@ -20,6 +20,7 @@ export interface TableContext<T> {
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly announce: (text: string) => void;
   readonly isRtl: () => boolean;
+  readonly loading: () => boolean;
   readonly engine: Readonly<ShallowRef<TableEngine<T>>>;
   readonly revision: VersionRead;
   readonly pageStart: () => number;
@@ -35,6 +36,7 @@ export interface TableContext<T> {
   readonly textOf: (row: T, key: string) => string;
   readonly scopeOf: (row: T, position: number, key: string, pinned: boolean) => NuiTableCellSlot<T>;
   readonly headRows: () => number;
+  readonly rowSize: () => number;
   readonly pinnedRows: () => number;
   readonly frozenRows: () => number;
   readonly rowWindow: () => VirtualList;

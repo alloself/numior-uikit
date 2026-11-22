@@ -350,6 +350,7 @@ import { useTableFocus } from './use-table-focus';
 import { useCellMenuArea } from './areas/cell-menu-area';
 import { useClipboardArea } from './areas/clipboard-area';
 import { useOverlayArea } from './areas/overlay-area';
+import { useRowMovesArea } from './areas/row-moves-area';
 import type { TableContext } from './areas/table-context';
 import { useTableCellEditor } from './use-table-cell-editor';
 import { createEchoes } from './table-echoes';
@@ -370,10 +371,8 @@ import { useTableQuery } from './use-table-query';
 import { useTableWarmup } from './use-table-warmup';
 import { useTableResize } from './use-table-resize';
 import { provideTableHandles } from './table-handles';
-import { useTableRowDrag } from './use-table-row-drag';
 import { nodeIdsOf, useTableRowPlaces } from './use-table-row-places';
 import { keepEqual } from './table-values';
-import { useTableRowResize } from './use-table-row-resize';
 import { useTableRowSizes } from './use-table-row-sizes';
 import { useTableTotals } from './use-table-totals';
 import { useTableSelection, type TableSelectionKey } from './use-table-selection';
@@ -655,6 +654,7 @@ const table: TableContext<T> = {
   messages,
   announce,
   isRtl: () => direction.isRtl(),
+  loading: () => loadingNow.value,
   engine,
   revision,
   pageStart: () => pageStart.value,
@@ -670,6 +670,7 @@ const table: TableContext<T> = {
   textOf: (row, key) => textOf(row, key),
   scopeOf: (row, position, key, pinned) => scopeOf(row, position, key, pinned),
   headRows: () => headRows.value,
+  rowSize: () => rowSize.value,
   pinnedRows: () => pinnedCount.value,
   frozenRows: () => frozenCount.value,
   rowWindow: () => rowWindow,
@@ -1309,18 +1310,6 @@ const headUtility = (column: string): NuiTableUtilityCellProps => {
     : NO_UTILITY;
 };
 
-const dragEnabled = computed(
-  () =>
-    rowDragOn &&
-    !remote &&
-    source === undefined &&
-    !loadingNow.value &&
-    sort.value.length === 0 &&
-    filters.value.length === 0 &&
-    quick.value.trim() === '' &&
-    groupBy.value.length === 0,
-);
-
 const labelOf = (row: T): string => {
   const keys = dataKeysOf(layout.value);
   const first = keys.find((key) => columnAt(key).type === NuiTableColumnType.Text) ?? keys[0];
@@ -1494,92 +1483,47 @@ const rowLabelAt = (position: number): string => {
   return custom ?? String(ordinalOf(position));
 };
 
-const rowResize = useTableRowResize({
-  enabled: () => rowHead.value?.resizable === true && source === undefined && !loadingNow.value,
+const {
+  dragEnabled,
+  rowDrag,
+  rowResize,
+  sizableOf,
+  grabAt,
+  onRowResize,
+  onRowResetSize,
+  refocusMoved,
+} = useRowMovesArea(table, {
+  draggable: () => rowDragOn && !remote && source === undefined,
+  queried: () =>
+    sort.value.length > 0 ||
+    filters.value.length > 0 ||
+    quick.value.trim() !== '' ||
+    groupBy.value.length > 0,
+  sizable: () => rowHead.value?.resizable === true && source === undefined,
   heights: rowHeights,
-  rowSize: () => rowSize.value,
-  keyAt: (position) => {
-    const node = engine.value.nodeAt(pageStart.value + position);
-    return node?.kind === TableNodeKind.Row ? String(node.id) : undefined;
-  },
+  nestDelay: () => nestDelay,
+  canNest: (row) =>
+    getChildren !== undefined && (getChildren(row) !== undefined || hasChildren?.(row) !== true),
+  childCount: (row) => getChildren?.(row)?.length ?? 0,
+  keyOf,
+  labelOf,
   labelAt: rowLabelAt,
-  messages,
-  announce: (text) => {
-    announcement.value = text;
-  },
-  resized: (changes) => {
-    emit('rowResize', changes);
-  },
-  tapped: (position) => {
+  selectRow: (position) => {
     rangeSelect.selectRow(position);
   },
+  focusCell: (visual) => {
+    focus.focusCell(visual);
+  },
 });
-
-const sizableOf = (item: TableBodyRow): boolean =>
-  rowHead.value?.resizable === true && source === undefined && item.group === undefined;
 
 const pinnedUtility = (item: TablePinnedRow<T>, column: string): NuiTableUtilityCellProps =>
   item.selected === undefined || column === ROW_HEAD_KEY
     ? NO_UTILITY
     : { control: 'checkbox', checked: item.selected, label: selectText.value };
 
-const movedRow = createIntent<T>();
-
 const gripKey = computed(() =>
   rowDragOn ? (treeKey.value ?? dataKeysOf(layout.value)[0]) : undefined,
 );
-
-const positionOf = (row: T): number | undefined => {
-  const key = keyOf(row);
-  const count = engine.value.count();
-
-  for (let index = pageStart.value; index < count; index += 1) {
-    const node = engine.value.nodeAt(index);
-
-    if (node?.kind === TableNodeKind.Row && keyOf(node.row) === key) {
-      return index - pageStart.value;
-    }
-  }
-  return undefined;
-};
-
-const refocusMoved = (): void => {
-  const row = movedRow.take();
-  const position = row === undefined ? undefined : positionOf(row);
-
-  if (position === undefined) {
-    return;
-  }
-
-  focus.focusCell({ row: position + pinnedCount.value, col: active.value.col });
-};
-
-const rowDrag = useTableRowDrag<T>({
-  enabled: () => dragEnabled.value,
-  engine,
-  viewport: () => viewport.value,
-  frame: () => frame.value,
-  pageStart: () => pageStart.value,
-  rowCount: () => visibleRows.value,
-  rowSize: () => rowSize.value,
-  leading: () => headRows.value + pinnedCount.value,
-  nestDelay: () => nestDelay,
-  isRtl: direction.isRtl,
-  canNest: (row) =>
-    getChildren !== undefined && (getChildren(row) !== undefined || hasChildren?.(row) !== true),
-  childCount: (row) => getChildren?.(row)?.length ?? 0,
-  labelOf,
-  messages,
-  announce: (text) => {
-    announcement.value = text;
-  },
-  refocus: (row) => {
-    movedRow.set(row);
-  },
-  emit: (event) => {
-    emit('reorder', event);
-  },
-});
 
 const dataKeys = computed(() => dataKeysOf(layout.value));
 
@@ -2609,14 +2553,6 @@ const expandAt = (position: number | undefined): void => {
   expansion.toggle(position);
 };
 
-const grabAt = (position: number | undefined, event: PointerEvent): void => {
-  if (position === undefined) {
-    return;
-  }
-
-  rowDrag.grab(position, event);
-};
-
 const isCellSlot = (name: string): name is `cell-${string}` => name.startsWith('cell-');
 
 const cellSlotNames = (): Array<`cell-${string}`> => Object.keys(rawSlots).filter(isCellSlot);
@@ -2692,22 +2628,6 @@ const bodyRowProps = (item: TableBodyRow): NuiTableRowProps => ({
   sizing: rowResize.active.value === item.index,
   plainText: plainTextAt,
 });
-
-const onRowResize = (_key: string, event: PointerEvent, position: number | undefined): void => {
-  if (position === undefined) {
-    return;
-  }
-
-  rowResize.start(position, event);
-};
-
-const onRowResetSize = (_key: string, position: number | undefined): void => {
-  if (position === undefined) {
-    return;
-  }
-
-  rowResize.reset(position);
-};
 
 const bodyContext: TableBodyRowContext<T> = {
   utilityAt,
