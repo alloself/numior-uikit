@@ -1,4 +1,11 @@
-import { setBlockSpot, type BlockSpot, type DocJSON } from '@numior/editor-core';
+import {
+  ContentNodeKind,
+  setBlockSpot,
+  splitBlock,
+  textSelection,
+  type BlockSpot,
+  type DocJSON,
+} from '@numior/editor-core';
 import type { NuiEditorApi } from '@numior/editor-vue';
 import { promiseTimeout } from '@vueuse/core';
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
@@ -95,6 +102,28 @@ export class SessionDriver {
     });
 
     await flushPromises();
+  }
+
+  async split(at: number): Promise<void> {
+    this.api.run((state, dispatch) => {
+      dispatch?.(state.tr.setSelection(textSelection(at)));
+      return true;
+    });
+
+    this.api.run(splitBlock);
+
+    await flushPromises();
+  }
+
+  get blockIds(): readonly string[] {
+    const state = this.api.state();
+
+    if (state === undefined) {
+      throw new Error('The editor has no state');
+    }
+    return state.doc.root.content.flatMap((node) =>
+      node.kind === ContentNodeKind.Element ? [node.id] : [],
+    );
   }
 
   async workIn(block: string, part: readonly string[]): Promise<void> {

@@ -5,6 +5,8 @@ import { NuiCollabFailure } from '../../src/vue';
 import { documentOf } from './comments-adapter';
 import { SessionDriver } from './session-driver';
 
+const SERVER_BLOCKS: readonly string[] = ['p0', 'p1'];
+
 let session: SessionDriver | undefined;
 
 const opened = async (): Promise<SessionDriver> => {
@@ -52,6 +54,25 @@ describe('a shared document that stopped syncing', () => {
     expect(shared.helloVersions).toEqual([null, null]);
     expect(shared.text).toBe('onetwothree');
     expect(shared.writable).toBe(true);
+  });
+
+  it('gives a block made after opening the document again an id no block of this session had', async () => {
+    const shared: SessionDriver = await opened();
+
+    await shared.welcome(documentOf('one', 'two'), 4);
+    await shared.split(2);
+
+    const made = shared.blockIds.filter((id) => !SERVER_BLOCKS.includes(id));
+
+    await shared.refuseChange(4);
+    await shared.openAgain();
+    await shared.welcome(documentOf('one', 'two'), 4);
+    await shared.split(2);
+
+    const remade = shared.blockIds.filter((id) => !SERVER_BLOCKS.includes(id));
+
+    expect([made.length, remade.length]).toEqual([1, 1]);
+    expect(remade).not.toEqual(made);
   });
 
   it('offers no way back when the page is older than the document', async () => {

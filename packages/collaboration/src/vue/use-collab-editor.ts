@@ -54,6 +54,7 @@ const samePlace = (state: EditorState, before: EditorState): boolean =>
 export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor => {
   const { doc, user, schema, transport, editor, persistence } = options;
   const sessionId = newClientId();
+  const sessionIds = createIdSource(`${sessionId}-`);
   const ready = ref(false);
   const document = shallowRef<DocJSON>();
   const plugins = shallowRef<readonly Plugin[]>(NO_PLUGINS);
@@ -113,7 +114,7 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
   });
 
   const load = (loaded: Doc, version: number, unconfirmed?: readonly UnconfirmedStep[]): void => {
-    ids.value = createIdSource(`${sessionId}-`);
+    ids.value = sessionIds;
     plugins.value = [collab({ version, unconfirmed }), remotePresence(), bridge];
     document.value = toJSON(loaded);
     ready.value = true;
