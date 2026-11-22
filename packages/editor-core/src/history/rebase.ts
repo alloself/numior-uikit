@@ -17,6 +17,7 @@ export interface MirrorMaps {
   readonly maps: readonly StepMap[];
   readonly mirrors: ReadonlyMap<number, number>;
   readonly edges?: ReadonlySet<number> | undefined;
+  readonly dropped?: ReadonlySet<number> | undefined;
 }
 
 export interface RebasedSteps {
@@ -288,20 +289,21 @@ export const mirrored = (chain: MirrorMaps): Mappable => {
 const shifted = (mirrors: ReadonlyMap<number, number>): Map<number, number> =>
   new Map([...mirrors].map(([from, to]) => [from + 1, to + 1]));
 
-const shiftedEdges = (edges: ReadonlySet<number> | undefined): Set<number> | undefined =>
-  edges === undefined ? undefined : new Set([...edges].map((index) => index + 1));
+const shiftedSet = (indices: ReadonlySet<number> | undefined): Set<number> | undefined =>
+  indices === undefined ? undefined : new Set([...indices].map((index) => index + 1));
 
 const passedStep = (chain: MirrorMaps, back: StepMap, ahead?: StepMap): MirrorMaps => {
   const mirrors = shifted(chain.mirrors);
-  const edges = shiftedEdges(chain.edges);
+  const edges = shiftedSet(chain.edges);
+  const dropped = shiftedSet(chain.dropped);
 
   if (ahead === undefined) {
-    return { maps: [back, ...chain.maps], mirrors, edges };
+    return { maps: [back, ...chain.maps], mirrors, edges, dropped };
   }
   const maps = [back, ...chain.maps, ahead];
 
   mirrors.set(0, maps.length - 1);
-  return { maps, mirrors, edges };
+  return { maps, mirrors, edges, dropped };
 };
 
 const idle = (step: Step): boolean => {
@@ -470,7 +472,7 @@ const carriedPast = (chain: MirrorMaps, step: Removal): Lifted | undefined => {
 
   return {
     step: { ...step, from: span.from, to: span.to },
-    chain: { maps, mirrors: chain.mirrors, edges: chain.edges },
+    chain: { maps, mirrors: chain.mirrors, edges: chain.edges, dropped: chain.dropped },
   };
 };
 
@@ -487,11 +489,45 @@ const leavesPositions = (step: Step): boolean =>
   step.kind === StepKind.Markup ||
   step.kind === StepKind.DocAttrs;
 
+const isInsertion = (step: Step): step is Removal =>
+  step.kind === StepKind.Replace && step.from === step.to && step.slice.content.length > 0;
+
+const swallowed = (chain: MirrorMaps, walk: Walk): boolean => {
+  const map = chain.maps[walk.at];
+
+  return (
+    map !== undefined &&
+    chain.dropped?.has(walk.at) === true &&
+    map.map(walk.pos, -1) !== map.map(walk.pos, 1)
+  );
+};
+
+const restoredAt = (chain: MirrorMaps, pos: number): number | undefined => {
+  const walk = walkFrom(pos);
+
+  while (walk.at < chain.maps.length) {
+    if (swallowed(chain, walk)) {
+      return undefined;
+    }
+    advance(chain, walk, 1);
+  }
+  return walk.pos;
+};
+
+const restoredStep = (step: Removal, chain: MirrorMaps): Moved => {
+  const at = restoredAt(chain, step.from);
+
+  return at === undefined ? NOTHING : single({ ...step, from: at, to: at });
+};
+
 const historyStep = (step: Step, behind: MirrorMaps): Moved => {
   const mapper = mirrored(behind);
 
   if (isRemoval(step)) {
     return removalsOf(step, mapper);
+  }
+  if (isInsertion(step)) {
+    return restoredStep(step, behind);
   }
   const moved = mapStep(step, mapper);
 

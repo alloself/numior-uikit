@@ -80,6 +80,12 @@ const mapsOf = (steps: readonly UnconfirmedStep[]): StepMap[] =>
 const taken = (tr: Transaction, steps: readonly Step[]): boolean =>
   steps.every((step) => tr.maybeStep(step).ok);
 
+const droppedOf = (mirrors: ReadonlyMap<number, number>, count: number): ReadonlySet<number> =>
+  Array.from({ length: count }).reduce<Set<number>>(
+    (dropped, _, index) => (mirrors.has(index) ? dropped : dropped.add(index)),
+    new Set(),
+  );
+
 const rebaseLocal = (
   tr: Transaction,
   remote: readonly Step[],
@@ -109,7 +115,11 @@ const rebaseLocal = (
       step,
       inverted: invertStep(step, tr.docs[first + index] ?? tr.before),
     })),
-    chain: { ...chain, edges: new Set(chain.mirrors.keys()) },
+    chain: {
+      ...chain,
+      edges: new Set(chain.mirrors.keys()),
+      dropped: droppedOf(chain.mirrors, unconfirmed.length),
+    },
     conflicts,
   };
 };

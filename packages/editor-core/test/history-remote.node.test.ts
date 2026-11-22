@@ -45,18 +45,10 @@ const noteLetters = (letters: Set<string> | undefined, text: string): void => {
   }
 };
 
-const keptLine = (
-  original: string,
-  theirs: ReadonlySet<string> | undefined,
-  mine: ReadonlySet<string> | undefined,
-  kept: string,
-): string =>
+const keptLine = (original: string, theirs: ReadonlySet<string> | undefined): string =>
   original
     .split('')
-    .filter(
-      (letter) =>
-        theirs?.has(letter) !== true && (kept.includes(letter) || mine?.has(letter) !== true),
-    )
+    .filter((letter) => theirs?.has(letter) !== true)
     .join('');
 
 const undoAll = (editor: EditingHarness): void => {
@@ -270,11 +262,21 @@ describe('history over remote changes', () => {
     expect(editor.outline).toBe('paragraph("oe") paragraph("two")');
   });
 
-  it('leaves only what others did after undoing my edits around the text they deleted', () => {
+  it('brings back a letter I deleted after someone else deleted the letters around its place', () => {
+    const editor = twoLines();
+
+    editor.change((tr) => tr.delete(2, 3));
+    remoteCut(editor, 1, 3);
+    undoAll(editor);
+
+    expect(editor.outline).toBe('paragraph("n") paragraph("two")');
+  });
+
+  it('leaves exactly what others did after undoing my edits around the text they deleted', () => {
     const original = ['one', 'two'];
 
     const turn = fc.record({
-      kind: fc.constantFrom('type', 'type', 'delete', 'pause', 'remote', 'cut'),
+      kind: fc.constantFrom('type', 'type', 'delete', 'retype', 'pause', 'remote', 'cut'),
       offset: fc.nat(),
       length: fc.integer({ min: 1, max: 4 }),
     });
@@ -283,7 +285,6 @@ describe('history over remote changes', () => {
       fc.property(fc.array(turn, { minLength: 3, maxLength: 25 }), (turns) => {
         const editor = twoLines();
         const theirs = [new Set<string>(), new Set<string>()];
-        const mine = [new Set<string>(), new Set<string>()];
 
         for (const step of turns) {
           const at = editor.nearestText(step.offset % (editor.state.doc.size + 1));
@@ -297,8 +298,11 @@ describe('history over remote changes', () => {
               editor.type('a'.repeat(step.length));
               break;
             case 'delete':
-              noteLetters(mine[line], text);
               editor.change((tr) => (end > at ? tr.delete(at, end) : tr));
+              break;
+            case 'retype':
+              editor.select(textSelection(at, end));
+              editor.type('a');
               break;
             case 'pause':
               editor.pause(1000);
@@ -315,11 +319,7 @@ describe('history over remote changes', () => {
 
         const kept = lineTexts(editor.state).map((line) => line.replaceAll('x', ''));
 
-        expect(kept).toEqual(
-          original.map((line, index) =>
-            keptLine(line, theirs[index], mine[index], kept[index] ?? ''),
-          ),
-        );
+        expect(kept).toEqual(original.map((line, index) => keptLine(line, theirs[index])));
       }),
       { numRuns: 500 },
     );

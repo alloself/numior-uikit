@@ -317,6 +317,32 @@ describe('collab plugin', () => {
     expect(sendableSteps(next)).toHaveLength(0);
   });
 
+  it('brings back a letter it deleted after someone else deleted the text around its place', () => {
+    const state = started();
+    const deleted = state.apply(state.tr.delete(2, 3));
+    const confirmed = deleted.apply(confirmSteps(deleted, 1, 4));
+    const rebased = confirmed.apply(received(confirmed, confirmed.tr.delete(1, 3).steps));
+    let current = rebased;
+
+    undo(current, (tr) => {
+      current = current.apply(tr);
+    });
+
+    expect(firstText(rebased)).toBe('');
+    expect(firstText(current)).toBe('n');
+  });
+
+  it('leaves a letter deleted when someone else deleted it at the same time', () => {
+    const state = started();
+    const remote = state.tr.delete(1, 4).steps;
+    const deleted = state.apply(state.tr.delete(2, 3));
+
+    const next = deleted.apply(received(deleted, remote));
+
+    expect(firstText(next)).toBe('');
+    expect(undoDepth(next)).toBe(0);
+  });
+
   it('undoes text confirmed before a remote change', () => {
     const typed = typedAt(started(), 'L', 4);
     const confirmed = typed.apply(confirmSteps(typed, 1, 4));
