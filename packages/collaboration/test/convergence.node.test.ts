@@ -1,9 +1,20 @@
 import {
+  deleteSelection,
+  joinBackward,
+  joinForward,
+  liftListItem,
   moveChild,
   redo,
+  setBlockType,
+  sinkListItem,
   splitBlock,
+  splitListItem,
   textSelection,
+  toggleList,
+  toggleMark,
+  toggleWrapper,
   undo,
+  type Command,
   type Doc,
   type Mark,
   type Transaction,
@@ -34,6 +45,88 @@ interface TextSpot {
   readonly end: number;
   readonly marked: boolean;
 }
+
+type PeerAction = (typeof PeerAction)[keyof typeof PeerAction];
+
+interface PeerMove {
+  readonly who: number;
+  readonly action: PeerAction;
+  readonly anchor: number;
+  readonly head: number;
+  readonly ranged: boolean;
+  readonly from: number;
+  readonly to: number;
+}
+
+const PeerAction = {
+  Send: 'send',
+  Receive: 'receive',
+  Cut: 'cut',
+  Relink: 'relink',
+  Late: 'late',
+  Type: 'type',
+  Move: 'move',
+  Split: 'split',
+  SplitItem: 'splitItem',
+  JoinBackward: 'joinBackward',
+  JoinForward: 'joinForward',
+  Delete: 'delete',
+  Heading: 'heading',
+  Paragraph: 'paragraph',
+  Code: 'code',
+  Bullets: 'bullets',
+  Ordered: 'ordered',
+  Todo: 'todo',
+  Quote: 'quote',
+  Sink: 'sink',
+  Lift: 'lift',
+  Bold: 'bold',
+  Undo: 'undo',
+  Redo: 'redo',
+} as const;
+
+const PEER_COMMANDS: Readonly<Partial<Record<PeerAction, Command>>> = {
+  split: splitBlock,
+  splitItem: splitListItem,
+  joinBackward,
+  joinForward,
+  delete: deleteSelection,
+  heading: setBlockType('heading', { level: 2 }),
+  paragraph: setBlockType('paragraph'),
+  code: setBlockType('code_block'),
+  bullets: toggleList('bullet_list'),
+  ordered: toggleList('ordered_list'),
+  todo: toggleList('todo_list'),
+  quote: toggleWrapper('blockquote'),
+  sink: sinkListItem,
+  lift: liftListItem,
+  bold: toggleMark('bold'),
+  undo,
+  redo,
+};
+
+const EDITS = [
+  PeerAction.Move,
+  PeerAction.Split,
+  PeerAction.SplitItem,
+  PeerAction.JoinBackward,
+  PeerAction.JoinForward,
+  PeerAction.Delete,
+  PeerAction.Heading,
+  PeerAction.Paragraph,
+  PeerAction.Code,
+  PeerAction.Bullets,
+  PeerAction.Ordered,
+  PeerAction.Todo,
+  PeerAction.Quote,
+  PeerAction.Sink,
+  PeerAction.Lift,
+  PeerAction.Bold,
+  PeerAction.Undo,
+  PeerAction.Redo,
+] as const;
+
+const PEERS = ['ann', 'bob', 'cid'];
 
 const BOLD: Mark = { type: 'bold', attrs: {} };
 
@@ -250,6 +343,97 @@ const actionArbitrary = fc.oneof(
   { weight: 2, arbitrary: fc.constant(receiving) },
 );
 
+const PEER_MOVE: fc.Arbitrary<PeerMove> = fc.record({
+  who: fc.nat({ max: PEERS.length - 1 }),
+  action: fc.oneof(
+    { weight: 4, arbitrary: fc.constant(PeerAction.Send) },
+    { weight: 4, arbitrary: fc.constant(PeerAction.Receive) },
+    { weight: 4, arbitrary: fc.constant(PeerAction.Type) },
+    {
+      weight: 1,
+      arbitrary: fc.constantFrom(PeerAction.Cut, PeerAction.Relink, PeerAction.Late),
+    },
+    {
+      weight: 9,
+      arbitrary: fc.constantFrom(...EDITS),
+    },
+  ),
+  anchor: fc.nat(),
+  head: fc.nat(),
+  ranged: fc.nat({ max: 3 }).map((pick) => pick === 0),
+  from: fc.nat(),
+  to: fc.nat(),
+});
+
+const linkMoved = (client: NetworkClient, action: PeerAction): boolean => {
+  switch (action) {
+    case PeerAction.Send:
+      client.toServer();
+      return true;
+    case PeerAction.Receive:
+      client.toClient();
+      return true;
+    case PeerAction.Cut:
+      client.cut();
+      return true;
+    case PeerAction.Relink:
+      client.relink();
+      return true;
+    case PeerAction.Late:
+      client.late();
+      return true;
+    default:
+      return false;
+  }
+};
+
+const peerCommand = (client: NetworkClient, move: PeerMove, at: number): Command | undefined => {
+  switch (move.action) {
+    case PeerAction.Type:
+      return (state, dispatch) => {
+        dispatch?.(state.tr.insertText('x', at));
+        return true;
+      };
+    case PeerAction.Move: {
+      const { root } = client.state().doc;
+      const blocks = Math.max(1, root.content.length);
+
+      return moveChild(root.id, move.from % blocks, move.to % blocks);
+    }
+    default:
+      return PEER_COMMANDS[move.action];
+  }
+};
+
+const peerPlayed = (network: CollabNetwork, move: PeerMove): void => {
+  const client = network.clients[move.who];
+
+  if (client === undefined || linkMoved(client, move.action)) {
+    return;
+  }
+
+  const spots = textSpots(client.state().doc);
+  const anchor = spots[move.anchor % Math.max(1, spots.length)]?.pos;
+
+  if (anchor === undefined) {
+    return;
+  }
+
+  const head = move.ranged ? (spots[move.head % spots.length]?.pos ?? anchor) : anchor;
+
+  const command = peerCommand(client, move, anchor);
+
+  if (command === undefined) {
+    return;
+  }
+
+  client.edit((tr) => {
+    tr.setSelection(textSelection(anchor, head));
+  });
+
+  client.run(command);
+};
+
 describe('convergence under the server order', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
@@ -381,4 +565,33 @@ describe('convergence under the server order', () => {
       );
     },
   );
+
+  it('brings three clients to one valid document through real commands and broken links', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 1, max: 1000 }),
+        fc.array(PEER_MOVE, { maxLength: 40, size: 'max' }),
+        (seed, moves) => {
+          const network = createNetwork(generateDoc(fixtureSchema, { blocks: 8, seed }), PEERS);
+
+          moves.forEach((move) => {
+            peerPlayed(network, move);
+          });
+
+          network.mend();
+          network.settle();
+          network.close();
+
+          for (const doc of network.docs()) {
+            expect(doc).toEqual(network.server());
+          }
+          for (const client of network.clients) {
+            expect(client.status().kind).toBe(CollabStatusKind.Online);
+            expect(fixtureSchema.check(client.state().doc.root).ok).toBe(true);
+          }
+        },
+      ),
+      { numRuns: 150 },
+    );
+  });
 });
