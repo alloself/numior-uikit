@@ -122,6 +122,7 @@ const monthYear = (text: string, locale: NumberLocale): number | undefined => {
 
 const namedInYear = (text: string, year: number, locale: NumberLocale): number | undefined => {
   const dayName = DAY_NAME.exec(text);
+
   const nameDay =
     dayName === null && locale.dateOrder === DateOrder.Mdy ? NAME_DAY.exec(text) : null;
 
