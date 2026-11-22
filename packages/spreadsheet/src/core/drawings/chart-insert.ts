@@ -33,6 +33,10 @@ const LEAST_COLS = 3;
 
 const DOUGHNUT_HOLE = 50;
 
+const TAG_LENGTH = 8;
+
+const TAG_RADIX = 36;
+
 const ROUND_KINDS = new Set<SheetChartKind>([SheetChartKind.Pie, SheetChartKind.Doughnut]);
 
 const absolute = (row: number, col: number): CellRef => ({
@@ -201,14 +205,20 @@ export const chartAnchorAt = (row: number, col: number, end?: CellAddress): Draw
   };
 };
 
+const randomTag = (): string =>
+  Array.from(globalThis.crypto.getRandomValues(new Uint8Array(TAG_LENGTH)), (byte) =>
+    (byte % TAG_RADIX).toString(TAG_RADIX),
+  ).join('');
+
 export const freshDrawingId = (layout: SheetLayout): string => {
   const taken = new Set(layout.drawings.map((drawing) => drawing.id));
-  let index = 1;
+  const number = String(layout.drawings.length + 1);
+  let id = `new-${number}-${randomTag()}`;
 
-  while (taken.has(`new-${String(index)}`)) {
-    index += 1;
+  while (taken.has(id)) {
+    id = `new-${number}-${randomTag()}`;
   }
-  return `new-${String(index)}`;
+  return id;
 };
 
 export const insertDrawing = (layout: SheetLayout, drawing: SheetDrawing): SheetLayout => ({

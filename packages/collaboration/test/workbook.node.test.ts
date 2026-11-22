@@ -1,6 +1,14 @@
 import {
+  DrawingKind,
+  SheetChartKind,
+  StepKind,
+  chartAnchorAt,
+  chartOfRange,
   createStepCodec,
   createWorkbook,
+  freshDrawingId,
+  insertDrawing,
+  layoutDelta,
   lineLayoutsOf,
   moveRule,
   pivotCaptions,
@@ -135,6 +143,37 @@ const heightened = (client: BookClient, row: number, size: number): void => {
     },
   ]);
 };
+
+const chartInserted = (client: BookClient, row: number, name: string): void => {
+  const sheet = sheetOf(client, SHEET);
+  const area = { top: 0, left: 0, bottom: 1, right: 1 };
+  const chart = chartOfRange(sheet.cells, SHEET, area, SheetChartKind.Column);
+
+  if (chart === undefined) {
+    throw new Error('the cells make no chart');
+  }
+
+  const layout = insertDrawing(sheet.layout, {
+    id: freshDrawingId(sheet.layout),
+    name,
+    alt: '',
+    anchor: chartAnchorAt(row, 3),
+    content: { kind: DrawingKind.Chart, chart },
+  });
+
+  const delta = layoutDelta(sheet.layout, layout);
+
+  if (delta === undefined) {
+    throw new Error('the chart changed nothing');
+  }
+
+  client.commit([{ kind: StepKind.SetLayout, sheet: SHEET, ...delta }]);
+};
+
+const chartsOf = (client: BookClient): readonly string[] =>
+  sheetOf(client, SHEET)
+    .layout.drawings.map((drawing) => drawing.name)
+    .toSorted();
 
 const ruleOn = (top: number, bottom: number): ConditionalFormat => ({
   ranges: [{ top, left: 0, bottom, right: 0 }],
@@ -680,6 +719,34 @@ describe('workbook steps through the collaboration envelope', () => {
       'Extra',
       'Other',
       SHEET,
+    ]);
+
+    expectSame(ann, bob);
+  });
+
+  it('keeps two charts inserted on one sheet at the same time', () => {
+    const net = createBookNetwork(
+      ['ann', 'bob'],
+      [
+        seedSheet,
+        writeCells(valueCell(0, 0, 'Item'), valueCell(0, 1, 'Sum'), valueCell(1, 0, 'Pen')),
+        writeCells({
+          row: 1,
+          col: 1,
+          content: { kind: 'value', value: { kind: 'number', value: 5 } },
+        }),
+      ],
+    );
+
+    const [ann, bob] = pair(net);
+
+    chartInserted(ann, 2, 'Ann chart');
+    chartInserted(bob, 20, 'Bob chart');
+    net.settle();
+
+    expect([chartsOf(ann), chartsOf(bob)]).toEqual([
+      ['Ann chart', 'Bob chart'],
+      ['Ann chart', 'Bob chart'],
     ]);
 
     expectSame(ann, bob);

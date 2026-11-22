@@ -186,10 +186,9 @@ describe('chart from a range', () => {
 
     const layout = insertDrawing(sheet.layout, drawingOf(chart));
 
-    expect([chartAnchorAt(1_048_575, 16_383).kind, freshDrawingId(layout)]).toEqual([
-      DrawingAnchorKind.Cells,
-      'new-2',
-    ]);
+    expect(chartAnchorAt(1_048_575, 16_383).kind).toBe(DrawingAnchorKind.Cells);
+    expect(freshDrawingId(layout)).toMatch(/^new-2-[0-9a-z]{8}$/u);
+    expect(freshDrawingId(layout)).not.toBe(freshDrawingId(layout));
 
     expect(chartAnchorAt(1_048_575, 16_383)).toMatchObject({
       to: { row: 1_048_575, col: 16_383 },
