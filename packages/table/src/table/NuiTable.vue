@@ -347,10 +347,10 @@ import NuiTableFilter from './NuiTableFilter.vue';
 import NuiTableFooterCell from './NuiTableFooterCell.vue';
 import NuiTableHeaderMarks from './NuiTableHeaderMarks.vue';
 import { useTableFocus } from './use-table-focus';
+import { useCellMenuArea } from './areas/cell-menu-area';
 import { useClipboardArea } from './areas/clipboard-area';
 import { useOverlayArea } from './areas/overlay-area';
 import type { TableContext } from './areas/table-context';
-import { useTableContextMenu } from './use-table-context-menu';
 import { useTableCellEditor } from './use-table-cell-editor';
 import { createEchoes } from './table-echoes';
 import { useTablePicking } from './use-table-picking';
@@ -393,7 +393,6 @@ import {
   type NuiTableCellValue,
   type NuiTableColumn,
   type NuiTableColumnOrder,
-  type NuiTableContextScope,
   type NuiTableDetailSlot,
   type NuiTableDraft,
   type NuiTableEdgeDirection,
@@ -651,9 +650,11 @@ const announce = (text: string): void => {
 
 const table: TableContext<T> = {
   viewport,
+  frame,
   emit,
   messages,
   announce,
+  isRtl: () => direction.isRtl(),
   engine,
   revision,
   pageStart: () => pageStart.value,
@@ -667,6 +668,7 @@ const table: TableContext<T> = {
   dataKeys: () => dataKeys.value,
   dataOffset: () => dataOffset.value,
   textOf: (row, key) => textOf(row, key),
+  scopeOf: (row, position, key, pinned) => scopeOf(row, position, key, pinned),
   headRows: () => headRows.value,
   pinnedRows: () => pinnedCount.value,
   frozenRows: () => frozenCount.value,
@@ -2255,77 +2257,21 @@ const picker = useTablePicking({
   },
 });
 
-const selectForMenu = (target: NuiTableCellPosition): NuiTableRanges => {
-  const body = { row: target.row - pinnedCount.value, col: target.col - dataOffset.value };
-
-  if (body.row >= 0 && rangeSelect.contains(body)) {
-    return ranges.value;
-  }
-
-  const focused =
-    active.value.row === target.row &&
-    active.value.col === target.col &&
-    viewport.value?.contains(document.activeElement) === true;
-
-  rangeSelect.clear();
-
-  if (!focused) {
-    focus.focusCell(target, false);
-  }
-  return [];
-};
-
-const contextScopeOf = (
-  focused: NuiTableCellPosition,
-  current: NuiTableRanges,
-): NuiTableContextScope<T> | undefined => {
-  const data = dataCellOf(focused);
-  const target = data === undefined ? focused : visualCellOf(anchorOf(mergeIndex.value, data));
-  const row = rowFor(target.row);
-  const key = dataKeyAt(layout.value, target.col);
-  const pinned = target.row < pinnedCount.value;
-
-  return row === undefined || key === undefined
-    ? undefined
-    : {
-        ...scopeOf(row, pinned ? target.row : target.row - pinnedCount.value, key, pinned),
-        ranges: current,
-      };
-};
-
-const cellMenuNode = useTemplateRef<NuiMenuExposed>('cell-menu');
-const contextAnchor = useTemplateRef<HTMLElement>('context-anchor');
-
-const cellMenu = useTableContextMenu<T>({
-  enabled: () => (contextMenu === undefined ? cellSelection : contextMenu !== false),
-  extra: () => (contextMenu === false ? undefined : contextMenu),
-  frame: () => frame.value,
-  anchor: () => contextAnchor.value,
-  viewport: () => viewport.value,
-  headRows: () => headRows.value,
-  scopeOf: contextScopeOf,
-  select: selectForMenu,
-  copyable: () => clipboard.copyable(),
-  copy: (headers) => {
-    void clipboard.copy(headers);
-  },
+const cellMenu = useCellMenuArea(table, {
+  option: () => contextMenu,
+  cellSelection: () => cellSelection,
   editable: () => canEdit.value,
-  clearable: () => editing.clearable(),
-  cut: () => {
-    void editing.cut();
+  clipboard,
+  editing,
+  ranges: rangeSelect,
+  anchorOf: (visual) => {
+    const data = dataCellOf(visual);
+
+    return data === undefined ? visual : visualCellOf(anchorOf(mergeIndex.value, data));
   },
-  clear: () => {
-    editing.clear();
+  focusCell: (visual) => {
+    focus.focusCell(visual, false);
   },
-  pastable: () => editing.pastable(),
-  paste: () => {
-    void editing.pasteFromClipboard();
-  },
-  show: (focusOn) => {
-    cellMenuNode.value?.show(focusOn);
-  },
-  isRtl: direction.isRtl,
-  messages,
 });
 
 const busy = computed(() => query.busy.value || clipboard.busy.value || exporter.busy.value);

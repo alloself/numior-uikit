@@ -5,6 +5,7 @@ import type { TableLayout } from '../table-layout';
 import type { NuiTableMessages } from '../table.messages';
 import type {
   NuiTableCellPosition,
+  NuiTableCellSlot,
   NuiTableColumn,
   NuiTableEvents,
   NuiTableRanges,
@@ -14,9 +15,11 @@ export type TableEmit<T> = EmitFn<ShortEmitsToObject<NuiTableEvents<T>>>;
 
 export interface TableContext<T> {
   readonly viewport: Readonly<ShallowRef<HTMLElement | null>>;
+  readonly frame: Readonly<ShallowRef<HTMLElement | null>>;
   readonly emit: TableEmit<T>;
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly announce: (text: string) => void;
+  readonly isRtl: () => boolean;
   readonly engine: Readonly<ShallowRef<TableEngine<T>>>;
   readonly revision: VersionRead;
   readonly pageStart: () => number;
@@ -30,6 +33,7 @@ export interface TableContext<T> {
   readonly dataKeys: () => readonly string[];
   readonly dataOffset: () => number;
   readonly textOf: (row: T, key: string) => string;
+  readonly scopeOf: (row: T, position: number, key: string, pinned: boolean) => NuiTableCellSlot<T>;
   readonly headRows: () => number;
   readonly pinnedRows: () => number;
   readonly frozenRows: () => number;
