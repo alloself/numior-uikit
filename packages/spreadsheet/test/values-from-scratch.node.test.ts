@@ -63,6 +63,13 @@ type Move =
   | { readonly kind: typeof MoveKind.Undo }
   | { readonly kind: typeof MoveKind.Redo };
 
+type Slice = (typeof Slice)[keyof typeof Slice];
+
+interface Turn {
+  readonly move: Move;
+  readonly slice: Slice;
+}
+
 const MoveKind = {
   Value: 'value',
   Formula: 'formula',
@@ -72,6 +79,13 @@ const MoveKind = {
   Remove: 'remove',
   Undo: 'undo',
   Redo: 'redo',
+} as const;
+
+const Slice = {
+  Running: 'running',
+  Ticks: 'ticks',
+  Cancel: 'cancel',
+  Settle: 'settle',
 } as const;
 
 const PROPERTY_TIMEOUT = 60_000;
@@ -87,6 +101,20 @@ const PLAIN_SHEET = /^[A-Za-z]+$/u;
 const WHOLE = { top: 0, left: 0, bottom: 1_048_575, right: 16_383 };
 
 const SETTLED = { budgetMs: Number.POSITIVE_INFINITY, volatile: false };
+
+const SLICED = { budgetMs: -1, yieldTo: () => Promise.resolve(), volatile: false };
+
+const SLICED_RUNS = 60;
+
+const SLICED_MOVES = 40;
+
+const DRAIN_ROUNDS = 10_000;
+
+const SEED_TOP = 12;
+
+const SEED_ROWS = 25;
+
+const SEED_COLUMNS = 6;
 
 const COLUMN = fc.integer({ min: 0, max: 5 });
 
@@ -175,6 +203,11 @@ const MOVE: fc.Arbitrary<Move> = fc.oneof(
   { weight: 1, arbitrary: fc.constant<Move>({ kind: MoveKind.Undo }) },
   { weight: 1, arbitrary: fc.constant<Move>({ kind: MoveKind.Redo }) },
 );
+
+const TURN: fc.Arbitrary<Turn> = fc.record({
+  move: MOVE,
+  slice: fc.constantFrom(Slice.Running, Slice.Ticks, Slice.Cancel, Slice.Settle),
+});
 
 const desk = (): Desk => {
   const book = createWorkbook();
@@ -346,6 +379,59 @@ const differencesOf = (live: Map<string, string>, fresh: Map<string, string>): D
     return found;
   }, []);
 
+const seedText = (row: number, col: number): string =>
+  row === SEED_TOP
+    ? `=SUM(A1:F10)+${String(col)}`
+    : `=${columnName(col)}${String(row)}+${columnName((col + 1) % SEED_COLUMNS)}${String(row)}`;
+
+const seededDesk = (): Desk => {
+  const table = desk();
+  const cells: CellEdit[] = [];
+
+  for (let row = SEED_TOP; row < SEED_TOP + SEED_ROWS; row += 1) {
+    for (let col = 0; col < SEED_COLUMNS; col += 1) {
+      const parsed = parseFormula(seedText(row, col), EN_FORMULAS, { row, col });
+
+      if (!parsed.ok) {
+        throw new Error(`${seedText(row, col)} does not parse`);
+      }
+
+      cells.push({ row, col, content: { kind: 'formula', ast: parsed.ast } });
+    }
+  }
+
+  table.history.commit([{ kind: 'setCells', sheet: 'Main', cells }]);
+  return table;
+};
+
+const sliced = async (table: Desk, slice: Slice): Promise<boolean> => {
+  const run = table.calculator.recalculate(SLICED);
+
+  switch (slice) {
+    case Slice.Cancel:
+      run.cancel();
+      await run.settled;
+      return true;
+    case Slice.Settle:
+      await run.settled;
+      return true;
+    case Slice.Ticks:
+      await Promise.resolve();
+      await Promise.resolve();
+      return false;
+    default:
+      return false;
+  }
+};
+
+const drained = async (calculator: Calculator): Promise<number> => {
+  for (let round = 0; calculator.pending > 0 && round < DRAIN_ROUNDS; round += 1) {
+    await calculator.recalculate(SLICED).settled;
+  }
+
+  return calculator.pending;
+};
+
 describe('values of formulas after edits', () => {
   it(
     'equal the values of the same book calculated from scratch after every edit, line move, sheet change, undo and redo',
@@ -362,6 +448,40 @@ describe('values of formulas after edits', () => {
           });
         }),
         { numRuns: RUNS },
+      );
+    },
+    PROPERTY_TIMEOUT,
+  );
+});
+
+describe('values of formulas after a recalculation cut into slices', () => {
+  it(
+    'equal the values calculated from scratch when edits come while slices run, a run is cancelled or left behind',
+    async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(TURN, { maxLength: SLICED_MOVES, size: 'max' }),
+          async (turns) => {
+            const table = seededDesk();
+
+            for (const turn of turns) {
+              play(table, turn.move);
+
+              const checked = await sliced(table, turn.slice);
+
+              if (!checked) {
+                continue;
+              }
+
+              expect(await drained(table.calculator)).toBe(0);
+              expect(differencesOf(valuesOf(table.calculator), fromScratch(table))).toEqual([]);
+            }
+
+            expect(await drained(table.calculator)).toBe(0);
+            expect(differencesOf(valuesOf(table.calculator), fromScratch(table))).toEqual([]);
+          },
+        ),
+        { numRuns: SLICED_RUNS },
       );
     },
     PROPERTY_TIMEOUT,
