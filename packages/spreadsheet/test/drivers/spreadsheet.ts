@@ -55,6 +55,15 @@ interface CellSpot {
 
 const DRAWING_MENU = '[role="menu"][aria-label="Object actions"]';
 
+const spotOf = (cell: Element | null | undefined): CellSpot | undefined => {
+  const label = cell?.parentElement?.querySelector('[role="rowheader"]')?.textContent?.trim();
+  const index = Number(cell?.getAttribute('aria-colindex'));
+
+  return label === undefined || Number.isNaN(index)
+    ? undefined
+    : { row: Number(label), col: index - 2 };
+};
+
 const EDGE_POINTER = 9;
 
 const EDGE_START = 100;
@@ -617,13 +626,15 @@ export class SpreadsheetDriver {
   }
 
   get focusedCell(): CellSpot | undefined {
-    const cell = document.activeElement?.closest('[role="gridcell"]');
-    const label = cell?.parentElement?.querySelector('[role="rowheader"]')?.textContent?.trim();
-    const index = Number(cell?.getAttribute('aria-colindex'));
+    return spotOf(document.activeElement?.closest('[role="gridcell"]'));
+  }
 
-    return label === undefined || Number.isNaN(index)
-      ? undefined
-      : { row: Number(label), col: index - 2 };
+  get tabStop(): CellSpot | undefined {
+    return spotOf(this.wrapper.element.querySelector('[role="gridcell"][tabindex="0"]'));
+  }
+
+  get selectedCells(): number {
+    return this.wrapper.findAll('[role="gridcell"][aria-selected="true"]').length;
   }
 
   get referenceFrames(): string[] {

@@ -347,6 +347,29 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.nameBox).toBe('C3');
   });
 
+  it('opens on the selection it is given and leaves the focus where it was', async () => {
+    const outside = document.createElement('button');
+
+    document.body.append(outside);
+    outside.focus();
+
+    const sheet = sheetOf({
+      book: salesBook(),
+      label: 'Sales book',
+      selection: { active: { row: 1, col: 2 }, ranges: [{ top: 1, left: 1, bottom: 1, right: 2 }] },
+    });
+
+    await sheet.settle();
+
+    expect(sheet.nameBox).toBe('C2');
+    expect(sheet.tabStop).toEqual({ row: 2, col: 2 });
+    expect(sheet.selectedCells).toBe(2);
+    expect(document.activeElement).toBe(outside);
+    expect(sheet.selection).toBeUndefined();
+
+    outside.remove();
+  });
+
   it('inserts and deletes the selected rows and columns from the cell menu', async () => {
     const book = salesBook();
 

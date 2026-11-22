@@ -39,6 +39,14 @@ export const tableRangeOf = (cells: SheetCells, area: CellRange): NuiTableRange 
   to: positionOf(cells, { row: area.bottom, col: area.right }),
 });
 
+const tableRangesOf = (cells: SheetCells, next: NuiSpreadsheetSelection): NuiTableRange[] => {
+  const single =
+    next.ranges.length === 1 &&
+    rangeKey(next.ranges[0] ?? cellRange(next.active)) === rangeKey(cellRange(next.active));
+
+  return single ? [] : next.ranges.map((range) => tableRangeOf(cells, range));
+};
+
 export const useSheetSelection = (options: SheetSelectionOptions): SheetSelection => {
   const current = computed((): NuiSpreadsheetSelection | undefined => {
     const cells = options.cells();
@@ -60,19 +68,18 @@ export const useSheetSelection = (options: SheetSelectionOptions): SheetSelectio
     if (cells === undefined) {
       return;
     }
-
-    const single =
-      next.ranges.length === 1 &&
-      rangeKey(next.ranges[0] ?? cellRange(next.active)) === rangeKey(cellRange(next.active));
-
     options.table.value?.focusCell(positionOf(cells, next.active));
+    options.formula.ranges.value = tableRangesOf(cells, next);
+  };
 
-    options.formula.ranges.value = single
-      ? []
-      : next.ranges.map((range) => ({
-          from: positionOf(cells, { row: range.top, col: range.left }),
-          to: positionOf(cells, { row: range.bottom, col: range.right }),
-        }));
+  const open = (next: NuiSpreadsheetSelection | undefined): void => {
+    const cells = options.cells();
+
+    if (next === undefined || cells === undefined) {
+      return;
+    }
+    options.formula.active.value = positionOf(cells, next.active);
+    options.formula.ranges.value = tableRangesOf(cells, next);
   };
 
   watch(current, (value) => {
@@ -90,6 +97,8 @@ export const useSheetSelection = (options: SheetSelectionOptions): SheetSelectio
 
     select(value);
   });
+
+  open(options.model.value);
 
   return { current, select };
 };
