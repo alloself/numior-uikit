@@ -81,8 +81,10 @@ test('the quote on the home page counts the amount due again when a quantity cha
 }) => {
   await docs.open('/');
   const home = docs.home();
-  await home.quoteCell('8', 3).click();
   await expect(home.quoteFormula).toHaveValue('=D6+D7');
+
+  await home.quoteCell('5', 3).click();
+  await expect(home.quoteFormula).toHaveValue('=B5*C5');
 
   await home.enterInQuote('2', 1, '3');
 

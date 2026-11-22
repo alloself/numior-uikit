@@ -11,6 +11,7 @@
         class="w-full"
         :book="book"
         :calculator="calculator"
+        v-model:selection="selection"
         :sheet-tabs="false"
         label="Смета гостиной"
         height="15rem"
@@ -27,7 +28,7 @@ import {
   NuiCardHeader,
   NuiCardTitle,
 } from '@numior/kit';
-import { NuiSpreadsheet } from '@numior/kit/spreadsheet';
+import { NuiSpreadsheet, type NuiSpreadsheetSelection } from '@numior/kit/spreadsheet';
 import {
   createCalculator,
   createWorkbook,
@@ -36,6 +37,7 @@ import {
   textValue,
   type LineLayout,
 } from '@numior/kit/spreadsheet/core';
+import { ref } from 'vue';
 import { products } from '#demo/products';
 
 const HEADER = ['Товар', 'Кол-во', 'Цена', 'Сумма'];
@@ -53,6 +55,10 @@ const PICKS = [
 const TOTAL_ROW = PICKS.length + 1;
 const DISCOUNT_ROW = TOTAL_ROW + 1;
 const DUE_ROW = DISCOUNT_ROW + 1;
+const AMOUNT_COL = 3;
+
+const productOf = (sku: string): { name: string; price: number } =>
+  products.find((item) => item.sku === sku) ?? { name: sku, price: 0 };
 
 const columnOf = (size: number): LineLayout => ({
   size,
@@ -83,11 +89,11 @@ HEADER.forEach((title, col) => {
 PICKS.forEach(({ sku, quantity }, index) => {
   const row = index + 1;
   const line = String(row + 1);
-  const product = products.find((item) => item.sku === sku);
+  const product = productOf(sku);
 
-  sheet.cells.set(row, 0, textValue(product?.name ?? sku));
+  sheet.cells.set(row, 0, textValue(product.name));
   sheet.cells.set(row, 1, numberValue(quantity));
-  sheet.cells.set(row, 2, numberValue(product?.price ?? 0));
+  sheet.cells.set(row, 2, numberValue(product.price));
   sheet.formats.set(row, 2, money);
   calculator.setFormula(sheet, row, 3, `=B${line}*C${line}`);
   sheet.formats.set(row, 3, money);
@@ -115,4 +121,9 @@ calculator.setFormula(sheet, DUE_ROW, 3, `=D${total}+D${discount}`);
 });
 
 calculator.recalculate();
+
+const selection = ref<NuiSpreadsheetSelection>({
+  active: { row: DUE_ROW, col: AMOUNT_COL },
+  ranges: [{ top: DUE_ROW, left: AMOUNT_COL, bottom: DUE_ROW, right: AMOUNT_COL }],
+});
 </script>
