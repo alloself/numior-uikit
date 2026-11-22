@@ -1,25 +1,25 @@
 import type { Place, PlaceOrigin, TreeIndex } from './yjs.types';
 
+interface Keyed {
+  readonly id: string;
+  readonly key: string;
+}
+
 type CyclePass = (typeof CyclePass)[keyof typeof CyclePass];
 
 export const ROOT_PARENT = '';
 
 const CyclePass = { Open: 1, Done: 2 } as const;
 
-const byKey =
-  (placeOf: (id: string) => PlaceOrigin | undefined) =>
-  (left: string, right: string): number => {
-    const leftKey = placeOf(left)?.key ?? '';
-    const rightKey = placeOf(right)?.key ?? '';
-
-    if (leftKey !== rightKey) {
-      return leftKey < rightKey ? -1 : 1;
-    }
-    if (left === right) {
-      return 0;
-    }
-    return left < right ? -1 : 1;
-  };
+const byKey = (left: Keyed, right: Keyed): number => {
+  if (left.key !== right.key) {
+    return left.key < right.key ? -1 : 1;
+  }
+  if (left.id === right.id) {
+    return 0;
+  }
+  return left.id < right.id ? -1 : 1;
+};
 
 const isLater = (raw: ReadonlyMap<string, Place>, left: string, right: string): boolean => {
   const leftClock = raw.get(left)?.clock ?? 0;
@@ -53,10 +53,13 @@ export const createTreeIndex = (): TreeIndex => {
       return;
     }
 
-    const set = members.get(place.parent) ?? new Set<string>();
+    const set = members.get(place.parent);
 
-    set.add(id);
-    members.set(place.parent, set);
+    if (set === undefined) {
+      members.set(place.parent, new Set([id]));
+    } else {
+      set.add(id);
+    }
     sorted.delete(place.parent);
     touched.add(place.parent);
   };
@@ -74,15 +77,25 @@ export const createTreeIndex = (): TreeIndex => {
   };
 
   const onCycle = (id: string): boolean => {
-    const seen = new Set<string>();
+    let seen: Set<string> | undefined;
     let current = placeOf(id)?.parent;
 
-    while (current !== undefined && current !== ROOT_PARENT && !seen.has(current)) {
+    while (current !== undefined && current !== ROOT_PARENT && seen?.has(current) !== true) {
       if (current === id) {
         return true;
       }
+      seen ??= new Set();
       seen.add(current);
       current = placeOf(current)?.parent;
+    }
+    return false;
+  };
+
+  const tangledBy = (changes: ReadonlyMap<string, Place | undefined>): boolean => {
+    for (const id of changes.keys()) {
+      if (onCycle(id)) {
+        return true;
+      }
     }
     return false;
   };
@@ -180,9 +193,7 @@ export const createTreeIndex = (): TreeIndex => {
       join(id, touched);
     }
 
-    const tangled = Array.from(changes.keys()).some(onCycle);
-
-    if (overridden.size === 0 && !tangled) {
+    if (overridden.size === 0 && !tangledBy(changes)) {
       return touched;
     }
     resolve(touched);
@@ -196,7 +207,12 @@ export const createTreeIndex = (): TreeIndex => {
       return known;
     }
 
-    const children = Array.from(members.get(parent) ?? []).toSorted(byKey(placeOf));
+    const keyed = Array.from(members.get(parent) ?? [], (id): Keyed => ({
+      id,
+      key: placeOf(id)?.key ?? '',
+    }));
+
+    const children = keyed.toSorted(byKey).map((child) => child.id);
 
     sorted.set(parent, children);
     return children;

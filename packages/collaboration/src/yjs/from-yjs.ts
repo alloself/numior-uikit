@@ -25,13 +25,12 @@ type Fields = Readonly<Record<string, unknown>>;
 
 export const ID_ATTRIBUTE = 'nui:id';
 
-export const isFields = (value: unknown): value is Fields =>
-  typeof value === 'object' && value !== null;
+const isFields = (value: unknown): value is Fields => typeof value === 'object' && value !== null;
 
-const isAttrValue = (value: unknown): value is AttrValue =>
+export const isAttrValue = (value: unknown): value is AttrValue =>
   value === null || ['string', 'number', 'boolean'].includes(typeof value);
 
-export const attrsFrom = (value: unknown): Attrs | undefined => {
+const attrsFrom = (value: unknown): Attrs | undefined => {
   if (!isFields(value)) {
     return undefined;
   }

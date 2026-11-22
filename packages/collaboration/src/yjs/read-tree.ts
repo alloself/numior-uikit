@@ -1,9 +1,9 @@
-import type { Attrs, ContentNode, ElementNode } from '@numior/editor-core';
+import type { AttrValue, Attrs, ContentNode, ElementNode } from '@numior/editor-core';
 import { XmlElement } from 'yjs';
-import { attrsFrom, decodedValue, isFields, readChildren } from './from-yjs';
+import { decodedValue, isAttrValue, readChildren } from './from-yjs';
 import { isOrderKey } from './order-key';
 import { ROOT_PARENT } from './tree-index';
-import { EntryField, type Place, type PlaceOrigin, type TreeStore } from './yjs.types';
+import { EntryField, type Place, type TreeStore } from './yjs.types';
 
 export const isEntry = (value: unknown): value is XmlElement => value instanceof XmlElement;
 
@@ -12,37 +12,47 @@ const isOwnField = (key: string): boolean => key.startsWith('nui:');
 export const isInlineType = (store: TreeStore, type: string): boolean =>
   store.schema.nodes.get(type)?.inlineContent === true;
 
-const originFrom = (value: unknown): PlaceOrigin | undefined =>
-  isFields(value) && typeof value['parent'] === 'string' && isOrderKey(value['key'])
-    ? { parent: value['parent'], key: value['key'] }
-    : undefined;
+export const placeCode = ({ clock, key, parent, from }: Place): string =>
+  JSON.stringify(
+    from === undefined ? [clock, key, parent] : [clock, key, parent, from.key, from.parent],
+  );
+
+const fieldsOf = (encoded: unknown): readonly unknown[] => {
+  const value = typeof encoded === 'string' ? decodedValue(encoded) : undefined;
+
+  return Array.isArray(value) ? value : [];
+};
 
 export const placeFrom = (encoded: unknown): Place | undefined => {
-  const value = typeof encoded === 'string' ? decodedValue(encoded) : undefined;
-  const origin = originFrom(value);
+  const [clock, key, parent, fromKey, fromParent] = fieldsOf(encoded);
 
-  if (!isFields(value) || origin === undefined || typeof value['clock'] !== 'number') {
+  if (typeof clock !== 'number' || typeof parent !== 'string' || !isOrderKey(key)) {
     return undefined;
   }
 
-  const from = originFrom(value['from']);
-
-  return from === undefined
-    ? { ...origin, clock: value['clock'] }
-    : { ...origin, clock: value['clock'], from };
+  return typeof fromParent === 'string' && isOrderKey(fromKey)
+    ? { parent, key, clock, from: { parent: fromParent, key: fromKey } }
+    : { parent, key, clock };
 };
 
-const attrsOf = (entry: XmlElement): Attrs | undefined =>
-  attrsFrom(
-    Object.fromEntries(
-      Object.entries(entry.getAttributes()).reduce<[string, unknown][]>((entries, [key, value]) => {
-        if (!isOwnField(key)) {
-          entries.push([key, typeof value === 'string' ? decodedValue(value) : undefined]);
-        }
-        return entries;
-      }, []),
-    ),
-  );
+const attrsOf = (attributes: Readonly<Record<string, unknown>>): Attrs | undefined => {
+  const attrs: Record<string, AttrValue> = {};
+
+  for (const key in attributes) {
+    if (isOwnField(key)) {
+      continue;
+    }
+
+    const value = attributes[key];
+    const decoded = typeof value === 'string' ? decodedValue(value) : undefined;
+
+    if (!isAttrValue(decoded)) {
+      return undefined;
+    }
+    attrs[key] = decoded;
+  }
+  return attrs;
+};
 
 const inlineOf = (store: TreeStore, entry: XmlElement): readonly ContentNode[] | undefined =>
   readChildren(store, entry);
@@ -55,15 +65,16 @@ const nodeOf = (store: TreeStore, id: string): ElementNode | undefined => {
   }
 
   const entry = store.blocks.get(id);
-  const type = isEntry(entry) ? entry.getAttribute(EntryField.Type) : undefined;
-  const attrs = isEntry(entry) ? attrsOf(entry) : undefined;
 
-  if (
-    !isEntry(entry) ||
-    typeof type !== 'string' ||
-    attrs === undefined ||
-    !store.schema.nodes.has(type)
-  ) {
+  if (!isEntry(entry)) {
+    return undefined;
+  }
+
+  const attributes = entry.getAttributes();
+  const type = attributes[EntryField.Type];
+  const attrs = attrsOf(attributes);
+
+  if (typeof type !== 'string' || attrs === undefined || !store.schema.nodes.has(type)) {
     return undefined;
   }
 

@@ -38,8 +38,8 @@ export const isOrderKey = (key: unknown): key is string => {
     length > 0 &&
     key.length >= length &&
     key !== SMALLEST &&
-    KEY_DIGITS.test(key.slice(1)) &&
-    !key.slice(length).endsWith(ZERO)
+    KEY_DIGITS.test(key) &&
+    (key.length === length || !key.endsWith(ZERO))
   );
 };
 

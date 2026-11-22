@@ -6,7 +6,7 @@ import {
 } from '@numior/editor-core';
 import { XmlElement } from 'yjs';
 import { keysBetween } from './order-key';
-import { isEntry, isInlineType } from './read-tree';
+import { isEntry, isInlineType, placeCode } from './read-tree';
 import { risingRun } from './rising-run';
 import { syncChildren } from './to-yjs';
 import { ROOT_PARENT } from './tree-index';
@@ -52,7 +52,7 @@ const writePlace = (
       ? { parent, key, clock }
       : { parent, key, clock, from: { parent: before.parent, key: before.key } };
 
-  entry.setAttribute(EntryField.Place, JSON.stringify(place));
+  entry.setAttribute(EntryField.Place, placeCode(place));
   writing.changes.set(id, place);
 };
 
@@ -92,7 +92,6 @@ const createEntry = (writing: Writing, node: ElementNode, parent: string, key: s
   const entry = new XmlElement(BLOCK_NAME);
 
   writing.store.blocks.set(node.id, entry);
-  writing.store.owners.set(entry, node.id);
   entry.setAttribute(EntryField.Type, node.type);
   syncAttrs(entry, node.attrs);
   writePlace(writing, entry, node.id, parent, key);

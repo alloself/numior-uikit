@@ -123,6 +123,24 @@ const targetAt = (
   return found;
 };
 
+const ownerOf = (event: YEvent<AbstractType<unknown>>): string | undefined => {
+  const [head] = event.path;
+
+  return typeof head === 'string' ? head : undefined;
+};
+
+const placed = (places: ReadonlyMap<string, Place | undefined>): ReadonlySet<string> => {
+  const ids = new Set<string>();
+
+  for (const [id, place] of places) {
+    if (place === undefined) {
+      continue;
+    }
+    ids.add(id);
+  }
+  return ids;
+};
+
 const entryIds = (node: ElementNode): readonly string[] =>
   node.content.reduce<string[]>(
     (ids, child) => {
@@ -153,7 +171,6 @@ export const yjsBinding = (
     cache: new Map(),
     stale: new Set(),
     known: new WeakMap(),
-    owners: new WeakMap(),
   };
 
   let applying = false;
@@ -179,15 +196,6 @@ export const yjsBinding = (
     return place;
   };
 
-  const ownerOf = (target: AbstractType<unknown>): string | undefined => {
-    let current: AbstractType<unknown> | null = target;
-
-    while (current !== null && current.parent !== blocks) {
-      current = current.parent;
-    }
-    return current === null ? undefined : store.owners.get(current);
-  };
-
   const noteEntries = (
     ids: Iterable<string>,
     places: Map<string, Place | undefined>,
@@ -203,7 +211,6 @@ export const yjsBinding = (
         store.stale.delete(id);
         continue;
       }
-      store.owners.set(entry, id);
       changed.add(id);
     }
   };
@@ -233,7 +240,7 @@ export const yjsBinding = (
       }
       forgetInline(store, target);
 
-      const id = ownerOf(target);
+      const id = ownerOf(event);
 
       if (id === undefined) {
         continue;
@@ -246,7 +253,7 @@ export const yjsBinding = (
       places.set(id, placeOfEntry(id, target));
     }
     settle(places, changed);
-    return new Set(Array.from(places.keys()).filter((id) => places.get(id) !== undefined));
+    return placed(places);
   };
 
   const removeTarget = (target: RepairTarget): void => {
@@ -351,7 +358,10 @@ export const yjsBinding = (
   const scan = (): void => {
     const places = new Map<string, Place | undefined>();
 
-    noteEntries(Array.from(blocks.keys()), places, new Set());
+    blocks.forEach((entry, id) => {
+      places.set(id, placeOfEntry(id, entry));
+    });
+
     store.index.update(places);
   };
 

@@ -41,7 +41,6 @@ export interface TreeStore {
   readonly cache: Map<string, ElementNode>;
   readonly stale: Set<string>;
   readonly known: WeakMap<XmlElement, ElementNode>;
-  readonly owners: WeakMap<object, string>;
 }
 
 export type RepairTarget =
