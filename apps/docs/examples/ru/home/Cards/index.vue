@@ -6,6 +6,7 @@
       <div class="flex flex-col gap-6">
         <Elements />
         <Description />
+        <Estimate />
         <OrdersByStatus />
       </div>
       <div class="hidden flex-col gap-6 @3xl:flex">
@@ -33,6 +34,7 @@ import Catalog from './Catalog.vue';
 import DeliveryDate from './DeliveryDate.vue';
 import Description from './Description.vue';
 import Elements from './Elements.vue';
+import Estimate from './Estimate.vue';
 import NewOrder from './NewOrder.vue';
 import Notifications from './Notifications.vue';
 import OrdersByStatus from './OrdersByStatus.vue';

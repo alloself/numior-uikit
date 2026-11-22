@@ -235,6 +235,8 @@ export class DocsHome {
   readonly start: Locator;
   readonly copyInstall: Locator;
   readonly screen: Locator;
+  readonly quote: Locator;
+  readonly quoteFormula: Locator;
   private readonly options: Locator;
 
   constructor(private readonly page: Page) {
@@ -247,6 +249,8 @@ export class DocsHome {
 
     this.screen = page.getByRole('region', { name: 'Компоненты Numior UI на данных магазина' });
     this.options = page.getByRole('group', { name: 'Вид компонентов' });
+    this.quote = this.screen.getByRole('grid', { name: 'Смета гостиной' });
+    this.quoteFormula = this.screen.getByRole('textbox', { name: 'Строка формул' });
   }
 
   screenScheme(): Promise<string | null> {
@@ -295,6 +299,19 @@ export class DocsHome {
 
   editor(): Locator {
     return this.screen.getByRole('textbox', { name: 'Описание товара' });
+  }
+
+  quoteCell(row: string, column: number): Locator {
+    return this.quote
+      .getByRole('row')
+      .filter({ has: this.page.getByRole('rowheader', { name: row, exact: true }) })
+      .locator(`[aria-colindex="${String(column + 2)}"]`);
+  }
+
+  async enterInQuote(row: string, column: number, text: string): Promise<void> {
+    await this.quoteCell(row, column).click();
+    await this.page.keyboard.type(text);
+    await this.page.keyboard.press('Enter');
   }
 
   async typeInEditor(text: string): Promise<void> {

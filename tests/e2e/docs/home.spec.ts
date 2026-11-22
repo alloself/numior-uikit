@@ -76,6 +76,19 @@ test('the home page shows the table and the tree among the components', async ({
   await expect(home.screen.getByRole('tree', { name: 'Разделы каталога' })).toBeVisible();
 });
 
+test('the quote on the home page counts the amount due again when a quantity changes', async ({
+  docs,
+}) => {
+  await docs.open('/');
+  const home = docs.home();
+  await home.quoteCell('8', 3).click();
+  await expect(home.quoteFormula).toHaveValue('=D6+D7');
+
+  await home.enterInQuote('2', 1, '3');
+
+  await expect(home.quoteCell('8', 3)).toHaveText('76 760 ₽');
+});
+
 test('the skip link moves focus to the home content', async ({ docs, isMobile }) => {
   test.skip(isMobile, 'keyboard only');
   await docs.open('/');
