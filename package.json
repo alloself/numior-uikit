@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter @numior/playground dev",
-    "docs:dev": "pnpm docs:reference && pnpm --filter @numior/docs dev",
+    "docs:dev": "vp run --cache --filter './packages/*' build && pnpm docs:reference && pnpm --filter @numior/docs dev",
     "docs:reference": "pnpm --filter @numior/docs reference",
     "build": "vp run --filter './packages/*' build && vp run --filter @numior/playground build",
     "docs:build": "pnpm --filter @numior/docs build && pnpm --filter @numior/docs check:dist",
