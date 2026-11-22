@@ -2,7 +2,7 @@ import { computed, watch, type ComputedRef, type Ref, type ShallowRef } from 'vu
 import type { NuiCheckState } from '@numior/vue';
 import { TableNodeKind, type TableEngine, type TableNodeId } from '../engine';
 import { NuiTableSelection, type NuiTableCellPosition, type TablePageWindow } from './table.types';
-import { Key } from '@numior/primitives';
+import { Key, type VersionRead } from '@numior/primitives';
 
 export type TableSelectionKey<T> = TableNodeId | T;
 
@@ -11,7 +11,7 @@ export interface TableSelectionOptions<T> {
   readonly selected: Ref<readonly T[]>;
   readonly keyOf: (row: T) => TableSelectionKey<T>;
   readonly engine: Readonly<ShallowRef<TableEngine<T>>>;
-  readonly revision: Readonly<Ref<number>>;
+  readonly revision: VersionRead;
   readonly scope: () => TablePageWindow;
   readonly disabled: () => boolean;
   readonly selectKeyAt: (visual: number) => boolean;
@@ -103,14 +103,13 @@ export const useTableSelection = <T>(options: TableSelectionOptions<T>): TableSe
   };
 
   const headerState = computed<NuiCheckState>(() => {
-    void options.revision.value;
     const chosen = keys.value;
 
     if (chosen.size === 0) {
       return 'unchecked';
     }
 
-    const mix = scopeMix(chosen);
+    const mix = options.revision.read(() => scopeMix(chosen));
 
     if (!mix.picked) {
       return 'unchecked';
@@ -118,10 +117,9 @@ export const useTableSelection = <T>(options: TableSelectionOptions<T>): TableSe
     return mix.skipped ? 'indeterminate' : 'checked';
   });
 
-  const headerDisabled = computed(() => {
-    void options.revision.value;
-    return options.disabled() || !scopeHoldsRow();
-  });
+  const headerDisabled = computed(
+    () => options.disabled() || !options.revision.read(scopeHoldsRow),
+  );
 
   const has = (row: T): boolean => keys.value.has(options.keyOf(row));
 

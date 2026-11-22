@@ -69,6 +69,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { versionOf } from '@numior/primitives';
 import NuiTableResizer from './NuiTableResizer.vue';
 import { rowCellViews, rowPlainTexts } from './table-row-view';
 import {
@@ -165,21 +166,19 @@ const rowStyle = computed(() => {
 
 const ownRevision = computed(() => (position === undefined ? 0 : (revisionOf?.(position) ?? 0)));
 
-const paints = computed(() => {
-  void revision;
-  void ownRevision.value;
-  return position === undefined ? undefined : paint?.(position, spans);
-});
+const drawn = versionOf(() => (revision ?? 0) + ownRevision.value);
 
-const plainTexts = computed((): ReadonlyMap<string, string> | undefined => {
-  void revision;
-  void ownRevision.value;
+const paints = computed(() =>
+  position === undefined ? undefined : drawn.read(() => paint?.(position, spans)),
+);
 
-  if (plainText === undefined || position === undefined) {
-    return undefined;
-  }
-  return rowPlainTexts(cells.cells, spans, paints.value, (key) => plainText(position, key));
-});
+const plainTexts = computed((): ReadonlyMap<string, string> | undefined =>
+  plainText === undefined || position === undefined
+    ? undefined
+    : drawn.read(() =>
+        rowPlainTexts(cells.cells, spans, paints.value, (key) => plainText(position, key)),
+      ),
+);
 
 const views = computed(() =>
   rowCellViews(cells.cells, spans, {

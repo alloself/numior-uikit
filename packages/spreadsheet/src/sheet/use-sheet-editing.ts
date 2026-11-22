@@ -9,7 +9,8 @@ import {
   type NuiTableCellPosition,
   type NuiTableRange,
 } from '@numior/table';
-import { computed, ref, shallowRef, watch } from 'vue';
+import { createVersion } from '@numior/primitives';
+import { computed, shallowRef, watch } from 'vue';
 import {
   createCellEditor,
   createStepper,
@@ -114,7 +115,7 @@ const sameCell = (a: NuiTableDraft | undefined, b: NuiTableDraft): boolean =>
 
 export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
   const draft = shallowRef<NuiTableDraft>();
-  const revision = ref(0);
+  const revision = createVersion();
 
   let applied: WorkbookStep[] = [];
 
@@ -147,7 +148,7 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
   );
 
   const redraw = (): void => {
-    revision.value += 1;
+    revision.bump();
     options.recalc.run();
   };
 
@@ -213,10 +214,10 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
     const sheet = options.sheet();
     const cells = options.cells();
 
-    if (revision.value < 0 || sheet === undefined || cells === undefined) {
+    if (sheet === undefined || cells === undefined) {
       return '';
     }
-    return inputAt(sheet, cells, position);
+    return revision.read(() => inputAt(sheet, cells, position));
   };
 
   const opened = (next: NuiTableDraft): NuiTableDraft => {

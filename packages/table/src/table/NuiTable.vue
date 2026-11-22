@@ -95,7 +95,7 @@
               :wraps="!windowed"
               :paint="pinnedPaint"
               :active="focus.activeIn(item.index)"
-              :revision="revision"
+              :revision="revision.stamp"
               :selected="item.selected"
             >
               <template #utility="{ column }">
@@ -164,7 +164,7 @@
               part="foot"
               :wraps="!windowed"
               :active="focus.activeIn(pinnedCount + visibleRows)"
-              :revision="revision"
+              :revision="revision.stamp"
             >
               <template #default="{ column }">
                 <slot :name="`footer-${column}`" v-bind="totals.scope(column)">
@@ -249,6 +249,7 @@ import { clamp, onLongPress, useDevicePixelRatio, useResizeObserver } from '@vue
 import { formRulesMessages } from '@numior/forms';
 import {
   createIntent,
+  createVersion,
   ReorderAxis,
   useControlId,
   useControls,
@@ -638,10 +639,10 @@ const engine = shallowRef(createEngine());
 const waiting = ref(!engine.value.settled());
 const loadingNow = computed(() => loading || waiting.value);
 const rowCount = ref(0);
-const revision = ref(0);
+const revision = createVersion();
 const touched = shallowReactive(new Map<number, number>());
 let stamp = 0;
-const arrangement = ref(0);
+const arrangement = createVersion();
 const announcement = ref('');
 const rowsIntent = createIntent<true>();
 const selectOn = computed(() => selectable !== undefined);
@@ -653,10 +654,9 @@ const treeOn = computed(() =>
 const detailOn = computed(() => slots.detail !== undefined && !treeOn.value);
 const grouping = computed(() => (treeOn.value ? NO_GROUPS : groupByNow.value));
 
-const detailPositions = computed(() => {
-  void revision.value;
-  return detailOn.value ? engine.value.details() : NO_DETAILS;
-});
+const detailPositions = computed(() =>
+  revision.read(() => (detailOn.value ? engine.value.details() : NO_DETAILS)),
+);
 
 const pageWindow = computed(() =>
   paginationProps.value === undefined || remote
@@ -862,11 +862,11 @@ const frozenCount = computed(() =>
 const gridRole = computed(() => (hierarchical.value ? 'treegrid' : 'grid'));
 
 const detailSpots = computed<readonly TableDetailSpot[]>((previous) => {
-  void revision.value;
-
   const next = loadingNow.value
     ? NO_SPOTS
-    : detailSpotsOf(engine.value, detailPositions.value, pageStart.value, visibleRows.value);
+    : revision.read(() =>
+        detailSpotsOf(engine.value, detailPositions.value, pageStart.value, visibleRows.value),
+      );
 
   return previous !== undefined && sameSpots(previous, next) ? previous : next;
 });
@@ -883,7 +883,7 @@ const rowSizes = useTableRowSizes({
   pinned: () => pinnedCount.value,
   spots: () => detailSpots.value,
   heights: () => sizedHeights.value,
-  arrangement: () => arrangement.value,
+  arrangement,
   rendered: () => [bodyRows.value, rowCells.value, pinnedRows],
   resize: (sizes) => {
     rowWindow.resize(sizes);
@@ -1395,7 +1395,7 @@ const skeletonRows = computed((): TableSkeletonRow[] =>
 );
 
 const bodyRows = computed((previous?: readonly TableBodyRow[]): readonly TableBodyRow[] => {
-  const current = revision.value;
+  const current = revision.stamp;
 
   if (loadingNow.value) {
     return [];
@@ -1854,9 +1854,7 @@ const rowAtPosition = (position: number): T | undefined => {
 };
 
 const cellKeyOf = (position: NuiTableCellPosition): NuiTableCellKey | undefined => {
-  void revision.value;
-
-  const node = engine.value.nodeAt(pageStart.value + position.row);
+  const node = revision.read(() => engine.value.nodeAt(pageStart.value + position.row));
   const column = dataKeys.value[position.col];
 
   return node?.kind !== TableNodeKind.Row || column === undefined
@@ -1865,10 +1863,11 @@ const cellKeyOf = (position: NuiTableCellPosition): NuiTableCellKey | undefined 
 };
 
 const cellPositionOf = (key: NuiTableCellKey): NuiTableCellPosition | undefined => {
-  void revision.value;
-
   const col = dataKeys.value.indexOf(key.column);
-  const [found] = col < 0 ? [] : engine.value.positionsOf((rowId) => rowId === key.row, 1);
+
+  const [found] =
+    col < 0 ? [] : revision.read(() => engine.value.positionsOf((rowId) => rowId === key.row, 1));
+
   const row = found === undefined ? -1 : found[1] - pageStart.value;
 
   return row < 0 || row >= visibleRows.value ? undefined : { row, col };
@@ -2811,9 +2810,8 @@ const ensureRows = (): void => {
 };
 
 const sync = (): void => {
-  stamp += 1;
   rowCount.value = engine.value.count();
-  revision.value = stamp;
+  revision.bump();
 
   if (touched.size === 0) {
     return;
@@ -2887,7 +2885,7 @@ const invalidate = (list?: NuiTableRanges): void => {
 };
 
 const rearrange = (): void => {
-  arrangement.value += 1;
+  arrangement.bump();
   sync();
 };
 

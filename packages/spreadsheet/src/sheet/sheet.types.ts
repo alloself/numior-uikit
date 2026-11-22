@@ -14,6 +14,7 @@ import type {
   NuiTableSourceCell,
 } from '@numior/table';
 import type { NuiListEntry, NuiMenuEntry, NuiSize, NuiTabDescriptor } from '@numior/vue';
+import type { VersionRead } from '@numior/primitives';
 import type { ComponentPublicInstance, ComputedRef, Ref, ShallowRef } from 'vue';
 import type {
   BookLocale,
@@ -241,7 +242,7 @@ export interface SheetRecalcOptions {
 export interface SheetRecalc {
   readonly phase: Readonly<Ref<RecalcPhase>>;
   readonly progress: Readonly<Ref<number>>;
-  readonly revision: Readonly<Ref<number>>;
+  readonly revision: VersionRead;
   readonly outdated: CellOutdated;
   run(options?: RecalcOptions): void;
   stop(): void;
@@ -424,7 +425,7 @@ export interface SheetEditingOptions {
 
 export interface SheetEditing {
   readonly draft: Readonly<ShallowRef<NuiTableDraft | undefined>>;
-  readonly revision: Readonly<Ref<number>>;
+  readonly revision: VersionRead;
   readonly commands: NuiTableCommandSink<number>;
   setDraft(next: NuiTableDraft | undefined): void;
   moveDraft(position: NuiTableCellPosition): void;

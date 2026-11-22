@@ -335,6 +335,8 @@ export { ReorderAxis, ReorderEventType, ReorderPhase } from './reorder/reorder.t
 export { useDelayedOpen } from './timing/useDelayedOpen';
 export { useMediaQuery } from './media/useMediaQuery';
 export type { DelayedOpen, DelayedOpenOptions } from './timing/useDelayedOpen';
+export { createVersion, versionOf } from './version/createVersion';
+export type { Version, VersionRead } from './version/createVersion';
 export { createToastStore } from './toast/toast-store';
 export { ToastHold, ToastTone } from './toast/toast.types';
 export type {

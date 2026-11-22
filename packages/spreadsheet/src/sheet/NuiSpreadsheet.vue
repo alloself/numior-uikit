@@ -267,7 +267,15 @@
 
 <script setup lang="ts">
 import { PaintRoller } from '@lucide/vue';
-import { Direction, Key, isComposing, useLocale, useMessages } from '@numior/primitives';
+import {
+  createVersion,
+  Direction,
+  Key,
+  isComposing,
+  useLocale,
+  useMessages,
+  versionOf,
+} from '@numior/primitives';
 import {
   NuiTable,
   NuiTablePeers,
@@ -453,14 +461,14 @@ const bookLocale = computed(
   (): BookLocale => locale ?? (kitLocale.value.startsWith('ru') ? RU_LOCALE : EN_LOCALE),
 );
 
-const sheetsRevision = ref(0);
+const sheetsRevision = createVersion();
 
 const sheetsKey = (): string =>
   book.sheets.map((each) => `${String(each.id)}:${each.name}`).join('/');
 
 let knownSheets = sheetsKey();
 
-const sheetList = computed(() => (sheetsRevision.value >= 0 ? [...book.sheets] : []));
+const sheetList = computed(() => sheetsRevision.read(() => [...book.sheets]));
 
 const shownIndex = computed(() =>
   Math.max(0, Math.min(sheetIndex.value, sheetList.value.length - 1)),
@@ -485,21 +493,25 @@ const recalc = useSheetRecalc({
   table: grid,
 });
 
-const layoutRevision = ref(0);
+const layoutRevision = createVersion();
 
 let knownLayout = shownSheet.value?.layout;
 
-const cells = computed(() =>
-  shownSheet.value === undefined || layoutRevision.value < 0
+const cells = computed(() => {
+  const shown = shownSheet.value;
+
+  return shown === undefined
     ? undefined
-    : sheetCells({
-        book,
-        sheet: shownSheet.value,
-        locale: bookLocale.value,
-        outdated: recalc.outdated,
-        calculator: calculator ?? ownCalculator.value,
-      }),
-);
+    : layoutRevision.read(() =>
+        sheetCells({
+          book,
+          sheet: shown,
+          locale: bookLocale.value,
+          outdated: recalc.outdated,
+          calculator: calculator ?? ownCalculator.value,
+        }),
+      );
+});
 
 const peerFrames = computed(() => peerFramesOf(peers, shownSheet.value?.key, cells.value));
 
@@ -536,7 +548,7 @@ const noteStructure = (): boolean => {
     const kept = before === undefined ? -1 : book.sheets.indexOf(book.sheet(before.name) ?? before);
 
     knownSheets = next;
-    sheetsRevision.value += 1;
+    sheetsRevision.bump();
 
     if (kept >= 0) {
       sheetIndex.value = kept;
@@ -546,7 +558,7 @@ const noteStructure = (): boolean => {
 
   if (laidOut) {
     knownLayout = shownSheet.value?.layout;
-    layoutRevision.value += 1;
+    layoutRevision.bump();
   }
   file.noteEdit();
   return laidOut;
@@ -593,7 +605,7 @@ const lineSizes = useSheetLineSizes({
   announce,
 });
 
-watch([shownSheet, layoutRevision], lineSizes.forget);
+watch([shownSheet, () => layoutRevision.stamp], lineSizes.forget);
 
 const onRemoteSteps = (_steps: readonly WorkbookStep[], lines: readonly LineChange[]): void => {
   const held = places.hold();
@@ -642,7 +654,7 @@ const drawings = useSheetDrawings({
   sheet: () => shownSheet.value,
   locale: () => bookLocale.value,
   messages: () => messages.value,
-  revision: () => editing.revision.value + recalc.revision.value + layoutRevision.value,
+  revision: versionOf(() => editing.revision.stamp + recalc.revision.stamp + layoutRevision.stamp),
 });
 
 const lineNear: LineNear = {
@@ -1077,8 +1089,9 @@ const rules = useSheetPopover({
   back: () => formula.backToGrid(),
 });
 
-const sheetFormats = computed((): readonly ConditionalFormat[] =>
-  editing.revision.value >= 0 ? (shownSheet.value?.conditional ?? []) : [],
+const sheetFormats = computed(
+  (): readonly ConditionalFormat[] =>
+    editing.revision.read(() => shownSheet.value?.conditional) ?? [],
 );
 
 const selectedRanges = computed((): readonly CellRange[] => selection.current.value?.ranges ?? []);

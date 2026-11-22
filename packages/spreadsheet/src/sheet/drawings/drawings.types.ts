@@ -1,5 +1,5 @@
 import type { ChartSpec } from '@numior/charts';
-import type { FloatingPlacement } from '@numior/primitives';
+import type { FloatingPlacement, VersionRead } from '@numior/primitives';
 import type { NuiTableExposed, NuiTableOverlaySlot, NuiTableRect } from '@numior/table';
 import type { NuiMenuEntry, NuiMenuFocus } from '@numior/vue';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
@@ -133,7 +133,7 @@ export interface SheetDrawingsOptions {
   readonly sheet: () => Sheet | undefined;
   readonly locale: () => BookLocale;
   readonly messages: () => NuiSpreadsheetMessages;
-  readonly revision: () => number;
+  readonly revision: VersionRead;
 }
 
 export interface DrawingEditOptions {

@@ -78,11 +78,9 @@ export const useSheetDrawings = (
   const shown = computed((): readonly ShownDrawing[] => {
     const sheet = options.sheet();
 
-    if (sheet === undefined || options.revision() < 0) {
+    if (sheet === undefined) {
       return [];
     }
-
-    const sizes = lineSizesOf(sheet);
 
     const source: ChartSource = {
       book: options.book(),
@@ -91,7 +89,11 @@ export const useSheetDrawings = (
       seriesName: (index) => options.messages().chartSeries({ index }),
     };
 
-    return sheet.layout.drawings.map((drawing) => shownOf(drawing, sizes, source));
+    return options.revision.read(() => {
+      const sizes = lineSizesOf(sheet);
+
+      return sheet.layout.drawings.map((drawing) => shownOf(drawing, sizes, source));
+    });
   });
 
   watch(shown, (drawings) => {

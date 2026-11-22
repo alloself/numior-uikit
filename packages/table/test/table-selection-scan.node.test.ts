@@ -1,3 +1,4 @@
+import { createVersion } from '@numior/primitives';
 import { shallowRef } from 'vue';
 import { describe, expect, it } from 'vite-plus/test';
 import type { TableEngine } from '../src/engine';
@@ -42,7 +43,7 @@ const headerOver = (count: number): HeaderScene => {
     selected,
     keyOf: (row) => row,
     engine: shallowRef(engine),
-    revision: shallowRef(0),
+    revision: createVersion(),
     scope: () => ({ start: 0, end: harness.engine.count() }),
     disabled: () => false,
     selectKeyAt: () => false,

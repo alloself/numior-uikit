@@ -340,6 +340,11 @@ status: accepted
   `window|document|globalThis.addEventListener` обязан вызывать `onScopeDispose`,
   `tryOnScopeDispose`, `onBeforeUnmount` или `onUnmounted`. Отложенный показ меню после
   отпускания кнопки — композабл `useAfterRelease()` из `@numior/primitives`.
+- Императивное ядро (движок таблицы, книга, калькулятор) экран читает под версией:
+  `createVersion()` из `@numior/primitives` — `bump()` после перемены ядра, `read(() => …)` в
+  `computed` и `watch`, `stamp` для меток и ключей кеша, `versionOf(stamp)` для чужих номеров
+  (пропсы). Касание счётчика рукой (`void revision.value`, `x.value >= 0 ? … : []`) в таблице и
+  листе отклоняет `numior/version-reads` в ESLint; опись версий — в ADR таблицы и листа.
 - Одно действие — один рендер. Watcher с `flush: 'post'` только трогает DOM: вызывает
   `focus()`, `showPopover()`, измеряет и пишет `element.style` или custom properties; он не
   пишет в реактивное состояние и не запускает второй рендер. Кто активен, где tab stop и

@@ -8,6 +8,7 @@ import { pageListeners } from './scripts/eslint/page-listeners.mjs';
 import { pointerListeners } from './scripts/eslint/pointer-listeners.mjs';
 import { spreadArguments } from './scripts/eslint/spread-arguments.mjs';
 import { testPhases } from './scripts/eslint/test-phases.mjs';
+import { versionReads } from './scripts/eslint/version-reads.mjs';
 
 const multiline = ['multiline-const', 'multiline-let', 'multiline-expression', 'function', 'class'];
 
@@ -267,6 +268,7 @@ export default [
           'pointer-listeners': pointerListeners,
           'spread-arguments': spreadArguments,
           'test-phases': testPhases,
+          'version-reads': versionReads,
         },
       },
     },
@@ -287,6 +289,13 @@ export default [
   {
     files: ['packages/*/{src,server}/**/*.ts', 'packages/*/{src,server}/**/*.vue'],
     rules: { 'numior/spread-arguments': 'error' },
+  },
+  {
+    files: [
+      'packages/{table,spreadsheet}/src/**/*.ts',
+      'packages/{table,spreadsheet}/src/**/*.vue',
+    ],
+    rules: { 'numior/version-reads': 'error' },
   },
   {
     files: ['tests/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],

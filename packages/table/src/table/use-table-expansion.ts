@@ -1,5 +1,5 @@
 import { computed, shallowRef, type ComputedRef, type Ref, type ShallowRef } from 'vue';
-import { formatNumber, Key } from '@numior/primitives';
+import { formatNumber, Key, type VersionRead } from '@numior/primitives';
 import {
   TableNodeKind,
   type TableEngine,
@@ -21,7 +21,7 @@ import {
 export interface TableExpansionOptions<T> {
   readonly engine: Readonly<ShallowRef<TableEngine<T>>>;
   readonly expanded: Ref<readonly TableNodeId[]>;
-  readonly revision: Readonly<Ref<number>>;
+  readonly revision: VersionRead;
   readonly offset: () => number;
   readonly keys: () => readonly string[];
   readonly keyAt: (visual: number) => string | undefined;
@@ -65,7 +65,7 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
     const keys = options.keys();
 
     return {
-      revision: options.revision.value,
+      revision: options.revision.stamp,
       offset: options.offset(),
       keys,
       spare: keys.find((key) => options.columnAt(key).aggregate === undefined) ?? keys[0],

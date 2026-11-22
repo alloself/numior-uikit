@@ -68,7 +68,7 @@ export const useSheetClipboard = (options: SheetClipboardOptions): SheetClipboar
   const live = (): SheetClipMark | undefined => {
     const current = mark.value;
 
-    return current !== undefined && current.revision === options.editing.revision.value
+    return current !== undefined && current.revision === options.editing.revision.stamp
       ? current
       : undefined;
   };
@@ -90,7 +90,7 @@ export const useSheetClipboard = (options: SheetClipboardOptions): SheetClipboar
 
     return clip === undefined
       ? undefined
-      : { clip, text, sheet, range, revision: options.editing.revision.value, cut: false };
+      : { clip, text, sheet, range, revision: options.editing.revision.stamp, cut: false };
   };
 
   const written = (
@@ -160,7 +160,7 @@ export const useSheetClipboard = (options: SheetClipboardOptions): SheetClipboar
       return undefined;
     }
 
-    mark.value = current.cut ? undefined : { ...current, revision: options.editing.revision.value };
+    mark.value = current.cut ? undefined : { ...current, revision: options.editing.revision.stamp };
     return [tableRangeOf(cells, result.area)];
   };
 

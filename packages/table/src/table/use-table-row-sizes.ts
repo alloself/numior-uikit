@@ -8,7 +8,12 @@ import {
   type ShallowRef,
   type WatchSource,
 } from 'vue';
-import { createSizeIndex, type ItemSize, type VirtualSize } from '@numior/primitives';
+import {
+  createSizeIndex,
+  type ItemSize,
+  type VersionRead,
+  type VirtualSize,
+} from '@numior/primitives';
 import { sum, times } from 'lodash-es';
 import { TableNodeKind, type TableEngine, type TableNodeId } from '../engine';
 import { OWN_BODY_ROWS, OWN_DETAIL_ROWS, OWN_PINNED_ROWS, rowPositionOf } from './table-dom';
@@ -26,7 +31,7 @@ export interface TableRowSizesOptions<T> {
   readonly pinned: () => number;
   readonly spots: () => readonly TableDetailSpot[];
   readonly heights: () => NuiTableRowHeights;
-  readonly arrangement: () => number;
+  readonly arrangement: VersionRead;
   readonly rendered: WatchSource;
   readonly resize: (sizes: readonly VirtualSize[]) => void;
 }
@@ -97,14 +102,15 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
   const sizedPositions = computed((): ReadonlyMap<string, number> => {
     const keys = new Set(sizedKeys.value === '' ? [] : sizedKeys.value.split('\u0000'));
 
-    void options.arrangement();
-
     if (keys.size === 0 || options.mode() === TableRowMode.Fluid) {
       return NO_POSITIONS;
     }
     const start = options.pageStart();
     const end = start + options.count();
-    const found = options.engine.value.positionsOf((id) => keys.has(String(id)), keys.size);
+
+    const found = options.arrangement.read(() =>
+      options.engine.value.positionsOf((id) => keys.has(String(id)), keys.size),
+    );
 
     return new Map(
       found.flatMap(([id, position]) =>
@@ -129,8 +135,7 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
 
   const flowSize = (base: number): ItemSize => {
     if (options.measured()) {
-      void options.arrangement();
-      return indexOf(base);
+      return options.arrangement.read(() => indexOf(base));
     }
     return sizedPositions.value.size === 0
       ? base
@@ -146,8 +151,7 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
           ? base
           : indexOf(base);
       case TableRowMode.Fluid:
-        void options.arrangement();
-        return indexOf(base);
+        return options.arrangement.read(() => indexOf(base));
     }
   };
 

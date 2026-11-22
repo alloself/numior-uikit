@@ -99,9 +99,9 @@ export const useSheetPivots = (options: SheetPivotsOptions): SheetPivots => {
   const pivot = computed((): SheetPivot | undefined => {
     const current = target.value;
 
-    return current === undefined || options.editing.revision.value < 0
+    return current === undefined
       ? undefined
-      : options.book().pivots.get(current.sheet, current.name);
+      : options.editing.revision.read(() => options.book().pivots.get(current.sheet, current.name));
   });
 
   const definition = computed(() => pivot.value?.definition);

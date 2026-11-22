@@ -1,4 +1,5 @@
 import { useRafFn, useTimeoutFn } from '@vueuse/core';
+import { createVersion } from '@numior/primitives';
 import { ref } from 'vue';
 import type { RecalcOptions, Recalculation } from '../core';
 import { RecalcPhase, type SheetRecalc, type SheetRecalcOptions } from './sheet.types';
@@ -12,7 +13,7 @@ export const useSheetRecalc = (options: SheetRecalcOptions): SheetRecalc => {
 
   const progress = ref(0);
 
-  const revision = ref(0);
+  const revision = createVersion();
 
   let current: Recalculation | undefined;
 
@@ -23,7 +24,7 @@ export const useSheetRecalc = (options: SheetRecalcOptions): SheetRecalc => {
   let exact = true;
 
   const redraw = (): void => {
-    revision.value += 1;
+    revision.bump();
     options.table.value?.invalidate();
   };
 
