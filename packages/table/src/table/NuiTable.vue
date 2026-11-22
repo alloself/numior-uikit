@@ -246,13 +246,11 @@ import {
   watch,
 } from 'vue';
 import { clamp, onLongPress, useDevicePixelRatio, useResizeObserver } from '@vueuse/core';
-import { formRulesMessages } from '@numior/forms';
 import {
   createIntent,
   createVersion,
   ReorderAxis,
   useControlId,
-  useControls,
   useDirection,
   useLocale,
   useMessages,
@@ -293,7 +291,6 @@ import {
   expandToMerges,
   keepSpans,
   leaveMerge,
-  leaveMergeBy,
   mergeSpans,
   pieceOf,
 } from './table-merges';
@@ -337,19 +334,14 @@ import NuiTableHeaderMarks from './NuiTableHeaderMarks.vue';
 import { useTableFocus } from './use-table-focus';
 import { useCellMenuArea } from './areas/cell-menu-area';
 import { useClipboardArea } from './areas/clipboard-area';
+import { useEditingArea } from './areas/editing-area';
 import { useGroupsArea } from './areas/groups-area';
 import { useHeaderArea } from './areas/header-area';
 import { useOverlayArea } from './areas/overlay-area';
 import { useRowMovesArea } from './areas/row-moves-area';
 import type { TableContext } from './areas/table-context';
-import { useTableCellEditor } from './use-table-cell-editor';
 import { createEchoes } from './table-echoes';
-import { useTablePicking } from './use-table-picking';
-import { useTableEditing } from './use-table-editing';
-import { editorPlan } from './table-editors';
-import { parseCell } from './table-parse';
-import { ruleFailure } from './table-rules';
-import { boxOf, clampPosition, columnSpansOf, type RangeBox } from './table-ranges';
+import { boxOf, clampPosition, columnSpansOf, sameSpot, type RangeBox } from './table-ranges';
 import { useTableRanges } from './use-table-ranges';
 import { pageRowsOf, pageStepOf } from './table-keys';
 import type { TableFilterTarget } from './use-table-header';
@@ -359,13 +351,11 @@ import { useTableQuery } from './use-table-query';
 import { useTableWarmup } from './use-table-warmup';
 import { useTableResize } from './use-table-resize';
 import { provideTableHandles } from './table-handles';
-import { nodeIdsOf, useTableRowPlaces } from './use-table-row-places';
 import { keepEqual } from './table-values';
 import { useTableRowSizes } from './use-table-row-sizes';
 import { useTableSelection, type TableSelectionKey } from './use-table-selection';
 import {
   NuiTableColumnType,
-  NuiTableEditRefusalReason,
   NuiTableRowHeight,
   NuiTableSize,
   TableBodyPart,
@@ -376,7 +366,6 @@ import {
   TableRowMode,
   TableStatusSlot,
   type NuiTableCellSlot,
-  type NuiTableCellValue,
   type NuiTableColumn,
   type NuiTableColumnOrder,
   type NuiTableDraft,
@@ -454,11 +443,6 @@ const SKELETON_ROWS = 5;
 const NAMED_ROWS = 10_000;
 const LONG_PRESS = 500;
 
-const sameSpot = (
-  a: NuiTableCellPosition | undefined,
-  b: NuiTableCellPosition | undefined,
-): boolean => a?.row === b?.row && a?.col === b?.col;
-
 const {
   columns,
   rows = [],
@@ -528,7 +512,6 @@ const rowHeights = defineModel<NuiTableRowHeights>('rowHeights', { default: () =
 const activeCell = defineModel<NuiTableCellPosition | undefined>('active');
 const draft = defineModel<NuiTableDraft | undefined>('draft');
 const activeEchoes = createEchoes<NuiTableCellPosition | undefined>(sameSpot);
-const draftEchoes = createEchoes<NuiTableDraft | undefined>(Object.is);
 const emit = defineEmits<NuiTableEvents<T>>();
 const slots = defineSlots<NuiTableSlots<T>>();
 const rawSlots = useSlots();
@@ -1916,176 +1899,57 @@ const { clipboard, exporter } = useClipboardArea(table, {
   last: () => lastCell?.(),
 });
 
-const canEdit = computed(() =>
-  tree.value.leaves.some((column) => column.editable !== undefined && column.editable !== false),
-);
+const { canEdit, editing, cellEditor, picker, rowPlaces, editorProps, onEditorUpdate } =
+  useEditingArea(table, {
+    leaves: () => tree.value.leaves,
+    rows: () => rows,
+    getKey: () => getKey,
+    nested: () => getChildren !== undefined,
+    sourced: () => source !== undefined,
+    locale: () => resolvedLocale.value,
+    booleanTexts: () => booleanTexts.value,
+    controls: () => controls,
+    grow: () => growEditor,
+    keep: () => keepEditing,
+    picking: () => picking,
+    hooks: () => clipboardHooks,
+    commands: () => commands,
+    copyLimit: () => copyLimit,
+    errorId: () => `${gridId.value}-error`,
+    draft,
+    clipboard,
+    ranges: rangeSelect,
+    position: activeData,
+    covered: coveredAt,
+    merges: () => mergeIndex.value,
+    whole: wholeRange,
+    locate: cellOfTarget,
+    focusData: (position) => {
+      const current = activeData();
+      const stays = current?.row === position.row && current.col === position.col;
 
-const editableOf = (row: T, key: string): boolean => {
-  const editable = columnAt(key).editable;
-  return typeof editable === 'function' ? editable(row) : editable === true;
-};
-
-const rowByKey = computed(() =>
-  getKey === undefined || getChildren !== undefined
-    ? undefined
-    : new Map(rows.map((row) => [getKey(row), row])),
-);
-
-const clipboardOf = (): Clipboard | undefined =>
-  typeof navigator === 'undefined' || !('clipboard' in navigator) ? undefined : navigator.clipboard;
-
-const readClipboard = async (): Promise<string | null> => {
-  try {
-    return (await clipboardOf()?.readText()) ?? null;
-  } catch {
-    return null;
-  }
-};
-
-const ownsCell = (element: Element | null): boolean =>
-  element instanceof HTMLElement &&
-  element.matches('.nui-table__cell') &&
-  viewport.value?.contains(element) === true;
-
-const resolveRow = (row: T): T | undefined =>
-  getKey === undefined || source !== undefined || rowByKey.value === undefined
-    ? row
-    : rowByKey.value.get(getKey(row));
-
-const ruleTexts = useMessages(formRulesMessages, resolvedLocale);
-const kitControls = useControls();
-
-const editOn = computed(() => !loadingNow.value && canEdit.value);
-
-const checkCell = (row: T, key: string, value: NuiTableCellValue): string | undefined => {
-  const column = columnAt(key);
-
-  return ruleFailure(column, value, {
-    name: key,
-    label: column.label,
-    values: row,
-    messages: ruleTexts.value,
+      focus.focusCell(stays ? active.value : visualCellOf(position));
+    },
+    reveal: (position) => {
+      focus.reveal(visualCellOf(position));
+    },
+    move: (position) => moveActiveCell(position),
+    select: (next) => {
+      ranges.value = next;
+    },
+    applied: (keys, changed) => {
+      applyChanged(keys, changed);
+    },
+    resetOn: [
+      sortNow,
+      filtersNow,
+      quick,
+      groupByNow,
+      expandedNow,
+      pageStart,
+      () => dataKeys.value.join('\u0000'),
+    ],
   });
-};
-
-const editing = useTableEditing<T>({
-  enabled: () => editOn.value,
-  ranges: () => ranges.value,
-  cell: activeData,
-  rowAt: rowAtPosition,
-  keyAt: (col) => dataKeys.value[col],
-  editable: editableOf,
-  covered: coveredAt,
-  valueOf: (row, key) => cellValueOf(columnAt(key), row),
-  resolve: resolveRow,
-  limit: () => copyLimit,
-  copy: () => clipboard.copy(false),
-  emit: (event) => {
-    emit('edit', event);
-  },
-  sink: () => commands,
-  keys: () => dataKeys.value,
-  applied: (keys, changed) => {
-    applyChanged(keys, changed);
-  },
-  parse: (row, key, text) =>
-    parseCell(columnAt(key), text, row, resolvedLocale.value, booleanTexts.value),
-  readBlock: (data, target) => clipboardHooks?.parse?.(data, target),
-  pasteHook: (data, scope) => clipboardHooks?.paste?.(data, scope),
-  cutHook: (cutRanges) => clipboardHooks?.cut?.(cutRanges) === true,
-  check: checkCell,
-  bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
-  select: (next) => {
-    rangeSelect.replace(next);
-  },
-  readable: () => typeof clipboardOf()?.readText === 'function',
-  read: readClipboard,
-  owns: ownsCell,
-  messages,
-  announce,
-});
-
-const cellEditor = useTableCellEditor<T>({
-  enabled: () => editOn.value,
-  cell: activeData,
-  rowAt: rowAtPosition,
-  keyAt: (col) => dataKeys.value[col],
-  labelOf: (key) => columnAt(key).label,
-  editable: editableOf,
-  valueOf: (row, key) => cellValueOf(columnAt(key), row),
-  plan: (row, key) =>
-    editorPlan(
-      columnAt(key),
-      cellValueOf(columnAt(key), row),
-      controls ?? kitControls,
-      resolvedLocale.value,
-    ),
-  check: checkCell,
-  invalid: () => ruleTexts.value.invalid,
-  save: (row, key, value) => {
-    editing.commitCell(row, key, value);
-  },
-  fill: (key, value) => {
-    const type = columnAt(key).type;
-
-    editing.fillCells(value, (target) => columnAt(target).type === type);
-  },
-  share: (next) => {
-    draftEchoes.sent(next);
-    draft.value = next;
-  },
-  refuse: (row, key, reason) => {
-    emit('editRefused', { row, key, reason });
-  },
-  bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
-  locate: (target) => cellOfTarget(target),
-  leave: (from, move) => leaveMergeBy(mergeIndex.value, from, move),
-  focus: (position) => {
-    const current = activeData();
-    const stays = current?.row === position.row && current.col === position.col;
-
-    focus.focusCell(stays ? active.value : visualCellOf(position));
-  },
-  resetOn: [
-    sortNow,
-    filtersNow,
-    quick,
-    groupByNow,
-    expandedNow,
-    pageStart,
-    () => dataKeys.value.join('\u0000'),
-  ],
-  messages,
-  announce,
-});
-
-const picker = useTablePicking({
-  active: () => {
-    const now = cellEditor.current();
-
-    return now !== undefined && picking?.(now) === true;
-  },
-  origin: () => cellEditor.session.value?.position,
-  locate: (target) => {
-    const cell =
-      target instanceof Element && target.closest('.nui-table__editor') === null
-        ? cellOfTarget(target)
-        : undefined;
-
-    return sameSpot(cell, cellEditor.session.value?.position) ? undefined : cell;
-  },
-  cellAt: (x, y) => rangeSelect.cellAtPoint(x, y),
-  whole: wholeRange,
-  leave: (from, move) => leaveMergeBy(mergeIndex.value, from, move),
-  bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
-  isRtl: direction.isRtl,
-  reveal: (position) => {
-    focus.reveal(visualCellOf(position));
-  },
-  pick: (range) => {
-    emit('pick', range);
-  },
-});
 
 const cellMenu = useCellMenuArea(table, {
   option: () => contextMenu,
@@ -2278,35 +2142,6 @@ const treeLevelOf = (item: TableBodyRow): number => (treeOn.value ? item.treeLev
 
 const hasTreeToggle = (item: TableBodyRow): boolean =>
   item.expanded !== undefined || item.loading || treeLevelOf(item) > 0;
-
-const editorProps = computed(() => {
-  const current = cellEditor.session.value;
-
-  return current === undefined
-    ? undefined
-    : {
-        spec: current.spec,
-        value: cellEditor.draft.value,
-        label: current.label,
-        errorId: `${gridId.value}-error`,
-        error: cellEditor.error.value,
-        typed: current.typed,
-        passive: current.passive,
-        caret: current.caret,
-        grow: growEditor,
-        keep: keepEditing,
-        pick: picker.onKeydown,
-        attach: cellEditor.attach,
-        commit: cellEditor.commit,
-        cancel: cellEditor.cancel,
-        composed: cellEditor.composed,
-      };
-});
-
-const onEditorUpdate = (value: unknown): void => {
-  picker.reset();
-  cellEditor.input(value);
-};
 
 const contentOf = (
   item: TableBodyRow,
@@ -2668,47 +2503,6 @@ const moveActiveCell = (position: NuiTableCellPosition): boolean => {
   return true;
 };
 
-const bodyPositionsOf = (wanted: readonly T[]): ReadonlyMap<T, number> => {
-  const ids = nodeIdsOf(wanted, rows, getKey);
-
-  return engine.value
-    .positionsOf((node) => ids.has(node), ids.size)
-    .reduce((found, [node, position]) => {
-      const row = ids.get(node);
-      const body = position - pageStart.value;
-
-      if (row !== undefined && body >= 0 && body < visibleRows.value) {
-        found.set(row, body);
-      }
-      return found;
-    }, new Map<T, number>());
-};
-
-const rowPlaces = useTableRowPlaces<T>({
-  active: activeData,
-  editing: () => {
-    const current = cellEditor.session.value;
-
-    return current === undefined ? undefined : { row: current.row, col: current.position.col };
-  },
-  ranges: () => ranges.value,
-  rowAt: rowAtPosition,
-  locate: bodyPositionsOf,
-  move: moveActiveCell,
-  drop: (held) => {
-    const key = dataKeys.value[held.col];
-
-    if (key !== undefined) {
-      emit('editRefused', { row: held.row, key, reason: NuiTableEditRefusalReason.RowGone });
-    }
-
-    cellEditor.reset();
-  },
-  select: (next) => {
-    ranges.value = next;
-  },
-});
-
 const shareActive = (next: NuiTableCellPosition | undefined): void => {
   activeEchoes.sent(next);
   activeCell.value = next;
@@ -2731,18 +2525,6 @@ watch(
 );
 
 watch(shownActive, shareActive, { immediate: true });
-
-watch(draft, (next) => {
-  if (draftEchoes.echoed(next)) {
-    return;
-  }
-
-  cellEditor.receive(next);
-});
-
-watch(cellEditor.session, () => {
-  picker.reset();
-});
 
 watch(visibleRows, clampActive);
 

@@ -64,6 +64,11 @@ export const boxOf = (range: NuiTableRange): RangeBox => ({
 export const samePosition = (a: NuiTableCellPosition, b: NuiTableCellPosition): boolean =>
   a.row === b.row && a.col === b.col;
 
+export const sameSpot = (
+  a: NuiTableCellPosition | undefined,
+  b: NuiTableCellPosition | undefined,
+): boolean => a?.row === b?.row && a?.col === b?.col;
+
 export const sameRanges = (a: NuiTableRanges, b: NuiTableRanges): boolean =>
   a.length === b.length &&
   a.every((range, index) => {
