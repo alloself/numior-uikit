@@ -116,6 +116,11 @@ sheet scrolled to its very start shows rows inserted at the start right away.
 Conditional formatting rules that different people add at the same time are all kept. The order of
 the rules follows the person who changed it.
 
+When two people create a sheet or a table under one name at the same time, both are kept. The second
+gets the next name, "Sheet3" after "Sheet2", and its cells and formulas stay on it. A sheet renamed, or
+removed and brought back by undo, stays the same sheet for everyone, and the frames of other people
+stay on it.
+
 Once the connection fails, edits are no longer sent: `readOnly` turns on and `failure` holds the
 reason. `NuiCollabFailure` explains it and offers to open the book again, which calls `rejoin`. The
 page is not reloaded.
