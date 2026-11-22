@@ -763,6 +763,127 @@ describe('values after lines move', () => {
     expect([sheet.settled('A1', 'Rates'), sheet.settled('A2', 'Rates')]).toEqual(['0', '0']);
   });
 
+  it('numbers rows again after rows are inserted or deleted above the formulas', () => {
+    const sheet = openBook();
+
+    sheet.type('A5', '=ROW()');
+    sheet.type('B5', '=ROW()-1');
+
+    expect([sheet.settled('A5'), sheet.settled('B5')]).toEqual(['5', '4']);
+
+    sheet.insert('1');
+
+    expect([sheet.settled('A6'), sheet.settled('B6')]).toEqual(['6', '5']);
+
+    sheet.remove('1', 2);
+
+    expect([sheet.settled('A4'), sheet.settled('B4')]).toEqual(['4', '3']);
+  });
+
+  it('gives the new column of a formula and of a reference after columns move', () => {
+    const sheet = openBook();
+
+    sheet.type('C1', '=COLUMN()');
+    sheet.type('A1', '=COLUMN(Sheet1!C1)', 'Rates');
+
+    expect([sheet.settled('C1'), sheet.settled('A1', 'Rates')]).toEqual(['3', '3']);
+
+    sheet.insert('A');
+
+    expect([sheet.settled('D1'), sheet.settled('A1', 'Rates')]).toEqual(['4', '4']);
+
+    sheet.remove('A', 2);
+
+    expect([sheet.settled('B1'), sheet.settled('A1', 'Rates')]).toEqual(['2', '2']);
+  });
+
+  it('reads the row of a reference that moved with an insert above it', () => {
+    const sheet = openBook();
+
+    sheet.type('A1', '=ROW(Sheet1!A5)', 'Rates');
+    sheet.type('A2', '=ROWS(Sheet1!A:A)-ROW(Sheet1!A6)', 'Rates');
+
+    expect([sheet.settled('A1', 'Rates'), sheet.settled('A2', 'Rates')]).toEqual(['5', '1048570']);
+
+    sheet.insert('3');
+
+    expect([sheet.settled('A1', 'Rates'), sheet.settled('A2', 'Rates')]).toEqual(['6', '1048569']);
+  });
+
+  it('intersects a whole column at the row a formula moved to', () => {
+    const sheet = openBook();
+
+    sheet.type('A6', '4', 'Rates');
+    sheet.type('A7', '9', 'Rates');
+    sheet.type('C6', '=@Rates!A:A');
+
+    expect(sheet.settled('C6')).toBe('4');
+
+    sheet.insert('1');
+
+    expect(sheet.settled('C7')).toBe('9');
+  });
+
+  it('reads a relative R1C1 address of INDIRECT from the row a formula moved to', () => {
+    const sheet = openBook();
+
+    sheet.type('A3', '7', 'Rates');
+    sheet.type('A4', '8', 'Rates');
+    sheet.type('B4', '=INDIRECT("Rates!R[-1]C[-1]",FALSE)');
+
+    expect(sheet.settled('B4')).toBe('7');
+
+    sheet.insert('1');
+
+    expect(sheet.settled('B5')).toBe('8');
+  });
+
+  it('reads a relative name and a name over ROW() from the row a formula moved to', () => {
+    const sheet = openBook();
+
+    sheet.type('A4', '40', 'Rates');
+    sheet.type('A5', '50', 'Rates');
+    sheet.name('Prev', '=Rates!A4', 'Sheet1', undefined, 'B5');
+    sheet.name('Here', '=ROW()');
+    sheet.type('B5', '=Prev');
+    sheet.type('C5', '=Here');
+
+    expect([sheet.settled('B5'), sheet.settled('C5')]).toEqual(['40', '5']);
+
+    sheet.insert('1');
+
+    expect([sheet.settled('B6'), sheet.settled('C6')]).toEqual(['50', '6']);
+
+    sheet.type('A5', '55', 'Rates');
+
+    expect(sheet.settled('B6')).toBe('55');
+  });
+
+  it('reads the row of a table on another sheet that a formula moved to', () => {
+    const sheet = openBook();
+
+    sheet.type('A1', 'Item', 'Rates');
+    sheet.type('B1', 'Amount', 'Rates');
+
+    ['2', '3', '4', '5', '6'].forEach((row) => {
+      sheet.type(`A${row}`, `Item ${row}`, 'Rates');
+      sheet.type(`B${row}`, `${row}0`, 'Rates');
+    });
+
+    sheet.table('A1:B6', { name: 'Sales' }, 'Rates');
+    sheet.type('D3', '=Sales[@Amount]');
+
+    expect(sheet.settled('D3')).toBe('30');
+
+    sheet.insert('1');
+
+    expect(sheet.settled('D4')).toBe('40');
+
+    sheet.type('B4', '44', 'Rates');
+
+    expect(sheet.settled('D4')).toBe('44');
+  });
+
   it('leaves formulas over single cells waiting for nothing after a row is inserted among them', async () => {
     const sheet = openBook();
 

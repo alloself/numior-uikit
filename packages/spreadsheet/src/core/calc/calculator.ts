@@ -4,11 +4,14 @@ import {
   CellValueKind,
   LineAxis,
   type CellRange,
+  type CellRef,
   type CellValue,
 } from '../cell.types';
 import {
   FormulaNodeKind,
   FormulaReferenceKind,
+  StructuredArea,
+  UnaryOperator,
   type FormulaLocale,
   type FormulaNode,
   type FormulaParse,
@@ -17,7 +20,7 @@ import {
 import { EN_LOCALE, type BookLocale } from '../locale';
 import { withYear } from '../format/number-locale';
 import { coversAxis, shiftIndex } from '../lines';
-import { ORIGIN, referenceRange } from '../formula/origin';
+import { ORIGIN, referenceRange, type LocatedReference } from '../formula/origin';
 import { parseFormula } from '../formula/parser';
 import { changesMeaning, shiftFormula, shiftSpan, type LineChange } from '../formula/rewrite';
 import { readReferences, type ReadsArgument } from '../formula/references';
@@ -135,6 +138,8 @@ interface FormulaRecord {
   precedents: readonly Precedent[];
   names: ReadonlySet<string>;
   dynamic: boolean;
+  placed: boolean;
+  anchored: boolean;
 }
 
 interface ShiftPlan {
@@ -172,11 +177,21 @@ interface Links {
   readonly precedents: Precedent[];
   readonly names: Set<string>;
   readonly reads: ReadsArgument;
+  readonly placeOf: (ast: FormulaNode) => boolean;
+  placed: boolean;
+  anchored: boolean;
 }
 
 interface FoundLinks {
   readonly precedents: Precedent[];
   readonly names: ReadonlySet<string>;
+  readonly placed: boolean;
+  readonly anchored: boolean;
+}
+
+interface TreeTraits {
+  readonly volatile: boolean;
+  readonly placed: boolean;
 }
 
 type Placed = Pick<FormulaRecord, 'sheet' | 'row' | 'col'>;
@@ -245,11 +260,29 @@ const structuredLinks = (
   if (owner !== undefined) {
     links.names.add(owner.toLowerCase());
   }
+  if (found.area === StructuredArea.Row && table !== undefined && table.sheet !== record.sheet) {
+    links.placed = true;
+    links.anchored = true;
+  }
   if (!read || table === undefined || typeof range !== 'object') {
     return;
   }
 
   links.precedents.push({ sheet: table.sheet.id, range });
+};
+
+const relativeRef = (ref: CellRef): boolean => !ref.rowAbsolute || !ref.colAbsolute;
+
+const relativeReference = (found: LocatedReference): boolean => {
+  switch (found.kind) {
+    case FormulaReferenceKind.Range:
+      return relativeRef(found.from) || relativeRef(found.to);
+    case FormulaReferenceKind.Columns:
+    case FormulaReferenceKind.Rows:
+      return !found.from.absolute || !found.to.absolute;
+    default:
+      return relativeRef(found.ref);
+  }
 };
 
 const collectLinks = (
@@ -259,6 +292,7 @@ const collectLinks = (
   links: Links,
   seen: Map<DefinedName, boolean>,
   read: boolean,
+  named: boolean,
 ): void => {
   readReferences(ast, links.reads, read).forEach(({ reference: found, read: used }) => {
     if (found.kind === FormulaReferenceKind.Structured) {
@@ -273,6 +307,10 @@ const collectLinks = (
     const target = localSheet(workbook, found, record.sheet);
     const range = referenceRange(found, record);
 
+    if (named && relativeReference(found)) {
+      links.placed = true;
+      links.anchored = true;
+    }
     if (target === undefined || range === undefined) {
       return;
     }
@@ -310,7 +348,8 @@ const nameLinks = (
   }
 
   seen.set(defined, read);
-  collectLinks(defined.ast, record, workbook, links, seen, read);
+  links.placed ||= links.placeOf(defined.ast);
+  collectLinks(defined.ast, record, workbook, links, seen, read, true);
 };
 
 const tableLinks = (table: SheetTable | undefined, links: Links, read: boolean): void => {
@@ -344,11 +383,26 @@ const linksOf = (
   record: Placed,
   workbook: Workbook,
   reads: ReadsArgument,
+  placeOf: (ast: FormulaNode) => boolean,
 ): FoundLinks => {
-  const links: Links = { precedents: [], names: new Set(), reads };
+  const links: Links = {
+    precedents: [],
+    names: new Set(),
+    reads,
+    placeOf,
+    placed: false,
+    anchored: false,
+  };
 
-  collectLinks(ast, record, workbook, links, new Map(), true);
-  return links.names.size === 0 ? { precedents: links.precedents, names: NO_NAMES } : links;
+  collectLinks(ast, record, workbook, links, new Map(), true, false);
+  return links.names.size === 0
+    ? {
+        precedents: links.precedents,
+        names: NO_NAMES,
+        placed: links.placed,
+        anchored: links.anchored,
+      }
+    : links;
 };
 
 const SUBTOTALS = new Set(['SUBTOTAL', 'AGGREGATE']);
@@ -372,11 +426,22 @@ const callsSubtotal = (node: FormulaNode): boolean => {
   return found;
 };
 
-const usesVolatile = (node: FormulaNode, functions: FunctionRegistry): boolean =>
-  findNode(
-    node,
-    (item) => item.kind === FormulaNodeKind.Call && functions.get(item.name)?.volatile === true,
-  ) !== undefined;
+const readsPlace = (item: FormulaNode, functions: FunctionRegistry): boolean =>
+  (item.kind === FormulaNodeKind.Call && functions.get(item.name)?.readsPlace === true) ||
+  (item.kind === FormulaNodeKind.Unary && item.op === UnaryOperator.Intersect);
+
+const traitsOf = (node: FormulaNode, functions: FunctionRegistry): TreeTraits => {
+  let volatile = false;
+  let placed = false;
+
+  findNode(node, (item) => {
+    volatile ||= item.kind === FormulaNodeKind.Call && functions.get(item.name)?.volatile === true;
+    placed ||= readsPlace(item, functions);
+    return volatile && placed;
+  });
+
+  return { volatile, placed };
+};
 
 const indexDown = (sheet: Sheet, range: CellRange, index: LookupIndex): void => {
   sheet.cells.forEachInRange({ ...range, top: index.bottom + 1 }, (row, _col, value) => {
@@ -504,6 +569,22 @@ export const createCalculator = (
   const unknown = new Set<string>();
   const contexts = new Map<Sheet, EvalContext>();
   const nameUsers = new Map<string, Set<number>>();
+  const placedNames = new WeakMap<FormulaNode, boolean>();
+  const relocated = new Set<number>();
+
+  const namePlaced = (ast: FormulaNode): boolean => {
+    const known = placedNames.get(ast);
+
+    if (known !== undefined) {
+      return known;
+    }
+
+    const found = findNode(ast, (item) => readsPlace(item, functions)) !== undefined;
+
+    placedNames.set(ast, found);
+    return found;
+  };
+
   let current: Run | undefined;
   let locale = initialLocale;
   let moment = clock();
@@ -829,6 +910,8 @@ export const createCalculator = (
   };
 
   const plan = (viewport: RecalcOptions['viewport']) => {
+    relinkMoved();
+
     const planned = planRecalc(pending, graph, locate);
 
     planned.order.forEach(markStale);
@@ -970,7 +1053,8 @@ export const createCalculator = (
     const known = idAt(sheet.id, row, col);
     const key = known ?? nextId;
     const cell: FormulaCell = { ast, state: 'stale' };
-    const links = linksOf(ast, { sheet, row, col }, workbook, argumentReads);
+    const links = linksOf(ast, { sheet, row, col }, workbook, argumentReads, namePlaced);
+    const traits = traitsOf(ast, functions);
 
     const record: FormulaRecord = {
       id: key,
@@ -981,6 +1065,8 @@ export const createCalculator = (
       precedents: links.precedents,
       names: links.names,
       dynamic: false,
+      placed: traits.placed || links.placed,
+      anchored: links.anchored,
     };
 
     interrupt();
@@ -995,51 +1081,60 @@ export const createCalculator = (
     formulas.set(key, record);
     graph.set(key, record.precedents);
     pending.add(key);
-    if (usesVolatile(ast, functions)) {
+    if (traits.volatile) {
       volatiles.add(key);
     } else {
       volatiles.delete(key);
     }
   };
 
+  const linkAgain = (key: number, rewrite?: UserRewrite): void => {
+    const record = formulas.get(key);
+
+    if (record === undefined) {
+      return;
+    }
+
+    const ast =
+      rewrite === undefined
+        ? record.cell.ast
+        : rewrite(record.sheet, record.row, record.col, record.cell.ast);
+
+    if (ast !== record.cell.ast) {
+      record.cell = { ast, state: record.cell.state };
+    }
+
+    const links = linksOf(ast, record, workbook, argumentReads, namePlaced);
+    const unchanged = samePrecedents(links.precedents, record.precedents);
+
+    record.placed = traitsOf(ast, functions).placed || links.placed;
+    record.anchored = links.anchored;
+    if (!sameNames(links.names, record.names)) {
+      unregister(key, record.names);
+      register(key, links.names);
+      record.names = links.names;
+    }
+    if (!unchanged) {
+      record.precedents = links.precedents;
+      graph.set(key, links.precedents);
+    }
+    if (rewrite !== undefined && unchanged) {
+      return;
+    }
+
+    record.cell.state = 'stale';
+    pending.add(key);
+  };
+
   const relinkName = (name: string, rewrite?: UserRewrite): void => {
     const snapshot = [...(nameUsers.get(name) ?? [])];
 
-    snapshot.forEach((key) => {
-      const record = formulas.get(key);
+    snapshot.forEach((key) => linkAgain(key, rewrite));
+  };
 
-      if (record === undefined) {
-        return;
-      }
-
-      const ast =
-        rewrite === undefined
-          ? record.cell.ast
-          : rewrite(record.sheet, record.row, record.col, record.cell.ast);
-
-      if (ast !== record.cell.ast) {
-        record.cell = { ast, state: record.cell.state };
-      }
-
-      const links = linksOf(ast, record, workbook, argumentReads);
-      const unchanged = samePrecedents(links.precedents, record.precedents);
-
-      if (!sameNames(links.names, record.names)) {
-        unregister(key, record.names);
-        register(key, links.names);
-        record.names = links.names;
-      }
-      if (!unchanged) {
-        record.precedents = links.precedents;
-        graph.set(key, links.precedents);
-      }
-      if (rewrite !== undefined && unchanged) {
-        return;
-      }
-
-      record.cell.state = 'stale';
-      pending.add(key);
-    });
+  const relinkMoved = (): void => {
+    relocated.forEach((key) => linkAgain(key));
+    relocated.clear();
   };
 
   const setName = (name: string, scope: Sheet | undefined, ast: FormulaNode | undefined): void => {
@@ -1138,18 +1233,23 @@ export const createCalculator = (
         return;
       }
 
-      const contentsMove =
-        readsAcross(record.precedents, sheet.id, change) ||
-        (record.dynamic && readsFrom(graph.precedentsOf(record.id), sheet.id, change));
+      const ast = shiftFormula(record.cell.ast, change, onSheet, record);
+      const moved = line !== before;
 
-      if (contentsMove) {
+      const settles =
+        readsAcross(record.precedents, sheet.id, change) ||
+        (record.dynamic && readsFrom(graph.precedentsOf(record.id), sheet.id, change)) ||
+        (record.placed && (moved || ast !== record.cell.ast));
+
+      if (settles) {
         markStale(record.id);
       }
-
-      const ast = shiftFormula(record.cell.ast, change, onSheet, record);
+      if (record.anchored && moved) {
+        relocated.add(record.id);
+      }
 
       if (ast === record.cell.ast) {
-        if (line !== before) {
+        if (moved) {
           applyShift({ record, line, ast, relink: false }, change.axis);
         }
         return;
@@ -1222,6 +1322,8 @@ export const createCalculator = (
     setValue,
     importValue: write,
     outdated: () => {
+      relinkMoved();
+
       const planned = new Set(pending.size === 0 ? [] : planRecalc(pending, graph, locate).order);
 
       return (sheet, row, col) => {
@@ -1370,6 +1472,8 @@ export const createCalculator = (
           pending.add(key);
         });
       }
+
+      relinkMoved();
 
       const run: Run = {
         planner: createPlanner(pending, graph, locate),

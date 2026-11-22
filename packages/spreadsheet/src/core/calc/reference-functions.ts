@@ -93,6 +93,7 @@ export const REFERENCE_FUNCTIONS: readonly FunctionSpec[] = [
   defineFunction({
     name: 'ROW',
     unreadAt: firstArgument,
+    readsPlace: true,
     min: 0,
     max: 1,
     referenceAt: firstArgument,
@@ -101,6 +102,7 @@ export const REFERENCE_FUNCTIONS: readonly FunctionSpec[] = [
   defineFunction({
     name: 'COLUMN',
     unreadAt: firstArgument,
+    readsPlace: true,
     min: 0,
     max: 1,
     referenceAt: firstArgument,
@@ -137,6 +139,7 @@ export const REFERENCE_FUNCTIONS: readonly FunctionSpec[] = [
     max: 2,
     givesReference: true,
     volatile: true,
+    readsPlace: true,
     evaluate: (args) => args.indirect(args.text(0), args.logical(1, true)),
   }),
 ];
