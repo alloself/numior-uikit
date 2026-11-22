@@ -52,6 +52,10 @@ const openEditor = (today = AUTUMN_2026, locale = RU_LOCALE) => {
     },
     input: (row: number, col: number) => editor.inputText(sheet, row, col),
     value: (row: number, col: number) => sheet.cells.get(row, col),
+    result: (row: number, col: number) => {
+      calculator.recalculate({ budgetMs: Number.POSITIVE_INFINITY });
+      return sheet.cells.get(row, col);
+    },
     format: (row: number, col: number) => editor.formatAt(sheet, row, col),
     setFormat: (address: string, code: string) => {
       editor.setFormat(sheet, range(address), code);
@@ -147,7 +151,7 @@ describe('reading typed input', () => {
       format: undefined,
     });
 
-    expect(readInput(' #н/д ', RU_NUMBERS)).toEqual({
+    expect(readInput('#н/д', RU_NUMBERS)).toEqual({
       kind: 'value',
       value: errorValue('#N/A'),
       format: undefined,
@@ -365,6 +369,223 @@ describe('cell editor', () => {
       value: textValue('15.03'),
       format: undefined,
     });
+  });
+
+  it('reads a month with a year typed without a day as the first of that month, as Excel does', () => {
+    const sheet = openEditor();
+
+    const typed: readonly (readonly [string, number])[] = [
+      ['03.15', 42064],
+      ['3.15', 42064],
+      ['3/15', 42064],
+      ['3-15', 42064],
+      ['03 . 15', 42064],
+      ['12.2026', 46357],
+      ['3/2026', 46082],
+      ['3 .2026', 46082],
+      ['12.99', 36495],
+      ['12.30', 11293],
+      ['2.29', 47150],
+      ['1.13', 41275],
+      ['02.1900', 32],
+      ['мар 15', 42064],
+      ['мар.15', 42064],
+      ['мар-15', 42064],
+      ['мар/15', 42064],
+      ['Март 15', 42064],
+      ['мар 2026', 46082],
+      ['мар 99', 36220],
+      ['мар 5', 38412],
+      ['мар 0', 36586],
+    ];
+
+    typed.forEach(([text], row) => {
+      sheet.enter(row, 0, text);
+    });
+
+    expect(typed.map((_entry, row) => sheet.value(row, 0))).toEqual(
+      typed.map(([, serial]) => numberValue(serial)),
+    );
+
+    expect(typed.map((_entry, row) => sheet.format(row, 0))).toEqual(typed.map(() => 'mmm.yy'));
+    expect(sheet.shown(0, 0)).toBe('мар.15');
+    expect(sheet.input(0, 0)).toBe('01.03.2015');
+  });
+
+  it('reads two numbers as a day and a month first and keeps what is neither as text', () => {
+    const sheet = openEditor();
+    const days = ['1.2', '3.05', '12.9', '12.12'];
+
+    const kept = [
+      '13.15',
+      '13.2026',
+      '0.15',
+      '00.2026',
+      '12.1899',
+      '12.10000',
+      '15-2026',
+      '3.0',
+      '3.00',
+      '3/0',
+      '31.11',
+      '29.02',
+      'марта 2026',
+      'мар 100',
+      'мар 2026г',
+      'мар,15',
+      'мар 15 2026',
+    ];
+
+    [...days, ...kept].forEach((text, row) => {
+      sheet.enter(row, 0, text);
+    });
+
+    expect(days.map((_text, row) => [sheet.value(row, 0), sheet.format(row, 0)])).toEqual(
+      [46054, 46145, 46277, 46368].map((serial) => [numberValue(serial), 'dd.mmm']),
+    );
+
+    expect(kept.map((_text, row) => sheet.value(days.length + row, 0))).toEqual(
+      kept.map(textValue),
+    );
+  });
+
+  it('keeps a date, a time or a logical value typed after a space as text and reads a number either way', () => {
+    const sheet = openEditor();
+
+    const kept = [
+      ' 15.03',
+      ' 15.03.2026',
+      ' 03.15',
+      ' мар 15',
+      ' 10:30',
+      ' ИСТИНА',
+      'ИСТИНА ',
+      ' #Н/Д',
+      '#Н/Д ',
+    ];
+
+    const read: readonly (readonly [string, number, string])[] = [
+      ['15.03 ', 46096, 'dd.mmm'],
+      ['15.03.2026 ', 46096, 'dd.mm.yyyy'],
+      ['03.15 ', 42064, 'mmm.yy'],
+      ['10:30 ', 0.4375, 'h:mm'],
+      [' 5', 5, 'General'],
+      ['  5  ', 5, 'General'],
+      [' 5%', 0.05, '0%'],
+      [' 1,5', 1.5, 'General'],
+      ['- 5', -5, 'General'],
+      [' 5 000 ', 5000, '#,##0'],
+    ];
+
+    kept.forEach((text, row) => {
+      sheet.enter(row, 0, text);
+    });
+
+    read.forEach(([text], row) => {
+      sheet.enter(kept.length + row, 0, text);
+    });
+
+    expect(kept.map((_text, row) => sheet.value(row, 0))).toEqual(kept.map(textValue));
+
+    expect(
+      read.map((_entry, row) => [
+        sheet.value(kept.length + row, 0),
+        sheet.format(kept.length + row, 0),
+      ]),
+    ).toEqual(read.map(([, value, format]) => [numberValue(value), format]));
+  });
+
+  it('gives a date typed with a time the short date and time format whatever the date looked like', () => {
+    const sheet = openEditor();
+
+    const typed: readonly (readonly [string, number])[] = [
+      ['03.2026 10:30', 46082.4375],
+      ['мар 15 10:30', 42064.4375],
+      ['15 мар 2026 10:30', 46096.4375],
+      ['март 2026 10:30', 46082.4375],
+      ['1 мар 15 10:30', 42064.4375],
+    ];
+
+    typed.forEach(([text], row) => {
+      sheet.enter(row, 0, text);
+    });
+
+    expect(typed.map((_entry, row) => [sheet.value(row, 0), sheet.format(row, 0)])).toEqual(
+      typed.map(([, serial]) => [numberValue(serial), 'dd.mm.yyyy h:mm']),
+    );
+  });
+
+  it('reads a month with a year in formulas and trims spaces only in DATEVALUE, TIMEVALUE and VALUE', () => {
+    const sheet = openEditor();
+
+    const formulas = [
+      '=ДАТАЗНАЧ("03.15")',
+      '=ДАТАЗНАЧ("12.2026")',
+      '=ДАТАЗНАЧ("мар 15")',
+      '="03.15"+0',
+      '=ДАТАЗНАЧ(" 15.03.2026 ")',
+      '=ВРЕМЗНАЧ(" 10:30 ")',
+      '=ЗНАЧЕН(" 12.2026 ")',
+      '="10:30 "+0',
+      '=" 5 "+0',
+      '=" 15.03.2026 "+0',
+      '=" 10:30"+0',
+      '=ГОД(" 15.03.2026")',
+      '=ГОД("15.03.2026 ")',
+      '=ГОД("03.15")',
+      '=МЕСЯЦ("12.2026")',
+    ];
+
+    formulas.forEach((text, row) => {
+      sheet.enter(row, 0, text);
+    });
+
+    expect(formulas.map((_text, row) => sheet.result(row, 0))).toEqual([
+      numberValue(42064),
+      numberValue(46357),
+      numberValue(42064),
+      numberValue(42064),
+      numberValue(46096),
+      numberValue(0.4375),
+      numberValue(46357),
+      numberValue(0.4375),
+      numberValue(5),
+      errorValue('#VALUE!'),
+      errorValue('#VALUE!'),
+      errorValue('#VALUE!'),
+      numberValue(2026),
+      numberValue(2015),
+      numberValue(12),
+    ]);
+  });
+
+  it('reads a month with a year in an English book only where the second number cannot be a day', () => {
+    const sheet = openEditor(AUTUMN_2026, EN_LOCALE);
+
+    const typed: readonly (readonly [string, number, string])[] = [
+      ['3/45', 16497, 'mmm-yy'],
+      ['12/2026', 46357, 'mmm-yy'],
+      ['Mar 45', 16497, 'mmm-yy'],
+      ['Mar 2026', 46082, 'mmm-yy'],
+      ['Mar-15', 46096, 'd-mmm'],
+      ['Mar 15', 46096, 'd-mmm'],
+    ];
+
+    typed.forEach(([text], row) => {
+      sheet.enter(row, 0, text);
+    });
+
+    sheet.enter(6, 0, '13/2026');
+    sheet.enter(7, 0, '3/00');
+
+    expect(typed.map((_entry, row) => [sheet.value(row, 0), sheet.format(row, 0)])).toEqual(
+      typed.map(([, serial, format]) => [numberValue(serial), format]),
+    );
+
+    expect([sheet.value(6, 0), sheet.value(7, 0)]).toEqual([
+      textValue('13/2026'),
+      textValue('3/00'),
+    ]);
   });
 
   it('reports a formula that does not parse and leaves the cell as it was', () => {

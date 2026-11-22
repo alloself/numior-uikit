@@ -209,8 +209,8 @@ export const readInput = (text: string, locale: NumberLocale): CellInput => {
     return { kind: 'formula', text };
   }
 
-  const logical = logicalFromText(text.trim(), locale);
-  const error = errorFromText(text.trim(), locale.errors);
+  const logical = logicalFromText(text, locale);
+  const error = errorFromText(text, locale.errors);
 
   if (error !== undefined) {
     return { kind: 'value', value: errorValue(error), format: undefined };

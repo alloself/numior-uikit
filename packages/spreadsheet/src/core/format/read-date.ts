@@ -30,13 +30,19 @@ const DAY_NAMED = /^(\d{1,2})[-\s.]+(\p{L}+)\.?[-\s.,]+(\d{2,4})$/iu;
 
 const NAMED_DAY = /^(\p{L}+)\.?\s+(\d{1,2}),?\s+(\d{2,4})$/iu;
 
-const MONTH_YEAR = /^(\p{L}+)\.?[-\s.]+(\d{4})$/iu;
+const MONTH_YEAR = /^(\p{L}+)\.?[-\s./]+(\d{1,2}|\d{4})$/iu;
+
+const MONTH_NUMBER = /^(\d{1,2})\s*[./-]\s*(\d{2}|\d{4})$/u;
+
+const NO_YEAR = '00';
+
+const LEADING_SPACE = /^\s/u;
 
 const DAY_MONTH = /^(\d{1,2})\s*([./-])\s*(\d{1,2})$/u;
 
 const DAY_NAME = /^(\d{1,2})[-\s.]*(\p{L}+)$/iu;
 
-const NAME_DAY = /^(\p{L}+)\.?\s+(\d{1,2})$/iu;
+const NAME_DAY = /^(\p{L}+)\.?[-\s./]+(\d{1,2})$/iu;
 
 const fullYear = (text: string): number => {
   const year = Number(text);
@@ -112,12 +118,21 @@ const namedDate = (text: string, locale: NumberLocale): number | undefined => {
       );
 };
 
+const numericMonth = (text: string): number | undefined => {
+  const found = MONTH_NUMBER.exec(text);
+  const year = found?.[2];
+
+  return found === null || year === undefined || year === NO_YEAR
+    ? undefined
+    : validDate(fullYear(year), Number(found[1]), 1);
+};
+
 const monthYear = (text: string, locale: NumberLocale): number | undefined => {
   const found = MONTH_YEAR.exec(text);
 
   return found === null
-    ? undefined
-    : validDate(Number(found[2]), monthOf(found[1] ?? '', locale), 1);
+    ? numericMonth(text)
+    : validDate(fullYear(found[2] ?? ''), monthOf(found[1] ?? '', locale), 1);
 };
 
 const namedInYear = (text: string, year: number, locale: NumberLocale): number | undefined => {
@@ -159,9 +174,9 @@ const dateOf = (text: string, locale: NumberLocale): DateRead | undefined => {
 
   return (
     read(numeric, locale.shortDate) ??
-    read(namedDate(text, locale), locale.namedDate) ??
-    read(monthYear(text, locale), locale.monthDate) ??
-    read(dateInYear(text, locale), locale.dayMonth, locale.shortDate)
+    read(namedDate(text, locale), locale.namedDate, locale.shortDate) ??
+    read(dateInYear(text, locale), locale.dayMonth, locale.shortDate) ??
+    read(monthYear(text, locale), locale.monthDate, locale.shortDate)
   );
 };
 
@@ -197,7 +212,11 @@ const timeOf = (text: string, elapsed: boolean): Clock | undefined => {
 };
 
 export const readDateText = (raw: string, locale: NumberLocale): DateText | undefined => {
-  const text = raw.trim();
+  if (LEADING_SPACE.test(raw)) {
+    return undefined;
+  }
+
+  const text = raw.trimEnd();
   const clock = timeOf(text, true);
 
   if (clock !== undefined) {

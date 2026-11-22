@@ -201,13 +201,13 @@ const timeOfParts = (hours: number, minutes: number, seconds: number): number =>
 };
 
 const textDate = (args: FunctionArgs): number => {
-  const read = readDateText(args.text(0), args.locale);
+  const read = readDateText(args.text(0).trim(), args.locale);
 
   return read?.date ?? raise('#VALUE!');
 };
 
 const textTime = (args: FunctionArgs): number => {
-  const read = readDateText(args.text(0), args.locale);
+  const read = readDateText(args.text(0).trim(), args.locale);
 
   if (read === undefined) {
     return raise('#VALUE!');
