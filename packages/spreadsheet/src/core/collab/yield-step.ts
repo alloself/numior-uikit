@@ -225,27 +225,17 @@ const removesForeign = (step: WorkbookStep, touched: readonly WorkbookStep[]): b
   return false;
 };
 
-const undone = (change: RemoteChange): RemoteChange | undefined => {
+const undone = (change: RemoteChange): RemoteChange => {
   switch (change.kind) {
     case RemoteChangeKind.Lines:
       return { kind: change.kind, change: { ...change.change, count: -change.change.count } };
-    case RemoteChangeKind.RenameSheet:
     case RemoteChangeKind.RenameTable:
       return { ...change, from: change.to, to: change.from };
-    case RemoteChangeKind.RemoveSheet:
-      return undefined;
   }
 };
 
 const withoutStep = (step: WorkbookStep): RemoteChange[] =>
-  changesOf(step).reduceRight<RemoteChange[]>((back, change) => {
-    const inverse = undone(change);
-
-    if (inverse !== undefined) {
-      back.push(inverse);
-    }
-    return back;
-  }, []);
+  changesOf(step).map(undone).toReversed();
 
 export const yieldPass = (state: Yielding, step: WorkbookStep): YieldTrace => {
   const moved = state.kept.length === 0 ? step : stepOver(step, state.kept);

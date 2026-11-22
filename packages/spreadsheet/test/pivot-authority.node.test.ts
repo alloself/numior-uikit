@@ -2,10 +2,13 @@ import { isEqual, min } from 'lodash-es';
 import { describe, expect, it } from 'vite-plus/test';
 import {
   EN_FORMULAS,
+  sheetKeys,
   createCalculator,
   createStepCodec,
   createStepper,
   createWorkbook,
+  createWorkbookDocument,
+  keyedStep,
   numberValue,
   parseFormula,
   textValue,
@@ -85,9 +88,9 @@ const rateStep = (rate: number): WorkbookStep => ({
 const REFRESH: WorkbookStep = { kind: 'refreshPivot', sheet: 'Pivot', name: 'Sales' };
 
 const bookSeed = (cells: readonly CellEdit[], definition: PivotDefinition): WorkbookStep[] => [
-  { kind: 'addSheet', name: 'Data', index: 0 },
+  { kind: 'addSheet', name: 'Data', index: 0, key: 'data' },
   { kind: 'setCells', sheet: 'Data', cells: [valueCell(0, RATE_COL, numberValue(2)), ...cells] },
-  { kind: 'addSheet', name: 'Pivot', index: 1 },
+  { kind: 'addSheet', name: 'Pivot', index: 1, key: 'pivot' },
   {
     kind: 'setPivot',
     sheet: 'Pivot',
@@ -95,6 +98,15 @@ const bookSeed = (cells: readonly CellEdit[], definition: PivotDefinition): Work
     pivot: { anchor: { row: 0, col: 0 }, definition },
   },
 ];
+
+const keyed = (book: Workbook, step: WorkbookStep): WorkbookStep => {
+  const wire = keyedStep(step, sheetKeys(book));
+
+  if (wire === undefined) {
+    throw new Error(`the step ${step.kind} names no sheet of the book`);
+  }
+  return wire;
+};
 
 const shared = (seed: readonly WorkbookStep[]): Shared => {
   const mirror = createWorkbook();
@@ -108,20 +120,14 @@ const shared = (seed: readonly WorkbookStep[]): Shared => {
   const authority = workbookAuthority(seed);
 
   return {
-    apply: (steps) => authority.apply(steps.map((step) => codec.encode(step))),
+    apply: (steps) => authority.apply(steps.map((step) => codec.encode(keyed(mirror, step)))),
     opened: () => {
       const book = createWorkbook();
-      const into = createStepper(book, createCalculator(book));
-      const reader = createStepCodec(book);
 
-      for (const wire of authority.snapshot().steps) {
-        const step = reader.decode(wire);
+      const document = createWorkbookDocument({ book, calculator: createCalculator(book) });
 
-        if (step === undefined) {
-          throw new Error('the snapshot does not read');
-        }
-
-        into.apply(step);
+      if (!document.load(authority.snapshot(), 0)) {
+        throw new Error('the snapshot does not read');
       }
       return book;
     },

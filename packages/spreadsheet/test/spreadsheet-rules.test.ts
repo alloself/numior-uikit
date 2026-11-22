@@ -187,7 +187,7 @@ describe('NuiSpreadsheet conditional formatting panel', () => {
 
     const theirs = createStepCodec(book).encode({
       kind: 'setConditional',
-      sheet: 'Sales',
+      sheet: book.sheets[0]?.key ?? '',
       formats: [
         ...known,
         { ranges: [column(2)], rules: [{ rule: blanks, priority: 3, stopIfTrue: false }] },

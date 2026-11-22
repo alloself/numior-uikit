@@ -43,10 +43,6 @@ const OTHER_SHEET = lines('Q', 'rows', 0, 5);
 
 const COLUMNS = lines('S', 'cols', 0, 1);
 
-const RENAMED: RemoteChange = { kind: RemoteChangeKind.RenameSheet, from: 'S', to: 'T' };
-
-const REMOVED: RemoteChange = { kind: RemoteChangeKind.RemoveSheet, name: 'S' };
-
 const TABLE_RENAMED: RemoteChange = {
   kind: RemoteChangeKind.RenameTable,
   from: 'People',
@@ -141,8 +137,6 @@ const SCENARIOS: readonly Scenario[] = [
     undefined,
   ],
   ['moves cells by columns', SET_CELLS, COLUMNS, { cells: [{ row: 3, col: 1, format: '0' }] }],
-  ['renames the sheet of cells', SET_CELLS, RENAMED, { sheet: 'T' }],
-  ['drops cells on a removed sheet', SET_CELLS, REMOVED, undefined],
   [
     'moves an insertion',
     { kind: 'insertLines', sheet: 'S', axis: 'rows', at: 3, count: 1 },
@@ -173,55 +167,12 @@ const SCENARIOS: readonly Scenario[] = [
     REMOVED_ROWS,
     undefined,
   ],
-  ['keeps a new sheet', { kind: 'addSheet', name: 'N', index: 0 }, RENAMED, { name: 'N' }],
-  [
-    'follows a renamed sheet when removing',
-    { kind: 'removeSheet', name: 'S' },
-    RENAMED,
-    { name: 'T' },
-  ],
-  ['drops a removal of a removed sheet', { kind: 'removeSheet', name: 'S' }, REMOVED, undefined],
-  [
-    'follows a renamed sheet when renaming',
-    { kind: 'renameSheet', from: 'S', to: 'U' },
-    RENAMED,
-    { from: 'T' },
-  ],
-  [
-    'drops a rename of a removed sheet',
-    { kind: 'renameSheet', from: 'S', to: 'U' },
-    REMOVED,
-    undefined,
-  ],
-  [
-    'renames a name scope',
-    { kind: 'setName', name: 'n', scope: 'S', ast: undefined },
-    RENAMED,
-    { scope: 'T' },
-  ],
-  [
-    'drops a name on a removed sheet',
-    { kind: 'setName', name: 'n', scope: 'S', ast: undefined },
-    REMOVED,
-    undefined,
-  ],
+  ['keeps a new sheet', { kind: 'addSheet', name: 'N', index: 0 }, INSERTED, { name: 'N' }],
   [
     'moves a new table',
     { kind: 'addTable', name: 'People', table: TABLE },
     INSERTED,
     { table: { ...TABLE, range: MOVED_RANGE } },
-  ],
-  [
-    'follows the sheet of a new table',
-    { kind: 'addTable', name: 'People', table: TABLE },
-    RENAMED,
-    { table: { ...TABLE, sheet: 'T' } },
-  ],
-  [
-    'drops a table on a removed sheet',
-    { kind: 'addTable', name: 'People', table: TABLE },
-    REMOVED,
-    undefined,
   ],
   [
     'keeps a table above the change',
@@ -258,16 +209,10 @@ const SCENARIOS: readonly Scenario[] = [
     { from: 'Staff' },
   ],
   [
-    'renames the sheet of a pivot refresh',
-    { kind: 'refreshPivot', sheet: 'S', name: 'P' },
-    RENAMED,
-    { sheet: 'T' },
-  ],
-  [
     'keeps a removed pivot',
     { kind: 'setPivot', sheet: 'S', name: 'P', pivot: undefined },
-    RENAMED,
-    { sheet: 'T', pivot: undefined },
+    TABLE_RENAMED,
+    { sheet: 'S', pivot: undefined },
   ],
   [
     'moves a pivot anchor',
@@ -286,18 +231,6 @@ const SCENARIOS: readonly Scenario[] = [
     { kind: 'setPivot', sheet: 'Q', name: 'P', pivot: pivotOf(SOURCE) },
     INSERTED,
     { pivot: { definition: { source: { range: MOVED_RANGE } } } },
-  ],
-  [
-    'follows a renamed source sheet',
-    { kind: 'setPivot', sheet: 'Q', name: 'P', pivot: pivotOf(SOURCE) },
-    RENAMED,
-    { pivot: { definition: { source: { sheet: 'T' } } } },
-  ],
-  [
-    'loses the source on a removed sheet',
-    { kind: 'setPivot', sheet: 'Q', name: 'P', pivot: pivotOf(SOURCE) },
-    REMOVED,
-    { pivot: { definition: { source: LOST } } },
   ],
   [
     'loses a source in removed lines',
@@ -335,26 +268,8 @@ const SCENARIOS: readonly Scenario[] = [
   [
     'keeps a restore without a pivot',
     { kind: 'putPivot', sheet: 'S', name: 'P', pivot: undefined },
-    RENAMED,
-    { sheet: 'T', pivot: undefined, cells: undefined, layout: undefined },
-  ],
-  [
-    'keeps a layout on rename',
-    { kind: 'setLayout', sheet: 'S', layout: EMPTY_LAYOUT },
-    RENAMED,
-    { sheet: 'T' },
-  ],
-  [
-    'drops a layout on a removed sheet',
-    { kind: 'setLayout', sheet: 'S', layout: EMPTY_LAYOUT },
-    REMOVED,
-    undefined,
-  ],
-  [
-    'keeps a layout on a removed other sheet',
-    { kind: 'setLayout', sheet: 'Q', layout: EMPTY_LAYOUT },
-    REMOVED,
-    { sheet: 'Q' },
+    TABLE_RENAMED,
+    { sheet: 'S', pivot: undefined, cells: undefined, layout: undefined },
   ],
   [
     'keeps a layout on a renamed table',
@@ -363,22 +278,10 @@ const SCENARIOS: readonly Scenario[] = [
     { sheet: 'S' },
   ],
   [
-    'keeps the rules on a removed other sheet',
-    { kind: 'setConditional', sheet: 'Q', formats: [] },
-    REMOVED,
-    { formats: [] },
-  ],
-  [
     'keeps the rules on a renamed table',
     { kind: 'setConditional', sheet: 'S', formats: [] },
     TABLE_RENAMED,
     { formats: [] },
-  ],
-  [
-    'keeps the rules on a rename',
-    { kind: 'setConditional', sheet: 'S', formats: [] },
-    RENAMED,
-    { sheet: 'T' },
   ],
   [
     'moves the rules with lines',
@@ -443,8 +346,6 @@ describe('rebasing workbook steps', () => {
   });
 
   it.each([
-    ['a renamed sheet', RENAMED, 'S!A1', 'T!A1'],
-    ['a removed sheet', REMOVED, 'S!A1', '#REF!'],
     ['a renamed table', TABLE_RENAMED, 'SUM(People[a])', 'SUM(Staff[a])'],
     ['moved lines', lines('S', 'rows', 0, 2), 'S!A1', 'S!A3'],
   ])('rewrites a formula for %s', (_what, change, formula, printed) => {
@@ -453,12 +354,12 @@ describe('rebasing workbook steps', () => {
     expect(printedAfter(rebased)).toBe(printed);
   });
 
-  it('rewrites the formula of a scoped name', () => {
+  it('rewrites the formula of a name', () => {
     const step: WorkbookStep = { kind: 'setName', name: 'n', ast: astOf('=S!A1') };
 
-    const rebased = rebaseStep(step, RENAMED);
+    const rebased = rebaseStep(step, lines('S', 'rows', 0, 2));
 
-    expect(rebased).toMatchObject({ ast: astOf('=T!A1') });
+    expect(rebased).toMatchObject({ ast: astOf('=S!A3') });
   });
 
   it('keeps the steps of a batch that survive', () => {
@@ -476,9 +377,12 @@ describe('rebasing workbook steps', () => {
   });
 
   it('drops a batch with nothing left', () => {
-    const step: WorkbookStep = { kind: 'batch', steps: [SET_CELLS] };
+    const step: WorkbookStep = {
+      kind: 'batch',
+      steps: [{ kind: 'setCells', sheet: 'S', cells: [{ row: 1, col: 0, format: '0' }] }],
+    };
 
-    const rebased = rebaseStep(step, REMOVED);
+    const rebased = rebaseStep(step, REMOVED_ROWS);
 
     expect(rebased).toBeUndefined();
   });
@@ -498,13 +402,7 @@ describe('remote changes', () => {
       ],
     });
 
-    expect(changes).toEqual([
-      INSERTED,
-      REMOVED_ROWS,
-      RENAMED,
-      { ...REMOVED, name: 'T' },
-      TABLE_RENAMED,
-    ]);
+    expect(changes).toEqual([INSERTED, REMOVED_ROWS, TABLE_RENAMED]);
   });
 
   it.each([
@@ -528,15 +426,7 @@ describe('remote changes', () => {
     ],
     ['a change on another sheet', OTHER_SHEET, INSERTED, OTHER_SHEET],
     ['a change on another axis', COLUMNS, INSERTED, COLUMNS],
-    ['lines on a renamed sheet', INSERTED, RENAMED, lines('T', 'rows', 1, 2)],
-    [
-      'a rename of a renamed sheet',
-      { ...RENAMED, to: 'U' },
-      RENAMED,
-      { ...RENAMED, from: 'T', to: 'U' },
-    ],
-    ['a removal', REMOVED, INSERTED, REMOVED],
-    ['a table rename', TABLE_RENAMED, RENAMED, TABLE_RENAMED],
+    ['a table rename', TABLE_RENAMED, INSERTED, TABLE_RENAMED],
   ])('moves %s', (_what, change, local, after) => {
     const moved = changeOver(change, local);
 

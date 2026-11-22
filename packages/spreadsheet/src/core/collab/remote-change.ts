@@ -16,10 +16,6 @@ const changeOfStep = (step: WorkbookStep): RemoteChange | undefined => {
         kind: RemoteChangeKind.Lines,
         change: { sheet: step.sheet, axis: step.axis, at: step.at, count: -step.count },
       };
-    case StepKind.RenameSheet:
-      return { kind: RemoteChangeKind.RenameSheet, from: step.from, to: step.to };
-    case StepKind.RemoveSheet:
-      return { kind: RemoteChangeKind.RemoveSheet, name: step.name };
     case StepKind.RenameTable:
       return { kind: RemoteChangeKind.RenameTable, from: step.from, to: step.to };
     default:
@@ -55,31 +51,20 @@ const linesOver = (change: LineChange, local: LineChange): LineChange | undefine
   return change.count > 0 ? insertionOver(change, local) : deletionOver(change, local);
 };
 
-const sheetAfterRename = (sheet: string, local: RemoteChange): string =>
-  local.kind === RemoteChangeKind.RenameSheet && sameName(sheet, local.from) ? local.to : sheet;
-
 export const linesAfter = (changes: readonly RemoteChange[]): readonly LineChange[] =>
-  changes.reduce<LineChange[]>((lines, change, index) => {
+  changes.reduce<LineChange[]>((lines, change) => {
     if (change.kind === RemoteChangeKind.Lines) {
-      lines.push({
-        ...change.change,
-        sheet: changes.slice(index + 1).reduce(sheetAfterRename, change.change.sheet),
-      });
+      lines.push(change.change);
     }
     return lines;
   }, []);
 
 export const changeOver = (change: RemoteChange, local: RemoteChange): RemoteChange | undefined => {
-  if (change.kind !== RemoteChangeKind.Lines) {
-    return change.kind === RemoteChangeKind.RenameSheet
-      ? { ...change, from: sheetAfterRename(change.from, local) }
-      : change;
+  if (change.kind !== RemoteChangeKind.Lines || local.kind !== RemoteChangeKind.Lines) {
+    return change;
   }
 
-  const moved =
-    local.kind === RemoteChangeKind.Lines ? linesOver(change.change, local.change) : change.change;
+  const moved = linesOver(change.change, local.change);
 
-  return moved === undefined
-    ? undefined
-    : { ...change, change: { ...moved, sheet: sheetAfterRename(moved.sheet, local) } };
+  return moved === undefined ? undefined : { ...change, change: moved };
 };

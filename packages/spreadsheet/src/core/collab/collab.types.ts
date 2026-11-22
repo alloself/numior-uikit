@@ -14,12 +14,6 @@ export interface SchemaStampLike {
 export type RemoteChange =
   | { readonly kind: typeof RemoteChangeKind.Lines; readonly change: LineChange }
   | {
-      readonly kind: typeof RemoteChangeKind.RenameSheet;
-      readonly from: string;
-      readonly to: string;
-    }
-  | { readonly kind: typeof RemoteChangeKind.RemoveSheet; readonly name: string }
-  | {
       readonly kind: typeof RemoteChangeKind.RenameTable;
       readonly from: string;
       readonly to: string;
@@ -75,7 +69,5 @@ export interface WorkbookAuthorityOptions {
 
 export const RemoteChangeKind = {
   Lines: 'lines',
-  RenameSheet: 'renameSheet',
-  RemoveSheet: 'removeSheet',
   RenameTable: 'renameTable',
 } as const;

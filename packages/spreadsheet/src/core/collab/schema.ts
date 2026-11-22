@@ -6,7 +6,7 @@ import type { Workbook } from '../workbook';
 import { StepKind, type WorkbookStep } from '../steps/step.types';
 import type { SchemaStampLike } from './collab.types';
 
-export const WORKBOOK_SCHEMA: SchemaStampLike = { name: 'numior-workbook', version: 1 };
+export const WORKBOOK_SCHEMA: SchemaStampLike = { name: 'numior-workbook', version: 2 };
 
 export const snapshotSteps = (snapshot: unknown): readonly unknown[] | undefined =>
   isRecord(snapshot) && Array.isArray(snapshot.steps) ? snapshot.steps : undefined;

@@ -6,11 +6,13 @@ import {
   createWorkbook,
   createWorkbookDocument,
   createWorkbookHistory,
+  keyedStep,
   parseFormula,
   printFormula,
   workbookAuthority,
   type Calculator,
   type CellEdit,
+  type SheetNames,
   type Workbook,
   type WorkbookDocument,
   type WorkbookHistory,
@@ -52,7 +54,23 @@ export const WHOLE = { top: 0, left: 0, bottom: 1_048_575, right: 16_383 };
 
 export const SHEET = 'Sheet1';
 
-export const seedSheet: WorkbookStep = { kind: 'addSheet', name: SHEET, index: 0 };
+export const KEY = 'main';
+
+export const seedSheet: WorkbookStep = { kind: 'addSheet', name: SHEET, index: 0, key: KEY };
+
+const SEED_NAMES: SheetNames = {
+  keyOf: (name) => (name.toLowerCase() === SHEET.toLowerCase() ? KEY : undefined),
+  nameOf: (key) => (key === KEY ? SHEET : undefined),
+};
+
+export const onWire = (step: WorkbookStep): WorkbookStep => {
+  const keyed = keyedStep(step, SEED_NAMES);
+
+  if (keyed === undefined) {
+    throw new Error(`the step ${step.kind} names no seeded sheet`);
+  }
+  return keyed;
+};
 
 export const valueCell = (row: number, col: number, text: string): CellEdit => ({
   row,
@@ -131,6 +149,7 @@ const dumpBook = (book: Workbook, calculator: Calculator): string => {
 
     return {
       name: sheet.name,
+      key: sheet.key,
       cells: [...cells].toSorted(([left], [right]) => left.localeCompare(right)),
       formats: formats.toSorted((left, right) => left.localeCompare(right)),
       layout: codec.encode({ kind: 'setLayout', sheet: sheet.name, layout: sheet.layout }),

@@ -23,15 +23,17 @@ interface SharedBook {
 
 const SHEET = 'Sheet1';
 
+const KEY = 'main';
+
 const WIDE_COLUMN = 3;
 
 const WIDE_CHARS = 20;
 
-const SNAPSHOT = { steps: [{ kind: 'addSheet', name: SHEET, index: 0 }] };
+const SNAPSHOT = { steps: [{ kind: 'addSheet', name: SHEET, index: 0, key: KEY }] };
 
 const mounted: SpreadsheetDriver[] = [];
 
-const writeAt = (row: number, col: number, value: unknown, sheet = SHEET): unknown => ({
+const writeAt = (row: number, col: number, value: unknown, sheet = KEY): unknown => ({
   kind: 'setCells',
   sheet,
   cells: [{ row, col, content: { kind: 'value', value } }],
@@ -117,7 +119,7 @@ const hide = ({ book, session }: SharedBook, row: number): void => {
 
 const rowsAdded = (at: number, count: number): unknown => ({
   kind: 'insertLines',
-  sheet: SHEET,
+  sheet: KEY,
   axis: 'rows',
   at,
   count,
@@ -171,7 +173,7 @@ describe('NuiSpreadsheet in a shared book', () => {
 
     await driver.enter(2, 0, 'mine');
     book.session.confirm(1, 2);
-    receive(book.session, { kind: 'insertLines', sheet: SHEET, axis: 'rows', at: 0, count: 1 });
+    receive(book.session, { kind: 'insertLines', sheet: KEY, axis: 'rows', at: 0, count: 1 });
     await driver.settle();
 
     expect(driver.text(3, 0)).toBe('mine');
@@ -190,11 +192,11 @@ describe('NuiSpreadsheet in a shared book', () => {
     session.load(
       {
         steps: [
-          { kind: 'addSheet', name: SHEET, index: 0 },
+          { kind: 'addSheet', name: SHEET, index: 0, key: KEY },
           writeAt(0, 0, { kind: 'number', value: 2 }),
           {
             kind: 'setCells',
-            sheet: SHEET,
+            sheet: KEY,
             cells: [{ row: 0, col: 1, content: { kind: 'formula', ast: astOf('=A1*3', 0, 1) } }],
           },
         ],
@@ -213,7 +215,7 @@ describe('NuiSpreadsheet in a shared book', () => {
     const book = shared();
     const driver = open(book);
 
-    receive(book.session, { kind: 'addSheet', name: 'Plan', index: 1 });
+    receive(book.session, { kind: 'addSheet', name: 'Plan', index: 1, key: 'plan' });
     await driver.settle();
     await driver.chooseTab('Plan');
     await driver.enter(1, 0, 'unsent');
@@ -223,10 +225,10 @@ describe('NuiSpreadsheet in a shared book', () => {
     book.session.load(
       {
         steps: [
-          { kind: 'addSheet', name: 'Intro', index: 0 },
-          { kind: 'addSheet', name: SHEET, index: 1 },
-          { kind: 'addSheet', name: 'Plan', index: 2 },
-          writeAt(0, 0, { kind: 'string', value: 'theirs' }, 'Plan'),
+          { kind: 'addSheet', name: 'Intro', index: 0, key: 'intro' },
+          { kind: 'addSheet', name: SHEET, index: 1, key: KEY },
+          { kind: 'addSheet', name: 'Plan', index: 2, key: 'plan' },
+          writeAt(0, 0, { kind: 'string', value: 'theirs' }, 'plan'),
         ],
       },
       9,
@@ -246,7 +248,7 @@ describe('NuiSpreadsheet in a shared book', () => {
     const book = shared();
     const driver = open(book);
 
-    receive(book.session, { kind: 'addSheet', name: 'Plan', index: 1 });
+    receive(book.session, { kind: 'addSheet', name: 'Plan', index: 1, key: 'plan' });
     await driver.settle();
 
     expect(driver.tabs).toEqual([SHEET, 'Plan']);
@@ -344,7 +346,7 @@ describe('NuiSpreadsheet in a shared book', () => {
     await driver.focus(6, 1);
     await driver.press('F2');
     await driver.type('=A4+A2');
-    receive(book.session, { kind: 'deleteLines', sheet: SHEET, axis: 'rows', at: 3, count: 1 });
+    receive(book.session, { kind: 'deleteLines', sheet: KEY, axis: 'rows', at: 3, count: 1 });
     await driver.settle();
 
     expect(driver.editingCell).toEqual({ row: 5, col: 1 });
@@ -409,7 +411,7 @@ describe('NuiSpreadsheet in a shared book', () => {
     await driver.focus(3, 0);
     await driver.press('F2');
     await driver.type('draft');
-    receive(book.session, { kind: 'deleteLines', sheet: SHEET, axis: 'rows', at: 2, count: 1 });
+    receive(book.session, { kind: 'deleteLines', sheet: KEY, axis: 'rows', at: 2, count: 1 });
     await driver.settle();
 
     expect(driver.editing).toBe(false);
@@ -452,8 +454,8 @@ describe('NuiSpreadsheet in a shared book', () => {
     receive(
       book.session,
       rowsAdded(1, 2),
-      { kind: 'insertLines', sheet: SHEET, axis: 'cols', at: 0, count: 1 },
-      { kind: 'deleteLines', sheet: SHEET, axis: 'rows', at: 6, count: 1 },
+      { kind: 'insertLines', sheet: KEY, axis: 'cols', at: 0, count: 1 },
+      { kind: 'deleteLines', sheet: KEY, axis: 'rows', at: 6, count: 1 },
     );
 
     await driver.settle();
@@ -483,8 +485,8 @@ describe('NuiSpreadsheet in a shared book', () => {
 
     receive(
       book.session,
-      { kind: 'deleteLines', sheet: SHEET, axis: 'rows', at: 0, count: 1 },
-      { kind: 'insertLines', sheet: SHEET, axis: 'cols', at: 1, count: 2 },
+      { kind: 'deleteLines', sheet: KEY, axis: 'rows', at: 0, count: 1 },
+      { kind: 'insertLines', sheet: KEY, axis: 'cols', at: 1, count: 2 },
     );
 
     await driver.settle();
@@ -570,7 +572,7 @@ describe('NuiSpreadsheet in a shared book', () => {
       ranges: [{ top: 3, left: 2, bottom: 3, right: 2 }],
     });
 
-    receive(book.session, { kind: 'renameSheet', from: SHEET, to: 'Plan' });
+    receive(book.session, { kind: 'renameSheet', from: KEY, to: 'Plan' });
     await driver.settle();
 
     expect(driver.tabs).toEqual(['Plan']);

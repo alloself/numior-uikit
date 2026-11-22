@@ -14,14 +14,16 @@ const ANN = { id: 'ann', name: 'Ann' };
 
 const SHEET = 'Plan';
 
+const KEY = 'plan';
+
 const PRESENCE_PAUSE = 80;
 
 const snapshotOf = (cells: readonly BookCell[]): unknown => ({
   steps: [
-    { kind: 'addSheet', name: SHEET, index: 0 },
+    { kind: 'addSheet', name: SHEET, index: 0, key: KEY },
     {
       kind: 'setCells',
-      sheet: SHEET,
+      sheet: KEY,
       cells: cells.map(([row, col, text]) => ({
         row,
         col,

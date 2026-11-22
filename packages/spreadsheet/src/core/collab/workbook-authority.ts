@@ -11,6 +11,7 @@ import type {
   WorkbookAuthorityOptions,
   WorkbookSnapshot,
 } from './collab.types';
+import { sheetKeys, keyedStep, localStep } from './keyed-steps';
 import { changesOver, stepOver } from './rebase-queue';
 import { changesOf } from './remote-change';
 import { WORKBOOK_SCHEMA, settleForStep } from './schema';
@@ -30,6 +31,7 @@ export const workbookAuthority = (
   const calculator = createCalculator(book);
   const stepper = createStepper(book, calculator);
   const codec = createStepCodec(book);
+  const names = sheetKeys(book);
   let tail: readonly (readonly RemoteChange[])[] = [];
   let shot: WorkbookSnapshot | undefined;
 
@@ -39,6 +41,13 @@ export const workbookAuthority = (
     const result = stepper.apply(step);
 
     return result.ok ? result.inverse : undefined;
+  };
+
+  const take = (keyed: WorkbookStep): Taken | undefined => {
+    const local = localStep(keyed, names);
+    const inverse = local === undefined ? undefined : applyOne(local);
+
+    return inverse === undefined ? undefined : { step: keyed, inverse };
   };
 
   const undo = (taken: readonly Taken[]): void => {
@@ -57,10 +66,20 @@ export const workbookAuthority = (
     applyOne(step);
   });
 
+  const wired = (steps: readonly WorkbookStep[]): readonly WireWorkbookStep[] =>
+    steps.reduce<WireWorkbookStep[]>((wires, step) => {
+      const keyed = keyedStep(step, names);
+
+      if (keyed !== undefined) {
+        wires.push(codec.encode(keyed));
+      }
+      return wires;
+    }, []);
+
   return {
     schema: WORKBOOK_SCHEMA,
     snapshot: () => {
-      shot ??= { steps: bookSteps(book, calculator).map((step) => codec.encode(step)) };
+      shot ??= { steps: wired(bookSteps(book, calculator)) };
       return shot;
     },
     apply: (wires) => {
@@ -68,13 +87,13 @@ export const workbookAuthority = (
 
       for (const wire of wires) {
         const step = codec.decode(wire);
-        const inverse = step === undefined ? undefined : applyOne(step);
+        const done = step === undefined ? undefined : take(step);
 
-        if (step === undefined || inverse === undefined) {
+        if (done === undefined) {
           undo(taken);
           return false;
         }
-        taken.push({ step, inverse });
+        taken.push(done);
       }
       kept(taken);
       return true;
@@ -96,10 +115,10 @@ export const workbookAuthority = (
         }
 
         const moved = stepOver(step, moving);
-        const inverse = moved === undefined ? undefined : applyOne(moved);
+        const done = moved === undefined ? undefined : take(moved);
 
-        if (moved !== undefined && inverse !== undefined) {
-          taken.push({ step: moved, inverse });
+        if (done !== undefined) {
+          taken.push(done);
         }
         moving = changesOver(moving, changesOf(step));
       }

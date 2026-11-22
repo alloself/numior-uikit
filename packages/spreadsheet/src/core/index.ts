@@ -262,6 +262,7 @@ export type {
   WorkbookSelection,
   WorkbookUser,
 } from './collab/presence.types';
+export { keyedStep, localStep, sheetKeys, type SheetNames } from './collab/keyed-steps';
 export { WORKBOOK_SCHEMA } from './collab/schema';
 export { workbookAuthority } from './collab/workbook-authority';
 export { createWorkbookDocument } from './collab/workbook-document';

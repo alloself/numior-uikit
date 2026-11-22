@@ -1,7 +1,8 @@
 import type { LineChange } from '../formula/rewrite';
+import { mergeLayouts } from '../layout/merge-layout';
 import { createStepper } from '../steps/apply-step';
 import type { WorkbookHistory } from '../steps/history';
-import { StepKind, type StepResult, type WorkbookStep } from '../steps/step.types';
+import { StepKind, StepRefusal, type StepResult, type WorkbookStep } from '../steps/step.types';
 import { createStepCodec } from '../wire/step-codec';
 import {
   RemoteChangeKind,
@@ -10,7 +11,19 @@ import {
   type WorkbookDocumentListener,
   type WorkbookDocumentOptions,
 } from './collab.types';
-import { mergeLayouts } from '../layout/merge-layout';
+import {
+  sheetKeys,
+  keptNames,
+  keyedChanges,
+  keyedLayout,
+  keyedStep,
+  localChanges,
+  localLines,
+  localStep,
+  namesKept,
+  type KeptNames,
+  type SheetNames,
+} from './keyed-steps';
 import { changesOver, stepOver } from './rebase-queue';
 import { changesOf, linesAfter } from './remote-change';
 import { flattened, settleForStep, snapshotSteps } from './schema';
@@ -19,6 +32,17 @@ import { foreignEdits, yieldPass } from './yield-step';
 interface Unconfirmed {
   readonly step: WorkbookStep;
   readonly inverse: WorkbookStep;
+}
+
+interface Taken {
+  readonly keyed: WorkbookStep;
+  readonly local: WorkbookStep;
+  readonly result: StepResult;
+}
+
+interface Received {
+  readonly changes: readonly RemoteChange[];
+  readonly shown: readonly WorkbookStep[];
 }
 
 const sameWires = (left: readonly unknown[], right: readonly unknown[]): boolean =>
@@ -33,6 +57,18 @@ const lineChangesOf = (changes: readonly RemoteChange[]): readonly LineChange[] 
     return lines;
   }, []);
 
+const SHEET_STEPS: ReadonlySet<WorkbookStep['kind']> = new Set([
+  StepKind.AddSheet,
+  StepKind.RemoveSheet,
+  StepKind.RenameSheet,
+]);
+
+const touchesSheets = (step: WorkbookStep): boolean =>
+  step.kind === StepKind.Batch ? step.steps.some(touchesSheets) : SHEET_STEPS.has(step.kind);
+
+const withKey = (step: WorkbookStep, key: () => string): WorkbookStep =>
+  step.kind === StepKind.AddSheet && step.key === undefined ? { ...step, key: key() } : step;
+
 export const createWorkbookDocument = ({
   book,
   calculator,
@@ -40,6 +76,7 @@ export const createWorkbookDocument = ({
 }: WorkbookDocumentOptions): WorkbookDocument => {
   const raw = createStepper(book, calculator);
   const codec = createStepCodec(book);
+  const names = sheetKeys(book);
   const listeners = new Set<WorkbookDocumentListener>();
 
   let version = initial;
@@ -47,7 +84,7 @@ export const createWorkbookDocument = ({
   let history: WorkbookHistory | undefined;
 
   const notify = (steps: readonly WorkbookStep[], moved: readonly RemoteChange[]): void => {
-    const lines = linesAfter(moved);
+    const lines = localLines(linesAfter(moved), names);
 
     listeners.forEach((listener) => {
       listener(steps, lines);
@@ -59,6 +96,12 @@ export const createWorkbookDocument = ({
     return raw.apply(step);
   };
 
+  const take = (keyed: WorkbookStep): Taken | undefined => {
+    const local = localStep(keyed, names);
+
+    return local === undefined ? undefined : { keyed, local, result: applied(local) };
+  };
+
   const decodedAll = (steps: readonly unknown[]): readonly WorkbookStep[] | undefined =>
     steps.reduce<WorkbookStep[] | undefined>((decoded, wire) => {
       const step = codec.decode(wire);
@@ -66,15 +109,25 @@ export const createWorkbookDocument = ({
       return decoded === undefined || step === undefined ? undefined : [...decoded, step];
     }, []);
 
-  const rollback = (): void => {
-    unconfirmed.toReversed().forEach(({ inverse }) => {
+  const rollback = (sent = 0): readonly RemoteChange[] => {
+    const undone: RemoteChange[] = [];
+    const kept = unconfirmed.length - sent;
+
+    unconfirmed.toReversed().forEach(({ inverse }, index) => {
+      if (index >= kept) {
+        for (const change of keyedChanges(inverse, names)) {
+          undone.push(change);
+        }
+      }
       raw.apply(inverse);
     });
+
+    return undone;
   };
 
   const restore = (): void => {
     unconfirmed.forEach(({ step }) => {
-      applied(step);
+      take(step);
     });
   };
 
@@ -82,32 +135,34 @@ export const createWorkbookDocument = ({
     step: WorkbookStep,
     inverse: WorkbookStep,
     changes: readonly RemoteChange[],
+    before: SheetNames,
   ): WorkbookStep => {
     if (step.kind !== StepKind.SetLayout || step.base !== undefined) {
       return step;
     }
 
-    const base = stepOver(inverse, changes);
-    const sheet = book.sheet(step.sheet);
+    const back = keyedStep(inverse, before);
+    const base = back === undefined ? undefined : stepOver(back, changes);
+    const sheet = book.keyed(step.sheet);
 
     return base?.kind === StepKind.SetLayout && base.base !== undefined && sheet !== undefined
-      ? { ...step, layout: mergeLayouts(base.layout, base.base, sheet.layout) }
+      ? { ...step, layout: mergeLayouts(base.layout, base.base, keyedLayout(sheet.layout, names)) }
       : step;
   };
 
-  const replay = (remote: readonly RemoteChange[]): readonly RemoteChange[] => {
+  const replay = (remote: readonly RemoteChange[], before: SheetNames): readonly RemoteChange[] => {
     const replayed: Unconfirmed[] = [];
 
     const moving = unconfirmed.reduce<readonly RemoteChange[]>((changes, { step, inverse }) => {
       const rebased = stepOver(step, changes);
 
-      if (rebased !== undefined) {
-        const merged = withMergedLayout(rebased, inverse, changes);
-        const result = applied(merged);
+      const taken =
+        rebased === undefined
+          ? undefined
+          : take(withMergedLayout(rebased, inverse, changes, before));
 
-        if (result.ok) {
-          replayed.push({ step: merged, inverse: result.inverse });
-        }
+      if (taken?.result.ok === true) {
+        replayed.push({ step: taken.keyed, inverse: taken.result.inverse });
       }
       return changesOver(changes, changesOf(step));
     }, remote);
@@ -116,26 +171,84 @@ export const createWorkbookDocument = ({
     return moving;
   };
 
-  const applyRemote = (steps: readonly WorkbookStep[]): readonly RemoteChange[] | undefined => {
+  const applyRemote = (steps: readonly WorkbookStep[]): Received | undefined => {
     const changes: RemoteChange[] = [];
     const inverses: WorkbookStep[] = [];
+    const shown: WorkbookStep[] = [];
 
     for (const step of steps) {
-      const result = applied(step);
+      const taken = take(step);
 
-      if (!result.ok) {
+      if (taken === undefined) {
+        continue;
+      }
+      if (!taken.result.ok) {
         inverses.toReversed().forEach((inverse) => {
           raw.apply(inverse);
         });
 
         return undefined;
       }
-      inverses.push(result.inverse);
-      for (const entry of changesOf(step)) {
+      inverses.push(taken.result.inverse);
+      shown.push(taken.local);
+      for (const entry of changesOf(taken.keyed)) {
         changes.push(entry);
       }
     }
-    return changes;
+    return { changes, shown };
+  };
+
+  const historyOver = (
+    before: KeptNames | undefined,
+    moving: readonly RemoteChange[],
+  ): ((step: WorkbookStep) => WorkbookStep | undefined) | undefined => {
+    if (before === undefined || namesKept(before, book)) {
+      const local = localChanges(moving, names);
+
+      return local.length === 0 ? undefined : (step) => stepOver(step, local);
+    }
+    return (step) => {
+      const keyed = keyedStep(step, before);
+      const moved = keyed === undefined ? undefined : stepOver(keyed, moving);
+
+      return moved === undefined ? undefined : localStep(moved, names);
+    };
+  };
+
+  const rebaseHistory = (before: KeptNames | undefined, moving: readonly RemoteChange[]): void => {
+    const map = historyOver(before, moving);
+
+    if (map === undefined) {
+      return;
+    }
+
+    history?.rebase(map);
+  };
+
+  const yieldHistory = (steps: readonly WorkbookStep[]): void => {
+    const touched = foreignEdits(
+      steps,
+      unconfirmed.map(({ step }) => step),
+    ).reduce<WorkbookStep[]>((local, edit) => {
+      const shown = localStep(edit, names);
+
+      if (shown !== undefined) {
+        local.push(shown);
+      }
+      return local;
+    }, []);
+
+    history?.trace({ touched, kept: [] }, yieldPass);
+  };
+
+  const namesBefore = (steps: readonly WorkbookStep[]): KeptNames | undefined =>
+    steps.some(touchesSheets) || unconfirmed.some(({ step }) => touchesSheets(step))
+      ? keptNames(book)
+      : undefined;
+
+  const refusedLocally = (inverse: WorkbookStep): StepResult => {
+    raw.apply(inverse);
+    return { ok: false, reason: StepRefusal.MissingSheet };
   };
 
   return {
@@ -150,8 +263,9 @@ export const createWorkbookDocument = ({
       }
 
       const before = raw.clear();
+      const remote = applyRemote(steps);
 
-      if (applyRemote(steps) === undefined) {
+      if (remote === undefined) {
         raw.clear();
         raw.apply(before);
         return false;
@@ -159,7 +273,7 @@ export const createWorkbookDocument = ({
       unconfirmed = [];
       version = at;
       history?.clear();
-      notify(steps, []);
+      notify(remote.shown, []);
       return true;
     },
     reset: () => {
@@ -172,6 +286,9 @@ export const createWorkbookDocument = ({
       if (steps === undefined || version === null) {
         return false;
       }
+
+      const before = namesBefore(steps);
+
       rollback();
 
       const remote = applyRemote(steps);
@@ -182,22 +299,11 @@ export const createWorkbookDocument = ({
       }
       version += steps.length;
 
-      const moving = replay(remote);
+      const moving = replay(remote.changes, before ?? names);
 
-      history?.rebase((step) => stepOver(step, moving));
-
-      history?.trace(
-        {
-          touched: foreignEdits(
-            steps,
-            unconfirmed.map(({ step }) => step),
-          ),
-          kept: [],
-        },
-        yieldPass,
-      );
-
-      notify(steps, moving);
+      rebaseHistory(before, moving);
+      yieldHistory(steps);
+      notify(remote.shown, moving);
       return true;
     },
     confirm: (count, at) => {
@@ -221,8 +327,9 @@ export const createWorkbookDocument = ({
         version = at;
         return true;
       }
-      rollback();
 
+      const before = namesBefore(steps);
+      const undone = rollback(count);
       const remote = applyRemote(steps);
 
       if (remote === undefined) {
@@ -232,11 +339,10 @@ export const createWorkbookDocument = ({
       unconfirmed = unconfirmed.slice(count);
       version = at;
 
-      const undone = sent.toReversed().map(({ inverse }) => inverse);
-      const moving = replay([...undone.flatMap(changesOf), ...remote]);
+      const moving = replay([...undone, ...remote.changes], before ?? names);
 
-      history?.rebase((step) => stepOver(step, moving));
-      notify([...undone, ...steps], moving);
+      rebaseHistory(before, moving);
+      notify([...sent.toReversed().map(({ inverse }) => inverse), ...remote.shown], moving);
       return true;
     },
     stepper: {
@@ -245,17 +351,20 @@ export const createWorkbookDocument = ({
         const changes: RemoteChange[] = [];
 
         for (const part of flattened(step)) {
-          const result = applied(part);
+          const local = withKey(part, () => book.freshKey());
+          const keyed = keyedStep(local, names);
+          const done = applied(local);
+          const result = done.ok && keyed === undefined ? refusedLocally(done.inverse) : done;
 
-          if (!result.ok) {
+          if (!result.ok || keyed === undefined) {
             recorded.toReversed().forEach(({ inverse }) => {
               raw.apply(inverse);
             });
 
             return result;
           }
-          recorded.push({ step: part, inverse: result.inverse });
-          for (const entry of changesOf(part)) {
+          recorded.push({ step: keyed, inverse: result.inverse });
+          for (const entry of changesOf(local)) {
             changes.push(entry);
           }
         }

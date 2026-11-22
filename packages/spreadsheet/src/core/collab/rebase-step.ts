@@ -6,14 +6,7 @@ import {
 } from '../conditional/shift';
 import type { ConditionalFormat } from '../conditional/conditional.types';
 import type { FormulaNode } from '../formula/formula.types';
-import {
-  dropSheetFromFormula,
-  renameInFormula,
-  renameTableInFormula,
-  sameName,
-  shiftFormula,
-  shiftSpan,
-} from '../formula/rewrite';
+import { renameTableInFormula, sameName, shiftFormula, shiftSpan } from '../formula/rewrite';
 import { shiftIndex } from '../lines';
 import { mapLayoutFormulas, shiftLayout } from '../layout/line-layouts';
 import type { SheetLayout } from '../layout/layout.types';
@@ -35,15 +28,6 @@ const TABLE_COLUMN_PREFIX = 'Column';
 
 const LOST_SOURCE: PivotSource = { kind: PivotSourceKind.Lost };
 
-const homeOver = (home: string, change: RemoteChange): string | undefined => {
-  if (change.kind === RemoteChangeKind.RenameSheet && sameName(home, change.from)) {
-    return change.to;
-  }
-  return change.kind === RemoteChangeKind.RemoveSheet && sameName(home, change.name)
-    ? undefined
-    : home;
-};
-
 const formulaOver = (
   ast: FormulaNode,
   change: RemoteChange,
@@ -53,10 +37,6 @@ const formulaOver = (
   switch (change.kind) {
     case RemoteChangeKind.Lines:
       return shiftFormula(ast, change.change, sameName(home, change.change.sheet), origin);
-    case RemoteChangeKind.RenameSheet:
-      return renameInFormula(ast, change.from, change.to);
-    case RemoteChangeKind.RemoveSheet:
-      return dropSheetFromFormula(ast, change.name);
     case RemoteChangeKind.RenameTable:
       return renameTableInFormula(ast, change.from, change.to);
   }
@@ -118,10 +98,6 @@ const layoutOver = (layout: SheetLayout, change: RemoteChange, home: string): Sh
   switch (change.kind) {
     case RemoteChangeKind.Lines:
       return shiftLayout(layout, change.change, sameName(home, change.change.sheet));
-    case RemoteChangeKind.RenameSheet:
-      return mapLayoutFormulas(layout, (ast) => renameInFormula(ast, change.from, change.to));
-    case RemoteChangeKind.RemoveSheet:
-      return mapLayoutFormulas(layout, (ast) => dropSheetFromFormula(ast, change.name));
     case RemoteChangeKind.RenameTable:
       return mapLayoutFormulas(layout, (ast) => renameTableInFormula(ast, change.from, change.to));
   }
@@ -137,10 +113,6 @@ const formatsOver = (
       return sameName(home, change.change.sheet)
         ? shiftConditional(formats, change.change)
         : shiftConditionalReferences(formats, change.change);
-    case RemoteChangeKind.RenameSheet:
-      return mapConditionalFormulas(formats, (ast) => renameInFormula(ast, change.from, change.to));
-    case RemoteChangeKind.RemoveSheet:
-      return mapConditionalFormulas(formats, (ast) => dropSheetFromFormula(ast, change.name));
     case RemoteChangeKind.RenameTable:
       return mapConditionalFormulas(formats, (ast) =>
         renameTableInFormula(ast, change.from, change.to),
@@ -149,13 +121,8 @@ const formatsOver = (
 };
 
 const tableOver = (table: TableSpec, change: RemoteChange): TableSpec | undefined => {
-  const sheet = homeOver(table.sheet, change);
-
-  if (sheet === undefined) {
-    return undefined;
-  }
   if (change.kind !== RemoteChangeKind.Lines || !sameName(table.sheet, change.change.sheet)) {
-    return { ...table, sheet };
+    return table;
   }
 
   const shift = shiftTable(table, change.change, TABLE_COLUMN_PREFIX);
@@ -164,7 +131,7 @@ const tableOver = (table: TableSpec, change: RemoteChange): TableSpec | undefine
     case TableShiftKind.Removed:
       return undefined;
     case TableShiftKind.Moved:
-      return { ...shift.shape, sheet };
+      return { ...shift.shape, sheet: table.sheet };
     case TableShiftKind.Same:
       return table;
   }
@@ -180,15 +147,9 @@ const sourceOver = (source: PivotSource, change: RemoteChange): PivotSource => {
     return source;
   }
 
-  const sheet = homeOver(source.sheet, change);
-
-  if (sheet === undefined) {
-    return LOST_SOURCE;
-  }
-
   const range = rangeOver(source.range, change, source.sheet);
 
-  return range === undefined ? LOST_SOURCE : { ...source, sheet, range };
+  return range === undefined ? LOST_SOURCE : { ...source, range };
 };
 
 const pivotOver = <P extends PivotSpec>(
@@ -210,36 +171,31 @@ const pivotOver = <P extends PivotSpec>(
 const linesStepOver = (
   step: StepOf<typeof StepKind.InsertLines | typeof StepKind.DeleteLines>,
   change: RemoteChange,
-  sheet: string,
 ): WorkbookStep | undefined => {
   if (
     change.kind !== RemoteChangeKind.Lines ||
     !sameName(step.sheet, change.change.sheet) ||
     step.axis !== change.change.axis
   ) {
-    return { ...step, sheet };
+    return step;
   }
   if (step.kind === StepKind.InsertLines) {
-    return { ...step, sheet, at: shiftIndex(step.at, change.change) ?? change.change.at };
+    return { ...step, at: shiftIndex(step.at, change.change) ?? change.change.at };
   }
 
   const span = shiftSpan([step.at, step.at + step.count - 1], change.change);
 
-  return span === undefined
-    ? undefined
-    : { ...step, sheet, at: span[0], count: span[1] - span[0] + 1 };
+  return span === undefined ? undefined : { ...step, at: span[0], count: span[1] - span[0] + 1 };
 };
 
 const putPivotOver = (
   step: StepOf<typeof StepKind.PutPivot>,
   change: RemoteChange,
-  sheet: string,
 ): WorkbookStep => {
   const pivot = step.pivot === undefined ? undefined : pivotOver(step.pivot, change, step.sheet);
 
   return {
     ...step,
-    sheet,
     pivot:
       pivot === undefined
         ? undefined
@@ -259,10 +215,8 @@ const putPivotOver = (
 const conditionalStepOver = (
   step: StepOf<typeof StepKind.SetConditional>,
   change: RemoteChange,
-  sheet: string,
 ): WorkbookStep => ({
   ...step,
-  sheet,
   formats: formatsOver(step.formats, change, step.sheet),
   base: step.base === undefined ? undefined : formatsOver(step.base, change, step.sheet),
 });
@@ -270,10 +224,8 @@ const conditionalStepOver = (
 const layoutStepOver = (
   step: StepOf<typeof StepKind.SetLayout>,
   change: RemoteChange,
-  sheet: string,
 ): WorkbookStep => ({
   ...step,
-  sheet,
   layout: layoutOver(step.layout, change, step.sheet),
   base: step.base === undefined ? undefined : layoutOver(step.base, change, step.sheet),
 });
@@ -281,74 +233,51 @@ const layoutStepOver = (
 const setPivotOver = (
   step: StepOf<typeof StepKind.SetPivot>,
   change: RemoteChange,
-  sheet: string,
 ): WorkbookStep | undefined => {
   if (step.pivot === undefined) {
-    return { ...step, sheet };
+    return step;
   }
 
   const pivot = pivotOver(step.pivot, change, step.sheet);
 
-  return pivot === undefined ? undefined : { ...step, sheet, pivot };
+  return pivot === undefined ? undefined : { ...step, pivot };
 };
 
 const sheetStepOver = (step: SheetStep, change: RemoteChange): WorkbookStep | undefined => {
-  const sheet = homeOver(step.sheet, change);
-
-  if (sheet === undefined) {
-    return undefined;
-  }
   switch (step.kind) {
     case StepKind.SetCells: {
       const cells = cellsOver(step.cells, change, step.sheet);
 
-      return cells.length === 0 ? undefined : { ...step, sheet, cells };
+      return cells.length === 0 ? undefined : { ...step, cells };
     }
     case StepKind.SetFormat: {
       const range = rangeOver(step.range, change, step.sheet);
 
-      return range === undefined ? undefined : { ...step, sheet, range };
+      return range === undefined ? undefined : { ...step, range };
     }
     case StepKind.InsertLines:
     case StepKind.DeleteLines:
-      return linesStepOver(step, change, sheet);
+      return linesStepOver(step, change);
     case StepKind.SetConditional:
-      return conditionalStepOver(step, change, sheet);
+      return conditionalStepOver(step, change);
     case StepKind.SetLayout:
-      return layoutStepOver(step, change, sheet);
+      return layoutStepOver(step, change);
     case StepKind.SetPivot:
-      return setPivotOver(step, change, sheet);
+      return setPivotOver(step, change);
     case StepKind.RefreshPivot:
-      return { ...step, sheet };
+      return step;
     case StepKind.PutPivot:
-      return putPivotOver(step, change, sheet);
+      return putPivotOver(step, change);
   }
 };
-
-const nameOver = (name: string, change: RemoteChange): string =>
-  change.kind === RemoteChangeKind.RenameSheet && sameName(name, change.from) ? change.to : name;
 
 const tableNameOver = (name: string, change: RemoteChange): string =>
   change.kind === RemoteChangeKind.RenameTable && sameName(name, change.from) ? change.to : name;
 
-const setNameOver = (
-  step: StepOf<typeof StepKind.SetName>,
-  change: RemoteChange,
-): WorkbookStep | undefined => {
-  const scope = step.scope === undefined ? undefined : homeOver(step.scope, change);
-
-  if (step.scope !== undefined && scope === undefined) {
-    return undefined;
-  }
-  return {
-    ...step,
-    scope,
-    ast:
-      step.ast === undefined
-        ? undefined
-        : formulaOver(step.ast, change, step.scope ?? '', { row: 0, col: 0 }),
-  };
-};
+const setNameOver = (step: StepOf<typeof StepKind.SetName>, change: RemoteChange): WorkbookStep =>
+  step.ast === undefined
+    ? step
+    : { ...step, ast: formulaOver(step.ast, change, step.scope ?? '', { row: 0, col: 0 }) };
 
 const batchOver = (
   step: StepOf<typeof StepKind.Batch>,
@@ -369,15 +298,9 @@ const batchOver = (
 export const rebaseStep = (step: WorkbookStep, change: RemoteChange): WorkbookStep | undefined => {
   switch (step.kind) {
     case StepKind.AddSheet:
-      return step;
     case StepKind.RemoveSheet:
-      return homeOver(step.name, change) === undefined
-        ? undefined
-        : { ...step, name: nameOver(step.name, change) };
     case StepKind.RenameSheet:
-      return homeOver(step.from, change) === undefined
-        ? undefined
-        : { ...step, from: nameOver(step.from, change) };
+      return step;
     case StepKind.SetName:
       return setNameOver(step, change);
     case StepKind.AddTable: {

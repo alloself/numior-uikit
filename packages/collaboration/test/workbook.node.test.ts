@@ -26,9 +26,11 @@ import * as fc from 'fast-check';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { CollabStatusKind } from '../src';
 import {
+  KEY,
   SHEET,
   createBookNetwork,
   formulaCell,
+  onWire,
   seedSheet,
   valueCell,
   writeCells,
@@ -774,7 +776,11 @@ describe('workbook steps through the collaboration envelope', () => {
     ann?.commit([writeCells(valueCell(0, 0, 'sent'))]);
     ann?.commit([writeCells(valueCell(1, 0, 'later'))]);
 
-    const settled = ann?.document.settle(1, [writeCells(valueCell(5, 0, 'sent'))], version + 1);
+    const settled = ann?.document.settle(
+      1,
+      [onWire(writeCells(valueCell(5, 0, 'sent')))],
+      version + 1,
+    );
 
     expect(settled).toBe(true);
     expect(ann?.document.pending()).toHaveLength(1);
@@ -811,10 +817,10 @@ describe('workbook steps through the collaboration envelope', () => {
   it('has the authority move a write of an old version past the rows inserted since', () => {
     const authority = workbookAuthority([seedSheet]);
 
-    authority.apply([insertRow(0, 2)]);
+    authority.apply([onWire(insertRow(0, 2))]);
 
-    expect(authority.rebase([writeCells(valueCell(1, 0, 'late'))], 1)).toEqual([
-      writeCells(valueCell(3, 0, 'late')),
+    expect(authority.rebase([onWire(writeCells(valueCell(1, 0, 'late')))], 1)).toEqual([
+      onWire(writeCells(valueCell(3, 0, 'late'))),
     ]);
   });
 
@@ -827,7 +833,7 @@ describe('workbook steps through the collaboration envelope', () => {
     const layoutStep = (layout: LineLayouts, base?: LineLayouts): unknown =>
       codec.encode({
         kind: 'setLayout',
-        sheet: SHEET,
+        sheet: KEY,
         layout: { ...empty, cols: layout },
         base: base === undefined ? undefined : { ...empty, cols: base },
       });
@@ -846,25 +852,25 @@ describe('workbook steps through the collaboration envelope', () => {
   it('has the authority drop a write into rows removed since and keep the rest of the pack', () => {
     const authority = workbookAuthority([seedSheet]);
 
-    authority.apply([deleteRow(1)]);
+    authority.apply([onWire(deleteRow(1))]);
 
     expect(
       authority.rebase(
-        [writeCells(valueCell(1, 0, 'gone')), writeCells(valueCell(4, 0, 'kept'))],
+        [onWire(writeCells(valueCell(1, 0, 'gone'))), onWire(writeCells(valueCell(4, 0, 'kept')))],
         1,
       ),
-    ).toEqual([writeCells(valueCell(3, 0, 'kept'))]);
+    ).toEqual([onWire(writeCells(valueCell(3, 0, 'kept')))]);
   });
 
   it.each([
-    ['a layout of an old version', [{ kind: 'setLayout', sheet: SHEET, layout: {} }], 1],
+    ['a layout of an old version', [{ kind: 'setLayout', sheet: KEY, layout: {} }], 1],
     ['a step it cannot read', [{ kind: 'nope' }], 1],
-    ['a version older than it remembers', [writeCells(valueCell(0, 0, 'late'))], 2],
+    ['a version older than it remembers', [onWire(writeCells(valueCell(0, 0, 'late')))], 2],
   ])('has the authority leave %s to its author and keep the book', (_name, steps, behind) => {
     const authority = workbookAuthority([seedSheet], { window: 1 });
 
-    authority.apply([insertRow(0)]);
-    authority.apply([insertRow(0)]);
+    authority.apply([onWire(insertRow(0))]);
+    authority.apply([onWire(insertRow(0))]);
 
     const before = authority.snapshot();
 
@@ -876,7 +882,7 @@ describe('workbook steps through the collaboration envelope', () => {
     const authority = workbookAuthority([seedSheet]);
     const before = authority.snapshot();
 
-    const accepted = authority.apply([{ kind: 'removeSheet', name: SHEET }, { kind: 'nope' }]);
+    const accepted = authority.apply([{ kind: 'removeSheet', name: KEY }, { kind: 'nope' }]);
 
     expect(accepted).toBe(false);
     expect(authority.snapshot()).toEqual(before);
@@ -886,12 +892,12 @@ describe('workbook steps through the collaboration envelope', () => {
     const authority = workbookAuthority([seedSheet]);
 
     const accepted = authority.apply([
-      writeCells(valueCell(0, 0, 'written')),
-      { kind: 'removeSheet', name: 'Missing' },
+      onWire(writeCells(valueCell(0, 0, 'written'))),
+      { kind: 'removeSheet', name: 'missing' },
     ]);
 
     expect(accepted).toBe(false);
-    expect(authority.apply([{ kind: 'addSheet', name: 'Next', index: 1 }])).toBe(true);
+    expect(authority.apply([{ kind: 'addSheet', name: 'Next', index: 1, key: 'next' }])).toBe(true);
   });
 
   it(

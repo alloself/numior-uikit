@@ -1,19 +1,22 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
+  sheetKeys,
   createCalculator,
   createStepCodec,
   createWorkbook,
   createWorkbookDocument,
   textValue,
+  keyedStep,
   workbookAuthority,
+  type Workbook,
   type WorkbookStep,
 } from '../src/core';
 
 const SHEET = 'Sheet1';
 
-const SEED: WorkbookStep = { kind: 'addSheet', name: SHEET, index: 0 };
+const SEED: WorkbookStep = { kind: 'addSheet', name: SHEET, index: 0, key: 'main' };
 
-const REPEATED_SHEET: WorkbookStep = { kind: 'addSheet', name: SHEET, index: 1 };
+const REPEATED_SHEET: WorkbookStep = { kind: 'addSheet', name: SHEET, index: 1, key: 'again' };
 
 const written = (row: number, col: number, text: string): WorkbookStep => ({
   kind: 'setCells',
@@ -21,11 +24,24 @@ const written = (row: number, col: number, text: string): WorkbookStep => ({
   cells: [{ row, col, content: { kind: 'value', value: textValue(text) } }],
 });
 
+const wiresOf = (book: Workbook, steps: readonly WorkbookStep[]): readonly unknown[] => {
+  const codec = createStepCodec(book);
+  const names = sheetKeys(book);
+
+  return steps.map((step) => {
+    const keyed = keyedStep(step, names);
+
+    if (keyed === undefined) {
+      throw new Error(`the step ${step.kind} names no sheet of the book`);
+    }
+    return codec.encode(keyed);
+  });
+};
+
 const openDocument = () => {
   const book = createWorkbook();
   const calculator = createCalculator(book);
   const document = createWorkbookDocument({ book, calculator });
-  const codec = createStepCodec(book);
 
   document.load(workbookAuthority([SEED]).snapshot(), 1);
 
@@ -33,7 +49,7 @@ const openDocument = () => {
     document,
     write: (row: number, col: number, text: string) =>
       document.stepper.apply(written(row, col, text)).ok,
-    wires: (...steps: readonly WorkbookStep[]) => steps.map((step) => codec.encode(step)),
+    wires: (...steps: readonly WorkbookStep[]) => wiresOf(book, steps),
     texts: () =>
       [0, 1, 2].map((col) => {
         const sheet = book.sheet(SHEET);

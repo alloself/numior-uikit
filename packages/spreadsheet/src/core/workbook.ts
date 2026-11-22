@@ -105,6 +105,7 @@ export interface Workbook {
   removeSheet(sheet: Sheet): void;
   sheet(name: string): Sheet | undefined;
   keyed(key: string): Sheet | undefined;
+  freshKey(): string;
   renameSheet(sheet: Sheet, name: string): boolean;
 }
 
@@ -381,6 +382,7 @@ export const createWorkbook = (): Workbook => {
     externals,
     sheet,
     keyed,
+    freshKey,
     get revision() {
       return count.writes;
     },

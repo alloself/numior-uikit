@@ -91,7 +91,7 @@ const isWireStep: Guard<WireWorkbookStep> = byKind({
     kind: oneOf(StepKind.AddSheet),
     name: isString,
     index: isCount,
-    key: optional(isSheetKey),
+    key: isSheetKey,
   }),
   [StepKind.RemoveSheet]: shapeOf({ kind: oneOf(StepKind.RemoveSheet), name: isString }),
   [StepKind.RenameSheet]: shapeOf({

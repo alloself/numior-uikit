@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
   EN_FORMULAS,
+  sheetKeys,
   createCalculator,
   createCellEditor,
   createStepCodec,
@@ -8,6 +9,7 @@ import {
   createWorkbook,
   createWorkbookDocument,
   createWorkbookHistory,
+  keyedStep,
   lineLayoutsOf,
   parseCell,
   parseFormula,
@@ -190,11 +192,18 @@ const openShared = () => {
   };
 
   const take = (step: WorkbookStep): void => {
-    const wire = codec.encode(step);
+    const local =
+      step.kind === 'addSheet' && step.key === undefined ? { ...step, key: book.freshKey() } : step;
+
+    const keyed = keyedStep(local, sheetKeys(book));
 
     calculator.recalculate({ budgetMs: Number.POSITIVE_INFINITY });
 
-    if (!stepper.apply(step).ok || !authority.apply([wire])) {
+    if (
+      keyed === undefined ||
+      !stepper.apply(local).ok ||
+      !authority.apply([codec.encode(keyed)])
+    ) {
       throw new Error(`The step ${step.kind} was refused`);
     }
   };
@@ -478,8 +487,8 @@ describe('a workbook opened again from the server', () => {
     const loaded = client.document.load(
       {
         steps: [
-          { kind: 'addSheet', name: 'One', index: 0 },
-          { kind: 'addSheet', name: 'One', index: 1 },
+          { kind: 'addSheet', name: 'One', index: 0, key: 'one' },
+          { kind: 'addSheet', name: 'One', index: 1, key: 'two' },
         ],
       },
       3,
