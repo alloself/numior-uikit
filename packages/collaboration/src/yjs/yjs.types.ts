@@ -1,5 +1,5 @@
 import type { Dispatch, Doc, EditorState, ElementNode, Plugin, Schema } from '@numior/editor-core';
-import type { Map as YMap, XmlElement } from 'yjs';
+import type { Array as YArray, Map as YMap, XmlElement, XmlText } from 'yjs';
 
 export interface YjsBindingOptions {
   readonly schema: Schema;
@@ -15,32 +15,27 @@ export interface YjsBinding {
   readonly destroy: () => void;
 }
 
-export interface PlaceOrigin {
-  readonly parent: string;
-  readonly key: string;
-}
+export type Fields = Readonly<Record<string, unknown>>;
 
-export interface Place extends PlaceOrigin {
-  readonly clock: number;
-  readonly from?: PlaceOrigin | undefined;
-}
+export type ReadBlock = ElementNode | typeof Skipped | undefined;
 
-export interface TreeIndex {
-  readonly placeOf: (id: string) => PlaceOrigin | undefined;
-  readonly rawOf: (id: string) => Place | undefined;
-  readonly childrenOf: (parent: string) => readonly string[];
-  readonly overrides: () => ReadonlyMap<string, PlaceOrigin>;
-  readonly clock: () => number;
-  readonly update: (changes: ReadonlyMap<string, Place | undefined>) => ReadonlySet<string>;
-}
+export type Known = WeakMap<XmlElement, ElementNode>;
 
-export interface TreeStore {
+export type Entry = XmlText | YMap<unknown>;
+
+export interface ReadContext {
   readonly schema: Schema;
+  readonly known: Known;
+}
+
+export interface TreeStore extends ReadContext {
   readonly blocks: YMap<unknown>;
-  readonly index: TreeIndex;
+  readonly root: YArray<unknown>;
   readonly cache: Map<string, ElementNode>;
   readonly stale: Set<string>;
-  readonly known: WeakMap<XmlElement, ElementNode>;
+  readonly parents: Map<string, string>;
+  readonly loose: Set<string>;
+  readonly copies: Set<string>;
 }
 
 export type RepairTarget =
@@ -48,12 +43,25 @@ export type RepairTarget =
   | {
       readonly kind: typeof RepairKind.Inline;
       readonly element: XmlElement;
+      readonly line: XmlText;
       readonly owner: string;
     };
 
+export type Atom =
+  | { readonly kind: typeof AtomKind.Text; readonly text: string; readonly format: Fields }
+  | { readonly kind: typeof AtomKind.Embed; readonly key: string; readonly element?: XmlElement };
+
+export type EntryKind = (typeof EntryKind)[keyof typeof EntryKind];
+
 export const EntryField = {
   Type: 'nui:type',
-  Place: 'nui:place',
+  Children: 'nui:children',
 } as const;
 
+export const EntryKind = { Line: 'line', Holder: 'holder' } as const;
+
+export const AtomKind = { Text: 'text', Embed: 'embed' } as const;
+
 export const RepairKind = { Entry: 'entry', Inline: 'inline' } as const;
+
+export const Skipped = Symbol('skipped');

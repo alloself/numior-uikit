@@ -386,7 +386,7 @@ const api = computed(() => editor.value?.editor);
 
 const shared = new Doc();
 
-const binding = yjsBinding(shared, shared.getMap('description'), {
+const binding = yjsBinding(shared, 'description', {
   schema: contentSchema,
   getState: () => api.value?.state(),
   dispatch: (tr) => {
@@ -402,7 +402,15 @@ Give `binding.plugin` to the editor in `plugins`. `read()` returns the shared do
 arrived, and `seed(doc)` fills an empty one. There is no presence: carets and avatars need a
 channel of your own.
 
-Blocks live in a `Y.Map`, each under its id with its own place in its parent. Moving a block
-changes only that place, so text a coauthor types into the block while it moves stays put.
+The second argument names the document inside the `Y.Doc`. Blocks live in a `Y.Map` of that name,
+each under its id. The order of top-level blocks lives in a `Y.Array` named `description:order`.
+
+A block with a line of text is a `Y.XmlText`, and a container keeps a list of its children's ids.
+Moving a block moves only its id between lists. Text a coauthor types into the block while it moves
+stays put.
+
+When two people move one block to different places at once, it stays at the first of them in
+document order. A block moved into a quote that a coauthor deleted at the same time goes to the end
+of the document.
 
 <SignatureReference :names="['yjsBinding', 'YjsBindingOptions', 'YjsBinding']" />

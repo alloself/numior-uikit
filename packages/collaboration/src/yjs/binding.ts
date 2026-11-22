@@ -7,24 +7,24 @@ import {
   type ElementNode,
 } from '@numior/editor-core';
 import {
+  Array as YArray,
   XmlElement,
-  XmlFragment,
+  XmlText,
+  YMapEvent,
   type AbstractType,
   type Doc as YDoc,
-  type Map as YMap,
+  type Transaction as YTransaction,
   type YEvent,
 } from 'yjs';
 import { applyDocChange } from './doc-change';
-import { documentOf, ID_ATTRIBUTE } from './from-yjs';
-import { clientTag } from './order-key';
+import { isEntry, isLine, ROOT_PARENT } from './entries';
+import { embedsOf } from './line';
+import { rootOf } from './read-tree';
 import { carryMoves } from './remote-moves';
-import { isEntry, isInlineType, placeFrom, rootOf } from './read-tree';
-import { createTreeIndex, ROOT_PARENT } from './tree-index';
-import { writeTree } from './write-tree';
+import { documentOf, ID_ATTRIBUTE } from './values';
+import { dropCopies, writeTree } from './write-tree';
 import {
-  EntryField,
   RepairKind,
-  type Place,
   type RepairTarget,
   type TreeStore,
   type YjsBinding,
@@ -33,64 +33,97 @@ import {
 
 const NO_ROOT_ID = 'root';
 
+const ORDER_SUFFIX = ':order';
+
 const isRepairable = (issue: DocIssue): boolean =>
   issue.path.length > 0 &&
   (issue.kind === DocIssueKind.Content ||
     (issue.kind === DocIssueKind.Id && issue.reason === 'duplicate'));
 
-const childById = (parent: XmlFragment, id: string): XmlElement | undefined =>
-  parent
-    .toArray()
-    .findLast(
-      (child): child is XmlElement =>
-        child instanceof XmlElement && child.getAttribute(ID_ATTRIBUTE) === id,
-    );
-
 const forget = (store: TreeStore, element: XmlElement): void => {
   let current: unknown = element;
 
-  while (current instanceof XmlElement) {
-    store.known.delete(current);
+  while (current instanceof XmlElement || current instanceof XmlText) {
+    if (current instanceof XmlElement) {
+      store.known.delete(current);
+    }
     current = current.parent;
   }
 };
 
-const forgetInline = (store: TreeStore, target: AbstractType<unknown>): void => {
-  if (target instanceof XmlElement) {
-    forget(store, target);
+const ownerOf = (event: YEvent<AbstractType<unknown>>): string | undefined => {
+  const [head] = event.path;
+
+  return typeof head === 'string' ? head : undefined;
+};
+
+const arrivalsOf = (
+  store: TreeStore,
+  event: { readonly changes: { readonly delta: readonly { readonly insert?: unknown }[] } },
+  arrived: Set<string>,
+): void => {
+  if (store.cache.size === 0) {
     return;
   }
-  if (!(target.parent instanceof XmlElement)) {
-    return;
+  for (const change of event.changes.delta) {
+    const { insert } = change;
+
+    if (!Array.isArray(insert)) {
+      continue;
+    }
+    for (const item of insert) {
+      if (typeof item !== 'string' || !store.cache.has(item)) {
+        continue;
+      }
+      arrived.add(item);
+    }
   }
-  forget(store, target.parent);
+};
+
+const knownOf = (store: TreeStore, ids: ReadonlySet<string>): ReadonlySet<string> => {
+  const known = new Set<string>();
+
+  for (const id of ids) {
+    if (!store.cache.has(id)) {
+      continue;
+    }
+    known.add(id);
+  }
+  return known;
 };
 
 const entryTarget = (store: TreeStore, child: ElementNode): RepairTarget | undefined =>
   isEntry(store.blocks.get(child.id)) ? { kind: RepairKind.Entry, node: child } : undefined;
 
 const inlineTarget = (
-  fragment: XmlFragment,
+  line: XmlText,
   child: ElementNode,
   owner: string,
 ): RepairTarget | undefined => {
-  const element = childById(fragment, child.id);
+  const found = embedsOf(line).findLast(
+    ({ element }) =>
+      element.nodeName === child.type && element.getAttribute(ID_ATTRIBUTE) === child.id,
+  );
 
-  return element === undefined ? undefined : { kind: RepairKind.Inline, element, owner };
+  return found === undefined
+    ? undefined
+    : { kind: RepairKind.Inline, element: found.element, line, owner };
 };
 
-const fragmentAfter = (
+const lineAfter = (
   store: TreeStore,
   found: RepairTarget,
   child: ElementNode,
-): XmlFragment | undefined => {
+): XmlText | undefined => {
   if (found.kind === RepairKind.Inline) {
-    return found.element;
+    const [first] = found.element.toArray();
+
+    return first instanceof XmlText ? first : undefined;
   }
 
   const entry = store.blocks.get(child.id);
 
-  return isEntry(entry) && isInlineType(store, child.type) ? entry : undefined;
+  return isLine(entry) ? entry : undefined;
 };
 
 const targetAt = (
@@ -99,7 +132,7 @@ const targetAt = (
   path: readonly number[],
 ): RepairTarget | undefined => {
   let model = root;
-  let fragment: XmlFragment | undefined;
+  let line: XmlText | undefined;
   let owner = ROOT_PARENT;
   let found: RepairTarget | undefined;
 
@@ -110,35 +143,16 @@ const targetAt = (
       return undefined;
     }
 
-    found =
-      fragment === undefined ? entryTarget(store, child) : inlineTarget(fragment, child, owner);
+    found = line === undefined ? entryTarget(store, child) : inlineTarget(line, child, owner);
 
     if (found === undefined) {
       return undefined;
     }
     owner = found.kind === RepairKind.Entry ? child.id : owner;
-    fragment = fragmentAfter(store, found, child);
+    line = lineAfter(store, found, child);
     model = child;
   }
   return found;
-};
-
-const ownerOf = (event: YEvent<AbstractType<unknown>>): string | undefined => {
-  const [head] = event.path;
-
-  return typeof head === 'string' ? head : undefined;
-};
-
-const placed = (places: ReadonlyMap<string, Place | undefined>): ReadonlySet<string> => {
-  const ids = new Set<string>();
-
-  for (const [id, place] of places) {
-    if (place === undefined) {
-      continue;
-    }
-    ids.add(id);
-  }
-  return ids;
 };
 
 const entryIds = (node: ElementNode): readonly string[] =>
@@ -154,25 +168,27 @@ const entryIds = (node: ElementNode): readonly string[] =>
     [node.id],
   );
 
-export const yjsBinding = (
-  ydoc: YDoc,
-  blocks: YMap<unknown>,
-  options: YjsBindingOptions,
-): YjsBinding => {
+export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions): YjsBinding => {
   const { schema, getState, dispatch, onInvalid } = options;
-  const tag = clientTag(ydoc.clientID);
   const origin = Symbol('nui-yjs');
-  const broken = new Set<string>();
+  const blocks = ydoc.getMap<unknown>(name);
+  const order = ydoc.getArray<unknown>(`${name}${ORDER_SUFFIX}`);
 
   const store: TreeStore = {
     schema,
     blocks,
-    index: createTreeIndex(),
+    root: order,
+    known: new WeakMap(),
     cache: new Map(),
     stale: new Set(),
-    known: new WeakMap(),
+    parents: new Map(),
+    loose: new Set(),
+    copies: new Set(),
   };
 
+  const arrived = new Set<string>();
+  let pending = false;
+  let structural = false;
   let applying = false;
   let unread = false;
 
@@ -181,104 +197,91 @@ export const yjsBinding = (
 
     while (current !== undefined && !store.stale.has(current)) {
       store.stale.add(current);
-      current = current === ROOT_PARENT ? undefined : store.index.placeOf(current)?.parent;
+      current = current === ROOT_PARENT ? undefined : (store.parents.get(current) ?? ROOT_PARENT);
     }
   };
 
-  const placeOfEntry = (id: string, entry: unknown): Place | undefined => {
-    const place = isEntry(entry) ? placeFrom(entry.getAttribute(EntryField.Place)) : undefined;
-
-    if (isEntry(entry) && place === undefined) {
-      broken.add(id);
-      return undefined;
+  const noteEntries = (ids: Iterable<string>): void => {
+    if (store.cache.size === 0) {
+      return;
     }
-    broken.delete(id);
-    return place;
-  };
-
-  const noteEntries = (
-    ids: Iterable<string>,
-    places: Map<string, Place | undefined>,
-    changed: Set<string>,
-  ): void => {
     for (const id of ids) {
-      const entry = blocks.get(id);
-
-      places.set(id, placeOfEntry(id, entry));
-
-      if (!isEntry(entry)) {
-        store.cache.delete(id);
-        store.stale.delete(id);
+      if (!store.cache.has(id)) {
         continue;
       }
-      changed.add(id);
+      store.cache.delete(id);
+      store.stale.delete(id);
+      mark(store.parents.get(id) ?? ROOT_PARENT);
     }
   };
 
-  const settle = (
-    places: ReadonlyMap<string, Place | undefined>,
-    changed: Iterable<string>,
+  const noteBlocks = (
+    events: readonly YEvent<AbstractType<unknown>>[],
+    transaction: YTransaction,
   ): void => {
-    for (const parent of store.index.update(places)) {
-      mark(parent);
+    if (transaction.origin === origin) {
+      return;
     }
-    for (const id of changed) {
-      mark(id);
-    }
-  };
-
-  const note = (events: readonly YEvent<AbstractType<unknown>>[]): ReadonlySet<string> => {
-    const places = new Map<string, Place | undefined>();
-    const changed = new Set<string>();
+    pending = true;
 
     for (const event of events) {
       const { target } = event;
 
       if (target === blocks) {
-        noteEntries(event.keys.keys(), places, changed);
+        structural = true;
+        noteEntries(event instanceof YMapEvent ? event.keysChanged : event.keys.keys());
         continue;
       }
-      forgetInline(store, target);
+      if (target instanceof XmlElement) {
+        forget(store, target);
+      }
+      if (target.parent instanceof XmlElement) {
+        forget(store, target.parent);
+      }
 
       const id = ownerOf(event);
 
       if (id === undefined) {
         continue;
       }
-      changed.add(id);
-
-      if (target.parent !== blocks || !event.keys.has(EntryField.Place)) {
-        continue;
+      if (target instanceof YArray) {
+        structural = true;
+        arrivalsOf(store, event, arrived);
       }
-      places.set(id, placeOfEntry(id, target));
+      mark(id);
     }
-    settle(places, changed);
-    return placed(places);
+  };
+
+  const noteOrder = (event: YEvent<YArray<unknown>>, transaction: YTransaction): void => {
+    if (transaction.origin === origin) {
+      return;
+    }
+    pending = true;
+    structural = true;
+    arrivalsOf(store, event, arrived);
+    mark(ROOT_PARENT);
   };
 
   const removeTarget = (target: RepairTarget): void => {
     if (target.kind === RepairKind.Inline) {
-      const parent = target.element.parent;
+      const at = embedsOf(target.line).find(({ element }) => element === target.element)?.at;
 
       forget(store, target.element);
       mark(target.owner);
 
-      if (!(parent instanceof XmlFragment)) {
+      if (at === undefined) {
         return;
       }
-      parent.delete(parent.toArray().indexOf(target.element), 1);
+      target.line.delete(at, 1);
       return;
     }
-
-    const removed = new Map<string, Place | undefined>();
 
     for (const id of entryIds(target.node)) {
       blocks.delete(id);
       store.cache.delete(id);
       store.stale.delete(id);
-      removed.set(id, undefined);
     }
-    settle(removed, []);
+    mark(store.parents.get(target.node.id) ?? ROOT_PARENT);
   };
 
   const repaired = (root: ElementNode): boolean => {
@@ -302,23 +305,28 @@ export const yjsBinding = (
     return targets.some((target) => target !== undefined);
   };
 
-  const validRoot = (shell: ElementNode): ElementNode | undefined => {
-    let root = broken.size > 0 ? undefined : rootOf(store, shell);
+  const validRoot = (shell: ElementNode, full: boolean): ElementNode | undefined => {
+    let root = rootOf(store, shell, full);
 
     while (root !== undefined && !schema.check(root).ok) {
-      root = repaired(root) ? rootOf(store, shell) : undefined;
+      root = repaired(root) ? rootOf(store, shell, true) : undefined;
     }
     return root;
   };
 
-  const pull = (moved: ReadonlySet<string>): void => {
+  const pull = (): void => {
     const state = getState();
+    const full = structural;
+    const moved = knownOf(store, arrived);
+
+    structural = false;
+    arrived.clear();
 
     if (state === undefined) {
       return;
     }
 
-    const root = validRoot(state.doc.root);
+    const root = validRoot(state.doc.root, full || unread);
 
     unread = root === undefined;
 
@@ -333,40 +341,41 @@ export const yjsBinding = (
       schema.text(text, marks),
     ).setMeta(remoteChange, true);
 
-    if (!tr.changed) {
+    if (tr.changed) {
+      applying = true;
+      dispatch(tr);
+      applying = false;
+    }
+    if (store.copies.size === 0) {
       return;
     }
 
-    applying = true;
-    dispatch(tr);
-    applying = false;
+    ydoc.transact(() => {
+      dropCopies(store);
+    }, origin);
   };
 
-  const observer: Parameters<YMap<unknown>['observeDeep']>[0] = (events, transaction) => {
+  const flush = (transaction: YTransaction): void => {
+    if (!pending) {
+      return;
+    }
+    pending = false;
+
     if (transaction.origin === origin) {
       return;
     }
-    pull(note(events));
+    pull();
   };
 
   const write = (root: ElementNode): void => {
     ydoc.transact(() => {
-      writeTree(store, root, tag);
+      writeTree(store, root);
     }, origin);
   };
 
-  const scan = (): void => {
-    const places = new Map<string, Place | undefined>();
-
-    blocks.forEach((entry, id) => {
-      places.set(id, placeOfEntry(id, entry));
-    });
-
-    store.index.update(places);
-  };
-
-  scan();
-  blocks.observeDeep(observer);
+  blocks.observeDeep(noteBlocks);
+  order.observe(noteOrder);
+  ydoc.on('afterTransaction', flush);
 
   return {
     plugin: definePlugin({
@@ -382,11 +391,11 @@ export const yjsBinding = (
       },
     }),
     read: () => {
-      if (blocks.size === 0) {
+      if (blocks.size === 0 && order.length === 0) {
         return undefined;
       }
 
-      const root = validRoot(schema.element(schema.top.name, { id: NO_ROOT_ID }));
+      const root = validRoot(schema.element(schema.top.name, { id: NO_ROOT_ID }), true);
 
       return root === undefined ? undefined : documentOf(schema, root);
     },
@@ -394,7 +403,9 @@ export const yjsBinding = (
       write(doc.root);
     },
     destroy: () => {
-      blocks.unobserveDeep(observer);
+      blocks.unobserveDeep(noteBlocks);
+      order.unobserve(noteOrder);
+      ydoc.off('afterTransaction', flush);
     },
   };
 };

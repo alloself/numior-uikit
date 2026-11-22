@@ -20,13 +20,11 @@ import {
   Doc as YDoc,
   encodeStateAsUpdate,
   encodeStateVector,
-  XmlElement,
+  Array as YArray,
+  Map as YMap,
   XmlText,
-  type Map as YMap,
 } from 'yjs';
 import { yjsBinding, type YjsBinding } from '../src/yjs';
-import { placeCode } from '../src/yjs/read-tree';
-import type { Place } from '../src/yjs/yjs.types';
 
 interface Client {
   readonly ydoc: YDoc;
@@ -38,13 +36,22 @@ interface Client {
   readonly text: () => string;
 }
 
-const BLOCKS = 'document';
+interface Turn {
+  readonly who: number;
+  readonly kind: 'type' | 'move' | 'nest';
+  readonly block: string;
+  readonly to: number;
+  readonly peer: number;
+  readonly exchanged: boolean;
+}
 
-const LAST_KEY = 'b00';
+const BLOCKS = 'document';
 
 const LATENCY_BUDGET_MS = 100;
 
 const MOVABLE = ['a', 'b', 'c', 'd'] as const;
+
+const CARRIED = ['a', 'b', 'c', 'd', 'e', 'q', 'q2'] as const;
 
 const paragraph = (id: string, text: string): ElementNode =>
   fixtureSchema.element('paragraph', {
@@ -70,7 +77,7 @@ const clientOf = (
 ): Client => {
   let state: EditorState | undefined;
 
-  const binding = yjsBinding(ydoc, ydoc.getMap(BLOCKS), {
+  const binding = yjsBinding(ydoc, BLOCKS, {
     schema: fixtureSchema,
     getState: () => state,
     dispatch: (tr) => {
@@ -166,31 +173,46 @@ const numbered = (count: number): Doc =>
 
 const sharedBlocks = (client: Client): YMap<unknown> => client.ydoc.getMap(BLOCKS);
 
-const blocksOf = (client: Client): readonly unknown[] => Array.from(sharedBlocks(client).values());
+const sharedOrder = (client: Client): YArray<unknown> => client.ydoc.getArray(`${BLOCKS}:order`);
 
-const removeItem = (client: Client, id: string): void => {
-  client.ydoc.transact(() => {
-    sharedBlocks(client).delete(id);
-  });
+const childList = (client: Client, parent: string): YArray<unknown> | undefined => {
+  if (parent === '') {
+    return sharedOrder(client);
+  }
+
+  const entry = sharedBlocks(client).get(parent);
+  const list = entry instanceof YMap ? entry.get('nui:children') : undefined;
+
+  return list instanceof YArray ? list : undefined;
 };
+
+const blocksOf = (client: Client): readonly unknown[] => Array.from(sharedBlocks(client).values());
 
 const addForeign = (client: Client, type: string): void => {
   client.ydoc.transact(() => {
-    const entry = new XmlElement('block');
+    const entry = new YMap<unknown>();
 
     sharedBlocks(client).set('alien', entry);
-    entry.setAttribute('nui:type', type);
-    entry.setAttribute('nui:place', placeCode({ parent: '', key: LAST_KEY, clock: 1 }));
+    entry.set('nui:type', type);
+    sharedOrder(client).push(['alien']);
   });
 };
 
 const sharedText = (client: Client, id: string): string => {
   const entry = sharedBlocks(client).get(id);
+  const delta: unknown = entry instanceof XmlText ? entry.toDelta() : [];
 
-  return entry instanceof XmlElement
-    ? entry
-        .toArray()
-        .reduce((text, child) => (child instanceof XmlText ? text + child.toString() : text), '')
+  return Array.isArray(delta)
+    ? delta.reduce<string>(
+        (text, item: unknown) =>
+          typeof item === 'object' &&
+          item !== null &&
+          'insert' in item &&
+          typeof item.insert === 'string'
+            ? text + item.insert
+            : text,
+        '',
+      )
     : '';
 };
 
@@ -219,16 +241,51 @@ const slotOf = (client: Client, id: string): { parent: string; index: number } =
     : { parent: root.id, index: -1 };
 };
 
-const tangle = (client: Client, places: Readonly<Record<string, Place>>): void => {
-  client.ydoc.transact(() => {
-    for (const [id, place] of Object.entries(places)) {
-      const entry = sharedBlocks(client).get(id);
+const takeOut = (list: YArray<unknown>, id: string): void => {
+  const items = list.toArray();
 
-      if (!(entry instanceof XmlElement)) {
-        continue;
-      }
-      entry.setAttribute('nui:place', placeCode(place));
+  for (let at = items.length - 1; at >= 0; at -= 1) {
+    if (items[at] !== id) {
+      continue;
     }
+    list.delete(at, 1);
+  }
+};
+
+const tangle = (client: Client, parents: Readonly<Record<string, string>>): void => {
+  client.ydoc.transact(() => {
+    for (const [id, parent] of Object.entries(parents)) {
+      for (const holder of ['', ...Object.keys(parents)]) {
+        const list = childList(client, holder);
+
+        if (list === undefined) {
+          continue;
+        }
+        takeOut(list, id);
+      }
+      childList(client, parent)?.push([id]);
+    }
+  });
+};
+
+const listings = (client: Client): ReadonlyMap<string, number> => {
+  const counts = new Map<string, number>();
+
+  for (const holder of ['', ...sharedBlocks(client).keys()]) {
+    for (const item of childList(client, holder)?.toArray() ?? []) {
+      const id = String(item);
+
+      counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+  }
+  return counts;
+};
+
+const remove = (client: Client, id: string): void => {
+  client.apply((from) => {
+    const at = from.doc.positionOf(id) ?? 0;
+
+    return from.tr.delete(at, at + (from.doc.byId(id)?.size ?? 0));
   });
 };
 
@@ -350,6 +407,55 @@ describe('yjsBinding', () => {
     expect(right.text()).toBe('Oh, Hi !|two');
   });
 
+  it('carries a change of the attributes of a mention', () => {
+    const line = fixtureSchema.element('paragraph', {
+      id: 'a',
+      content: [
+        fixtureSchema.text('Hi '),
+        fixtureSchema.element('mention', { id: 'm', attrs: { user: 'u1', label: 'Ann' } }),
+      ],
+    });
+
+    const [left, right] = pair(docOf(line));
+
+    left.apply((from) =>
+      from.tr.setNodeAttrs(from.doc.positionOf('m') ?? 0, { user: 'u2', label: 'Bob' }),
+    );
+
+    exchange(left, right);
+
+    expect(right.state().doc.byId('m')?.attrs).toEqual({ user: 'u2', label: 'Bob' });
+    expect(right.binding.read()?.root.content).toEqual(left.state().doc.root.content);
+  });
+
+  it('keeps one of two mentions two people inserted with the same id at once', () => {
+    const [left, right] = pair(docOf(paragraph('a', 'one'), paragraph('b', 'two')));
+
+    const mention = fixtureSchema.element('mention', {
+      id: 'm',
+      attrs: { user: 'u1', label: 'Ann' },
+    });
+
+    for (const [client, block] of [
+      [left, 'a'],
+      [right, 'b'],
+    ] as const) {
+      client.apply((from) => {
+        const at = (from.doc.positionOf(block) ?? 0) + 1;
+
+        return from.tr.replace(at, at, { content: [mention], openStart: 0, openEnd: 0 });
+      });
+    }
+
+    exchange(left, right);
+    exchange(left, right);
+
+    expect(left.state().doc.root).toEqual(right.state().doc.root);
+    expect(fixtureSchema.check(left.state().doc.root).ok).toBe(true);
+    expect(left.state().doc.byId('m')).toBeDefined();
+    expect(right.binding.read()?.root.content).toEqual(right.state().doc.root.content);
+  });
+
   it('carries new and deleted blocks', () => {
     const [left, right] = pair(docOf(paragraph('a', 'one'), paragraph('b', 'two')));
 
@@ -426,6 +532,60 @@ describe('yjsBinding', () => {
     ).toHaveLength(1);
 
     expect(left.text().split('|')).toHaveLength(5);
+    expect(Array.from(listings(left).values())).toEqual(Array(5).fill(1));
+    expect(listings(right)).toEqual(listings(left));
+  });
+
+  it('lists a block once after two people carried it down to different places at once', () => {
+    const [left, right] = pair(numbered(5));
+
+    carry(left, 'p1', 'p4');
+    carry(right, 'p1', undefined);
+    exchange(left, right);
+    exchange(left, right);
+
+    expect([left.text(), right.text()]).toEqual([
+      'Paragraph 0|Paragraph 2|Paragraph 3|Paragraph 1|Paragraph 4',
+      'Paragraph 0|Paragraph 2|Paragraph 3|Paragraph 1|Paragraph 4',
+    ]);
+
+    expect(Array.from(listings(left).values())).toEqual(Array(5).fill(1));
+    expect(listings(right)).toEqual(listings(left));
+  });
+
+  it('drops a block one person deleted while another carried it', () => {
+    const [left, right] = pair(numbered(4));
+
+    remove(left, 'p1');
+    carry(right, 'p1', undefined);
+    exchange(left, right);
+    exchange(left, right);
+
+    expect([left.text(), right.text()]).toEqual([
+      'Paragraph 0|Paragraph 2|Paragraph 3',
+      'Paragraph 0|Paragraph 2|Paragraph 3',
+    ]);
+
+    expect(listings(right)).toEqual(listings(left));
+  });
+
+  it('keeps a block carried into a quote someone deleted at the same time at the end of the document', () => {
+    const [left, right] = pair(
+      docOf(
+        paragraph('a', 'one'),
+        quote('q', paragraph('inner', 'quoted')),
+        paragraph('c', 'three'),
+      ),
+    );
+
+    moveInto(left, 'a', 'q', 1);
+    remove(right, 'q');
+    exchange(left, right);
+    exchange(left, right);
+
+    expect(left.state().doc.root).toEqual(right.state().doc.root);
+    expect([left.text(), right.text()]).toEqual(['three|one', 'three|one']);
+    expect(right.binding.read()?.root.content).toEqual(right.state().doc.root.content);
   });
 
   it('keeps text typed into a block while someone else carries it', () => {
@@ -515,11 +675,7 @@ describe('yjsBinding', () => {
       ),
     );
 
-    tangle(left, {
-      qa: { parent: 'qc', key: 'a1', clock: 9, from: { parent: 'qb', key: 'a0' } },
-      qb: { parent: 'qa', key: 'a1', clock: 3, from: { parent: '', key: 'a1' } },
-      qc: { parent: 'qa', key: 'a2', clock: 2, from: { parent: '', key: 'a2' } },
-    });
+    tangle(left, { qa: 'qc', qb: 'qa', qc: 'qa' });
 
     exchange(left, right);
 
@@ -620,8 +776,8 @@ describe('yjsBinding', () => {
 
     const [left, right] = pair(docOf(paragraph('a', 'keep'), list));
 
-    removeItem(left, 'item0');
-    removeItem(right, 'item1');
+    remove(left, 'item0');
+    remove(right, 'item1');
     exchange(left, right);
 
     expect(fixtureSchema.check(left.state().doc.root).ok).toBe(true);
@@ -706,6 +862,66 @@ const shuffleBlock = (client: Client, block: string, kind: string, to: number): 
   }
 };
 
+const isQuote = (id: string): boolean => id === 'q' || id === 'q2';
+
+const meshOf = (clients: readonly Client[]): void => {
+  for (const one of clients) {
+    for (const other of clients) {
+      if (one === other) {
+        continue;
+      }
+      send(one, other);
+    }
+  }
+};
+
+const paragraphIds = (node: ElementNode): readonly string[] =>
+  node.content.reduce<string[]>(
+    (ids, child) => {
+      if (child.kind !== 'element') {
+        return ids;
+      }
+      for (const id of paragraphIds(child)) {
+        ids.push(id);
+      }
+      return ids;
+    },
+    node.type === 'paragraph' ? [node.id] : [],
+  );
+
+const carryAround = (client: Client, { kind, block, to }: Turn): void => {
+  const { doc } = client.state();
+  const target = block === 'q' ? 'q2' : 'q';
+
+  switch (kind) {
+    case 'type':
+      client.insertAt(block, 'x');
+      break;
+    case 'nest':
+      moveInto(client, block, target, to % ((doc.byId(target)?.content.length ?? 0) + 1));
+      break;
+    default:
+      moveInto(client, block, doc.root.id, to % (doc.root.content.length + 1));
+  }
+};
+
+const playTurn = (clients: readonly Client[], turn: Turn): void => {
+  const client = clients[turn.who];
+  const other = clients[turn.peer];
+
+  if (client === undefined) {
+    return;
+  }
+  carryAround(client, turn);
+
+  const kept = !turn.exchanged || other === undefined || other === client;
+
+  if (kept) {
+    return;
+  }
+  send(client, other);
+};
+
 describe('yjsBinding convergence', () => {
   it('keeps every letter typed while both sides carry blocks around and into a quote', () => {
     const turn = fc.record({
@@ -745,6 +961,70 @@ describe('yjsBinding convergence', () => {
         expect(left.state().doc.root).toEqual(right.state().doc.root);
         expect(fixtureSchema.check(left.state().doc.root).ok).toBe(true);
         expect(lettersIn(left.text(), 'x')).toBe(typed);
+        expect(left.binding.read()?.root.content).toEqual(left.state().doc.root.content);
+        expect(right.binding.read()?.root.content).toEqual(right.state().doc.root.content);
+        expect(listings(right)).toEqual(listings(left));
+      }),
+      { numRuns: 300 },
+    );
+  });
+
+  it('loses no paragraph and no letter when three people carry blocks and quotes into each other', () => {
+    const turn = fc.record({
+      who: fc.nat({ max: 2 }),
+      kind: fc.constantFrom('type', 'move', 'nest'),
+      block: fc.constantFrom(...CARRIED),
+      to: fc.nat(),
+      peer: fc.nat({ max: 2 }),
+      exchanged: fc.boolean(),
+    });
+
+    fc.assert(
+      fc.property(fc.array(turn, { minLength: 1, maxLength: 40 }), (turns) => {
+        const doc = docOf(
+          paragraph('a', 'one'),
+          paragraph('b', 'two'),
+          quote('q', paragraph('e', 'inside')),
+          paragraph('c', 'three'),
+          quote('q2', paragraph('d', 'four')),
+        );
+
+        const clients = [clientOf(doc), clientOf(doc), clientOf(doc)];
+
+        const typed = turns.reduce(
+          (count, step) => (step.kind === 'type' && !isQuote(step.block) ? count + 1 : count),
+          0,
+        );
+
+        clients[0]?.binding.seed(doc);
+        meshOf(clients);
+
+        turns.forEach((step) => {
+          playTurn(
+            clients,
+            step.kind === 'type' && isQuote(step.block) ? { ...step, kind: 'move' } : step,
+          );
+        });
+
+        meshOf(clients);
+        meshOf(clients);
+
+        const roots = clients.map((client) => client.state().doc.root);
+
+        expect(roots.slice(1)).toEqual([roots[0], roots[0]]);
+
+        expect(clients.map((client) => client.binding.read()?.root.content)).toEqual(
+          roots.map((root) => root.content),
+        );
+
+        expect(roots.map((root) => fixtureSchema.check(root).ok)).toEqual([true, true, true]);
+        expect(lettersIn(clients[0]?.text() ?? '', 'x')).toBe(typed);
+
+        expect(
+          paragraphIds(roots[0] ?? doc.root)
+            .filter((id) => /^[a-e]$/u.test(id))
+            .toSorted(),
+        ).toEqual(['a', 'b', 'c', 'd', 'e']);
       }),
       { numRuns: 300 },
     );

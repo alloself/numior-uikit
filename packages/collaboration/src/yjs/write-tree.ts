@@ -1,27 +1,35 @@
+import { ContentNodeKind, type ContentNode, type ElementNode } from '@numior/editor-core';
+import { Array as YArray, Map as YMap, XmlText } from 'yjs';
 import {
-  ContentNodeKind,
-  type Attrs,
-  type ContentNode,
-  type ElementNode,
-} from '@numior/editor-core';
-import { XmlElement } from 'yjs';
-import { keysBetween } from './order-key';
-import { isEntry, isInlineType, placeCode } from './read-tree';
+  fits,
+  holdsChildren,
+  isLine,
+  kindOf,
+  listIn,
+  listOf,
+  ROOT_PARENT,
+  writeAttrs,
+  writeType,
+} from './entries';
+import { commonRun } from './common-run';
+import { writeLine } from './line';
 import { risingRun } from './rising-run';
-import { syncChildren } from './to-yjs';
-import { ROOT_PARENT } from './tree-index';
-import { EntryField, type Place, type TreeStore } from './yjs.types';
+import { EntryField, EntryKind, type Entry, type TreeStore } from './yjs.types';
+
+interface Window {
+  readonly start: number;
+  readonly end: number;
+}
+
+interface Left {
+  readonly node: ElementNode;
+  readonly from: string;
+}
 
 interface Writing {
   readonly store: TreeStore;
-  readonly tag: string;
-  readonly clock: number;
-  readonly placed: Set<string>;
-  readonly left: Map<string, ElementNode>;
-  readonly changes: Map<string, Place | undefined>;
+  readonly left: Map<string, Left>;
 }
-
-const BLOCK_NAME = 'block';
 
 const elementsOf = (content: readonly ContentNode[]): readonly ElementNode[] =>
   content.reduce<ElementNode[]>((elements, node) => {
@@ -31,185 +39,94 @@ const elementsOf = (content: readonly ContentNode[]): readonly ElementNode[] =>
     return elements;
   }, []);
 
-const keptKey = (store: TreeStore, id: string, parent: string): string | undefined => {
-  const raw = store.index.rawOf(id);
+const sameIds = (next: readonly ElementNode[], previous: readonly ElementNode[]): boolean =>
+  next.length === previous.length && next.every((node, at) => node.id === previous[at]?.id);
 
-  return raw?.parent === parent && !store.index.overrides().has(id) ? raw.key : undefined;
-};
-
-const writePlace = (
-  writing: Writing,
-  entry: XmlElement,
-  id: string,
-  parent: string,
-  key: string,
+const removeOthers = (
+  list: YArray<unknown>,
+  start: number,
+  kept: ReadonlySet<number>,
+  count: number,
 ): void => {
-  const before = writing.store.index.placeOf(id);
-  const { clock } = writing;
+  let end = count;
 
-  const place: Place =
-    before === undefined
-      ? { parent, key, clock }
-      : { parent, key, clock, from: { parent: before.parent, key: before.key } };
-
-  entry.setAttribute(EntryField.Place, placeCode(place));
-  writing.changes.set(id, place);
-};
-
-const isOwnField = (key: string): boolean => key.startsWith('nui:');
-
-const syncAttrs = (entry: XmlElement, attrs: Attrs): void => {
-  for (const key of Object.keys(entry.getAttributes())) {
-    if (isOwnField(key) || Object.hasOwn(attrs, key)) {
+  for (let index = count - 1; index >= -1; index -= 1) {
+    if (index >= 0 && !kept.has(index)) {
       continue;
     }
-    entry.removeAttribute(key);
+    if (end - index > 1) {
+      list.delete(start + index + 1, end - index - 1);
+    }
+    end = index;
   }
-  for (const [key, value] of Object.entries(attrs)) {
-    const encoded = JSON.stringify(value);
+};
 
-    if (entry.getAttribute(key) === encoded) {
+const insertMissing = (
+  list: YArray<unknown>,
+  start: number,
+  next: readonly ElementNode[],
+  remaining: readonly unknown[],
+): void => {
+  const at = new Map(remaining.map((item, index) => [item, index]));
+  const runs: { readonly index: number; readonly ids: string[] }[] = [];
+  let run: string[] = [];
+
+  for (const node of next) {
+    const index = at.get(node.id);
+
+    if (index === undefined) {
+      run.push(node.id);
       continue;
     }
-    entry.setAttribute(key, encoded);
-  }
-};
-
-const fillContent = (
-  writing: Writing,
-  entry: XmlElement,
-  node: ElementNode,
-  previous: readonly ContentNode[],
-): void => {
-  if (isInlineType(writing.store, node.type)) {
-    syncChildren(writing.store.known, entry, node.content);
-    return;
-  }
-  syncContainer(writing, node.id, node.content, previous);
-};
-
-const createEntry = (writing: Writing, node: ElementNode, parent: string, key: string): void => {
-  const entry = new XmlElement(BLOCK_NAME);
-
-  writing.store.blocks.set(node.id, entry);
-  entry.setAttribute(EntryField.Type, node.type);
-  syncAttrs(entry, node.attrs);
-  writePlace(writing, entry, node.id, parent, key);
-  fillContent(writing, entry, node, []);
-  writing.store.cache.set(node.id, node);
-};
-
-const retyped = (
-  writing: Writing,
-  entry: XmlElement,
-  node: ElementNode,
-  previous: ElementNode | undefined,
-): readonly ContentNode[] => {
-  const type = entry.getAttribute(EntryField.Type);
-
-  if (type === node.type) {
-    return previous?.content ?? [];
-  }
-
-  const wasInline = typeof type === 'string' && isInlineType(writing.store, type);
-
-  entry.setAttribute(EntryField.Type, node.type);
-
-  if (wasInline === isInlineType(writing.store, node.type)) {
-    return previous?.content ?? [];
-  }
-  if (wasInline) {
-    entry.delete(0, entry.length);
-    return [];
-  }
-  for (const kid of elementsOf(previous?.content ?? [])) {
-    writing.left.set(kid.id, kid);
-  }
-  return [];
-};
-
-const syncEntry = (writing: Writing, node: ElementNode, parent: string, key: string): void => {
-  const entry = writing.store.blocks.get(node.id);
-
-  if (!isEntry(entry)) {
-    createEntry(writing, node, parent, key);
-    return;
-  }
-  if (keptKey(writing.store, node.id, parent) !== key) {
-    writePlace(writing, entry, node.id, parent, key);
-  }
-
-  const previous = writing.store.cache.get(node.id);
-
-  if (previous === node) {
-    return;
-  }
-
-  const content = retyped(writing, entry, node, previous);
-
-  syncAttrs(entry, node.attrs);
-  fillContent(writing, entry, node, content);
-  writing.store.cache.set(node.id, node);
-};
-
-const placeRun = (
-  writing: Writing,
-  parent: string,
-  run: readonly ElementNode[],
-  before: string | undefined,
-  after: string | undefined,
-): void => {
-  const keys = keysBetween(before, after, run.length, writing.tag);
-
-  run.forEach((node, at) => {
-    const key = keys[at];
-
-    if (key === undefined) {
-      return;
+    if (run.length > 0) {
+      runs.push({ index, ids: run });
     }
-    writing.placed.add(node.id);
-    syncEntry(writing, node, parent, key);
-  });
+    run = [];
+  }
+  if (run.length > 0) {
+    runs.push({ index: remaining.length, ids: run });
+  }
+  for (const { index, ids } of runs.toReversed()) {
+    list.insert(start + index, ids);
+  }
 };
 
-const sameOrder = (
+const syncList = (
+  store: TreeStore,
+  list: YArray<unknown>,
   next: readonly ElementNode[],
-  previous: readonly ElementNode[],
-  keys: readonly (string | undefined)[],
-): boolean =>
-  next.length === previous.length &&
-  next.every((node, at) => node.id === previous[at]?.id && keys[at] !== undefined);
-
-const anchorsOf = (
-  writing: Writing,
-  next: readonly ElementNode[],
-  previous: readonly ElementNode[],
-  keys: readonly (string | undefined)[],
-): ReadonlyMap<string, string> => {
+  window: Window,
+): void => {
+  const current = list.slice(window.start, window.end);
   const position = new Map(next.map((node, at) => [node.id, at]));
+  const counted = new Set<string>();
 
-  const targets = previous.map((node, at) =>
-    keys[at] === undefined ? -1 : (position.get(node.id) ?? -1),
-  );
-
-  const kept = risingRun(targets);
-  const anchors = new Map<string, string>();
-
-  previous.forEach((node, at) => {
-    const key = keys[at];
-
-    if (kept.has(at) && key !== undefined) {
-      anchors.set(node.id, key);
-      return;
+  const targets = current.map((item) => {
+    if (typeof item !== 'string' || counted.has(item)) {
+      return -1;
     }
-    if (position.has(node.id)) {
-      return;
-    }
-    writing.left.set(node.id, node);
+    counted.add(item);
+    return position.get(item) ?? -1;
   });
 
-  return anchors;
+  const rising = risingRun(targets);
+
+  const kept = current.reduce<Set<number>>((indices, item, index) => {
+    const unknown = typeof item === 'string' && !position.has(item) && !store.blocks.has(item);
+
+    if (rising.has(index) || unknown) {
+      indices.add(index);
+    }
+    return indices;
+  }, new Set());
+
+  const remaining = current.filter((_item, index) => kept.has(index));
+
+  removeOthers(list, window.start, kept, current.length);
+  insertMissing(list, window.start, next, remaining);
 };
+
+const wholeList = (list: YArray<unknown>): Window => ({ start: 0, end: list.length });
 
 const syncContainer = (
   writing: Writing,
@@ -217,90 +134,145 @@ const syncContainer = (
   content: readonly ContentNode[],
   previousContent: readonly ContentNode[],
 ): void => {
-  const next = elementsOf(content);
-  const previous = elementsOf(previousContent);
-  const keys = previous.map((node) => keptKey(writing.store, node.id, parent));
+  const { store } = writing;
+  const limit = Math.min(content.length, previousContent.length);
+  const head = commonRun(limit, (at) => content[at] === previousContent[at]);
 
-  if (sameOrder(next, previous, keys)) {
-    next.forEach((node, at) => {
-      const key = keys[at];
+  const tail = commonRun(
+    limit - head,
+    (at) => content[content.length - 1 - at] === previousContent[previousContent.length - 1 - at],
+  );
 
-      if (key === undefined) {
-        return;
-      }
-      syncEntry(writing, node, parent, key);
-    });
+  const next = elementsOf(content.slice(head, content.length - tail));
+  const previous = elementsOf(previousContent.slice(head, previousContent.length - tail));
+  const ids = new Set(next.map((node) => node.id));
 
-    return;
-  }
-
-  const anchors = anchorsOf(writing, next, previous, keys);
-  let run: ElementNode[] = [];
-  let before: string | undefined;
-
-  for (const node of next) {
-    const anchor = anchors.get(node.id);
-
-    if (anchor === undefined) {
-      run.push(node);
+  for (const node of previous) {
+    if (ids.has(node.id)) {
       continue;
     }
-    placeRun(writing, parent, run, before, anchor);
-    run = [];
-    before = anchor;
-    syncEntry(writing, node, parent, anchor);
+    writing.left.set(node.id, { node, from: parent });
   }
-  placeRun(writing, parent, run, before, undefined);
+
+  const list = listOf(store, parent);
+
+  if (list !== undefined && store.loose.has(parent)) {
+    syncList(store, list, elementsOf(content), wholeList(list));
+    store.loose.delete(parent);
+    store.copies.delete(parent);
+  } else if (list !== undefined && !sameIds(next, previous)) {
+    syncList(store, list, next, { start: head, end: head + previous.length });
+  }
+  for (const node of next) {
+    store.parents.set(node.id, parent);
+    syncEntry(writing, node);
+  }
 };
 
-const dropLeft = (writing: Writing, node: ElementNode): void => {
-  if (writing.placed.has(node.id)) {
+const fillEntry = (
+  writing: Writing,
+  entry: Entry,
+  node: ElementNode,
+  previous: readonly ContentNode[],
+): void => {
+  if (isLine(entry)) {
+    writeLine(writing.store.known, entry, node.content);
+    return;
+  }
+  if (!holdsChildren(writing.store.schema, node.type)) {
+    return;
+  }
+  if (listIn(entry) === undefined) {
+    entry.set(EntryField.Children, new YArray<unknown>());
+  }
+  syncContainer(writing, node.id, node.content, previous);
+};
+
+const createEntry = (writing: Writing, node: ElementNode, before: unknown): void => {
+  const { store } = writing;
+  const cached = store.cache.get(node.id);
+
+  if (listIn(before) !== undefined) {
+    for (const kid of elementsOf(cached?.content ?? [])) {
+      writing.left.set(kid.id, { node: kid, from: node.id });
+    }
+  }
+
+  const entry: Entry =
+    kindOf(store.schema, node.type) === EntryKind.Line ? new XmlText() : new YMap<unknown>();
+
+  store.blocks.set(node.id, entry);
+  writeType(entry, node.type);
+  writeAttrs(entry, node.attrs);
+  fillEntry(writing, entry, node, []);
+  store.cache.set(node.id, node);
+};
+
+const syncEntry = (writing: Writing, node: ElementNode): void => {
+  const { store } = writing;
+  const previous = store.cache.get(node.id);
+
+  if (previous === node) {
     return;
   }
 
+  const entry = store.blocks.get(node.id);
+
+  if (!fits(entry, kindOf(store.schema, node.type))) {
+    createEntry(writing, node, entry);
+    return;
+  }
+  writeType(entry, node.type);
+  writeAttrs(entry, node.attrs);
+  fillEntry(writing, entry, node, previous?.content ?? []);
+  store.cache.set(node.id, node);
+};
+
+const dropLeft = (writing: Writing, node: ElementNode, from: string): void => {
   const { store } = writing;
+
+  if (store.parents.get(node.id) !== from) {
+    return;
+  }
 
   store.blocks.delete(node.id);
   store.cache.delete(node.id);
   store.stale.delete(node.id);
-  writing.changes.set(node.id, undefined);
+  store.parents.delete(node.id);
+  store.loose.delete(node.id);
+  store.copies.delete(node.id);
 
-  if (isInlineType(store, node.type)) {
+  if (!holdsChildren(store.schema, node.type)) {
     return;
   }
   for (const kid of elementsOf(node.content)) {
-    dropLeft(writing, kid);
+    dropLeft(writing, kid, node.id);
   }
 };
 
-const settleOverrides = (writing: Writing): void => {
-  for (const [id, place] of writing.store.index.overrides()) {
-    const entry = writing.store.blocks.get(id);
+export const dropCopies = (store: TreeStore): void => {
+  for (const id of Array.from(store.copies)) {
+    const node = store.cache.get(id);
+    const list = listOf(store, id);
 
-    if (!isEntry(entry)) {
+    store.copies.delete(id);
+    store.loose.delete(id);
+
+    if (node === undefined || list === undefined) {
       continue;
     }
-    writePlace(writing, entry, id, place.parent, place.key);
+    syncList(store, list, elementsOf(node.content), wholeList(list));
   }
 };
 
-export const writeTree = (store: TreeStore, root: ElementNode, tag: string): void => {
-  const writing: Writing = {
-    store,
-    tag,
-    clock: store.index.clock() + 1,
-    placed: new Set(),
-    left: new Map(),
-    changes: new Map(),
-  };
+export const writeTree = (store: TreeStore, root: ElementNode): void => {
+  const writing: Writing = { store, left: new Map() };
 
-  settleOverrides(writing);
   syncContainer(writing, ROOT_PARENT, root.content, store.cache.get(ROOT_PARENT)?.content ?? []);
+  dropCopies(store);
 
-  for (const node of writing.left.values()) {
-    dropLeft(writing, node);
+  for (const { node, from } of writing.left.values()) {
+    dropLeft(writing, node, from);
   }
-
   store.cache.set(ROOT_PARENT, root);
-  store.index.update(writing.changes);
 };
