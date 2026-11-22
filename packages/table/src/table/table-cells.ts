@@ -41,11 +41,6 @@ export interface NuiTableCells {
 
 type CellRead = (row: number, col: number) => NuiTableSourceCell | undefined;
 
-interface ReadCache {
-  readonly read: CellRead;
-  readonly forget: () => void;
-}
-
 interface EdgeWalk {
   readonly read: CellRead;
   readonly rows: number;
@@ -54,6 +49,8 @@ interface EdgeWalk {
 }
 
 const COLUMN_WIDTH = 96;
+
+const NUMBERED_SIZES = 4;
 
 export const cellName = (position: NuiTableCellPosition): string =>
   `${columnName(position.col)}${position.row + 1}`;
@@ -125,27 +122,38 @@ export const cellEdge = (
     : nextFilled(walk, from);
 };
 
-let numbered: readonly number[] = [];
+const numbered = new Map<number, readonly number[]>();
 
 const lineNumbers = (count: number): readonly number[] => {
-  if (numbered.length !== count) {
-    numbered = Array.from({ length: count }, (_, row) => row);
-  }
-  return numbered;
-};
+  const known = numbered.get(count);
 
-const forgetters = new WeakMap<object, () => void>();
-
-export const forgetCellReads = (nextEdge: NuiTableNextEdge | undefined): void => {
-  if (nextEdge === undefined) {
-    return;
+  if (known !== undefined) {
+    return known;
   }
 
-  forgetters.get(nextEdge)?.();
+  const made = Array.from({ length: count }, (_, row) => row);
+
+  numbered.set(count, made);
+
+  for (const size of numbered.keys()) {
+    if (numbered.size <= NUMBERED_SIZES) {
+      break;
+    }
+
+    numbered.delete(size);
+  }
+  return made;
 };
 
-const oncePerRender = (read: CellRead, cols: number): ReadCache => {
+let forgotten = 0;
+
+export const forgetCellReads = (): void => {
+  forgotten += 1;
+};
+
+const oncePerRender = (read: CellRead, cols: number): CellRead => {
   const seen = new Map<number, NuiTableSourceCell | undefined>();
+  let epoch = forgotten;
   let queued = false;
 
   const forget = (): void => {
@@ -153,32 +161,35 @@ const oncePerRender = (read: CellRead, cols: number): ReadCache => {
     queued = false;
   };
 
-  return {
-    forget,
-    read: (row, col) => {
-      if (getCurrentInstance() === null) {
-        return read(row, col);
-      }
-      const key = row * cols + col;
+  return (row, col) => {
+    if (getCurrentInstance() === null) {
+      return read(row, col);
+    }
+    if (epoch !== forgotten) {
+      seen.clear();
+      epoch = forgotten;
+    }
 
-      if (seen.has(key)) {
-        return seen.get(key);
-      }
-      const cell = read(row, col);
+    const key = row * cols + col;
 
-      seen.set(key, cell);
+    if (seen.has(key)) {
+      return seen.get(key);
+    }
 
-      if (!queued) {
-        queued = true;
-        queueMicrotask(forget);
-      }
-      return cell;
-    },
+    const cell = read(row, col);
+
+    seen.set(key, cell);
+
+    if (!queued) {
+      queued = true;
+      queueMicrotask(forget);
+    }
+    return cell;
   };
 };
 
 export const tableCells = (source: NuiTableCellSource): NuiTableCells => {
-  const { read, forget } = oncePerRender((row, col) => source.cellAt(row, col), source.cols);
+  const read = oncePerRender((row, col) => source.cellAt(row, col), source.cols);
   const indexOf = new Map<string, number>();
 
   const columns = Array.from({ length: source.cols }, (_, col): NuiTableColumn<number> => {
@@ -202,8 +213,6 @@ export const tableCells = (source: NuiTableCellSource): NuiTableCells => {
   const nextEdge: NuiTableNextEdge = (from, direction) =>
     source.nextEdge?.(from, direction) ??
     cellEdge((row, col) => source.cellAt(row, col), source, from, direction);
-
-  forgetters.set(nextEdge, forget);
 
   return {
     cellSelection: true,

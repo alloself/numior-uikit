@@ -2877,7 +2877,7 @@ const rowsIn = (list: NuiTableRanges): T[] | undefined => {
 };
 
 const invalidate = (list?: NuiTableRanges): void => {
-  forgetCellReads(nextEdge);
+  forgetCellReads();
 
   if (list === undefined || queryActive()) {
     applyChanged(dataKeys.value, list === undefined ? undefined : rowsIn(list));

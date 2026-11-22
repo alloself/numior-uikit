@@ -66,6 +66,16 @@ describe('tableCells', () => {
     expect(tableCells({ ...source, rows: 1_048_576 }).rows[1_048_575]).toBe(1_048_575);
   });
 
+  it('keeps the rows array of a sheet while a smaller cell source is shown next to it', () => {
+    const source = { cols: 2, cellAt: (): undefined => undefined };
+    const sheet = tableCells({ ...source, rows: 1_048_576 }).rows;
+
+    const small = tableCells({ ...source, rows: 3 }).rows;
+    const again = tableCells({ ...source, rows: 1_048_576 }).rows;
+
+    expect([again === sheet, small]).toEqual([true, [0, 1, 2]]);
+  });
+
   it('turns a cell source into rows, lettered columns, styles, row labels and edges', async () => {
     const reads: string[] = [];
 
