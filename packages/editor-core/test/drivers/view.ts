@@ -64,6 +64,8 @@ const CHUNK = '.nui-editor__chunk';
 
 const SLOTS = 'nui-editor__slots';
 
+const ESTIMATED_SIZE = /contain-intrinsic-block-size: auto \d+px;/gu;
+
 const CHAR = 10;
 const LINE = 20;
 
@@ -159,6 +161,11 @@ const withoutStyles = (root: HTMLElement): string => {
   }
   return copy.innerHTML;
 };
+
+const pageOf = (root: HTMLElement): string =>
+  root.innerHTML
+    .replaceAll(' style=""', '')
+    .replaceAll(ESTIMATED_SIZE, 'contain-intrinsic-block-size: auto;');
 
 const sights: SightCallback[] = [];
 
@@ -630,6 +637,43 @@ export class EditorViewDriver {
 
   get markup(): string {
     return withoutStyles(this.host);
+  }
+
+  get page(): string {
+    return pageOf(this.host);
+  }
+
+  get freshPage(): string {
+    const host = document.createElement('div');
+
+    document.body.append(host);
+
+    const fresh = createEditorView(host, { state: this.state });
+    const page = pageOf(host);
+
+    fresh.destroy();
+    host.remove();
+    return page;
+  }
+
+  get textSpots(): readonly number[] {
+    const spots: number[] = [];
+
+    this.state.doc.nodesBetween(0, this.state.doc.size, (node, pos) => {
+      if (
+        node.kind !== 'element' ||
+        this.state.doc.schema.nodes.get(node.type)?.inlineContent !== true
+      ) {
+        return true;
+      }
+
+      for (let offset = pos + 1; offset < pos + node.size; offset += 1) {
+        spots.push(offset);
+      }
+      return true;
+    });
+
+    return spots;
   }
 
   setChunkInView(index: number, visible: boolean): void {
