@@ -217,6 +217,19 @@ const slotOf = (client: Client, id: string): { parent: string; index: number } =
     : { parent: root.id, index: -1 };
 };
 
+const tangle = (client: Client, places: Readonly<Record<string, object>>): void => {
+  client.ydoc.transact(() => {
+    for (const [id, place] of Object.entries(places)) {
+      const entry = sharedBlocks(client).get(id);
+
+      if (!(entry instanceof XmlElement)) {
+        continue;
+      }
+      entry.setAttribute('nui:place', JSON.stringify(place));
+    }
+  });
+};
+
 const insertBefore = (client: Client, before: string, ids: readonly string[]): void => {
   client.apply((from) => {
     const at = from.doc.positionOf(before) ?? 0;
@@ -489,6 +502,28 @@ describe('yjsBinding', () => {
 
     expect(right.text()).toBe(left.text());
     expect(right.binding.read()?.root.content).toEqual(right.state().doc.root.content);
+  });
+
+  it('keeps a block and everything in it when concurrent moves tie it into a loop twice', () => {
+    const [left, right] = pair(
+      docOf(
+        quote('qa', paragraph('pa', 'one')),
+        quote('qb', paragraph('pb', 'two')),
+        quote('qc', paragraph('pc', 'three')),
+      ),
+    );
+
+    tangle(left, {
+      qa: { parent: 'qc', key: 'a1', clock: 9, from: { parent: 'qb', key: 'a0' } },
+      qb: { parent: 'qa', key: 'a1', clock: 3, from: { parent: '', key: 'a1' } },
+      qc: { parent: 'qa', key: 'a2', clock: 2, from: { parent: '', key: 'a2' } },
+    });
+
+    exchange(left, right);
+
+    expect(left.state().doc.root).toEqual(right.state().doc.root);
+    expect(fixtureSchema.check(left.state().doc.root).ok).toBe(true);
+    expect(left.text()).toBe('onetwothree');
   });
 
   it(

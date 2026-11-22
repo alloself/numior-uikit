@@ -29,7 +29,7 @@ export interface TreeIndex {
   readonly placeOf: (id: string) => PlaceOrigin | undefined;
   readonly rawOf: (id: string) => Place | undefined;
   readonly childrenOf: (parent: string) => readonly string[];
-  readonly overrides: () => ReadonlyMap<string, PlaceOrigin | null>;
+  readonly overrides: () => ReadonlyMap<string, PlaceOrigin>;
   readonly clock: () => number;
   readonly update: (changes: ReadonlyMap<string, Place | undefined>) => ReadonlySet<string>;
 }

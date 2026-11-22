@@ -278,7 +278,7 @@ const settleOverrides = (writing: Writing): void => {
   for (const [id, place] of writing.store.index.overrides()) {
     const entry = writing.store.blocks.get(id);
 
-    if (place === null || !isEntry(entry)) {
+    if (!isEntry(entry)) {
       continue;
     }
     writePlace(writing, entry, id, place.parent, place.key);

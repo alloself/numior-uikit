@@ -39,19 +39,12 @@ const samePlace = (left: PlaceOrigin | undefined, right: PlaceOrigin | undefined
 
 export const createTreeIndex = (): TreeIndex => {
   const raw = new Map<string, Place>();
-  const overridden = new Map<string, PlaceOrigin | null>();
+  const overridden = new Map<string, PlaceOrigin>();
   const members = new Map<string, Set<string>>();
   const sorted = new Map<string, readonly string[]>();
   let latest = 0;
 
-  const placeOf = (id: string): PlaceOrigin | undefined => {
-    const override = overridden.get(id);
-
-    if (override === null) {
-      return undefined;
-    }
-    return override ?? raw.get(id);
-  };
+  const placeOf = (id: string): PlaceOrigin | undefined => overridden.get(id) ?? raw.get(id);
 
   const join = (id: string, touched: Set<string>): void => {
     const place = placeOf(id);
@@ -122,9 +115,15 @@ export const createTreeIndex = (): TreeIndex => {
   };
 
   const revert = (id: string): void => {
-    const from = raw.get(id)?.from;
+    const place = raw.get(id);
 
-    overridden.set(id, overridden.has(id) || from === undefined ? null : from);
+    if (place === undefined) {
+      return;
+    }
+
+    const back = overridden.has(id) ? undefined : place.from;
+
+    overridden.set(id, back ?? { parent: ROOT_PARENT, key: place.key });
   };
 
   const resolve = (touched: Set<string>): void => {
