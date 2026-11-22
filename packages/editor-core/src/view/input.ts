@@ -137,6 +137,17 @@ const collapsed = (host: ViewHost): boolean => {
   return selection.kind === SelectionKind.Text && selection.anchor === selection.head;
 };
 
+const insideOneLine = (host: ViewHost): boolean => {
+  const { doc, selection } = host.state();
+  const range = selectionRange(doc, selection);
+  const from = doc.resolve(range.from);
+  const to = doc.resolve(range.to);
+
+  return (
+    from.parent === to.parent && doc.schema.nodes.get(from.parent.type)?.inlineContent === true
+  );
+};
+
 const deletion = (event: InputEvent, host: ViewHost): InputIntent | undefined => {
   const kind = DELETES[event.inputType];
   const range = kind === undefined || !collapsed(host) ? undefined : targetRange(event, host);
@@ -530,8 +541,17 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     return gap;
   };
 
+  const openLine = (): void => {
+    if (insideOneLine(host)) {
+      return;
+    }
+
+    runIntent(host, { kind: 'insertText', text: '' });
+    parts.sync.write();
+  };
+
   const onCompositionstart = (): void => {
-    openGap();
+    openLine();
     parts.setComposing(true);
     parts.watch.startComposition();
   };

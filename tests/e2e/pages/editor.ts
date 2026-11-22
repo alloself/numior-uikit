@@ -651,6 +651,10 @@ export class EditorSection {
     return this.content.locator('.nui-editor__selected');
   }
 
+  divider(): Locator {
+    return this.content.locator('hr');
+  }
+
   mention(): Locator {
     return this.content.locator('.nui-content__mention');
   }

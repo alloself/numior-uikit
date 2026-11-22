@@ -99,15 +99,27 @@ const beforeinput = (inputType: string, data: string | null = null): InputEvent 
 
 const writeAtCaret = (text: string): void => {
   const selection = document.getSelection();
-  const anchor = selection?.anchorNode;
-  const offset = selection?.anchorOffset ?? 0;
 
-  if (!(anchor instanceof Text)) {
+  const range =
+    selection !== null && selection.rangeCount > 0 ? selection.getRangeAt(0) : undefined;
+
+  if (selection === null || range === undefined) {
+    return;
+  }
+  range.deleteContents();
+
+  const { startContainer: container, startOffset: offset } = range;
+
+  if (container instanceof Text) {
+    container.insertData(offset, text);
+    selection.collapse(container, offset + text.length);
     return;
   }
 
-  anchor.insertData(offset, text);
-  selection?.collapse(anchor, offset + text.length);
+  const written = document.createTextNode(text);
+
+  container.insertBefore(written, container.childNodes[offset] ?? null);
+  selection.collapse(written, text.length);
 };
 
 const textNodesOf = (root: Node): Text[] => {
@@ -265,6 +277,12 @@ export class EditorViewDriver {
     return this.state.selection;
   }
 
+  get types(): readonly string[] {
+    return this.state.doc.root.content.map((block) =>
+      block.kind === 'element' ? block.type : block.kind,
+    );
+  }
+
   get modelTexts(): readonly string[] {
     return this.state.doc.root.content.map((block) =>
       block.kind === 'element' ? inlineText(block) : block.text,
@@ -335,6 +353,11 @@ export class EditorViewDriver {
 
   selectAll(): void {
     this.view.dispatch(this.state.tr.setSelection({ kind: 'all' }));
+  }
+
+  selectNode(id: NodeId): void {
+    this.view.focus();
+    this.view.dispatch(this.state.tr.setSelection({ kind: 'node', id }));
   }
 
   selectInDom(anchor: number, head = anchor): void {

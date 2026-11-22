@@ -325,6 +325,48 @@ describe('editor view input', () => {
     expect(view.selection).toEqual(textSelection(4));
   });
 
+  it('puts a word composed over a selected divider on a line in its place, as typing does', async () => {
+    const divider = node('divider');
+    const view = mounted(doc(node('paragraph', ['ab']), divider, node('paragraph', ['cd'])));
+
+    view.selectNode(divider.id);
+    await view.compose('か');
+
+    expect(view.types).toEqual(['paragraph', 'paragraph', 'paragraph']);
+    expect(view.modelTexts).toEqual(['ab', 'か', 'cd']);
+    expect(view.domTexts).toEqual(['ab', 'か', 'cd']);
+    expect(view.selection).toEqual(textSelection(6));
+  });
+
+  it('leaves only the word composed over a selection of the whole document', async () => {
+    const view = mounted(twoParagraphs());
+
+    view.focus();
+    view.selectAll();
+    await view.compose('か');
+
+    expect(view.modelTexts).toEqual(['か']);
+    expect(view.domTexts).toEqual(['か']);
+  });
+
+  it('joins the lines a composition starts across and leaves out the blocks between them', async () => {
+    const view = mounted(
+      doc(
+        node('paragraph', ['ab']),
+        node('divider'),
+        node('paragraph', ['xy']),
+        node('paragraph', ['cd']),
+      ),
+    );
+
+    view.place(2, view.docSize - 2);
+    await view.compose('か');
+
+    expect(view.modelTexts).toEqual(['aかd']);
+    expect(view.domTexts).toEqual(['aかd']);
+    expect(view.selection).toEqual(textSelection(3));
+  });
+
   it('reads a DOM edit made without beforeinput back into the model', async () => {
     const view = mounted(twoParagraphs());
 
