@@ -27,7 +27,7 @@ export type {
 } from './decorations/decorations.types';
 export { createDoc } from './doc/doc';
 export type { Doc, NodeVisitor, ResolvedPos, Slice } from './doc/doc.types';
-export { createEmptyDoc, isEmptyDoc } from './doc/empty';
+export { createEmptyDoc, defaultTextblock, isEmptyDoc } from './doc/empty';
 export { fromJSON, sameDocJSON, toJSON } from './doc/json';
 export type {
   DocJSON,

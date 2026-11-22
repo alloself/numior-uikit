@@ -4,8 +4,8 @@ import type { Schema } from '../schema/schema.types';
 import { createDoc } from './doc';
 import type { Doc } from './doc.types';
 
-export const emptyTextblock = (schema: Schema, id: string): ElementNode | undefined => {
-  const name = [...schema.top.content.next.keys()].find((type) => {
+export const defaultTextblock = (schema: Schema): string | undefined =>
+  [...schema.top.content.next.keys()].find((type) => {
     const spec = schema.nodes.get(type);
 
     return (
@@ -13,6 +13,9 @@ export const emptyTextblock = (schema: Schema, id: string): ElementNode | undefi
       Object.values(spec.attrs).every((attr) => attr.default !== undefined)
     );
   });
+
+export const emptyTextblock = (schema: Schema, id: string): ElementNode | undefined => {
+  const name = defaultTextblock(schema);
 
   return name === undefined ? undefined : schema.element(name, { id });
 };
