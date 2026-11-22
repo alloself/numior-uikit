@@ -862,6 +862,22 @@ describe('values after lines move', () => {
     expect(sheet.settled('B5')).toBe('8');
   });
 
+  it('computes a formula again when the cell it read was in a deleted row and it moved onto that place', () => {
+    const sheet = openBook();
+
+    sheet.type('A5', '1');
+    sheet.type('A7', '=INDIRECT("R[-1]C",FALSE)');
+
+    expect(sheet.settled('A7')).toBe('0');
+
+    sheet.remove('6');
+
+    expect([sheet.settled('A6'), sheet.calculator.formulaAt(sheet.first, 5, 0)?.state]).toEqual([
+      '1',
+      'fresh',
+    ]);
+  });
+
   it('reads a relative name and a name over ROW() from the row a formula moved to', () => {
     const sheet = openBook();
 

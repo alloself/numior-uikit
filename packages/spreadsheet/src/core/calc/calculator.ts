@@ -1255,6 +1255,9 @@ export const createCalculator = (
       if (settles) {
         markStale(record.id);
       }
+      if (settles && record.dynamic) {
+        graph.set(record.id, record.precedents);
+      }
       if (record.anchored && moved) {
         relocated.add(record.id);
       }
