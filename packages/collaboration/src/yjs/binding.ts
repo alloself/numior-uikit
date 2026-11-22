@@ -1,16 +1,35 @@
 import {
-  DocIssueKind,
   ContentNodeKind,
+  DocIssueKind,
   definePlugin,
   remoteChange,
   type DocIssue,
   type ElementNode,
 } from '@numior/editor-core';
-import { XmlElement, type Doc as YDoc, type XmlFragment } from 'yjs';
+import {
+  XmlElement,
+  XmlFragment,
+  type AbstractType,
+  type Doc as YDoc,
+  type Map as YMap,
+  type YEvent,
+} from 'yjs';
 import { applyDocChange } from './doc-change';
-import { documentOf, ID_ATTRIBUTE, readRoot, type ReadContext } from './from-yjs';
-import { syncChildren } from './to-yjs';
-import type { YjsBinding, YjsBindingOptions } from './yjs.types';
+import { documentOf, ID_ATTRIBUTE } from './from-yjs';
+import { clientTag } from './order-key';
+import { carryMoves } from './remote-moves';
+import { isEntry, isInlineType, placeFrom, rootOf } from './read-tree';
+import { createTreeIndex, ROOT_PARENT } from './tree-index';
+import { writeTree } from './write-tree';
+import {
+  EntryField,
+  RepairKind,
+  type Place,
+  type RepairTarget,
+  type TreeStore,
+  type YjsBinding,
+  type YjsBindingOptions,
+} from './yjs.types';
 
 const NO_ROOT_ID = 'root';
 
@@ -27,14 +46,62 @@ const childById = (parent: XmlFragment, id: string): XmlElement | undefined =>
         child instanceof XmlElement && child.getAttribute(ID_ATTRIBUTE) === id,
     );
 
-const elementAt = (
+const forget = (store: TreeStore, element: XmlElement): void => {
+  let current: unknown = element;
+
+  while (current instanceof XmlElement) {
+    store.known.delete(current);
+    current = current.parent;
+  }
+};
+
+const forgetInline = (store: TreeStore, target: AbstractType<unknown>): void => {
+  if (target instanceof XmlElement) {
+    forget(store, target);
+    return;
+  }
+  if (!(target.parent instanceof XmlElement)) {
+    return;
+  }
+  forget(store, target.parent);
+};
+
+const entryTarget = (store: TreeStore, child: ElementNode): RepairTarget | undefined =>
+  isEntry(store.blocks.get(child.id)) ? { kind: RepairKind.Entry, node: child } : undefined;
+
+const inlineTarget = (
   fragment: XmlFragment,
+  child: ElementNode,
+  owner: string,
+): RepairTarget | undefined => {
+  const element = childById(fragment, child.id);
+
+  return element === undefined ? undefined : { kind: RepairKind.Inline, element, owner };
+};
+
+const fragmentAfter = (
+  store: TreeStore,
+  found: RepairTarget,
+  child: ElementNode,
+): XmlFragment | undefined => {
+  if (found.kind === RepairKind.Inline) {
+    return found.element;
+  }
+
+  const entry = store.blocks.get(child.id);
+
+  return isEntry(entry) && isInlineType(store, child.type) ? entry : undefined;
+};
+
+const targetAt = (
+  store: TreeStore,
   root: ElementNode,
   path: readonly number[],
-): XmlElement | undefined => {
-  let model: ElementNode = root;
-  let parent: XmlFragment = fragment;
-  let found: XmlElement | undefined;
+): RepairTarget | undefined => {
+  let model = root;
+  let fragment: XmlFragment | undefined;
+  let owner = ROOT_PARENT;
+  let found: RepairTarget | undefined;
 
   for (const index of path) {
     const child = model.content[index];
@@ -43,49 +110,168 @@ const elementAt = (
       return undefined;
     }
 
-    found = childById(parent, child.id);
+    found =
+      fragment === undefined ? entryTarget(store, child) : inlineTarget(fragment, child, owner);
 
     if (found === undefined) {
       return undefined;
     }
+    owner = found.kind === RepairKind.Entry ? child.id : owner;
+    fragment = fragmentAfter(store, found, child);
     model = child;
-    parent = found;
   }
   return found;
 };
 
-const removeChild = (element: XmlElement): void => {
-  const parent = element.parent;
-
-  if (!(parent instanceof XmlElement) && !isFragment(parent)) {
-    return;
-  }
-
-  parent.delete(parent.toArray().indexOf(element), 1);
-};
-
-const isFragment = (value: unknown): value is XmlFragment =>
-  typeof value === 'object' && value !== null && 'toArray' in value && 'insert' in value;
+const entryIds = (node: ElementNode): readonly string[] =>
+  node.content.reduce<string[]>(
+    (ids, child) => {
+      if (child.kind === ContentNodeKind.Element) {
+        for (const id of entryIds(child)) {
+          ids.push(id);
+        }
+      }
+      return ids;
+    },
+    [node.id],
+  );
 
 export const yjsBinding = (
   ydoc: YDoc,
-  fragment: XmlFragment,
+  blocks: YMap<unknown>,
   options: YjsBindingOptions,
 ): YjsBinding => {
   const { schema, getState, dispatch, onInvalid } = options;
-  const known = new WeakMap<XmlElement, ElementNode>();
-  const context: ReadContext = { schema, known };
+  const tag = clientTag(ydoc.clientID);
   const origin = Symbol('nui-yjs');
+  const broken = new Set<string>();
+
+  const store: TreeStore = {
+    schema,
+    blocks,
+    index: createTreeIndex(),
+    cache: new Map(),
+    stale: new Set(),
+    known: new WeakMap(),
+    owners: new WeakMap(),
+  };
+
   let applying = false;
   let unread = false;
 
-  const forget = (element: XmlElement): void => {
-    let current: unknown = element;
+  const mark = (id: string | undefined): void => {
+    let current = id;
 
-    while (current instanceof XmlElement) {
-      known.delete(current);
+    while (current !== undefined && !store.stale.has(current)) {
+      store.stale.add(current);
+      current = current === ROOT_PARENT ? undefined : store.index.placeOf(current)?.parent;
+    }
+  };
+
+  const placeOfEntry = (id: string, entry: unknown): Place | undefined => {
+    const place = isEntry(entry) ? placeFrom(entry.getAttribute(EntryField.Place)) : undefined;
+
+    if (isEntry(entry) && place === undefined) {
+      broken.add(id);
+      return undefined;
+    }
+    broken.delete(id);
+    return place;
+  };
+
+  const ownerOf = (target: AbstractType<unknown>): string | undefined => {
+    let current: AbstractType<unknown> | null = target;
+
+    while (current !== null && current.parent !== blocks) {
       current = current.parent;
     }
+    return current === null ? undefined : store.owners.get(current);
+  };
+
+  const noteEntries = (
+    ids: Iterable<string>,
+    places: Map<string, Place | undefined>,
+    changed: Set<string>,
+  ): void => {
+    for (const id of ids) {
+      const entry = blocks.get(id);
+
+      places.set(id, placeOfEntry(id, entry));
+
+      if (!isEntry(entry)) {
+        store.cache.delete(id);
+        store.stale.delete(id);
+        continue;
+      }
+      store.owners.set(entry, id);
+      changed.add(id);
+    }
+  };
+
+  const settle = (
+    places: ReadonlyMap<string, Place | undefined>,
+    changed: Iterable<string>,
+  ): void => {
+    for (const parent of store.index.update(places)) {
+      mark(parent);
+    }
+    for (const id of changed) {
+      mark(id);
+    }
+  };
+
+  const note = (events: readonly YEvent<AbstractType<unknown>>[]): ReadonlySet<string> => {
+    const places = new Map<string, Place | undefined>();
+    const changed = new Set<string>();
+
+    for (const event of events) {
+      const { target } = event;
+
+      if (target === blocks) {
+        noteEntries(event.keys.keys(), places, changed);
+        continue;
+      }
+      forgetInline(store, target);
+
+      const id = ownerOf(target);
+
+      if (id === undefined) {
+        continue;
+      }
+      changed.add(id);
+
+      if (target.parent !== blocks || !event.keys.has(EntryField.Place)) {
+        continue;
+      }
+      places.set(id, placeOfEntry(id, target));
+    }
+    settle(places, changed);
+    return new Set(Array.from(places.keys()).filter((id) => places.get(id) !== undefined));
+  };
+
+  const removeTarget = (target: RepairTarget): void => {
+    if (target.kind === RepairKind.Inline) {
+      const parent = target.element.parent;
+
+      forget(store, target.element);
+      mark(target.owner);
+
+      if (!(parent instanceof XmlFragment)) {
+        return;
+      }
+      parent.delete(parent.toArray().indexOf(target.element), 1);
+      return;
+    }
+
+    const removed = new Map<string, Place | undefined>();
+
+    for (const id of entryIds(target.node)) {
+      blocks.delete(id);
+      store.cache.delete(id);
+      store.stale.delete(id);
+      removed.set(id, undefined);
+    }
+    settle(removed, []);
   };
 
   const repaired = (root: ElementNode): boolean => {
@@ -95,32 +281,30 @@ export const yjsBinding = (
       return false;
     }
 
-    const targets = check.issues.map((issue) => elementAt(fragment, root, issue.path));
+    const targets = check.issues.map((issue) => targetAt(store, root, issue.path));
 
     ydoc.transact(() => {
-      targets.forEach((target) => {
+      for (const target of targets) {
         if (target === undefined) {
-          return;
+          continue;
         }
-
-        forget(target);
-        removeChild(target);
-      });
+        removeTarget(target);
+      }
     }, origin);
 
     return targets.some((target) => target !== undefined);
   };
 
   const validRoot = (shell: ElementNode): ElementNode | undefined => {
-    let root = readRoot(context, fragment, shell);
+    let root = broken.size > 0 ? undefined : rootOf(store, shell);
 
     while (root !== undefined && !schema.check(root).ok) {
-      root = repaired(root) ? readRoot(context, fragment, shell) : undefined;
+      root = repaired(root) ? rootOf(store, shell) : undefined;
     }
     return root;
   };
 
-  const pull = (): void => {
+  const pull = (moved: ReadonlySet<string>): void => {
     const state = getState();
 
     if (state === undefined) {
@@ -136,7 +320,9 @@ export const yjsBinding = (
       return;
     }
 
-    const tr = applyDocChange(state.tr, state.doc.root, root, (text, marks) =>
+    const carried = carryMoves(state.tr, root, moved);
+
+    const tr = applyDocChange(carried, carried.doc.root, root, (text, marks) =>
       schema.text(text, marks),
     ).setMeta(remoteChange, true);
 
@@ -149,29 +335,28 @@ export const yjsBinding = (
     applying = false;
   };
 
-  const observer: Parameters<XmlFragment['observeDeep']>[0] = (events, transaction) => {
+  const observer: Parameters<YMap<unknown>['observeDeep']>[0] = (events, transaction) => {
     if (transaction.origin === origin) {
       return;
     }
-
-    events.forEach((event) => {
-      if (event.target instanceof XmlElement) {
-        forget(event.target);
-      } else if (event.target.parent instanceof XmlElement) {
-        forget(event.target.parent);
-      }
-    });
-
-    pull();
+    pull(note(events));
   };
 
   const write = (root: ElementNode): void => {
     ydoc.transact(() => {
-      syncChildren(known, fragment, root.content);
+      writeTree(store, root, tag);
     }, origin);
   };
 
-  fragment.observeDeep(observer);
+  const scan = (): void => {
+    const places = new Map<string, Place | undefined>();
+
+    noteEntries(Array.from(blocks.keys()), places, new Set());
+    store.index.update(places);
+  };
+
+  scan();
+  blocks.observeDeep(observer);
 
   return {
     plugin: definePlugin({
@@ -187,7 +372,7 @@ export const yjsBinding = (
       },
     }),
     read: () => {
-      if (fragment.length === 0) {
+      if (blocks.size === 0) {
         return undefined;
       }
 
@@ -199,7 +384,7 @@ export const yjsBinding = (
       write(doc.root);
     },
     destroy: () => {
-      fragment.unobserveDeep(observer);
+      blocks.unobserveDeep(observer);
     },
   };
 };

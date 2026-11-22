@@ -386,7 +386,7 @@ const api = computed(() => editor.value?.editor);
 
 const shared = new Doc();
 
-const binding = yjsBinding(shared, shared.getXmlFragment('description'), {
+const binding = yjsBinding(shared, shared.getMap('description'), {
   schema: contentSchema,
   getState: () => api.value?.state(),
   dispatch: (tr) => {
@@ -401,5 +401,8 @@ const binding = yjsBinding(shared, shared.getXmlFragment('description'), {
 Give `binding.plugin` to the editor in `plugins`. `read()` returns the shared document once it has
 arrived, and `seed(doc)` fills an empty one. There is no presence: carets and avatars need a
 channel of your own.
+
+Blocks live in a `Y.Map`, each under its id with its own place in its parent. Moving a block
+changes only that place, so text a coauthor types into the block while it moves stays put.
 
 <SignatureReference :names="['yjsBinding', 'YjsBindingOptions', 'YjsBinding']" />

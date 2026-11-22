@@ -2,6 +2,8 @@ import {
   createDoc,
   createState,
   history,
+  moveBlock,
+  setBlockType,
   textSelection,
   undo,
   type Doc,
@@ -13,7 +15,15 @@ import {
 import { fixtureSchema } from '@numior/editor-core/fixtures';
 import * as fc from 'fast-check';
 import { describe, expect, it, vi } from 'vite-plus/test';
-import { applyUpdate, Doc as YDoc, encodeStateAsUpdate, XmlElement, XmlText } from 'yjs';
+import {
+  applyUpdate,
+  Doc as YDoc,
+  encodeStateAsUpdate,
+  encodeStateVector,
+  XmlElement,
+  XmlText,
+  type Map as YMap,
+} from 'yjs';
 import { yjsBinding, type YjsBinding } from '../src/yjs';
 
 interface Client {
@@ -26,7 +36,13 @@ interface Client {
   readonly text: () => string;
 }
 
-const FRAGMENT = 'document';
+const BLOCKS = 'document';
+
+const LAST_KEY = 'b00';
+
+const LATENCY_BUDGET_MS = 100;
+
+const MOVABLE = ['a', 'b', 'c', 'd'] as const;
 
 const paragraph = (id: string, text: string): ElementNode =>
   fixtureSchema.element('paragraph', {
@@ -52,7 +68,7 @@ const clientOf = (
 ): Client => {
   let state: EditorState | undefined;
 
-  const binding = yjsBinding(ydoc, ydoc.getXmlFragment(FRAGMENT), {
+  const binding = yjsBinding(ydoc, ydoc.getMap(BLOCKS), {
     schema: fixtureSchema,
     getState: () => state,
     dispatch: (tr) => {
@@ -107,9 +123,13 @@ const clientOf = (
 const textOf = (node: ElementNode['content'][number]): string =>
   node.kind === 'text' ? node.text : node.content.map(textOf).join('');
 
+const send = (from: Client, to: Client): void => {
+  applyUpdate(to.ydoc, encodeStateAsUpdate(from.ydoc, encodeStateVector(to.ydoc)));
+};
+
 const exchange = (left: Client, right: Client): void => {
-  applyUpdate(right.ydoc, encodeStateAsUpdate(left.ydoc));
-  applyUpdate(left.ydoc, encodeStateAsUpdate(right.ydoc));
+  send(left, right);
+  send(right, left);
 };
 
 const pair = (doc: Doc): readonly [Client, Client] => {
@@ -142,23 +162,76 @@ const numbered = (count: number): Doc =>
     ),
   );
 
-const blocksOf = (client: Client): readonly unknown[] =>
-  client.ydoc.getXmlFragment(FRAGMENT).toArray();
+const sharedBlocks = (client: Client): YMap<unknown> => client.ydoc.getMap(BLOCKS);
+
+const blocksOf = (client: Client): readonly unknown[] => Array.from(sharedBlocks(client).values());
 
 const removeItem = (client: Client, id: string): void => {
   client.ydoc.transact(() => {
-    const items = client.ydoc.getXmlFragment(FRAGMENT).get(1);
+    sharedBlocks(client).delete(id);
+  });
+};
 
-    if (!(items instanceof XmlElement)) {
-      return;
-    }
+const addForeign = (client: Client, type: string): void => {
+  client.ydoc.transact(() => {
+    const entry = new XmlElement('block');
 
-    items.delete(
-      items
+    sharedBlocks(client).set('alien', entry);
+    entry.setAttribute('nui:type', type);
+    entry.setAttribute('nui:place', JSON.stringify({ parent: '', key: LAST_KEY, clock: 1 }));
+  });
+};
+
+const sharedText = (client: Client, id: string): string => {
+  const entry = sharedBlocks(client).get(id);
+
+  return entry instanceof XmlElement
+    ? entry
         .toArray()
-        .findIndex((child) => child instanceof XmlElement && child.getAttribute('nui:id') === id),
-      1,
-    );
+        .reduce((text, child) => (child instanceof XmlText ? text + child.toString() : text), '')
+    : '';
+};
+
+const quote = (id: string, ...blocks: readonly ElementNode[]): ElementNode =>
+  fixtureSchema.element('blockquote', { id, content: blocks });
+
+const slotOf = (client: Client, id: string): { parent: string; index: number } => {
+  const { root } = client.state().doc;
+  const index = root.content.findIndex((node) => node.kind === 'element' && node.id === id);
+
+  if (index >= 0) {
+    return { parent: root.id, index };
+  }
+
+  const holder = root.content.find(
+    (node) =>
+      node.kind === 'element' &&
+      node.content.some((child) => child.kind === 'element' && child.id === id),
+  );
+
+  return holder?.kind === 'element'
+    ? {
+        parent: holder.id,
+        index: holder.content.findIndex((child) => child.kind === 'element' && child.id === id),
+      }
+    : { parent: root.id, index: -1 };
+};
+
+const insertBefore = (client: Client, before: string, ids: readonly string[]): void => {
+  client.apply((from) => {
+    const at = from.doc.positionOf(before) ?? 0;
+
+    return from.tr.replace(at, at, {
+      content: ids.map((id) => paragraph(id, id)),
+      openStart: 0,
+      openEnd: 0,
+    });
+  });
+};
+
+const moveInto = (client: Client, id: string, parent: string, index: number): void => {
+  moveBlock(slotOf(client, id), { parent, index })(client.state(), (tr) => {
+    client.apply(() => tr);
   });
 };
 
@@ -242,6 +315,26 @@ describe('yjsBinding', () => {
     expect(right.text()).toBe('Title');
   });
 
+  it('carries a mention inside a line and the text typed around it', () => {
+    const line = fixtureSchema.element('paragraph', {
+      id: 'a',
+      content: [
+        fixtureSchema.text('Hi '),
+        fixtureSchema.element('mention', { id: 'm', attrs: { user: 'u1', label: 'Ann' } }),
+        fixtureSchema.text('!'),
+      ],
+    });
+
+    const [left, right] = pair(docOf(line, paragraph('b', 'two')));
+
+    left.insertAt('a', 'Oh, ');
+    exchange(left, right);
+
+    expect(right.state().doc.root).toEqual(left.state().doc.root);
+    expect(right.state().doc.byId('m')?.attrs).toEqual({ user: 'u1', label: 'Ann' });
+    expect(right.text()).toBe('Oh, Hi !|two');
+  });
+
   it('carries new and deleted blocks', () => {
     const [left, right] = pair(docOf(paragraph('a', 'one'), paragraph('b', 'two')));
 
@@ -285,7 +378,7 @@ describe('yjsBinding', () => {
     expect([up.text(), writing.text()]).toEqual(['four|one|two|Ythree', 'four|one|two|Ythree']);
   });
 
-  it('leaves in the shared tree every block a carried block passed and writes the carried one alone', () => {
+  it('keeps every block of the shared tree when a block is carried, the carried one included', () => {
     const [left] = pair(numbered(6));
     const before = blocksOf(left);
 
@@ -293,7 +386,7 @@ describe('yjsBinding', () => {
 
     const after = blocksOf(left);
 
-    expect(after.filter((block) => before.includes(block))).toHaveLength(5);
+    expect(after.filter((block) => before.includes(block))).toHaveLength(6);
 
     expect(left.text()).toBe(
       'Paragraph 0|Paragraph 2|Paragraph 3|Paragraph 4|Paragraph 1|Paragraph 5',
@@ -320,6 +413,84 @@ describe('yjsBinding', () => {
     expect(left.text().split('|')).toHaveLength(5);
   });
 
+  it('keeps text typed into a block while someone else carries it', () => {
+    const [left, right] = pair(
+      docOf(paragraph('a', 'one'), paragraph('b', 'two'), paragraph('c', 'three')),
+    );
+
+    carry(left, 'a', undefined);
+    right.insertAt('a', 'X');
+    exchange(left, right);
+
+    expect([left.text(), right.text()]).toEqual(['two|three|Xone', 'two|three|Xone']);
+  });
+
+  it('keeps text typed into a block while someone else carries it into a quote', () => {
+    const [left, right] = pair(
+      docOf(
+        paragraph('a', 'one'),
+        quote('q', paragraph('inner', 'quoted')),
+        paragraph('c', 'three'),
+      ),
+    );
+
+    moveInto(left, 'a', 'q', 1);
+    right.insertAt('a', 'X');
+    exchange(left, right);
+
+    expect(left.state().doc.root).toEqual(right.state().doc.root);
+    expect(left.text()).toBe('quotedXone|three');
+  });
+
+  it('keeps text typed into a paragraph while someone else turns it into a heading', () => {
+    const [left, right] = pair(docOf(paragraph('a', 'Title'), paragraph('b', 'Body')));
+
+    left.apply((from) => from.tr.setSelection(textSelection(2)));
+
+    setBlockType('heading', { level: 2 })(left.state(), (tr) => {
+      left.apply(() => tr);
+    });
+
+    right.insertAt('a', 'New ');
+    exchange(left, right);
+
+    expect(left.state().doc.root).toEqual(right.state().doc.root);
+    expect(left.state().doc.root.content[0]).toMatchObject({ type: 'heading', id: 'a' });
+    expect(left.text()).toBe('New Title|Body');
+  });
+
+  it('keeps the blocks two people insert at the same place together', () => {
+    const [left, right] = pair(docOf(paragraph('a', 'one'), paragraph('b', 'two')));
+
+    insertBefore(left, 'b', ['L1', 'L2', 'L3']);
+    insertBefore(right, 'b', ['R1', 'R2', 'R3']);
+    exchange(left, right);
+
+    expect(left.text()).toBe(right.text());
+    expect(['one|L1|L2|L3|R1|R2|R3|two', 'one|R1|R2|R3|L1|L2|L3|two']).toContain(left.text());
+  });
+
+  it('keeps both quotes when two people carry each of them into the other at once', () => {
+    const [left, right] = pair(
+      docOf(quote('q1', paragraph('p1', 'one')), quote('q2', paragraph('p2', 'two'))),
+    );
+
+    moveInto(left, 'q1', 'q2', 1);
+    moveInto(right, 'q2', 'q1', 1);
+    exchange(left, right);
+    exchange(left, right);
+
+    expect(left.state().doc.root).toEqual(right.state().doc.root);
+    expect(fixtureSchema.check(left.state().doc.root).ok).toBe(true);
+    expect(left.text().split('|').join('')).toMatch(/^(onetwo|twoone)$/u);
+
+    left.insertAt('p1', 'L');
+    exchange(left, right);
+
+    expect(right.text()).toBe(left.text());
+    expect(right.binding.read()?.root.content).toEqual(right.state().doc.root.content);
+  });
+
   it(
     'carries the first of ten thousand blocks to the end within the latency budget',
     { tags: ['budget'] },
@@ -329,8 +500,23 @@ describe('yjsBinding', () => {
 
       carry(left, 'p0', undefined);
 
-      expect(performance.now() - started).toBeLessThan(100);
+      expect(performance.now() - started).toBeLessThan(LATENCY_BUDGET_MS);
       expect(left.text().endsWith('Paragraph 9999|Paragraph 0')).toBe(true);
+    },
+  );
+
+  it(
+    'carries typing in a document of ten thousand blocks to the other side within the latency budget',
+    { tags: ['budget'] },
+    () => {
+      const [left, right] = pair(numbered(10_000));
+      const started = performance.now();
+
+      left.insertAt('p5000', 'X');
+      send(left, right);
+
+      expect(performance.now() - started).toBeLessThan(LATENCY_BUDGET_MS);
+      expect(right.text()).toBe(left.text());
     },
   );
 
@@ -388,43 +574,27 @@ describe('yjsBinding', () => {
     const onInvalid = vi.fn<() => void>();
     const doc = docOf(paragraph('a', 'Hello'));
     const client = clientOf(doc, onInvalid);
-    const fragment = client.ydoc.getXmlFragment(FRAGMENT);
 
     client.binding.seed(doc);
-
-    client.ydoc.transact(() => {
-      const foreign = new XmlElement('hologram');
-
-      fragment.insert(1, [foreign]);
-      foreign.setAttribute('nui:id', 'alien');
-      foreign.insert(0, [new XmlText('?')]);
-    });
+    addForeign(client, 'hologram');
 
     expect(onInvalid).toHaveBeenCalledTimes(1);
-    expect(fragment.length).toBe(2);
+    expect(sharedBlocks(client).size).toBe(2);
     expect(client.text()).toBe('Hello');
   });
 
   it('writes nothing over a tree it could not read and goes on once it reads again', () => {
     const doc = docOf(paragraph('a', 'Hello'));
     const client = clientOf(doc);
-    const fragment = client.ydoc.getXmlFragment(FRAGMENT);
 
     client.binding.seed(doc);
-
-    client.ydoc.transact(() => {
-      const foreign = new XmlElement('hologram');
-
-      fragment.insert(1, [foreign]);
-      foreign.setAttribute('nui:id', 'alien');
-    });
-
+    addForeign(client, 'hologram');
     client.insertAt('a', '!');
 
-    expect(fragment.length).toBe(2);
+    expect(sharedText(client, 'a')).toBe('Hello');
 
     client.ydoc.transact(() => {
-      fragment.delete(1, 1);
+      sharedBlocks(client).delete('alien');
     });
 
     client.insertAt('a', '?');
@@ -458,7 +628,69 @@ const applyEdit = (client: Client, block: string, kind: string, text: string): v
   }
 };
 
+const lettersIn = (text: string, letter: string): number => text.split(letter).length - 1;
+
+const shuffleBlock = (client: Client, block: string, kind: string, to: number): void => {
+  const { root } = client.state().doc;
+  const inner = root.content.find((node) => node.kind === 'element' && node.id === 'q');
+  const nested = inner?.kind === 'element' ? inner.content.length : 0;
+
+  switch (kind) {
+    case 'type':
+      client.insertAt(block, 'x');
+      break;
+    case 'nest':
+      moveInto(client, block, 'q', to % (nested + 1));
+      break;
+    default:
+      moveInto(client, block, root.id, to % (root.content.length + 1));
+  }
+};
+
 describe('yjsBinding convergence', () => {
+  it('keeps every letter typed while both sides carry blocks around and into a quote', () => {
+    const turn = fc.record({
+      side: fc.boolean(),
+      kind: fc.constantFrom('type', 'type', 'move', 'nest'),
+      block: fc.constantFrom(...MOVABLE),
+      to: fc.nat(),
+      exchanged: fc.boolean(),
+    });
+
+    fc.assert(
+      fc.property(fc.array(turn, { minLength: 1, maxLength: 30 }), (turns) => {
+        const [left, right] = pair(
+          docOf(
+            paragraph('a', 'one'),
+            paragraph('b', 'two'),
+            quote('q', paragraph('e', 'inside')),
+            paragraph('c', 'three'),
+            paragraph('d', 'four'),
+          ),
+        );
+
+        const typed = turns.reduce((count, step) => (step.kind === 'type' ? count + 1 : count), 0);
+
+        turns.forEach(({ side, kind, block, to, exchanged }) => {
+          shuffleBlock(side ? left : right, block, kind, to);
+
+          if (!exchanged) {
+            return;
+          }
+
+          exchange(left, right);
+        });
+
+        exchange(left, right);
+
+        expect(left.state().doc.root).toEqual(right.state().doc.root);
+        expect(fixtureSchema.check(left.state().doc.root).ok).toBe(true);
+        expect(lettersIn(left.text(), 'x')).toBe(typed);
+      }),
+      { numRuns: 300 },
+    );
+  });
+
   const edit = fc.record({
     side: fc.boolean(),
     block: fc.constantFrom('a', 'b'),

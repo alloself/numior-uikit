@@ -302,7 +302,7 @@ import { yjsBinding } from '@numior/kit/collaboration/yjs';
 
 const ydoc = new Y.Doc();
 
-const binding = yjsBinding(ydoc, ydoc.getXmlFragment('document'), {
+const binding = yjsBinding(ydoc, ydoc.getMap('document'), {
   schema: contentSchema,
   getState: () => api.value?.state(),
   dispatch: (tr) => {
@@ -317,6 +317,9 @@ const binding = yjsBinding(ydoc, ydoc.getXmlFragment('document'), {
 Передайте `binding.plugin` в `plugins` редактора без `useCollabEditor`, а `api` получите через
 `useTemplateRef`, как при подключении документа. Пустой `Y.Doc` заполняет `seed(doc)`, а `read()`
 читает из него документ для редактора.
+
+Блоки лежат в `Y.Map`, каждый под своим id и со своим местом в родителе. Перенос блока меняет только
+место, поэтому текст, который соавтор набирает в переносимом блоке, остаётся на месте.
 
 Если дерево Yjs не подходит к схеме, связка вызывает `onInvalid` и ничего в него не пишет: закройте
 редактор для правки. Курсоров соавторов и списка участников связка не даёт, а `destroy()` отписывает

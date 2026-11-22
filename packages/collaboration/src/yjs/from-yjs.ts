@@ -25,12 +25,13 @@ type Fields = Readonly<Record<string, unknown>>;
 
 export const ID_ATTRIBUTE = 'nui:id';
 
-const isFields = (value: unknown): value is Fields => typeof value === 'object' && value !== null;
+export const isFields = (value: unknown): value is Fields =>
+  typeof value === 'object' && value !== null;
 
 const isAttrValue = (value: unknown): value is AttrValue =>
   value === null || ['string', 'number', 'boolean'].includes(typeof value);
 
-const attrsFrom = (value: unknown): Attrs | undefined => {
+export const attrsFrom = (value: unknown): Attrs | undefined => {
   if (!isFields(value)) {
     return undefined;
   }
@@ -82,7 +83,7 @@ const readText = (schema: Schema, text: XmlText): readonly TextNode[] | undefine
     return nodes;
   }, []);
 
-const decodedValue = (encoded: string): unknown => {
+export const decodedValue = (encoded: string): unknown => {
   try {
     return JSON.parse(encoded);
   } catch {
@@ -145,7 +146,7 @@ const readChild = (
   return node === undefined ? undefined : [node];
 };
 
-const readChildren = (
+export const readChildren = (
   context: ReadContext,
   parent: XmlFragment,
 ): readonly ContentNode[] | undefined => {
@@ -160,18 +161,6 @@ const readChildren = (
     }
     return content;
   }, []);
-};
-
-export const readRoot = (
-  context: ReadContext,
-  fragment: XmlFragment,
-  root: ElementNode,
-): ElementNode | undefined => {
-  const content = readChildren(context, fragment);
-
-  return content === undefined
-    ? undefined
-    : context.schema.element(root.type, { id: root.id, attrs: root.attrs, content });
 };
 
 export const documentOf = (schema: Schema, root: ElementNode): Doc => createDoc(schema, root);
