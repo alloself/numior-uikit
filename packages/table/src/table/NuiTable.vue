@@ -266,7 +266,6 @@ import {
   NuiMenu,
   NuiPagination,
   NuiSkeleton,
-  type NuiMenuExposed,
   type NuiSkeletonProps,
 } from '@numior/vue';
 import {
@@ -274,10 +273,8 @@ import {
   createTableEngine,
   TableNodeKind,
   type TableDetailNode,
-  type TableDistinct,
   type TableEngine,
   type TableFilter,
-  type TableFilterValue,
   type TableNode,
   type TableNodeId,
   type TableQuery,
@@ -323,7 +320,7 @@ import { useTextMeasure } from './use-text-measure';
 import { paintOf } from './table-paint';
 import { forgetCellReads } from './table-cells';
 import { ownCellAt, ownDetailOf, rowPositionOf } from './table-dom';
-import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './table-format';
+import { cellTextOf, cellValueOf, engineColumnOf } from './table-format';
 import { columnTreeOf, headerBandsOf } from './table-columns';
 import { orderLeaves } from './table-order';
 import {
@@ -349,6 +346,7 @@ import NuiTableHeaderMarks from './NuiTableHeaderMarks.vue';
 import { useTableFocus } from './use-table-focus';
 import { useCellMenuArea } from './areas/cell-menu-area';
 import { useClipboardArea } from './areas/clipboard-area';
+import { useHeaderArea } from './areas/header-area';
 import { useOverlayArea } from './areas/overlay-area';
 import { useRowMovesArea } from './areas/row-moves-area';
 import type { TableContext } from './areas/table-context';
@@ -363,9 +361,8 @@ import { boxOf, clampPosition, columnSpansOf, type RangeBox } from './table-rang
 import { useTableRanges } from './use-table-ranges';
 import { pageRowsOf, pageStepOf } from './table-keys';
 import { useTableExpansion } from './use-table-expansion';
-import { useTableHeader, type TableFilterTarget, type TableHeader } from './use-table-header';
+import type { TableFilterTarget } from './use-table-header';
 import { headFrameOf, headToolsOf, leastWidthOf } from './table-head-tools';
-import { useTableMenu, type TableMenu } from './use-table-menu';
 import { useTableColumnOrder } from './use-table-column-order';
 import { useTableQuery } from './use-table-query';
 import { useTableWarmup } from './use-table-warmup';
@@ -452,7 +449,6 @@ const awaited = (
 const INITIAL_ROWS = 30;
 const INITIAL_COLUMNS = 12;
 const ROW_OVERSCAN = 6;
-const DISTINCT_LIMIT = 100;
 const COLUMN_OVERSCAN = 2;
 const NO_ROW_HEAD = {} as const;
 const NO_HEIGHTS: NuiTableRowHeights = {};
@@ -1236,40 +1232,27 @@ const order = useTableColumnOrder<T>({
   },
 });
 
-const header: TableHeader<T> = useTableHeader({
-  keys: () => dataKeysOf(layout.value),
-  keyAt: (visual) => dataKeyAt(layout.value, visual),
-  columnAt,
+const { header, menu, menuAnchor, valueLabel, loadValues } = useHeaderArea(table, {
   sort,
   filters,
+  groupBy,
+  pins,
+  hidden,
+  widths,
   target: filterTarget,
   open: filterOpen,
-  messages,
-  announce: (text) => {
-    announcement.value = text;
+  columnMenu: () => columnMenu,
+  leaves: () => tree.value.leaves,
+  treeMode: () => treeOn.value,
+  resize,
+  order,
+  rowsIntent,
+  focusHeader: (target) => {
+    focus.focusHeader(target);
   },
-  filtered: (changed) => {
-    if (changed) {
-      rowsIntent.set(true);
-      return;
-    }
-
-    const count = engine.value.rowCount();
-
-    announcement.value = messages.value.rowsShown({ count });
-    emit('settle', { rows: count });
-  },
-  menu: (key, anchor, focusOn) => menu.openAt(key, anchor, focusOn),
-  resizable: resize.resizable,
-  resizing: (key) => resize.active.value === key,
-  resize: resize.onKeydown,
-  reorderable: order.reorderable,
-  dragging: (key) => order.dragging.value === key,
-  reorder: order.onKeydown,
+  locale: () => resolvedLocale.value,
+  booleanTexts: () => booleanTexts.value,
 });
-
-const menuNode = useTemplateRef<NuiMenuExposed>('menu-node');
-const menuAnchor = computed(() => menu.target.value?.anchor ?? null);
 
 const selection = useTableSelection<T>({
   mode: () => selectable,
@@ -1338,34 +1321,6 @@ const rowUtility = (item: TableBodyRow, column: string): NuiTableUtilityCellProp
 
 const gripLabel = (item: TableBodyRow): string =>
   dragLabel?.(rowAt(item.index)) ?? messages.value.dragRow({ row: labelOf(rowAt(item.index)) });
-
-const menu: TableMenu = useTableMenu({
-  enabled: () => columnMenu !== false,
-  extra: (key, anchor) =>
-    typeof columnMenu === 'function' ? columnMenu({ column: columnAt(key), anchor }) : [],
-  leaves: () => tree.value.leaves,
-  layout: () => layout.value,
-  columnAt,
-  head: header.head,
-  sort,
-  groupBy,
-  pins,
-  hidden,
-  widths,
-  resetWidth: resize.reset,
-  treeMode: () => treeOn.value,
-  messages,
-  announce: (text) => {
-    announcement.value = text;
-  },
-  openFilter: (key, anchor) => {
-    header.openFilterAt(key, anchor);
-  },
-  show: (focusOn) => {
-    menuNode.value?.show(focusOn);
-  },
-  refocus: focus.focusHeader,
-});
 
 const treeKey = computed(() =>
   treeOn.value || detailOn.value ? (treeColumn ?? dataKeysOf(layout.value)[0]) : undefined,
@@ -2370,40 +2325,6 @@ const viewportEvents = {
     rangeSelect.onDblclick(event);
   }),
   pointerup: outsideDetail(cellEditor.onPointerup),
-};
-
-const valueLabel = (value: TableFilterValue): string => {
-  const current = header.target.value;
-
-  const text =
-    current === null
-      ? ''
-      : valueTextOf(
-          columnAt(current.key),
-          value,
-          undefined,
-          resolvedLocale.value,
-          booleanTexts.value,
-        );
-
-  return text === '' ? messages.value.blank : text;
-};
-
-const loadValues = (search: string, signal: AbortSignal): Promise<TableDistinct | null> => {
-  const current = header.target.value;
-
-  if (current === null) {
-    return Promise.resolve(null);
-  }
-  const column = columnAt(current.key);
-  const plain = column.type === NuiTableColumnType.Text && column.format === undefined;
-
-  return engine.value.distinct(current.key, {
-    limit: DISTINCT_LIMIT,
-    search,
-    text: plain ? undefined : valueLabel,
-    signal,
-  });
 };
 
 const scopeOf = (row: T, position: number, key: string, pinned: boolean): NuiTableCellSlot<T> => {
