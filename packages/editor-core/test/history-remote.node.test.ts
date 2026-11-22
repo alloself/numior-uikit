@@ -32,6 +32,33 @@ const remote = (editor: EditingHarness, at: number, text: string): void => {
   editor.change((tr) => tr.insertText(text, at).setMeta(remoteChange, true));
 };
 
+const remoteCut = (editor: EditingHarness, from: number, to: number): void => {
+  editor.change((tr) => tr.delete(from, to).setMeta(remoteChange, true));
+};
+
+const lineTexts = (state: EditorState): readonly string[] =>
+  state.doc.root.content.map((block) => (block.kind === 'element' ? inlineText(block) : ''));
+
+const noteLetters = (letters: Set<string> | undefined, text: string): void => {
+  for (const letter of text) {
+    letters?.add(letter);
+  }
+};
+
+const keptLine = (
+  original: string,
+  theirs: ReadonlySet<string> | undefined,
+  mine: ReadonlySet<string> | undefined,
+  kept: string,
+): string =>
+  original
+    .split('')
+    .filter(
+      (letter) =>
+        theirs?.has(letter) !== true && (kept.includes(letter) || mine?.has(letter) !== true),
+    )
+    .join('');
+
 const undoAll = (editor: EditingHarness): void => {
   while (editor.press('Mod-z')) {
     editor.pause(1);
@@ -217,6 +244,84 @@ describe('history over remote changes', () => {
         expect(editor.outline.replaceAll('x', '')).toBe('paragraph("one") paragraph("two")');
       }),
       { numRuns: 400 },
+    );
+  });
+
+  it('takes back all my typing after someone else deleted the text around what was left of it', () => {
+    const editor = twoLines(1);
+
+    editor.type('aa');
+    remoteCut(editor, 3, 6);
+    editor.change((tr) => tr.delete(2, 3));
+    remoteCut(editor, 1, 2);
+    undoAll(editor);
+
+    expect(editor.outline).toBe('paragraph() paragraph("two")');
+  });
+
+  it('puts the letters I deleted around a letter someone else deleted back in their order', () => {
+    const editor = twoLines();
+
+    editor.change((tr) => tr.delete(1, 2));
+    editor.change((tr) => tr.delete(2, 3));
+    remoteCut(editor, 1, 2);
+    undoAll(editor);
+
+    expect(editor.outline).toBe('paragraph("oe") paragraph("two")');
+  });
+
+  it('leaves only what others did after undoing my edits around the text they deleted', () => {
+    const original = ['one', 'two'];
+
+    const turn = fc.record({
+      kind: fc.constantFrom('type', 'type', 'delete', 'pause', 'remote', 'cut'),
+      offset: fc.nat(),
+      length: fc.integer({ min: 1, max: 4 }),
+    });
+
+    fc.assert(
+      fc.property(fc.array(turn, { minLength: 3, maxLength: 25 }), (turns) => {
+        const editor = twoLines();
+        const theirs = [new Set<string>(), new Set<string>()];
+        const mine = [new Set<string>(), new Set<string>()];
+
+        for (const step of turns) {
+          const at = editor.nearestText(step.offset % (editor.state.doc.size + 1));
+          const end = editor.endOfTextAfter(at, step.length);
+          const line = at < secondLine(editor.state) ? 0 : 1;
+          const text = editor.state.doc.textBetween(at, end);
+
+          switch (step.kind) {
+            case 'type':
+              editor.select(textSelection(at));
+              editor.type('a'.repeat(step.length));
+              break;
+            case 'delete':
+              noteLetters(mine[line], text);
+              editor.change((tr) => (end > at ? tr.delete(at, end) : tr));
+              break;
+            case 'pause':
+              editor.pause(1000);
+              break;
+            case 'remote':
+              remote(editor, at, 'x'.repeat(step.length));
+              break;
+            default:
+              noteLetters(theirs[line], text);
+              remoteCut(editor, at, Math.max(at, end));
+          }
+        }
+        undoAll(editor);
+
+        const kept = lineTexts(editor.state).map((line) => line.replaceAll('x', ''));
+
+        expect(kept).toEqual(
+          original.map((line, index) =>
+            keptLine(line, theirs[index], mine[index], kept[index] ?? ''),
+          ),
+        );
+      }),
+      { numRuns: 500 },
     );
   });
 

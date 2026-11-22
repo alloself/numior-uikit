@@ -54,6 +54,7 @@ interface Walk {
   deletedBefore: boolean;
   deletedAfter: boolean;
   deletedAcross: boolean;
+  sides: Map<number, Assoc> | undefined;
 }
 
 interface Hit {
@@ -134,6 +135,7 @@ const walkFrom = (pos: number): Walk => ({
   deletedBefore: false,
   deletedAfter: false,
   deletedAcross: false,
+  sides: undefined,
 });
 
 const passed = (walk: Walk, result: MapResult): void => {
@@ -145,6 +147,32 @@ const passed = (walk: Walk, result: MapResult): void => {
   walk.at += 1;
 };
 
+const sideOf = (map: StepMap, pos: number): Assoc | undefined => {
+  const first = map.ranges[0];
+  const last = map.ranges.at(-1);
+
+  if (map.kind === StepMapKind.Move || first === undefined || last === undefined) {
+    return undefined;
+  }
+  if (pos < first.start) {
+    return -1;
+  }
+  return pos > last.start + last.oldSize ? 1 : undefined;
+};
+
+const noteSide = (chain: MirrorMaps, walk: Walk, map: StepMap): void => {
+  const twin = chain.mirrors.get(walk.at);
+  const side = twin === undefined ? undefined : sideOf(map, walk.pos);
+
+  if (twin === undefined || side === undefined) {
+    return;
+  }
+  walk.sides ??= new Map();
+  walk.sides.set(twin, side);
+};
+
+const sideAt = (walk: Walk): Assoc | undefined => walk.sides?.get(walk.at);
+
 const advance = (chain: MirrorMaps, walk: Walk, assoc: Assoc): void => {
   const jump = recovered(chain, walk.at, walk.pos, assoc);
   const map = chain.maps[walk.at];
@@ -155,7 +183,8 @@ const advance = (chain: MirrorMaps, walk: Walk, assoc: Assoc): void => {
   } else if (map === undefined) {
     walk.at += 1;
   } else {
-    passed(walk, map.mapResult(walk.pos, assoc));
+    noteSide(chain, walk, map);
+    passed(walk, map.mapResult(walk.pos, sideAt(walk) ?? assoc));
   }
 };
 
