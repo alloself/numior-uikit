@@ -220,6 +220,30 @@ describe('recalculation', () => {
     expect(sheet.value('B3')).toEqual(numberValue(8));
   });
 
+  it.each([
+    '=INDEX(E7:F8,1,1)',
+    '=INDEX(E7:F8,1,1)+1',
+    '=OFFSET(E8,-1,0)',
+    '=INDIRECT("E7")',
+    '=E7+1',
+  ])(
+    'gives %s that reaches its own cell the same circular value over an old number and over an empty cell',
+    (formula) => {
+      const over = openSheet();
+      const empty = openSheet();
+
+      over.enter('E7', 4);
+      over.recalc();
+      over.enter('E7', formula);
+      empty.enter('E7', formula);
+      over.recalc();
+      empty.recalc();
+
+      expect([over.value('E7'), over.state('E7')]).toEqual([numberValue(0), 'cycle']);
+      expect([empty.value('E7'), empty.state('E7')]).toEqual([numberValue(0), 'cycle']);
+    },
+  );
+
   it('marks circular references and keeps computing what depends on them', () => {
     const sheet = openSheet();
 

@@ -538,6 +538,12 @@ const applyShift = (move: ShiftPlan, axis: LineChange['axis']): void => {
 const insideSheet = (range: CellRange): boolean =>
   range.bottom < MAX_ROWS && range.right < MAX_COLS;
 
+const readsItself = (record: FormulaRecord, found: readonly Precedent[]): boolean =>
+  found.some(
+    (precedent) =>
+      precedent.sheet === record.sheet.id && containsCell(precedent.range, record.row, record.col),
+  );
+
 const plannedRun = (run: Run): boolean =>
   run.planner === undefined && run.marked >= run.queue.length;
 
@@ -834,6 +840,11 @@ export const createCalculator = (
 
     evaluating = undefined;
     settleDynamic(key, record, dynamic);
+    if (readsItself(record, dynamic)) {
+      release(key);
+      writeAnchor(record, numberValue(0), true);
+      return;
+    }
     place(key, record, result);
   };
 
