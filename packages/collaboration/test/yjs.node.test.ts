@@ -25,6 +25,8 @@ import {
   type Map as YMap,
 } from 'yjs';
 import { yjsBinding, type YjsBinding } from '../src/yjs';
+import { placeCode } from '../src/yjs/read-tree';
+import type { Place } from '../src/yjs/yjs.types';
 
 interface Client {
   readonly ydoc: YDoc;
@@ -178,7 +180,7 @@ const addForeign = (client: Client, type: string): void => {
 
     sharedBlocks(client).set('alien', entry);
     entry.setAttribute('nui:type', type);
-    entry.setAttribute('nui:place', JSON.stringify({ parent: '', key: LAST_KEY, clock: 1 }));
+    entry.setAttribute('nui:place', placeCode({ parent: '', key: LAST_KEY, clock: 1 }));
   });
 };
 
@@ -217,7 +219,7 @@ const slotOf = (client: Client, id: string): { parent: string; index: number } =
     : { parent: root.id, index: -1 };
 };
 
-const tangle = (client: Client, places: Readonly<Record<string, object>>): void => {
+const tangle = (client: Client, places: Readonly<Record<string, Place>>): void => {
   client.ydoc.transact(() => {
     for (const [id, place] of Object.entries(places)) {
       const entry = sharedBlocks(client).get(id);
@@ -225,7 +227,7 @@ const tangle = (client: Client, places: Readonly<Record<string, object>>): void 
       if (!(entry instanceof XmlElement)) {
         continue;
       }
-      entry.setAttribute('nui:place', JSON.stringify(place));
+      entry.setAttribute('nui:place', placeCode(place));
     }
   });
 };
@@ -537,6 +539,28 @@ describe('yjsBinding', () => {
 
       expect(performance.now() - started).toBeLessThan(LATENCY_BUDGET_MS);
       expect(left.text().endsWith('Paragraph 9999|Paragraph 0')).toBe(true);
+    },
+  );
+
+  it(
+    'opens a document of ten thousand blocks that arrives after the binding within the latency budget',
+    { tags: ['budget'] },
+    () => {
+      const doc = numbered(10_000);
+      const author = clientOf(doc);
+      const readers = [0, 1, 2].map(() => clientOf(docOf(paragraph('empty', ''))));
+
+      author.binding.seed(doc);
+
+      const times = readers.map((reader) => {
+        const started = performance.now();
+
+        send(author, reader);
+        return performance.now() - started;
+      });
+
+      expect(Math.min(...times)).toBeLessThan(LATENCY_BUDGET_MS);
+      expect(readers.map((reader) => reader.text())).toEqual(readers.map(() => author.text()));
     },
   );
 

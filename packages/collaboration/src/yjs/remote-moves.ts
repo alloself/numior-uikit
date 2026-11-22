@@ -56,15 +56,14 @@ const carry = (tr: Transaction, arrival: Arrival): void => {
   const from = doc.positionOf(arrival.id);
   const node = doc.byId(arrival.id);
 
+  if (from === undefined || node === undefined) {
+    return;
+  }
+
   const target =
     siblingEnd(doc, arrival.parent, arrival.index) ?? contentStart(doc, arrival.parent);
 
-  if (
-    from === undefined ||
-    node === undefined ||
-    target === undefined ||
-    (target >= from && target <= from + node.size)
-  ) {
+  if (target === undefined || (target >= from && target <= from + node.size)) {
     return;
   }
   tr.maybeStep({ kind: 'move', from, to: from + node.size, target });
