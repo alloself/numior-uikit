@@ -902,7 +902,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     }
   };
 
-  const patch = (query: TableQuery, keys: readonly string[], rows?: readonly T[]): void => {
+  const patch = (query: TableQuery, keys: readonly string[], rows?: readonly T[]): boolean => {
     const changed = new Set(keys);
     const plan = prepared.groups === null ? undefined : planOf(query);
 
@@ -910,17 +910,18 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     rowsVersion += 1;
 
     if (plan === undefined) {
-      return;
+      return false;
     }
     if (prepared.tree !== null) {
       retotal(plan);
-      return;
+      return false;
     }
     if (plan.groupBy.some((key) => changed.has(key))) {
       runSync(query);
-      return;
+      return true;
     }
     regroup(plan);
+    return false;
   };
 
   return {

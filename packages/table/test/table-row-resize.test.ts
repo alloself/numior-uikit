@@ -2,7 +2,7 @@ import { flushPromises } from '@vue/test-utils';
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { RemoteStaff } from './support/remote';
-import { staff, STAFF_COLUMNS, type Staff } from './support/staff';
+import { applyStaffEdits, staff, STAFF_COLUMNS, type Staff } from './support/staff';
 
 const mounted: Array<{ unmount(): void }> = [];
 const SIZABLE = { rowHeaders: { resizable: true }, getKey: (row: Staff) => row.id };
@@ -66,6 +66,36 @@ describe('NuiTable row resize', () => {
     expect(grid.rowHeights).toEqual({ 1: 20 });
     expect(grid.canvasHeight).toBe(3980);
     expect(grid.announcement).toBe('Высота строки 2: 20 px');
+  });
+
+  it('keeps the place of a tall row when an edit moves the row to another group', async () => {
+    const grid = mountStaff({
+      rows: staff(300),
+      groupBy: ['city'],
+      rowHeights: { 1: 80 },
+      props: { ...SIZABLE, height: '120px' },
+      onEdit: (event) => {
+        applyStaffEdits(event.changes);
+      },
+    });
+
+    await grid.settle();
+    await grid.toggleGroup(2);
+    await grid.toggleGroup(1);
+
+    expect(grid.rowHeight(2)).toBe('80px');
+    expect(grid.canvasHeight).toBe(8160);
+
+    await grid.focusCell(2, 3);
+    await grid.press('Enter');
+    await grid.typeInEditor('Москва');
+    await grid.press('Enter');
+    await grid.scrollToRow(4);
+
+    expect(grid.cellText(2, 1)).toBe('4');
+    expect(grid.rowHeight(2)).toBe('');
+    expect(grid.canvasHeight).toBe(8160);
+    expect(grid.scrollTop).toBe(160);
   });
 
   it('resizes a row from the keyboard on its header and resets it on a double click', async () => {

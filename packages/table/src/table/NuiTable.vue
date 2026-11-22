@@ -2825,8 +2825,16 @@ const applyChanged = (keys: readonly string[], changed?: readonly T[]): void => 
 
   const ran = currentQuery();
 
-  engine.value.patch(ran, keys, changed);
+  const moved = engine.value.patch(ran, keys, changed);
+
   totals.take(ran);
+
+  if (moved) {
+    rearrange();
+    clampActive();
+    return;
+  }
+
   sync();
 };
 

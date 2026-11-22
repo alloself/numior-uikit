@@ -820,7 +820,7 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
       void pullTotals();
       return { kind: 'done', count: count(), rows: rowCount() };
     },
-    patch: () => undefined,
+    patch: () => false,
     prepare: async () => true,
     visibleIndices: loaded,
     nodeAt,
