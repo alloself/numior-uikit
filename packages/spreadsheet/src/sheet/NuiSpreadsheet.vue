@@ -501,7 +501,7 @@ const cells = computed(() =>
       }),
 );
 
-const peerFrames = computed(() => peerFramesOf(peers, shownSheet.value?.name, cells.value));
+const peerFrames = computed(() => peerFramesOf(peers, shownSheet.value?.key, cells.value));
 
 const file = useSheetFile({
   book: () => book,
@@ -691,11 +691,9 @@ const selection = useSheetSelection({
 
 const place = computed((): NuiSpreadsheetPlace | undefined => {
   const chosen = selection.current.value;
-  const name = tabs.value[shownIndex.value]?.label;
+  const key = shownSheet.value?.key;
 
-  return chosen === undefined || name === undefined
-    ? undefined
-    : { sheet: name, selection: chosen };
+  return chosen === undefined || key === undefined ? undefined : { sheet: key, selection: chosen };
 });
 
 watch(

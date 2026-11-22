@@ -11,6 +11,10 @@ const SHEET = 'Лист1';
 
 const OTHER = 'Лист2';
 
+const SHEET_KEY = 'first';
+
+const OTHER_KEY = 'second';
+
 const mounted: SpreadsheetDriver[] = [];
 
 const single = (row: number, col: number): WorkbookSelection => ({
@@ -33,8 +37,8 @@ const peerOn = (sheet: string, selection: WorkbookSelection, name = 'Анна'):
 const open = (peers: readonly WorkbookPeer[] = []): SpreadsheetDriver => {
   const book = createWorkbook();
 
-  book.addSheet(SHEET);
-  book.addSheet(OTHER);
+  book.addSheet(SHEET, 0, SHEET_KEY);
+  book.addSheet(OTHER, 1, OTHER_KEY);
 
   const driver = SpreadsheetDriver.mount({
     book,
@@ -57,39 +61,39 @@ afterEach(() => {
 
 describe('someone else on the sheet', () => {
   it('names who stands on the shown sheet', () => {
-    const driver = open([peerOn(SHEET, single(2, 1))]);
+    const driver = open([peerOn(SHEET_KEY, single(2, 1))]);
 
     expect(driver.peerNames).toEqual(['Анна']);
   });
 
   it('leaves out someone on another sheet', () => {
-    const driver = open([peerOn(OTHER, single(2, 1))]);
+    const driver = open([peerOn(OTHER_KEY, single(2, 1))]);
 
     expect(driver.peerNames).toEqual([]);
   });
 
   it('leaves out someone who has not picked a cell', () => {
-    const driver = open([{ ...peerOn(SHEET, single(0, 0)), place: undefined }]);
+    const driver = open([{ ...peerOn(SHEET_KEY, single(0, 0)), place: undefined }]);
 
     expect(driver.peerNames).toEqual([]);
   });
 
   it('fills a selected range and leaves a single cell unfilled', async () => {
-    const driver = open([peerOn(SHEET, AREA)]);
+    const driver = open([peerOn(SHEET_KEY, AREA)]);
 
     expect(driver.peerAreas).toBe(1);
 
-    await driver.setPeers([peerOn(SHEET, single(2, 1))]);
+    await driver.setPeers([peerOn(SHEET_KEY, single(2, 1))]);
 
     expect(driver.peerAreas).toBe(0);
   });
 
   it('puts the name under a frame on the top row', async () => {
-    const driver = open([peerOn(SHEET, single(0, 1))]);
+    const driver = open([peerOn(SHEET_KEY, single(0, 1))]);
 
     expect(driver.peerFlagsBelow).toBe(1);
 
-    await driver.setPeers([peerOn(SHEET, single(4, 1))]);
+    await driver.setPeers([peerOn(SHEET_KEY, single(4, 1))]);
 
     expect(driver.peerFlagsBelow).toBe(0);
   });
@@ -101,7 +105,7 @@ describe('telling others where you stand', () => {
 
     await driver.select(single(3, 2));
 
-    expect(driver.places).toEqual([{ sheet: SHEET, selection: single(3, 2) }]);
+    expect(driver.places).toEqual([{ sheet: SHEET_KEY, selection: single(3, 2) }]);
   });
 
   it('stays quiet while the place is the same', async () => {

@@ -36,7 +36,7 @@ describe('NuiSpreadsheet on the server', () => {
             colour: 1,
             user: { id: 'anna', name: 'Анна' },
             place: {
-              sheet: 'Sales',
+              sheet: book.sheet('Sales')?.key ?? '',
               selection: {
                 active: { row: 1, col: 1 },
                 ranges: [{ top: 1, left: 1, bottom: 1, right: 1 }],

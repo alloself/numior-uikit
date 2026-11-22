@@ -80,7 +80,7 @@ describe('a shared book opened with useCollabWorkbook', () => {
     await book.welcome([[0, 0, 'Rent']], 5);
     await book.waitForPresence();
 
-    expect(book.toldPlacesSinceHello).toEqual(['Plan!2:2']);
+    expect(book.toldPlacesSinceHello).toEqual(['plan!2:2']);
   });
 
   it('opens no connection while it renders on the server', async () => {

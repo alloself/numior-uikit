@@ -563,19 +563,37 @@ describe('NuiSpreadsheet in a shared book', () => {
     expect(stop).toHaveBeenCalledOnce();
   });
 
-  it('tells others the new name of the sheet when someone else renames it', async () => {
+  it('keeps telling others the same sheet and keeps them on it when someone else renames it', async () => {
     const book = shared();
     const driver = open(book);
+    const place = { row: 3, col: 2 };
 
-    await driver.select({
-      active: { row: 3, col: 2 },
-      ranges: [{ top: 3, left: 2, bottom: 3, right: 2 }],
-    });
+    await driver.setPeers([
+      {
+        clientId: 'bob',
+        colour: 1,
+        user: { id: 'bob', name: 'Bob' },
+        place: {
+          sheet: KEY,
+          selection: { active: place, ranges: [{ top: 3, left: 2, bottom: 3, right: 2 }] },
+        },
+      },
+    ]);
+
+    await driver.select({ active: place, ranges: [{ top: 3, left: 2, bottom: 3, right: 2 }] });
 
     receive(book.session, { kind: 'renameSheet', from: KEY, to: 'Plan' });
     await driver.settle();
 
     expect(driver.tabs).toEqual(['Plan']);
-    expect(driver.places.at(-1)).toMatchObject({ sheet: 'Plan' });
+
+    expect(driver.places).toEqual([
+      {
+        sheet: KEY,
+        selection: { active: place, ranges: [{ top: 3, left: 2, bottom: 3, right: 2 }] },
+      },
+    ]);
+
+    expect(driver.peerNames).toEqual(['Bob']);
   });
 });
