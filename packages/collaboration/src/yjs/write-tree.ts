@@ -202,7 +202,7 @@ const createEntry = (writing: Writing, node: ElementNode, before: unknown): void
     kindOf(store.schema, node.type) === EntryKind.Line ? new XmlText() : new YMap<unknown>();
 
   store.blocks.set(node.id, entry);
-  writeType(entry, node.type);
+  writeType(store, entry, node.type);
   writeAttrs(entry, node.attrs);
   fillEntry(writing, entry, node, []);
   store.cache.set(node.id, node);
@@ -222,7 +222,7 @@ const syncEntry = (writing: Writing, node: ElementNode): void => {
     createEntry(writing, node, entry);
     return;
   }
-  writeType(entry, node.type);
+  writeType(store, entry, node.type);
   writeAttrs(entry, node.attrs);
   fillEntry(writing, entry, node, previous?.content ?? []);
   store.cache.set(node.id, node);

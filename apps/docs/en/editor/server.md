@@ -406,6 +406,8 @@ The second argument names the document inside the `Y.Doc`. Blocks live in a `Y.M
 each under its id. The order of top-level blocks lives in a `Y.Array` named `description:order`.
 
 A block with a line of text is a `Y.XmlText`, and a container keeps a list of its children's ids.
+The type of a block sits in a `nui:type` field, and a paragraph has none.
+
 Moving a block moves only its id between lists. Text a coauthor types into the block while it moves
 stays put.
 

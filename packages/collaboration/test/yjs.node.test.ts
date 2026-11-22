@@ -186,6 +186,15 @@ const childList = (client: Client, parent: string): YArray<unknown> | undefined 
   return list instanceof YArray ? list : undefined;
 };
 
+const typeField = (client: Client, id: string): unknown => {
+  const entry = sharedBlocks(client).get(id);
+
+  if (entry instanceof XmlText) {
+    return entry.getAttribute('nui:type');
+  }
+  return entry instanceof YMap ? entry.get('nui:type') : undefined;
+};
+
 const blocksOf = (client: Client): readonly unknown[] => Array.from(sharedBlocks(client).values());
 
 const addForeign = (client: Client, type: string): void => {
@@ -315,6 +324,35 @@ describe('yjsBinding', () => {
     client.binding.seed(doc);
 
     expect(client.binding.read()?.root.content).toEqual(doc.root.content);
+  });
+
+  it('leaves the type of a plain line out of Yjs and writes it for any other block', () => {
+    const [left, right] = pair(docOf(paragraph('a', 'Title'), quote('q', paragraph('b', 'Body'))));
+
+    expect(typeField(left, 'a')).toBeUndefined();
+    expect(typeField(left, 'b')).toBeUndefined();
+    expect(typeField(left, 'q')).toBe('blockquote');
+
+    left.apply((from) => from.tr.setSelection(textSelection(2)));
+
+    setBlockType('heading', { level: 2 })(left.state(), (tr) => {
+      left.apply(() => tr);
+    });
+
+    exchange(left, right);
+
+    expect(typeField(left, 'a')).toBe('heading');
+    expect(right.state().doc.root.content[0]).toMatchObject({ type: 'heading', id: 'a' });
+
+    setBlockType('paragraph')(left.state(), (tr) => {
+      left.apply(() => tr);
+    });
+
+    exchange(left, right);
+
+    expect(typeField(left, 'a')).toBeUndefined();
+    expect(right.state().doc.root).toEqual(left.state().doc.root);
+    expect(right.state().doc.root.content[0]).toMatchObject({ type: 'paragraph', id: 'a' });
   });
 
   it('has nothing to read in an empty fragment', () => {

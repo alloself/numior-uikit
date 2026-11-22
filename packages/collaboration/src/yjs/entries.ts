@@ -67,12 +67,24 @@ export const listIn = (entry: unknown): YArray<unknown> | undefined => {
 export const listOf = (store: TreeStore, parent: string): YArray<unknown> | undefined =>
   parent === ROOT_PARENT ? store.root : listIn(store.blocks.get(parent));
 
-export const writeType = (entry: Entry, type: string): void => {
-  if (typeOf(entry) === type) {
+export const writeType = (store: TreeStore, entry: Entry, type: string): void => {
+  const written = typeOf(entry);
+
+  if (isLine(entry) && type === store.plain) {
+    if (written === undefined) {
+      return;
+    }
+    removeField(entry, EntryField.Type);
+    return;
+  }
+  if (written === type) {
     return;
   }
   setField(entry, EntryField.Type, type);
 };
+
+export const entryType = (store: TreeStore, entry: Entry, fields: Fields): unknown =>
+  fields[EntryField.Type] ?? (isLine(entry) ? store.plain : undefined);
 
 export const writeAttrs = (entry: Entry, attrs: Attrs): void => {
   for (const key of Object.keys(fieldsOf(entry))) {

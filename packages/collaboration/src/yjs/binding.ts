@@ -1,6 +1,7 @@
 import {
   ContentNodeKind,
   DocIssueKind,
+  defaultTextblock,
   definePlugin,
   remoteChange,
   type DocIssue,
@@ -177,6 +178,7 @@ export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions)
   const store: TreeStore = {
     schema,
     blocks,
+    plain: defaultTextblock(schema),
     root: order,
     known: new WeakMap(),
     cache: new Map(),

@@ -30,6 +30,7 @@ export interface ReadContext {
 
 export interface TreeStore extends ReadContext {
   readonly blocks: YMap<unknown>;
+  readonly plain: string | undefined;
   readonly root: YArray<unknown>;
   readonly cache: Map<string, ElementNode>;
   readonly stale: Set<string>;

@@ -1,6 +1,7 @@
 import { ContentNodeKind, type ContentNode, type ElementNode } from '@numior/editor-core';
-import type { Array as YArray } from 'yjs';
+import { Array as YArray } from 'yjs';
 import {
+  entryType,
   fieldsOf,
   fits,
   holdsChildren,
@@ -13,11 +14,25 @@ import {
 } from './entries';
 import { lineContent } from './line';
 import { encodedAttrs } from './values';
-import { EntryField, Skipped, type Entry, type ReadBlock, type TreeStore } from './yjs.types';
+import {
+  EntryField,
+  Skipped,
+  type Entry,
+  type Fields,
+  type ReadBlock,
+  type TreeStore,
+} from './yjs.types';
 
 interface Reading {
   readonly store: TreeStore;
   readonly full: boolean;
+}
+
+interface Block {
+  readonly id: string;
+  readonly entry: Entry;
+  readonly type: string;
+  readonly fields: Fields;
 }
 
 const sameChildren = (content: readonly ContentNode[], children: readonly ContentNode[]): boolean =>
@@ -87,17 +102,21 @@ const childrenOf = (
 
 const contentOf = (
   reading: Reading,
-  id: string,
-  entry: Entry,
-  type: string,
+  block: Block,
   cached: ElementNode | undefined,
 ): readonly ContentNode[] | undefined => {
+  const { id, entry, type, fields } = block;
+
   if (isLine(entry)) {
     return lineContent(reading.store, entry);
   }
-  return holdsChildren(reading.store.schema, type)
-    ? childrenOf(reading, id, listIn(entry), cached)
-    : [];
+  if (!holdsChildren(reading.store.schema, type)) {
+    return [];
+  }
+
+  const list = fields[EntryField.Children];
+
+  return childrenOf(reading, id, list instanceof YArray ? list : undefined, cached);
 };
 
 const nodeOf = (reading: Reading, id: string, entry: Entry): ElementNode | undefined => {
@@ -110,7 +129,7 @@ const nodeOf = (reading: Reading, id: string, entry: Entry): ElementNode | undef
   }
 
   const fields = fieldsOf(entry);
-  const type = fields[EntryField.Type];
+  const type = entryType(store, entry, fields);
 
   if (
     typeof type !== 'string' ||
@@ -121,7 +140,7 @@ const nodeOf = (reading: Reading, id: string, entry: Entry): ElementNode | undef
   }
 
   const attrs = encodedAttrs(fields);
-  const content = contentOf(reading, id, entry, type, cached);
+  const content = contentOf(reading, { id, entry, type, fields }, cached);
 
   if (attrs === undefined || content === undefined) {
     return undefined;
@@ -173,8 +192,6 @@ const readBlock = (reading: Reading, item: unknown, parent: string): ReadBlock =
   return nodeOf(reading, id, entry);
 };
 
-const entryCount = (store: TreeStore): number => Array.from(store.blocks.keys()).length;
-
 const unreachedOf = (store: TreeStore): ReadonlyMap<string, unknown> => {
   const unreached = new Map<string, unknown>();
 
@@ -205,6 +222,11 @@ const listedBy = (entries: ReadonlyMap<string, unknown>): ReadonlySet<string> =>
 const rescued = (reading: Reading, content: ElementNode[]): boolean => {
   const { store } = reading;
   const unreached = unreachedOf(store);
+
+  if (unreached.size === 0) {
+    return true;
+  }
+
   const listed = listedBy(unreached);
   const order = Array.from(unreached.keys()).toSorted();
   const tops = order.filter((id) => !listed.has(id));
@@ -239,7 +261,7 @@ const rootContent = (reading: Reading): ElementNode[] | undefined => {
       ? elementsOf(cached.content).slice()
       : childrenOf(reading, ROOT_PARENT, store.root, cached);
 
-  if (content === undefined || !reading.full || store.parents.size === entryCount(store)) {
+  if (content === undefined || !reading.full) {
     return content;
   }
   return rescued(reading, content) ? content : undefined;
