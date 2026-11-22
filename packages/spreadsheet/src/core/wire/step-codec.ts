@@ -12,7 +12,7 @@ import { DrawingKind, type DrawingContent, type SheetDrawing } from '../drawings
 import { lineLayoutsOf } from '../layout/line-layouts';
 import type { LineLayout, LineLayouts, SheetLayout } from '../layout/layout.types';
 import { StepKind, type CellEdit, type TableSpec, type WorkbookStep } from '../steps/step.types';
-import type { Workbook } from '../workbook';
+import { SHEET_KEY, type Workbook } from '../workbook';
 import { isWireLayout } from './wire-layout';
 import { isPivotSpec, isPivotState } from './wire-pivot';
 import { isConditionalFormat } from './wire-rules';
@@ -59,6 +59,9 @@ const isTableSpec: Guard<TableSpec> = shapeOf({
   totals: isBoolean,
 });
 
+const isSheetKey: Guard<string> = (value): value is string =>
+  isString(value) && SHEET_KEY.test(value);
+
 const isPositive: Guard<number> = (value): value is number => isCount(value) && value > 0;
 
 const LINES = {
@@ -84,7 +87,12 @@ const isWireStep: Guard<WireWorkbookStep> = byKind({
   }),
   [StepKind.InsertLines]: shapeOf({ kind: oneOf(StepKind.InsertLines), ...LINES }),
   [StepKind.DeleteLines]: shapeOf({ kind: oneOf(StepKind.DeleteLines), ...LINES }),
-  [StepKind.AddSheet]: shapeOf({ kind: oneOf(StepKind.AddSheet), name: isString, index: isCount }),
+  [StepKind.AddSheet]: shapeOf({
+    kind: oneOf(StepKind.AddSheet),
+    name: isString,
+    index: isCount,
+    key: optional(isSheetKey),
+  }),
   [StepKind.RemoveSheet]: shapeOf({ kind: oneOf(StepKind.RemoveSheet), name: isString }),
   [StepKind.RenameSheet]: shapeOf({
     kind: oneOf(StepKind.RenameSheet),

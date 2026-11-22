@@ -71,6 +71,7 @@ export const bookSteps = (book: Workbook, calculator: Calculator): WorkbookStep[
     kind: 'addSheet',
     name: sheet.name,
     index,
+    key: sheet.key,
   })),
   ...book.sheets.flatMap((sheet) => cellSteps(book, calculator, sheet)),
   ...sharedSteps(book),

@@ -4,6 +4,7 @@ import type { CellStore } from '../cell-store';
 import { CellValueKind, type CellAddress, type CellRange, type CellRef } from '../cell.types';
 import { FormulaReferenceKind, type FormulaNode } from '../formula/formula.types';
 import type { SheetLayout } from '../layout/layout.types';
+import { randomTag } from '../random-tag';
 import {
   DrawingAnchorKind,
   DrawingPlacement,
@@ -34,8 +35,6 @@ const LEAST_COLS = 3;
 const DOUGHNUT_HOLE = 50;
 
 const TAG_LENGTH = 8;
-
-const TAG_RADIX = 36;
 
 const ROUND_KINDS = new Set<SheetChartKind>([SheetChartKind.Pie, SheetChartKind.Doughnut]);
 
@@ -205,18 +204,13 @@ export const chartAnchorAt = (row: number, col: number, end?: CellAddress): Draw
   };
 };
 
-const randomTag = (): string =>
-  Array.from(globalThis.crypto.getRandomValues(new Uint8Array(TAG_LENGTH)), (byte) =>
-    (byte % TAG_RADIX).toString(TAG_RADIX),
-  ).join('');
-
 export const freshDrawingId = (layout: SheetLayout): string => {
   const taken = new Set(layout.drawings.map((drawing) => drawing.id));
   const number = String(layout.drawings.length + 1);
-  let id = `new-${number}-${randomTag()}`;
+  let id = `new-${number}-${randomTag(TAG_LENGTH)}`;
 
   while (taken.has(id)) {
-    id = `new-${number}-${randomTag()}`;
+    id = `new-${number}-${randomTag(TAG_LENGTH)}`;
   }
   return id;
 };

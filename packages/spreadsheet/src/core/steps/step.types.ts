@@ -39,7 +39,12 @@ export type WorkbookStep =
       readonly at: number;
       readonly count: number;
     }
-  | { readonly kind: typeof StepKind.AddSheet; readonly name: string; readonly index: number }
+  | {
+      readonly kind: typeof StepKind.AddSheet;
+      readonly name: string;
+      readonly index: number;
+      readonly key?: string | undefined;
+    }
   | { readonly kind: typeof StepKind.RemoveSheet; readonly name: string }
   | { readonly kind: typeof StepKind.RenameSheet; readonly from: string; readonly to: string }
   | {
@@ -105,6 +110,7 @@ export const StepRefusal = {
   MissingSheet: 'missing-sheet',
   SheetFull: 'sheet-full',
   NameTaken: 'name-taken',
+  KeyTaken: 'key-taken',
   LastSheet: 'last-sheet',
   InvalidName: 'invalid-name',
   MissingTable: 'missing-table',

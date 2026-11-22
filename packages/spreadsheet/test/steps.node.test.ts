@@ -443,6 +443,27 @@ describe('workbook steps and history', () => {
     });
   });
 
+  it('keeps the key of a sheet through a rename and brings the sheet back with it', () => {
+    const book = openBook();
+
+    book.commit({ kind: 'addSheet', name: 'Plan', index: 1, key: 'plan' });
+    book.commit({ kind: 'renameSheet', from: 'Plan', to: 'Budget' });
+
+    expect(book.book.sheet('Budget')?.key).toBe('plan');
+
+    book.commit({ kind: 'removeSheet', name: 'Budget' });
+    book.history.undo();
+
+    expect(book.book.keyed('plan')?.name).toBe('Budget');
+
+    expect(book.commit({ kind: 'addSheet', name: 'Other', index: 0, key: 'plan' })).toEqual({
+      ok: false,
+      reason: 'key-taken',
+    });
+
+    expect(book.book.sheet('Other')).toBeUndefined();
+  });
+
   it('restores formats a range change replaced and keeps the history within its limit', () => {
     const book = openBook();
 

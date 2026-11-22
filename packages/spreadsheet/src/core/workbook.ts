@@ -9,11 +9,13 @@ import { EMPTY_LAYOUT } from './layout/line-layouts';
 import { createDecorations, type CellDecorations } from './decorations';
 import { createNumberFormats, type NumberFormats } from './number-formats';
 import type { BookIndexOf, BookLabelOf, FormulaNode, SheetPlace } from './formula/formula.types';
+import { randomTag } from './random-tag';
 import { createSharedStrings, type SharedStrings } from './strings';
 import type { TableShape } from './tables';
 
 export interface Sheet {
   readonly id: number;
+  readonly key: string;
   name: string;
   readonly cells: CellStore;
   readonly formats: CellFormats;
@@ -98,10 +100,11 @@ export interface Workbook {
   readonly sheets: readonly Sheet[];
   readonly externals: readonly ExternalBook[];
   readonly revision: number;
-  addSheet(name?: string, index?: number): Sheet;
+  addSheet(name?: string, index?: number, key?: string): Sheet;
   addExternal(init: ExternalBookInit): ExternalBook;
   removeSheet(sheet: Sheet): void;
   sheet(name: string): Sheet | undefined;
+  keyed(key: string): Sheet | undefined;
   renameSheet(sheet: Sheet, name: string): boolean;
 }
 
@@ -124,6 +127,10 @@ const R1C1_NAME = /^(?:[RrCc]|[Rr]\d*[Cc]\d*|[Rr]\d+|[Cc]\d+)$/u;
 const MAX_DEFINED_NAME = 255;
 
 const MAX_NAME = 31;
+
+const SHEET_KEY_LENGTH = 12;
+
+export const SHEET_KEY = /^[0-9a-z]{1,32}$/u;
 
 export const validSheetName = (name: string): boolean =>
   name.trim() !== '' &&
@@ -300,11 +307,13 @@ const named = (sheets: readonly Sheet[], name: string): Sheet | undefined => {
 
 const blankSheet = (
   id: number,
+  key: string,
   name: string,
   strings: SharedStrings,
   count?: WriteCount,
 ): Sheet => ({
   id,
+  key,
   name,
   cells: createCellStore(strings, count),
   formats: createCellFormats(),
@@ -340,6 +349,18 @@ export const createWorkbook = (): Workbook => {
 
   const sheet = (name: string): Sheet | undefined => named(sheets, name);
 
+  const keyed = (key: string): Sheet | undefined =>
+    sheets.find((candidate) => candidate.key === key);
+
+  const freshKey = (): string => {
+    let key = randomTag(SHEET_KEY_LENGTH);
+
+    while (keyed(key) !== undefined) {
+      key = randomTag(SHEET_KEY_LENGTH);
+    }
+    return key;
+  };
+
   const freeName = (): string => {
     let index = sheets.length + 1;
 
@@ -359,24 +380,31 @@ export const createWorkbook = (): Workbook => {
     sheets,
     externals,
     sheet,
+    keyed,
     get revision() {
       return count.writes;
     },
-    addSheet: (name, index = sheets.length) => {
+    addSheet: (name, index = sheets.length, key = freshKey()) => {
       const title = name ?? freeName();
 
       if (!validSheetName(title) || sheet(title) !== undefined) {
         throw new RangeError(`The sheet name ${title} is taken or not allowed`);
       }
+      if (!SHEET_KEY.test(key) || keyed(key) !== undefined) {
+        throw new RangeError(`The sheet key ${key} is taken or not allowed`);
+      }
 
-      const created = blankSheet(next, title, strings, count);
+      const created = blankSheet(next, key, title, strings, count);
 
       next += 1;
       sheets.splice(Math.min(Math.max(index, 0), sheets.length), 0, created);
       return created;
     },
     addExternal: (init) => {
-      const cached = init.sheets.map((name, index) => blankSheet(next + index, name, strings));
+      const cached = init.sheets.map((name, index) =>
+        blankSheet(next + index, randomTag(SHEET_KEY_LENGTH), name, strings),
+      );
+
       const added = externalBook(init, cached);
 
       next += cached.length;

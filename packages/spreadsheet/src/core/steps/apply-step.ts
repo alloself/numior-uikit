@@ -10,6 +10,7 @@ import { mapLayoutFormulas, shiftLayout } from '../layout/line-layouts';
 import { layoutBack, layoutDelta, patchLayout } from '../layout/merge-layout';
 import { dropSheetFromFormula, renameInFormula, type LineChange } from '../formula/rewrite';
 import {
+  SHEET_KEY,
   validDefinedName,
   validSheetName,
   type DefinedName,
@@ -379,11 +380,14 @@ export const createStepper = (book: Workbook, calculator: Calculator): BookStepp
     );
   };
 
-  const addSheet = (name: string, index: number): StepResult => {
+  const addSheet = (name: string, index: number, key: string | undefined): StepResult => {
     if (!validSheetName(name) || book.sheet(name) !== undefined) {
       return refused(StepRefusal.NameTaken);
     }
-    book.addSheet(name, index);
+    if (key !== undefined && (!SHEET_KEY.test(key) || book.keyed(key) !== undefined)) {
+      return refused(StepRefusal.KeyTaken);
+    }
+    book.addSheet(name, index, key);
 
     calculator.forEachFormula((sheet, row, col, ast) => {
       if (!mentions(ast, name)) {
@@ -440,7 +444,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): BookStepp
     return {
       kind: 'batch',
       steps: [
-        { kind: 'addSheet', name: sheet.name, index },
+        { kind: 'addSheet', name: sheet.name, index, key: sheet.key },
         { kind: 'setCells', sheet: sheet.name, cells: contents },
         ...removed.map((table): WorkbookStep => ({
           kind: 'setTable',
@@ -574,7 +578,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): BookStepp
   const apply = (step: WorkbookStep): StepResult => {
     switch (step.kind) {
       case StepKind.AddSheet:
-        return addSheet(step.name, step.index);
+        return addSheet(step.name, step.index, step.key);
       case StepKind.RemoveSheet:
         return onSheet(step.name, removeSheet);
       case StepKind.RenameSheet:
