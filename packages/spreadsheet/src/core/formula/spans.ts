@@ -393,23 +393,26 @@ export const followLines = (
 
 const inSheet = (index: number, size: number): boolean => index >= 0 && index < size;
 
+const shiftedIndex = (index: number, absolute: boolean, by: number): number =>
+  absolute ? index : index + by;
+
 const movedEndpoint = (endpoint: Endpoint, rows: number, cols: number): string | undefined => {
   switch (endpoint.kind) {
     case EndpointKind.Cell: {
-      const row = endpoint.ref.rowAbsolute ? endpoint.ref.row : endpoint.ref.row + rows;
-      const col = endpoint.ref.colAbsolute ? endpoint.ref.col : endpoint.ref.col + cols;
+      const row = shiftedIndex(endpoint.ref.row, endpoint.ref.rowAbsolute, rows);
+      const col = shiftedIndex(endpoint.ref.col, endpoint.ref.colAbsolute, cols);
 
       return inSheet(row, MAX_ROWS) && inSheet(col, MAX_COLS)
         ? placed(endpoint, row, col)
         : undefined;
     }
     case EndpointKind.Column: {
-      const col = endpoint.absolute ? endpoint.index : endpoint.index + cols;
+      const col = shiftedIndex(endpoint.index, endpoint.absolute, cols);
 
       return inSheet(col, MAX_COLS) ? placed(endpoint, 0, col) : undefined;
     }
     default: {
-      const row = endpoint.absolute ? endpoint.index : endpoint.index + rows;
+      const row = shiftedIndex(endpoint.index, endpoint.absolute, rows);
 
       return inSheet(row, MAX_ROWS) ? placed(endpoint, row, 0) : undefined;
     }
