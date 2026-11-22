@@ -11,7 +11,8 @@ import type {
   WorkbookAuthorityOptions,
   WorkbookSnapshot,
 } from './collab.types';
-import { sheetKeys, keyedStep, localStep } from './keyed-steps';
+import { freeNames, type TakenNames } from './free-names';
+import { keyedStep, localStep, sheetKeys } from './keyed-steps';
 import { changesOver, stepOver } from './rebase-queue';
 import { changesOf } from './remote-change';
 import { WORKBOOK_SCHEMA, settleForStep } from './schema';
@@ -19,6 +20,7 @@ import { WORKBOOK_SCHEMA, settleForStep } from './schema';
 interface Taken {
   readonly step: WorkbookStep;
   readonly inverse: WorkbookStep;
+  readonly renames: readonly RemoteChange[];
 }
 
 const WINDOW = 4096;
@@ -43,11 +45,17 @@ export const workbookAuthority = (
     return result.ok ? result.inverse : undefined;
   };
 
-  const take = (keyed: WorkbookStep): Taken | undefined => {
-    const local = localStep(keyed, names);
+  const occupied: TakenNames = {
+    sheets: names,
+    table: (name) => book.names.taken(name) || book.tables.get(name) !== undefined,
+  };
+
+  const take = (wire: WorkbookStep): Taken | undefined => {
+    const { step, renames } = freeNames(wire, occupied);
+    const local = localStep(step, names);
     const inverse = local === undefined ? undefined : applyOne(local);
 
-    return inverse === undefined ? undefined : { step: keyed, inverse };
+    return inverse === undefined ? undefined : { step, inverse, renames };
   };
 
   const undo = (taken: readonly Taken[]): void => {
@@ -83,19 +91,19 @@ export const workbookAuthority = (
       return shot;
     },
     apply: (wires) => {
-      const taken: Taken[] = [];
+      const accepted: Taken[] = [];
 
       for (const wire of wires) {
         const step = codec.decode(wire);
         const done = step === undefined ? undefined : take(step);
 
         if (done === undefined) {
-          undo(taken);
+          undo(accepted);
           return false;
         }
-        taken.push(done);
+        accepted.push(done);
       }
-      kept(taken);
+      kept(accepted);
       return true;
     },
     rebase: (wires, behind) => {
@@ -103,26 +111,29 @@ export const workbookAuthority = (
         return undefined;
       }
 
-      const taken: Taken[] = [];
+      const accepted: Taken[] = [];
       let moving: readonly RemoteChange[] = tail.slice(tail.length - behind).flat();
 
       for (const wire of wires) {
         const step = codec.decode(wire);
 
         if (step === undefined || (step.kind === StepKind.SetLayout && step.base === undefined)) {
-          undo(taken);
+          undo(accepted);
           return undefined;
         }
 
         const moved = stepOver(step, moving);
         const done = moved === undefined ? undefined : take(moved);
 
-        if (done !== undefined) {
-          taken.push(done);
-        }
         moving = changesOver(moving, changesOf(step));
+
+        if (done === undefined) {
+          continue;
+        }
+        accepted.push(done);
+        moving = [...moving, ...done.renames];
       }
-      return kept(taken);
+      return kept(accepted);
     },
   };
 };

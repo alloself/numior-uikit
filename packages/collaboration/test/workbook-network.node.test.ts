@@ -1,13 +1,21 @@
 import {
   EN_FORMULAS,
   columnName,
+  createCellEditor,
+  parseRange,
+  pivotCaptions,
   parseFormula,
   printFormula,
   type WorkbookStep,
 } from '@numior/spreadsheet/core';
 import * as fc from 'fast-check';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
-import { createBookNetwork, type BookClient, type BookNetwork } from './harness/workbook-network';
+import {
+  createBookNetwork,
+  formulaCell,
+  type BookClient,
+  type BookNetwork,
+} from './harness/workbook-network';
 
 type NetAction = (typeof NetAction)[keyof typeof NetAction];
 
@@ -288,12 +296,6 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const cellStep = (sheet: string, text: string): WorkbookStep => ({
-  kind: 'setCells',
-  sheet,
-  cells: [{ row: 0, col: 0, content: { kind: 'value', value: { kind: 'string', value: text } } }],
-});
-
 const renameStep = (from: string, to: string): WorkbookStep => ({ kind: 'renameSheet', from, to });
 
 const rowsStep = (sheet: string): WorkbookStep => ({
@@ -329,12 +331,72 @@ const settledPictures = (net: BookNetwork): readonly string[] => {
   return net.clients.map(pictureOf);
 };
 
+const cellAt = (sheet: string, row: number, col: number, text: string): WorkbookStep => ({
+  kind: 'setCells',
+  sheet,
+  cells: [{ row, col, content: { kind: 'value', value: { kind: 'string', value: text } } }],
+});
+
+const tableOf = (client: BookClient, range: string): WorkbookStep => {
+  const sheet = client.book.sheet('Sheet1');
+  const area = parseRange(range);
+
+  if (sheet === undefined || area === undefined) {
+    throw new Error(`no table over ${range}`);
+  }
+  return createCellEditor(client.book, client.calculator).tableStep(sheet, area);
+};
+
+const tableNames = (client: BookClient): readonly string[] => {
+  const names: string[] = [];
+
+  client.book.tables.forEach((table) => {
+    names.push(`${table.name}@${String(table.range.left)}`);
+  });
+
+  return names.toSorted();
+};
+
+const pivotOn = (sheet: string, index: number): readonly WorkbookStep[] => [
+  { kind: 'addSheet', name: sheet, index },
+  {
+    kind: 'setPivot',
+    sheet,
+    name: 'PivotTable1',
+    pivot: {
+      anchor: { row: 2, col: 0 },
+      definition: {
+        source: { kind: 'range', sheet: 'Sheet1', range: { top: 0, left: 0, bottom: 2, right: 0 } },
+        rows: [0],
+        columns: [],
+        filters: [],
+        values: [],
+        fields: [],
+        layout: 'compact',
+        rowTotals: true,
+        columnTotals: true,
+        autofit: true,
+        captions: pivotCaptions('en'),
+      },
+    },
+  },
+];
+
+const pivotsOf = (client: BookClient): readonly string[] =>
+  client.book.sheets.map(
+    (sheet) =>
+      `${sheet.name}:${client.book.pivots
+        .on(sheet)
+        .map((pivot) => pivot.name)
+        .join(',')}`,
+  );
+
 describe('sheets three people rename, remove and bring back at once', () => {
   it('ends with one book for everyone after a sheet is renamed to its own name among renames and new rows', () => {
     const [net, ann, bob, cat] = trio();
 
     try {
-      cat.commit([cellStep('Sheet1', 'cat1')]);
+      cat.commit([cellAt('Sheet1', 0, 0, 'cat1')]);
       cat.toServer();
       cat.commit([rowsStep('Sheet1')]);
       ann.commit([renameStep('Sheet1', 'Tab4')]);
@@ -344,7 +406,7 @@ describe('sheets three people rename, remove and bring back at once', () => {
       cat.commit([renameStep('Tab4', 'Tab1')]);
       bob.toClient();
       bob.commit([renameStep('Tab1', 'Tab1')]);
-      cat.commit([cellStep('Tab1', 'cat2')]);
+      cat.commit([cellAt('Tab1', 0, 0, 'cat2')]);
       bob.commit([nameStep('Total', '=Tab1!$A$1:$B$2')]);
 
       const pictures = settledPictures(net);
@@ -360,21 +422,141 @@ describe('sheets three people rename, remove and bring back at once', () => {
     const [net, ann, bob, cat] = trio();
 
     try {
-      cat.commit([cellStep('Sheet1', 'cat1')]);
+      cat.commit([cellAt('Sheet1', 0, 0, 'cat1')]);
       cat.toServer();
       ann.commit([renameStep('Sheet1', 'Ann')]);
       ann.commit([{ kind: 'addSheet', name: 'Notes', index: 0 }]);
       cat.commit([renameStep('Sheet1', 'Cat')]);
       ann.commit([{ kind: 'removeSheet', name: 'Ann' }]);
-      bob.commit([cellStep('Sheet1', 'bob1')]);
+      bob.commit([cellAt('Sheet1', 0, 0, 'bob1')]);
       ann.undo();
       cat.commit([nameStep('catName', "='Cat'!$A$1:$B$2")]);
-      bob.commit([cellStep('Sheet1', 'bob2')]);
+      bob.commit([cellAt('Sheet1', 0, 0, 'bob2')]);
 
       const pictures = settledPictures(net);
 
       expect(pictures).toEqual(pictures.map(() => pictures[0]));
       expect(net.newcomer()).toBe(ann.dump());
+    } finally {
+      net.close();
+    }
+  });
+});
+
+describe('names two people give at once', () => {
+  it('keeps both sheets two people add under one automatic name, the later under the next name', () => {
+    const [net, ann, bob] = trio();
+
+    try {
+      ann.commit([
+        { kind: 'addSheet', name: 'Sheet2', index: 1 },
+        cellAt('Sheet2', 0, 0, 'ANN budget'),
+      ]);
+
+      bob.commit([
+        { kind: 'addSheet', name: 'Sheet2', index: 1 },
+        cellAt('Sheet2', 0, 1, 'BOB notes'),
+        cellAt('Sheet2', 0, 0, 'BOB title'),
+      ]);
+
+      const pictures = settledPictures(net);
+
+      expect(pictures).toEqual(pictures.map(() => pictures[0]));
+      expect(bob.book.sheets.map((sheet) => sheet.name)).toEqual(['Sheet1', 'Sheet3', 'Sheet2']);
+      expect([bob.text('Sheet2', 0, 0), bob.text('Sheet2', 0, 1)]).toEqual(['ANN budget', '']);
+
+      expect([bob.text('Sheet3', 0, 0), bob.text('Sheet3', 0, 1)]).toEqual([
+        'BOB title',
+        'BOB notes',
+      ]);
+
+      bob.undo();
+
+      const undone = settledPictures(net);
+
+      expect(undone).toEqual(undone.map(() => undone[0]));
+      expect(ann.book.sheets.map((sheet) => sheet.name)).toEqual(['Sheet1', 'Sheet2']);
+      expect(ann.text('Sheet2', 0, 0)).toBe('ANN budget');
+    } finally {
+      net.close();
+    }
+  });
+
+  it('gives a sheet renamed to a name someone else took at once the next name', () => {
+    const [net, ann, bob] = trio([
+      { kind: 'addSheet', name: 'Sheet1', index: 0, key: 'main' },
+      { kind: 'addSheet', name: 'Other', index: 1, key: 'other' },
+    ]);
+
+    try {
+      ann.commit([renameStep('Sheet1', 'Plan')]);
+      bob.commit([renameStep('Other', 'Plan'), cellAt('Plan', 0, 0, 'BOB plan')]);
+
+      const pictures = settledPictures(net);
+
+      expect(pictures).toEqual(pictures.map(() => pictures[0]));
+      expect(bob.book.sheets.map((sheet) => sheet.name)).toEqual(['Plan', 'Plan2']);
+      expect([bob.text('Plan', 0, 0), bob.text('Plan2', 0, 0)]).toEqual(['', 'BOB plan']);
+    } finally {
+      net.close();
+    }
+  });
+
+  it('keeps both pivots two people insert at once, each on its own sheet', () => {
+    const [net, ann, bob] = trio();
+
+    try {
+      ann.commit([cellAt('Sheet1', 0, 0, 'Region'), cellAt('Sheet1', 1, 0, 'North')]);
+      net.settle();
+      ann.commit(pivotOn('Pivot 1', 1));
+      bob.commit(pivotOn('Pivot 1', 1));
+
+      const pictures = settledPictures(net);
+
+      expect(pictures).toEqual(pictures.map(() => pictures[0]));
+      expect(pivotsOf(bob)).toEqual(['Sheet1:', 'Pivot 2:PivotTable1', 'Pivot 1:PivotTable1']);
+      expect(pivotsOf(ann)).toEqual(pivotsOf(bob));
+    } finally {
+      net.close();
+    }
+  });
+
+  it('keeps both tables two people make under one automatic name and the formulas of each on its own', () => {
+    const [net, ann, bob] = trio();
+
+    try {
+      ann.commit([
+        cellAt('Sheet1', 0, 0, 'Item'),
+        cellAt('Sheet1', 0, 1, 'Sum'),
+        cellAt('Sheet1', 0, 3, 'Item'),
+        cellAt('Sheet1', 0, 4, 'Sum'),
+      ]);
+
+      net.settle();
+      ann.commit([tableOf(ann, 'A1:B3')]);
+      bob.commit([tableOf(bob, 'D1:E3')]);
+
+      bob.commit([
+        {
+          kind: 'setCells',
+          sheet: 'Sheet1',
+          cells: [formulaCell(5, 4, '=ROWS(Table1[Sum])')],
+        },
+      ]);
+
+      const pictures = settledPictures(net);
+
+      expect(pictures).toEqual(pictures.map(() => pictures[0]));
+      expect(tableNames(bob)).toEqual(['Table1@0', 'Table2@3']);
+      expect(bob.text('Sheet1', 5, 4)).toBe('=ROWS(Table2[Sum])');
+
+      bob.undo();
+      bob.undo();
+
+      const undone = settledPictures(net);
+
+      expect(undone).toEqual(undone.map(() => undone[0]));
+      expect(tableNames(ann)).toEqual(['Table1@0']);
     } finally {
       net.close();
     }

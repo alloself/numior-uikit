@@ -24,6 +24,7 @@ import {
   type KeptNames,
   type SheetNames,
 } from './keyed-steps';
+import { freeNames, type TakenNames } from './free-names';
 import { changesOver, stepOver } from './rebase-queue';
 import { changesOf, linesAfter } from './remote-change';
 import { flattened, settleForStep, snapshotSteps } from './schema';
@@ -38,6 +39,7 @@ interface Taken {
   readonly keyed: WorkbookStep;
   readonly local: WorkbookStep;
   readonly result: StepResult;
+  readonly renames: readonly RemoteChange[];
 }
 
 interface Received {
@@ -96,10 +98,16 @@ export const createWorkbookDocument = ({
     return raw.apply(step);
   };
 
-  const take = (keyed: WorkbookStep): Taken | undefined => {
+  const occupied: TakenNames = {
+    sheets: names,
+    table: (name) => book.names.taken(name) || book.tables.get(name) !== undefined,
+  };
+
+  const take = (wire: WorkbookStep): Taken | undefined => {
+    const { step: keyed, renames } = freeNames(wire, occupied);
     const local = localStep(keyed, names);
 
-    return local === undefined ? undefined : { keyed, local, result: applied(local) };
+    return local === undefined ? undefined : { keyed, local, result: applied(local), renames };
   };
 
   const decodedAll = (steps: readonly unknown[]): readonly WorkbookStep[] | undefined =>
@@ -156,15 +164,16 @@ export const createWorkbookDocument = ({
     const moving = unconfirmed.reduce<readonly RemoteChange[]>((changes, { step, inverse }) => {
       const rebased = stepOver(step, changes);
 
-      const taken =
+      const done =
         rebased === undefined
           ? undefined
           : take(withMergedLayout(rebased, inverse, changes, before));
 
-      if (taken?.result.ok === true) {
-        replayed.push({ step: taken.keyed, inverse: taken.result.inverse });
+      if (done?.result.ok !== true) {
+        return changesOver(changes, changesOf(step));
       }
-      return changesOver(changes, changesOf(step));
+      replayed.push({ step: done.keyed, inverse: done.result.inverse });
+      return [...changesOver(changes, changesOf(step)), ...done.renames];
     }, remote);
 
     unconfirmed = replayed;

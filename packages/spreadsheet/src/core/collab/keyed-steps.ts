@@ -28,7 +28,7 @@ export interface KeptNames extends SheetNames {
   readonly entries: ReadonlyMap<string, string>;
 }
 
-interface Scope extends SheetNames {
+export interface Scope extends SheetNames {
   readonly add: (name: string, key: string) => void;
   readonly remove: (key: string) => void;
   readonly rename: (key: string, name: string) => void;
@@ -52,7 +52,7 @@ const ABSENT = ':';
 
 const LOST_SOURCE: PivotSource = { kind: PivotSourceKind.Lost };
 
-const scopeOver = (base: SheetNames): Scope => {
+export const scopeOver = (base: SheetNames): Scope => {
   let overlay: Overlay | undefined;
 
   const nameOf = (key: string): string | undefined =>

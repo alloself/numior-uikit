@@ -125,9 +125,9 @@ const MACRO_NAME = /^\\.$/u;
 
 const R1C1_NAME = /^(?:[RrCc]|[Rr]\d*[Cc]\d*|[Rr]\d+|[Cc]\d+)$/u;
 
-const MAX_DEFINED_NAME = 255;
+export const DEFINED_NAME_LENGTH = 255;
 
-const MAX_NAME = 31;
+export const SHEET_NAME_LENGTH = 31;
 
 const SHEET_KEY_LENGTH = 12;
 
@@ -135,13 +135,13 @@ export const SHEET_KEY = /^[0-9a-z]{1,32}$/u;
 
 export const validSheetName = (name: string): boolean =>
   name.trim() !== '' &&
-  name.length <= MAX_NAME &&
+  name.length <= SHEET_NAME_LENGTH &&
   !FORBIDDEN.test(name) &&
   !name.startsWith("'") &&
   !name.endsWith("'");
 
 export const validTableName = (name: string): boolean =>
-  name.length <= MAX_DEFINED_NAME &&
+  name.length <= DEFINED_NAME_LENGTH &&
   NAME.test(name) &&
   !R1C1_NAME.test(name) &&
   parseCell(name) === undefined &&

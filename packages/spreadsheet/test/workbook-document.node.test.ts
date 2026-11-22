@@ -16,7 +16,7 @@ const SHEET = 'Sheet1';
 
 const SEED: WorkbookStep = { kind: 'addSheet', name: SHEET, index: 0, key: 'main' };
 
-const REPEATED_SHEET: WorkbookStep = { kind: 'addSheet', name: SHEET, index: 1, key: 'again' };
+const REPEATED_KEY: WorkbookStep = { kind: 'addSheet', name: 'Next', index: 1, key: 'main' };
 
 const written = (row: number, col: number, text: string): WorkbookStep => ({
   kind: 'setCells',
@@ -117,7 +117,7 @@ describe('workbook document', () => {
     const received = client.document.receive({
       version: 2,
       clientId: 'other',
-      steps: client.wires(written(0, 0, 'theirs'), REPEATED_SHEET, written(0, 2, 'more')),
+      steps: client.wires(written(0, 0, 'theirs'), REPEATED_KEY, written(0, 2, 'more')),
     });
 
     expect(received).toBe(false);
@@ -135,7 +135,7 @@ describe('workbook document', () => {
 
     const settled = client.document.settle(
       1,
-      client.wires(written(0, 0, 'theirs'), REPEATED_SHEET),
+      client.wires(written(0, 0, 'theirs'), REPEATED_KEY),
       3,
     );
 

@@ -488,7 +488,7 @@ describe('a workbook opened again from the server', () => {
       {
         steps: [
           { kind: 'addSheet', name: 'One', index: 0, key: 'one' },
-          { kind: 'addSheet', name: 'One', index: 1, key: 'two' },
+          { kind: 'addSheet', name: 'Two', index: 1, key: 'one' },
         ],
       },
       3,
