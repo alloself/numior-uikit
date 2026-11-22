@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { RU_LOCALE, loadCells, numberValue, textValue, type LoadEntry } from '../src/core';
+import {
+  RU_LOCALE,
+  errorValue,
+  loadCells,
+  numberValue,
+  textValue,
+  type LoadEntry,
+} from '../src/core';
 import { openBook } from './book-harness';
 import { evaluated, openSheet } from './sheet-harness';
 
@@ -562,6 +569,59 @@ describe('recalculation', () => {
 
     expect(sheet.value('A500')).toEqual(numberValue(500));
     expect(sheet.calculator.pending).toBe(0);
+  });
+});
+
+describe('ranges a criteria function reads', () => {
+  it('sums and averages a sum range stretched to the criteria range and follows its cells', () => {
+    const sheet = openSheet();
+
+    ['B1', 'B2', 'B3'].forEach((address) => sheet.enter(address, 1));
+    sheet.enter('C1', 10);
+    sheet.enter('C2', 20);
+    sheet.enter('C3', 30);
+    sheet.enter('H1', '=SUMIF(B1:B3,">0",C1)');
+    sheet.enter('H2', '=AVERAGEIF(B1:B3,">0",C1)');
+    sheet.enter('H3', '=SUMIF(B1:B3,">0",C1:D9)');
+    sheet.recalc();
+
+    expect([sheet.value('H1'), sheet.value('H2'), sheet.value('H3')]).toEqual([
+      numberValue(60),
+      numberValue(20),
+      numberValue(60),
+    ]);
+
+    sheet.enter('C2', 200);
+    sheet.recalc();
+
+    expect([sheet.value('H1'), sheet.value('H2'), sheet.value('H3')]).toEqual([
+      numberValue(240),
+      numberValue(80),
+      numberValue(240),
+    ]);
+  });
+
+  it('gives a sum range stretched over its own cell the circular value', () => {
+    const sheet = openSheet();
+
+    sheet.enter('D7', 1);
+    sheet.enter('E7', 1);
+    sheet.enter('F7', '=SUMIF(B:E,">0",C:C)');
+    sheet.recalc();
+    sheet.enter('B1', 0);
+    sheet.recalc();
+
+    expect([sheet.value('F7'), sheet.state('F7')]).toEqual([numberValue(0), 'cycle']);
+  });
+
+  it.each([
+    '=SUMIFS(C1:C1,B1:B3,">0")',
+    '=SUMIFS(C1:C5,B1:B3,">0")',
+    '=AVERAGEIFS(C1:C1,B1:B3,">0")',
+    '=MAXIFS(C1:C1,B1:B3,">0")',
+    '=MINIFS(C1:C1,B1:B3,">0")',
+  ])('refuses %s whose range differs in shape from its criteria range', (formula) => {
+    expect(evaluated(formula)).toEqual(errorValue('#VALUE!'));
   });
 });
 

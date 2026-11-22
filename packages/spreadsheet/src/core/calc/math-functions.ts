@@ -4,8 +4,9 @@ import {
   conditionsOf,
   eachNumber,
   forEachMatch,
+  ifsRangeOf,
   numbersOf,
-  referenceOf,
+  sumRangeOf,
   targetValue,
   type Condition,
   type Reference,
@@ -200,9 +201,8 @@ export const MATH_FUNCTIONS: readonly FunctionSpec[] = [
     referenceAt: (index) => index !== 1,
     evaluate: (args) => {
       const conditions = conditionsOf({ ...args, count: 2 }, 0);
-      const range = args.count > 2 ? referenceOf(args.value(2)) : conditions[0]?.range;
 
-      return range === undefined ? raise('#VALUE!') : sumIf(conditions, range);
+      return sumIf(conditions, sumRangeOf(args, conditions));
     },
   }),
   defineFunction({
@@ -211,7 +211,11 @@ export const MATH_FUNCTIONS: readonly FunctionSpec[] = [
     max: MANY,
     counts: pairsAfter(1),
     referenceAt: rangesAfter(1),
-    evaluate: (args) => sumIf(conditionsOf(args, 1), referenceOf(args.value(0))),
+    evaluate: (args) => {
+      const conditions = conditionsOf(args, 1);
+
+      return sumIf(conditions, ifsRangeOf(args, conditions));
+    },
   }),
   unary('ABS', Math.abs),
   unary('SIGN', Math.sign),

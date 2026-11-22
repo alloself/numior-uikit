@@ -9,8 +9,10 @@ import {
   eachNumber,
   eachValueAsNumber,
   forEachMatch,
+  ifsRangeOf,
   numbersOf,
   referenceOf,
+  sumRangeOf,
   targetValue,
   type Condition,
   type Reference,
@@ -177,15 +179,15 @@ const matched = (conditions: readonly Condition[], range: Reference): number[] =
 
 const averageIf = (args: FunctionArgs): EvalValue => {
   const conditions = conditionsOf({ ...args, count: 2 }, 0);
-  const range = args.count > 2 ? referenceOf(args.value(2)) : conditions[0]?.range;
 
-  return range === undefined ? raise('#VALUE!') : numberValue(mean(matched(conditions, range)));
+  return numberValue(mean(matched(conditions, sumRangeOf(args, conditions))));
 };
 
 const ifsExtreme =
   (pick: (values: readonly number[]) => number | undefined) =>
   (args: FunctionArgs): EvalValue => {
-    const found = matched(conditionsOf(args, 1), referenceOf(args.value(0)));
+    const conditions = conditionsOf(args, 1);
+    const found = matched(conditions, ifsRangeOf(args, conditions));
 
     return numberValue(pick(found) ?? 0);
   };
@@ -317,8 +319,11 @@ export const STATISTICS_FUNCTIONS: readonly FunctionSpec[] = [
     max: MANY,
     counts: pairsAfter(1),
     referenceAt: rangesAfter(1),
-    evaluate: (args) =>
-      numberValue(mean(matched(conditionsOf(args, 1), referenceOf(args.value(0))))),
+    evaluate: (args) => {
+      const conditions = conditionsOf(args, 1);
+
+      return numberValue(mean(matched(conditions, ifsRangeOf(args, conditions))));
+    },
   }),
   defineFunction({
     name: 'COUNT',

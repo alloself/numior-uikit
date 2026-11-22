@@ -125,6 +125,31 @@ const anchored = (target: Reference, like: CellRange): Reference => ({
   },
 });
 
+export const sumRangeOf = (args: FunctionArgs, conditions: readonly Condition[]): Reference => {
+  const first = conditions[0]?.range;
+
+  if (first === undefined) {
+    return raise('#VALUE!');
+  }
+  if (args.count <= 2) {
+    return first;
+  }
+
+  const given = referenceOf(args.value(2));
+  const target = anchored(given, first.range);
+
+  return sameShape(target.range, given.range)
+    ? given
+    : referenceOf(args.refer(target.sheet, target.range));
+};
+
+export const ifsRangeOf = (args: FunctionArgs, conditions: readonly Condition[]): Reference => {
+  const target = referenceOf(args.value(0));
+  const shape = conditions[0]?.range.range;
+
+  return shape === undefined || sameShape(target.range, shape) ? target : raise('#VALUE!');
+};
+
 export const forEachMatch = (
   conditions: readonly Condition[],
   target: Reference | undefined,
