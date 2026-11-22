@@ -347,14 +347,14 @@ import NuiTableFilter from './NuiTableFilter.vue';
 import NuiTableFooterCell from './NuiTableFooterCell.vue';
 import NuiTableHeaderMarks from './NuiTableHeaderMarks.vue';
 import { useTableFocus } from './use-table-focus';
-import { useTableOverlay } from './use-table-overlay';
-import { useTableClipboard, type TableCopyCell } from './use-table-clipboard';
+import { useClipboardArea } from './areas/clipboard-area';
+import { useOverlayArea } from './areas/overlay-area';
+import type { TableContext } from './areas/table-context';
 import { useTableContextMenu } from './use-table-context-menu';
 import { useTableCellEditor } from './use-table-cell-editor';
 import { createEchoes } from './table-echoes';
 import { useTablePicking } from './use-table-picking';
 import { useTableEditing } from './use-table-editing';
-import { useTableExport } from './use-table-export';
 import { editorPlan } from './table-editors';
 import { parseCell } from './table-parse';
 import { ruleFailure } from './table-rules';
@@ -422,7 +422,6 @@ import {
   type TableCellLayout,
   type TableCellLead,
   type TableCellPaint,
-  type NuiTableCellKey,
   type NuiTableCellPosition,
   type TableCellSpan,
   type TableCellView,
@@ -645,6 +644,36 @@ let stamp = 0;
 const arrangement = createVersion();
 const announcement = ref('');
 const rowsIntent = createIntent<true>();
+
+const announce = (text: string): void => {
+  announcement.value = text;
+};
+
+const table: TableContext<T> = {
+  viewport,
+  emit,
+  messages,
+  announce,
+  engine,
+  revision,
+  pageStart: () => pageStart.value,
+  bodyRows: () => visibleRows.value,
+  rowAtPosition: (position) => rowAtPosition(position),
+  rowFor: (visual) => rowFor(visual),
+  active: () => active.value,
+  ranges: () => ranges.value,
+  layout: () => layout.value,
+  columnAt: (key) => columnAt(key),
+  dataKeys: () => dataKeys.value,
+  dataOffset: () => dataOffset.value,
+  textOf: (row, key) => textOf(row, key),
+  headRows: () => headRows.value,
+  pinnedRows: () => pinnedCount.value,
+  frozenRows: () => frozenCount.value,
+  rowWindow: () => rowWindow,
+  columnWindow: () => columnWindow,
+};
+
 const selectOn = computed(() => selectable !== undefined);
 
 const treeOn = computed(() =>
@@ -1790,10 +1819,6 @@ const columnMarks = computed(() =>
   rowHead.value === undefined ? undefined : columnSpansOf(ranges.value, dataOffset.value),
 );
 
-const announce = (text: string): void => {
-  announcement.value = text;
-};
-
 const rangeSelect = useTableRanges({
   enabled: () => cellSelection && !loadingNow.value,
   lines: () => rowHead.value !== undefined,
@@ -1841,36 +1866,9 @@ const rangedAt = computed(() => (mergeIndex.value.size === 0 ? undefined : range
 const rangedOf = (item: TableBodyRow): TableRowRanges | undefined =>
   item.group === undefined ? rangeSelect.segmentsOf(item.index) : undefined;
 
-const copyCell = (): TableCopyCell<T> | undefined => {
-  const row = rowFor(active.value.row);
-  const key = dataKeyAt(layout.value, active.value.col);
-
-  return row === undefined || key === undefined ? undefined : { row, key };
-};
-
 const rowAtPosition = (position: number): T | undefined => {
   const node = engine.value.nodeAt(pageStart.value + position);
   return node?.kind === TableNodeKind.Row ? node.row : undefined;
-};
-
-const cellKeyOf = (position: NuiTableCellPosition): NuiTableCellKey | undefined => {
-  const node = revision.read(() => engine.value.nodeAt(pageStart.value + position.row));
-  const column = dataKeys.value[position.col];
-
-  return node?.kind !== TableNodeKind.Row || column === undefined
-    ? undefined
-    : { row: node.id, column };
-};
-
-const cellPositionOf = (key: NuiTableCellKey): NuiTableCellPosition | undefined => {
-  const col = dataKeys.value.indexOf(key.column);
-
-  const [found] =
-    col < 0 ? [] : revision.read(() => engine.value.positionsOf((rowId) => rowId === key.row, 1));
-
-  const row = found === undefined ? -1 : found[1] - pageStart.value;
-
-  return row < 0 || row >= visibleRows.value ? undefined : { row, col };
 };
 
 const paintedKeys = computed(() =>
@@ -2079,19 +2077,11 @@ const paintPinned: TableRowPainter = (position) => paintRow(pinnedRows[position]
 const bodyPaint = computed(() => (cellStyle === undefined ? undefined : paintBody));
 const pinnedPaint = computed(() => (cellStyle === undefined ? undefined : paintPinned));
 
-const clipboard = useTableClipboard<T>({
-  ranges: () => ranges.value,
-  cell: copyCell,
+const { clipboard, exporter } = useClipboardArea(table, {
   position: activeData,
   serialize: () => clipboardHooks?.serialize,
-  rowAt: rowAtPosition,
-  keyAt: (col) => dataKeys.value[col],
-  labelOf: (key) => columnAt(key).label,
-  textOf: (row, key) => textOf(row, key),
   limit: () => copyLimit,
   last: () => lastCell?.(),
-  messages,
-  announce,
 });
 
 const canEdit = computed(() =>
@@ -2336,15 +2326,6 @@ const cellMenu = useTableContextMenu<T>({
   },
   isRtl: direction.isRtl,
   messages,
-});
-
-const exporter = useTableExport<T>({
-  rows: (signal) => engine.value.collect(signal),
-  keys: () => dataKeys.value,
-  labelOf: (key) => columnAt(key).label,
-  textOf: (row, key) => textOf(row, key),
-  messages,
-  announce,
 });
 
 const busy = computed(() => query.busy.value || clipboard.busy.value || exporter.busy.value);
@@ -3127,22 +3108,9 @@ onMounted(() => {
   watch(neededRange, ensureRows, { immediate: true });
 });
 
-const overlay = useTableOverlay({
-  viewport,
-  rows: rowWindow,
-  columns: columnWindow,
-  layout: () => layout.value,
-  dataKeys: () => dataKeys.value,
-  rowCount: () => visibleRows.value,
+const { overlay, cellKeyOf, cellPositionOf } = useOverlayArea(table, {
   headSize: () => rowSize.value * headRows.value + rowSizes.pinnedSize.value,
-  headRows: () => headRows.value,
-  pinnedRows: () => pinnedCount.value,
-  frozenRows: () => frozenCount.value,
-  dataOffset: () => dataOffset.value,
   expand: wholeRange,
-  onWindow: (next) => {
-    emit('window', next);
-  },
 });
 
 defineExpose<NuiTableExposed>({
