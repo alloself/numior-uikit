@@ -6,6 +6,7 @@ import {
   definePlugin,
   remoteChange,
   type DocIssue,
+  type EditorState,
   type ElementNode,
 } from '@numior/editor-core';
 import {
@@ -43,6 +44,12 @@ const FOREIGN_IDS =
   'yjsBinding: the editor makes block ids of its own; give it binding.ids (the ids option of the state, the ids prop of NuiEditor)';
 
 const ORDER_SUFFIX = ':order';
+
+const META_SUFFIX = ':meta';
+
+const SCHEMA_KEY = 'schema';
+
+const VERSION_KEY = 'version';
 
 const isRepairable = (issue: DocIssue): boolean =>
   issue.path.length > 0 &&
@@ -188,6 +195,7 @@ export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions)
   const idSource = createIdSource(`${prefixOf()}-`);
   const blocks = ydoc.getMap<unknown>(name);
   const order = ydoc.getArray<unknown>(`${name}${ORDER_SUFFIX}`);
+  const meta = ydoc.getMap<unknown>(`${name}${META_SUFFIX}`);
 
   const store: TreeStore = {
     schema,
@@ -330,6 +338,51 @@ export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions)
     return root;
   };
 
+  const foreign = (): boolean =>
+    meta.size > 0 &&
+    (meta.get(SCHEMA_KEY) !== schema.name || meta.get(VERSION_KEY) !== schema.version);
+
+  const readRoot = (shell: ElementNode, full: boolean): ElementNode | undefined => {
+    if (!foreign()) {
+      return validRoot(shell, full);
+    }
+
+    const root = rootOf(store, shell, full);
+
+    return root !== undefined && schema.check(root).ok ? root : undefined;
+  };
+
+  const stamp = (): void => {
+    if (meta.size > 0) {
+      return;
+    }
+    meta.set(SCHEMA_KEY, schema.name);
+    meta.set(VERSION_KEY, schema.version);
+  };
+
+  const show = (state: EditorState, root: ElementNode, moved: ReadonlySet<string>): void => {
+    const carried = carryMoves(state.tr, root, moved);
+
+    const tr = applyDocChange(carried, carried.doc.root, root, schema).setMeta(remoteChange, true);
+
+    if (!tr.changed) {
+      return;
+    }
+    applying = true;
+    dispatch(tr);
+    applying = false;
+  };
+
+  const tidy = (): void => {
+    if (store.copies.size === 0 || foreign()) {
+      return;
+    }
+
+    ydoc.transact(() => {
+      dropCopies(store);
+    }, origin);
+  };
+
   const pull = (): void => {
     const state = getState();
     const full = structural;
@@ -342,31 +395,18 @@ export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions)
       return;
     }
 
-    const root = validRoot(state.doc.root, full || unread);
+    const root = readRoot(state.doc.root, full || unread);
 
     unread = root === undefined;
 
-    if (root === undefined) {
+    if (root === undefined || foreign()) {
       onInvalid?.();
+    }
+    if (root === undefined) {
       return;
     }
-
-    const carried = carryMoves(state.tr, root, moved);
-
-    const tr = applyDocChange(carried, carried.doc.root, root, schema).setMeta(remoteChange, true);
-
-    if (tr.changed) {
-      applying = true;
-      dispatch(tr);
-      applying = false;
-    }
-    if (store.copies.size === 0) {
-      return;
-    }
-
-    ydoc.transact(() => {
-      dropCopies(store);
-    }, origin);
+    show(state, root, moved);
+    tidy();
   };
 
   const flush = (transaction: YTransaction): void => {
@@ -383,6 +423,7 @@ export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions)
 
   const write = (root: ElementNode): void => {
     ydoc.transact(() => {
+      stamp();
       writeTree(store, root);
     }, origin);
   };
@@ -402,6 +443,9 @@ export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions)
           if (state.ids !== idSource) {
             throw new Error(FOREIGN_IDS);
           }
+          if (foreign()) {
+            return;
+          }
 
           write(state.doc.root);
         },
@@ -413,7 +457,7 @@ export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions)
         return undefined;
       }
 
-      const root = validRoot(schema.element(schema.top.name, { id: NO_ROOT_ID }), true);
+      const root = readRoot(schema.element(schema.top.name, { id: NO_ROOT_ID }), true);
 
       return root === undefined ? undefined : documentOf(schema, root);
     },

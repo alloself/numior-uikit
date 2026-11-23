@@ -1,5 +1,6 @@
 import {
   createDoc,
+  createSchema,
   createState,
   history,
   sameMarks,
@@ -76,6 +77,15 @@ const MARK_RANK = [...fixtureSchema.marks.keys()];
 
 const BOLD = fixtureSchema.mark('bold');
 
+const PLAIN_QUOTES = createSchema({
+  ...fixtureSchema.spec,
+  version: 2,
+  nodes: {
+    ...fixtureSchema.spec.nodes,
+    blockquote: { ...fixtureSchema.spec.nodes.blockquote, content: 'paragraph+' },
+  },
+});
+
 const MENTIONED: ReadonlySet<string> = new Set(['paragraph', 'heading']);
 
 const RELABELLED = 'Renamed';
@@ -101,12 +111,13 @@ const clientOf = (
   onInvalid?: () => void,
   ydoc = new YDoc(),
   extra: readonly Plugin[] = [],
+  schema = fixtureSchema,
 ): Client => {
   let state: EditorState | undefined;
   const received: Transaction[] = [];
 
   const binding = yjsBinding(ydoc, BLOCKS, {
-    schema: fixtureSchema,
+    schema,
     getState: () => state,
     dispatch: (tr) => {
       if (state === undefined) {
@@ -710,6 +721,41 @@ describe('yjsBinding', () => {
       ),
       { numRuns: 300 },
     );
+  });
+
+  it('leaves a list in a quote alone for someone whose schema has other rules and tells them', () => {
+    const doc = docOf(paragraph('a', 'one'), quote('q', paragraph('qp', 'quoted')));
+    const invalid = vi.fn<() => void>();
+    const left = clientOf(doc);
+    const right = clientOf(doc, invalid, new YDoc(), [], PLAIN_QUOTES);
+
+    left.binding.seed(doc);
+    exchange(left, right);
+
+    const seeded = encodeStateVector(right.ydoc);
+
+    right.insertAt('a', 'X');
+
+    expect(encodeStateVector(right.ydoc)).toEqual(seeded);
+
+    const list = fixtureSchema.element('bullet_list', {
+      id: 'list',
+      content: [
+        fixtureSchema.element('list_item', { id: 'item', content: [paragraph('ip', 'listed')] }),
+      ],
+    });
+
+    left.apply((from) => {
+      const at = (from.doc.positionOf('q') ?? 0) + (from.doc.byId('q')?.size ?? 2) - 1;
+
+      return from.tr.insert(at, [list]);
+    });
+
+    exchange(left, right);
+
+    expect(invalid).toHaveBeenCalled();
+    expect(left.text()).toBe('one|quotedlisted');
+    expect(left.binding.read()?.root.content).toEqual(left.state().doc.root.content);
   });
 
   it('has nothing to read in an empty fragment', () => {

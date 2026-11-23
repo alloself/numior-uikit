@@ -427,4 +427,12 @@ When two people move one block to different places at once, it stays at the firs
 document order. A block moved into a quote that a coauthor deleted at the same time goes to the end
 of the document.
 
+The first write puts the name and the version of the schema into a `Y.Map` named
+`description:meta`. A binding with a schema of another name or version does not write or repair
+the document. It still shows the edits of coauthors while they fit its schema.
+
+When the Yjs tree does not fit the schema or carries another one, the binding calls `onInvalid` and
+writes nothing. Close the editor for editing then. The binding gives no carets of coauthors and no
+list of people, and `destroy()` unsubscribes it from the `Y.Doc`.
+
 <SignatureReference :names="['yjsBinding', 'YjsBindingOptions', 'YjsBinding']" />
