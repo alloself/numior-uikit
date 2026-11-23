@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { llmsFull, llmsIndex } from '../.vitepress/llms/catalog';
 import type { LlmsCatalog, LlmsEntry } from '../.vitepress/llms/llms.types';
-import { site } from '../.vitepress/theme/site';
+
+const unpublished = { siteUrl: '', repository: '' };
 
 const entryOf = (section: string, title: string, description: string): LlmsEntry => ({
   link: `/en/components/${title.toLowerCase()}`,
@@ -17,7 +18,7 @@ const CATALOG: LlmsCatalog = {
   locale: 'en',
   title: 'Numior UI',
   description: 'Vue components for product interfaces.',
-  site,
+  site: unpublished,
   entries: [
     entryOf('Docs', 'Theming', 'Colors and density.'),
     entryOf('Components', 'Button', 'Starts an action.'),

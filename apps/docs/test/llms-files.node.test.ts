@@ -10,7 +10,8 @@ import { llmsPaths } from '../.vitepress/llms/paths';
 import { llmsResponse } from '../.vitepress/llms/plugin';
 import { navigationPages } from '../.vitepress/navigation';
 import { parseBundle } from '../.vitepress/reference/bundle';
-import { site } from '../.vitepress/theme/site';
+
+const unpublished = { siteUrl: '', repository: '' };
 
 const DOCS = fileURLToPath(new URL('..', import.meta.url));
 const BUNDLE = join(DOCS, '.reference/bundle.json');
@@ -21,7 +22,7 @@ const SOURCE: LlmsSource = {
   srcDir: DOCS,
   examplesRoot: join(DOCS, 'examples'),
   bundle: existsSync(BUNDLE) ? parseBundle(readFileSync(BUNDLE, 'utf8')) : undefined,
-  site,
+  site: unpublished,
 };
 
 const MARKDOWN = { accept: 'text/markdown' };

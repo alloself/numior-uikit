@@ -7,7 +7,8 @@ import {
   type PageMeta,
   type PageSource,
 } from '../.vitepress/meta';
-import { site } from '../.vitepress/theme/site';
+
+const unpublished = { siteUrl: '', repository: '' };
 
 const PAGES = ['index.md', 'en/index.md', 'components/button.md', 'en/components/button.md'];
 const published = { siteUrl: 'https://ui.example.org', repository: '' };
@@ -55,7 +56,7 @@ describe('page meta', () => {
   });
 
   it('describes the page for link previews in the language of the page', () => {
-    const head = pageHead(site, button);
+    const head = pageHead(unpublished, button);
 
     expect(contentOf(head, 'og:title')).toBe('Button');
     expect(contentOf(head, 'og:description')).toBe('Starts an action.');
@@ -65,7 +66,7 @@ describe('page meta', () => {
   });
 
   it('writes no address while the site address is not set', () => {
-    const head = pageHead(site, button);
+    const head = pageHead(unpublished, button);
 
     expect(hrefsOf(head, 'canonical')).toEqual([]);
     expect(hrefsOf(head, 'alternate')).toEqual([]);
@@ -73,7 +74,7 @@ describe('page meta', () => {
   });
 
   it('points at the Markdown copy of the page when it has one', () => {
-    const head = pageHead(site, { ...button, twin: '/en/components/button.md' });
+    const head = pageHead(unpublished, { ...button, twin: '/en/components/button.md' });
 
     expect(hrefsOf(head, 'alternate')).toEqual(['/en/components/button.md']);
 
@@ -101,7 +102,10 @@ describe('page meta', () => {
 
     expect(hrefsOf(head, 'alternate')).toEqual([]);
     expect(contentOf(head, 'og:locale:alternate')).toBeUndefined();
-    expect(contentOf(pageHead(site, { ...button, title: '' }), 'og:title')).toBe('Numior UI');
+
+    expect(contentOf(pageHead(unpublished, { ...button, title: '' }), 'og:title')).toBe(
+      'Numior UI',
+    );
   });
 
   it('describes a page from its lead and adds the Markdown copy after the head of the page', () => {
@@ -110,7 +114,7 @@ describe('page meta', () => {
       { name: 'robots', content: 'noindex' },
     ];
 
-    const page = describePage(site, { ...select, head: [robots] });
+    const page = describePage(unpublished, { ...select, head: [robots] });
 
     expect(page.description).toBe('Выбор из списка.');
     expect(page.head[0]).toEqual(robots);
@@ -119,7 +123,7 @@ describe('page meta', () => {
   });
 
   it('falls back to the site text of the page language and names no copy for a page without one', () => {
-    const page = describePage(site, {
+    const page = describePage(unpublished, {
       ...select,
       relativePath: 'en/index.md',
       markdown: '---\nlayout: home\n---\n',
