@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { access, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { access, mkdir, writeFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
+import { assertNpmAtLeast, packages } from './workspace-packages.mjs';
 
 const repositoryUrl = (options) => {
   // semantic-release rewrites repositoryUrl to an authenticated push URL.
@@ -15,20 +16,9 @@ const repositoryUrl = (options) => {
 
 const PRERELEASE = /\d+\.\d+\.\d+-[0-9A-Za-z.-]+/;
 
-const packages = async (cwd) => {
-  const entries = await readdir(join(cwd, 'packages'), { withFileTypes: true });
-  const result = [];
-  for (const entry of entries.filter((item) => item.isDirectory())) {
-    const directory = join(cwd, 'packages', entry.name);
-    const path = join(directory, 'package.json');
-    const manifest = JSON.parse(await readFile(path, 'utf8'));
-    assert.match(manifest.name, /^@numior\/[a-z0-9-]+$/, 'Unexpected release package');
-    result.push({ directory, path, manifest });
-  }
-  assert.ok(result.length > 0, 'No library packages found');
-  assert.equal(new Set(result.map(({ manifest }) => manifest.name)).size, result.length);
-  return result;
-};
+const ALPHA = /^1\.0\.0-alpha\.[1-9]\d*$/;
+
+const OIDC_NPM = [11, 5, 1];
 
 const assertStableDependencies = (manifest) => {
   for (const [name, range] of Object.entries({
@@ -52,8 +42,10 @@ export const verifyConditions = async (_config, context) => {
   assert.equal(
     context.env.NUMIOR_RELEASE_ENABLED,
     'true',
-    'Public releases are disabled until 1.0 readiness',
+    'Releases are disabled until NUMIOR_RELEASE_ENABLED is true',
   );
+
+  assertNpmAtLeast(context.env, OIDC_NPM, 'publish through Trusted Publishing');
 
   for (const { manifest } of libraries) {
     assert.equal(manifest.private, false, `${manifest.name} is not approved for publication`);
@@ -68,11 +60,7 @@ export const prepare = async (config, context) => {
   const version = context.nextRelease.version;
   const repository = repositoryUrl(context.options);
 
-  assert.match(
-    version,
-    /^[1-9]\d*\.\d+\.\d+$/,
-    'Only stable releases starting at 1.0.0 are supported',
-  );
+  assert.match(version, ALPHA, 'Only 1.0.0-alpha prereleases are published before 1.0');
 
   const libraries = await packages(context.cwd);
   const destination = resolve(context.cwd, '.release');

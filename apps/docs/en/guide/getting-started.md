@@ -32,6 +32,9 @@ bun add @numior/kit
 The package holds every component and module, and a module such as `@numior/kit/table` reaches
 the bundle only when the app imports it.
 
+Until 1.0 the packages ship as alphas numbered `1.0.0-alpha.N`, and the API still changes
+between them.
+
 ### Add the Vite plugin
 
 The plugin brings in Tailwind 4 and keeps in the CSS only the styles of the components your code

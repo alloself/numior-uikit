@@ -1,11 +1,11 @@
 import type { DocsSite } from './theme.types';
 
 const DOCS_ROOT = 'apps/docs';
-const DEFAULT_BRANCH = 'main';
+const DEFAULT_BRANCH = 'master';
 
 export const site: DocsSite = {
-  siteUrl: '',
-  repository: '',
+  siteUrl: 'https://ui.numior.ru',
+  repository: 'https://github.com/alloself/numior-uikit',
 };
 
 const trimmed = (value: string): string => value.trim().replace(/\/+$/u, '');

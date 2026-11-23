@@ -1,30 +1,71 @@
 ---
-title: "Единый стабильный релиз библиотек через semantic-release"
+title: "Единый релиз библиотек через semantic-release: alpha до 1.0"
 status: accepted
 ---
 
 ## Context
 
-В bootstrap отсутствовала автоматизация SemVer. Пользователь попросил её добавить. Все клиентские пакеты kit выпускаются совместно; до полного 1.0 разработка закрытая, публичных alpha/beta нет. В текущем Git нет remote и первого коммита; внешняя публикация не выполнялась.
+В bootstrap отсутствовала автоматизация SemVer. Пользователь попросил её добавить. Все клиентские
+пакеты kit выпускаются совместно. До 2026-11-23 публикация была закрыта до полного 1.0. Интервью
+2026-11-23 открыло npm раньше: владелец хочет ставить пакеты из npm, пока API ещё меняется. Без
+prerelease-канала semantic-release выпустил бы `1.0.0`, а каждый `feat!` после него — новый major.
 
 ## Decision
 
-Единая версия packages/* и тег v${version}; основная ветка master, совпадающая с текущим репозиторием. Conventional Commits: fix/perf → patch, feat → minor, !/BREAKING CHANGE → major. Первый release-worthy набор изменений выпускается как 1.0.0. Остальные изменения без breaking change не требуют релиза.
+Единая версия packages/* и тег `v${version}`. Conventional Commits: fix/perf → patch, feat →
+minor, !/BREAKING CHANGE → major. До 1.0 все релизы — `1.0.0-alpha.N`: master — prerelease-ветка
+`alpha`, номер растёт на единицу при любом типе изменения, major не прыгает. semantic-release
+требует хотя бы одну stable-ветку, существующую на remote, поэтому рядом лежит ветка `stable`,
+созданная от master и не используемая до 1.0. На 1.0 одно изменение делает master stable-веткой,
+`stable` удаляется.
 
-@release.config.mjs задаёт semantic-release, commit analyzer, release notes generator, собственный monorepo plugin и GitHub release с tarballs. Root и приложения остаются private. Версии библиотек меняются в release workspace без обратного коммита; Git-теги — источник опубликованной версии. Preset Conventional Commits 8.0.0 совместим с writer 8 в release-notes-generator; совместимость проверяется реальным dry-run.
+Релиз запускается кнопкой: `workflow_dispatch` workflow `ci.yml` на master. В том же запуске идут
+quality и browsers, после них job `release`, если repository variable
+`NUMIOR_RELEASE_ENABLED=true`. Push в master релиз не запускает. Та же кнопка выкладывает
+документацию (`docs-site.adr.md`); без release-worthy коммитов npm-шаг ничего не выпускает.
 
-@.github/workflows/ci.yml запускает release только после quality и browser jobs, только при push master и repository variable NUMIOR_RELEASE_ENABLED=true. Сам plugin повторно проверяет gate и private:false всех библиотек. До готовности 1.0 эта переменная не включается, private не снимается. PR workflow проверяет conventional title; на сервере потребуется squash merge с заголовком PR и branch protection.
+@release.config.mjs задаёт semantic-release, commit analyzer, release notes generator, собственный
+monorepo plugin и GitHub release с tarballs (prerelease). Root и приложения остаются private,
+библиотеки — `private: false`. Версии меняются в release workspace без обратного коммита; Git-теги
+и их git notes (`{"channels":["master"]}`) — источник опубликованной версии.
 
-@scripts/release/workspace.mjs сначала выставляет общую версию всем пакетам, затем pnpm pack конвертирует workspace-протоколы. Repository metadata берётся из реального remote с удалением любых credentials. npm публикует tarballs публично с provenance. GitHub Release содержит release notes и те же tarballs; при ошибке tarballs сохраняются workflow artifact.
+@scripts/release/workspace.mjs проверяет gate, `private: false` всех библиотек, отсутствие внешних
+prerelease-зависимостей и npm не старше 11.5.1 (Trusted Publishing). `prepare` пропускает только
+`1.0.0-alpha.N`, выставляет общую версию, `pnpm pack` заменяет `workspace:*` точными версиями.
+`publish` публикует tarballs с `--provenance --access public --tag latest`: npm 11 требует явный
+тег для prerelease, а `latest` до 1.0 указывает на свежую alpha, потому что npm ставит `latest` на
+первую версию пакета, а OIDC не даёт переводить dist-tag. На 1.0 `latest` переходит на 1.0.0 сам.
 
-Для npm предпочтителен Trusted Publishing OIDC (id-token:write, workflow ci.yml). Для первичного создания пакетов предусмотрен optional secret NPM_TOKEN через NODE_AUTH_TOKEN и setup-node registry configuration. Реальные scope/remote/доступы настраиваются перед публикацией; bootstrap их не выдумывает. Подробная инструкция: @docs/releases.md.
+Публикация — npm Trusted Publishing (OIDC, `id-token: write`, workflow `ci.yml`). Trusted
+publisher привязывается только к существующему пакету и только владельцем с 2FA, поэтому alpha.1
+выходит временным granular token `NPM_TOKEN` (7 дней), потом владелец запускает
+`pnpm release:trust` (@scripts/release/trust.mjs, `npm trust github … --allow-publish`, npm ≥
+11.15) и в течение двух суток выпускает следующую alpha уже через OIDC. Подробности и чек-лист
+владельца: @docs/releases.md.
 
 ## Alternatives Considered
 
-Независимые версии усложняют совместимость тесно связанных packages на старте; можно пересмотреть отдельным ADR. Только GitHub release не решает версионирование и публикацию npm workspace. Автокоммит package versions не нужен: создаёт лишние изменения и требует обхода защищённой ветки. Автопубликация текущего private bootstrap нарушила бы принятый план.
+Публиковать сразу `1.x` по каждому merge — версии ушли бы в десятки major до готовности API.
+Версии `0.x` semantic-release сам не ведёт: первый релиз у него всегда `1.0.0`. Канал beta обещает
+замороженный API, которого нет. dist-tag `alpha` оставил бы `latest` навсегда на alpha.1.
+Независимые версии усложняют совместимость тесно связанных packages на старте. Автокоммит версий
+не нужен: Git-теги — источник версии. Релиз на каждый merge отклонён владельцем: кнопка.
 
 ## Consequences
 
-pnpm release:check входит в pnpm check: проверяет SemVer, gate/private, запрет prerelease, упаковку и замену workspace ссылок, отсутствие credentials в metadata, первый 1.0.0 dry-run без тегов/мутаций. Исключение для необязательного peer с prerelease-нижней границей существовало один день (2026-09-28) ради адаптера vee-validate и ушло вместе с ним: правило снова без исключений. Тесты используют временный Git repo и пакеты, не публикуют и не меняют Git проекта. Fallow имеет точечное исключение для динамически загружаемого conventional-changelog-conventionalcommits; интеграционный тест проверяет preset.
+`pnpm release:check` входит в `pnpm check`: проверяет SemVer-правила, gate/private, запрет
+внешних prerelease-зависимостей, отказ стабильных и чужих prerelease-версий, проверку npm,
+упаковку и замену workspace-ссылок, отсутствие credentials в metadata, dry-run первой
+`1.0.0-alpha.1` и `alpha.2` после fix, feat и `feat!` на временном Git repo, а также скрипт
+привязки trust с поддельным npm. Тесты ничего не публикуют. Fallow имеет точечное исключение для
+динамически загружаемого conventional-changelog-conventionalcommits.
 
-Публикация нескольких npm-пакетов не атомарна. После частичного сбоя сверять registry и допубликовывать только отсутствующие версии из artifact того же SHA; semantic-release rerun не гарантирует восстановление. Не удалять уже опубликованные версии/теги. Release workflow не отменяется новым push. Поддержка предыдущего major шесть месяцев остаётся обязательством; maintenance branches появятся при втором major.
+Тег без git note канала считается выпуском другого канала: следующая alpha после `feat!` стала бы
+`2.0.0-alpha.1`, и plugin её отклонит. Тег, поставленный вручную при восстановлении, получает note
+`git notes --ref semantic-release-<tag> add -m '{"channels":["master"]}' <tag>`.
+
+Публикация нескольких npm-пакетов не атомарна. После частичного сбоя сверять registry и
+допубликовывать только отсутствующие версии из artifact того же SHA; rerun semantic-release не
+гарантирует восстановление. Не удалять опубликованные версии и теги. Release workflow не
+отменяется новым запуском. Поддержка предыдущего major шесть месяцев остаётся обязательством после
+1.0; maintenance-ветки появятся при втором major.

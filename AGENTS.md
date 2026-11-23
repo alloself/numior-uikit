@@ -58,7 +58,8 @@ that its features are implemented. Component and test conventions live in the sk
 - Run `pnpm check` (its steps run through `vp run --cache`) and, for browser behavior, `pnpm test:e2e`.
 - `pnpm arch:check` checks Archcore when its CLI is available.
 - Do not disable checks globally to hide findings or use `passWithNoTests`.
-- Keep packages private until the complete 1.0 release criteria are met.
+- Until the complete 1.0 release criteria are met, packages ship only as `1.0.0-alpha.N` from the
+  release button (`docs/releases.md`); the plugin refuses stable versions.
 - One task at a time in the main checkout, through a merge request: never a git worktree or another
   working copy (`git worktree add`, `EnterWorktree`, a clone, `isolation` on agents and
   workflows). A task is one branch from fresh `master`; the owner reviews and merges it, the agent

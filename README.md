@@ -6,7 +6,9 @@
 </div>
 
 <p align="center">
-  <a href="https://github.com/alloself/numior-uikit/actions/workflows/ci.yml"><img src="https://github.com/alloself/numior-uikit/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI"></a>
+  <a href="https://www.npmjs.com/package/@numior/kit"><img src="https://img.shields.io/npm/v/@numior/kit.svg" alt="npm"></a>
+  <a href="https://www.npmjs.com/package/@numior/kit"><img src="https://img.shields.io/npm/dm/@numior/kit.svg" alt="Downloads"></a>
+  <a href="https://ui.numior.ru/"><img src="https://img.shields.io/badge/docs-ui.numior.ru-informational.svg" alt="Документация"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/vue-3.5%2B-42b883.svg" alt="Vue 3.5+">
   <img src="https://img.shields.io/badge/tailwind-4-38bdf8.svg" alt="Tailwind 4">
@@ -14,13 +16,20 @@
 
 ### 🖥️ Документация
 
-Документация на русском и английском запускается из репозитория командой `pnpm docs:dev`.
-Публичного сайта пока нет.
+Документация на русском и английском живёт на [ui.numior.ru](https://ui.numior.ru/), из
+репозитория её запускает команда `pnpm docs:dev`.
 
 ### ⚡ Быстрый старт
 
-До версии 1.0 пакеты не публикуются в npm, поэтому кит запускается из репозитория. Нужны Node
-из `.node-version` и pnpm через Corepack:
+До версии 1.0 пакеты выходят в npm как alpha с номерами `1.0.0-alpha.N`, и API между ними ещё
+меняется:
+
+```sh
+pnpm add @numior/kit
+```
+
+Плагин Vite и стили подключаются по [руководству](https://ui.numior.ru/guide/getting-started).
+Чтобы запустить кит из репозитория, нужны Node из `.node-version` и pnpm через Corepack:
 
 ```sh
 git clone https://github.com/alloself/numior-uikit.git
