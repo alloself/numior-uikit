@@ -10,13 +10,13 @@ const CARET_TOLERANCE = 4;
 
 const FRAME_TOLERANCE = 1;
 
+const POPOVER_TOLERANCE = 40;
+
 const THEMES = ['light', 'dark'] as const;
 
 const TURNS = Array.from({ length: 60 }, (_, turn) => turn % 2);
 
 const HALF = '+'.repeat(TURNS.length / 2);
-
-const STREAM = 'x'.repeat(800);
 
 const TALL_TEXT = 60;
 
@@ -271,10 +271,9 @@ test.describe('collaboration', () => {
     await anna.newLine('Три');
     await expect(boris.editor).toContainText('Три');
 
-    const typing = anna.keepTyping(STREAM);
+    const turns = boris.appendToEach(TURNS, '+');
 
-    await boris.appendToEach(TURNS, '+');
-    await typing;
+    await anna.keepTypingUntil('x', turns);
 
     await expect(boris.paragraph(0)).toHaveText(`Один${HALF}`);
     await expect(boris.paragraph(1)).toHaveText(`Два${HALF}`);
@@ -590,9 +589,10 @@ test.describe('collaboration', () => {
 
     const mark = await boxOf(anna.marks.first());
     const popover = await boxOf(anna.comments);
+    const reachable = Math.min(mark.x, (await anna.layoutWidth()) - popover.width);
 
     expect(popover.y).toBeGreaterThanOrEqual(mark.y + mark.height);
-    expect(Math.abs(popover.x - mark.x)).toBeLessThan(40);
+    expect(Math.abs(popover.x - reachable)).toBeLessThan(POPOVER_TOLERANCE);
     await expect(anna.threads).toContainText('Вопрос');
 
     await anna.clickAway();
