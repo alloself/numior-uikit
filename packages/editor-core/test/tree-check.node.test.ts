@@ -1,11 +1,19 @@
 import * as fc from 'fast-check';
 import { describe, expect, it } from 'vite-plus/test';
-import { createTreeCheck, type ContentNode, type ElementNode } from '../src';
+import {
+  createTreeCheck,
+  type ContentNode,
+  type DocCheck,
+  type ElementNode,
+  type TreeCheck,
+} from '../src';
 import { createRandom, fixtureSchema, generateDoc, type Random } from '../src/fixtures';
 
 type Path = readonly number[];
 
 type Edit = (node: ElementNode, random: Random, ids: readonly string[]) => readonly ContentNode[];
+
+type Answer = readonly [DocCheck, DocCheck];
 
 const EDITS = 30;
 
@@ -240,6 +248,36 @@ const editedRoot = (root: ElementNode, random: Random): ElementNode => {
   return next?.kind === 'element' ? next : root;
 };
 
+const nextRoot = (roots: readonly ElementNode[], random: Random): ElementNode | undefined => {
+  const current = roots.at(-1);
+
+  if (random.chance(0.1)) {
+    return roots[random.int(0, roots.length - 1)];
+  }
+  return current === undefined ? undefined : attempted(current, () => editedRoot(current, random));
+};
+
+const answersOn = (
+  check: TreeCheck,
+  roots: ElementNode[],
+  root: ElementNode,
+  random: Random,
+): readonly Answer[] => {
+  const expected = fixtureSchema.check(root);
+  const answer: Answer = [check(root), expected];
+
+  if (expected.ok || random.chance(KEPT_INVALID)) {
+    roots.push(root);
+    return [answer];
+  }
+
+  const current = roots.at(-1);
+
+  return current === undefined
+    ? [answer]
+    : [answer, [check(current), fixtureSchema.check(current)]];
+};
+
 describe('createTreeCheck', () => {
   it('answers as a full check after any chain of edits, valid or not', () => {
     fc.assert(
@@ -252,28 +290,14 @@ describe('createTreeCheck', () => {
           const roots: ElementNode[] = [generateDoc(fixtureSchema, { blocks: size, seed }).root];
 
           for (let step = 0; step < EDITS; step += 1) {
-            const current = roots.at(-1) ?? roots[0];
-            const back = random.chance(0.1) ? roots[random.int(0, roots.length - 1)] : undefined;
+            const root = nextRoot(roots, random);
 
-            const root =
-              back ??
-              (current === undefined
-                ? undefined
-                : attempted(current, () => editedRoot(current, random)));
-
-            if (root === undefined || current === undefined) {
+            if (root === undefined) {
               return;
             }
-
-            const expected = fixtureSchema.check(root);
-
-            expect(check(root)).toEqual(expected);
-
-            if (expected.ok || random.chance(KEPT_INVALID)) {
-              roots.push(root);
-              continue;
+            for (const [answer, expected] of answersOn(check, roots, root, random)) {
+              expect(answer).toEqual(expected);
             }
-            expect(check(current)).toEqual(fixtureSchema.check(current));
           }
         },
       ),
