@@ -273,16 +273,7 @@ import NuiTableRow from './NuiTableRow.vue';
 import NuiTableTracks from './NuiTableTracks.vue';
 import NuiTableUtilityCell from './NuiTableUtilityCell.vue';
 import { tableMessages } from './table.messages';
-import {
-  anchorOf,
-  consecutiveRuns,
-  createMergeIndex,
-  expandToMerges,
-  keepSpans,
-  leaveMerge,
-  mergeSpans,
-  pieceOf,
-} from './table-merges';
+import { anchorOf } from './table-merges';
 import { useTextMeasure } from './use-text-measure';
 import { forgetCellReads } from './table-cells';
 import { ownCellAt, ownDetailOf, rowPositionOf } from './table-dom';
@@ -305,10 +296,10 @@ import { pageWindowOf, resolvePagination } from './table-pages';
 import NuiTableFilter from './NuiTableFilter.vue';
 import NuiTableFooterCell from './NuiTableFooterCell.vue';
 import NuiTableHeaderMarks from './NuiTableHeaderMarks.vue';
-import { useTableFocus } from './use-table-focus';
 import { useCellMenuArea } from './areas/cell-menu-area';
 import { useClipboardArea } from './areas/clipboard-area';
 import { useEditingArea } from './areas/editing-area';
+import { useFocusArea } from './areas/focus-area';
 import { useGroupsArea } from './areas/groups-area';
 import { useHeaderArea } from './areas/header-area';
 import { useOverlayArea } from './areas/overlay-area';
@@ -316,9 +307,7 @@ import { usePaintArea } from './areas/paint-area';
 import { useRowMovesArea } from './areas/row-moves-area';
 import { useViewsArea } from './areas/views-area';
 import type { TableContext } from './areas/table-context';
-import { createEchoes } from './table-echoes';
-import { boxOf, clampPosition, columnSpansOf, sameSpot, type RangeBox } from './table-ranges';
-import { useTableRanges } from './use-table-ranges';
+import { boxOf } from './table-ranges';
 import { pageRowsOf, pageStepOf } from './table-keys';
 import type { TableFilterTarget } from './use-table-header';
 import { headFrameOf, headToolsOf, leastWidthOf } from './table-head-tools';
@@ -329,7 +318,7 @@ import { useTableResize } from './use-table-resize';
 import { provideTableHandles } from './table-handles';
 import { keepEqual } from './table-values';
 import { useTableRowSizes } from './use-table-row-sizes';
-import { useTableSelection, type TableSelectionKey } from './use-table-selection';
+import type { TableSelectionKey } from './use-table-selection';
 import {
   NuiTableRowHeight,
   NuiTableSize,
@@ -342,7 +331,6 @@ import {
   type NuiTableColumn,
   type NuiTableColumnOrder,
   type NuiTableDraft,
-  type NuiTableEdgeDirection,
   type NuiTableEvents,
   type NuiTableExpanded,
   type NuiTableExposed,
@@ -351,7 +339,6 @@ import {
   type NuiTableHidden,
   type NuiTablePins,
   type NuiTableProps,
-  type NuiTableRange,
   type NuiTableRanges,
   type NuiTableScrollAnchor,
   type NuiTableRowHeaders,
@@ -360,13 +347,8 @@ import {
   type NuiTableSort,
   type NuiTableUtilityCellProps,
   type NuiTableWidths,
-  type TableBodyRow,
   type NuiTableCellPosition,
-  type TableLeadSpan,
-  type TableMergeLayout,
-  type TableMergeSlot,
   type TableReveal,
-  type TableRowSpan,
 } from './table.types';
 
 const ROW_SIZES = { sm: 32, md: 40, lg: 48 } as const;
@@ -380,7 +362,6 @@ const ROW_OVERSCAN = 6;
 const COLUMN_OVERSCAN = 2;
 const NO_ROW_HEAD = {} as const;
 const NO_HEIGHTS: NuiTableRowHeights = {};
-const NO_MERGE_INDEX = createMergeIndex([], { rows: 0, cols: 0 });
 const SKELETON_UTILITY: NuiTableUtilityCellProps = { control: 'skeleton' };
 const TEXT_SKELETON: NuiSkeletonProps = { shape: 'text', width: '100%' };
 
@@ -462,7 +443,6 @@ const ranges = defineModel<NuiTableRanges>('ranges', { default: () => [] });
 const rowHeights = defineModel<NuiTableRowHeights>('rowHeights', { default: () => ({}) });
 const activeCell = defineModel<NuiTableCellPosition | undefined>('active');
 const draft = defineModel<NuiTableDraft | undefined>('draft');
-const activeEchoes = createEchoes<NuiTableCellPosition | undefined>(sameSpot);
 const emit = defineEmits<NuiTableEvents<T>>();
 const slots = defineSlots<NuiTableSlots<T>>();
 const rawSlots = useSlots();
@@ -1020,39 +1000,6 @@ const status = computed<TableStatusSlot | undefined>(() => {
   return rowCount.value === 0 ? TableStatusSlot.Empty : undefined;
 });
 
-const focus = useTableFocus({
-  viewport,
-  active,
-  rows: rowWindow,
-  columns: columnWindow,
-  merges: () => mergeIndex.value,
-  rowCount: () => pinnedCount.value + visibleRows.value + footRows.value,
-  bodyRows: () => visibleRows.value,
-  pinnedRows: () => pinnedCount.value,
-  headRows: () => headRows.value,
-  colCount: () => layout.value.visual.length,
-  firstCol: () => dataOffset.value,
-  pageRows: (row, forward) => pageRows(row - pinnedCount.value, forward),
-  centreIndexOf: (visual) => centreIndexOf(layout.value, visual),
-  columnIndexOf: (key) => layout.value.visual.findIndex((column) => column.key === key),
-  isRtl: direction.isRtl,
-  windowed: () => windowed.value,
-  lead: () => activeLead.value,
-  settle: (focused) => settleFocus(focused),
-  leave: (from, key) => leaveFrom(from, key),
-  edge: (from, toward) => {
-    const data = dataCellOf(from);
-    const target = data === undefined ? undefined : edgeOfData(data, toward);
-
-    return target === undefined ? undefined : visualCellOf(target);
-  },
-  last: () => {
-    const target = lastOfData();
-
-    return target === undefined ? undefined : visualCellOf(target);
-  },
-});
-
 const columnAt = (key: string): NuiTableColumn<T> => {
   const column = columnByKey.value.get(key);
 
@@ -1145,17 +1092,6 @@ const { header, menu, menuAnchor, valueLabel, loadValues } = useHeaderArea(table
   booleanTexts: () => booleanTexts.value,
 });
 
-const selection = useTableSelection<T>({
-  mode: () => selectable,
-  selected,
-  keyOf,
-  engine,
-  revision,
-  scope: () => ({ start: pageStart.value, end: pageStart.value + visibleRows.value }),
-  disabled: () => loadingNow.value,
-  selectKeyAt: (visual) => layout.value.visual[visual]?.kind === TablePlacementKind.Select,
-});
-
 const gridAria = computed(() => {
   const captioned = hasCaption.value && label === undefined;
 
@@ -1239,170 +1175,6 @@ const dataOffsets = computed(() => {
   return offsets;
 });
 
-const mergeIndex = computed(() =>
-  merges.length > 0 && !hierarchical.value && !loadingNow.value
-    ? createMergeIndex(merges, { rows: visibleRows.value, cols: dataKeys.value.length })
-    : NO_MERGE_INDEX,
-);
-
-const coveredAt = (row: number, col: number): boolean => {
-  const merge = mergeIndex.value.at(row, col);
-
-  return merge !== undefined && (merge.top !== row || merge.start !== col);
-};
-
-const wholeRange = (range: NuiTableRange): NuiTableRange =>
-  expandToMerges(mergeIndex.value, range, {
-    rows: visibleRows.value,
-    cols: dataKeys.value.length,
-  });
-
-const mergeSlots = computed((): TableMergeSlot[] =>
-  rowCells.value.cells.map((cell) => ({
-    key: cell.key,
-    pane: cell.pin ?? 'centre',
-    col: cell.kind === TablePlacementKind.Data ? cell.colIndex - 1 - dataOffset.value : undefined,
-    edge: cell.edge,
-    tail: cell.kind !== TablePlacementKind.Gap && cell.tail === true,
-  })),
-);
-
-const mergeLayout = computed<TableMergeLayout<RangeBox> | undefined>((previous) => {
-  const index = mergeIndex.value;
-
-  if (index.size === 0) {
-    return undefined;
-  }
-
-  const runs = consecutiveRuns(
-    rowWindow.items.value.map((item) => item.index),
-    frozenCount.value,
-  );
-
-  const found = new Set(runs.flatMap((run) => index.within(run[0] ?? 0, run.at(-1) ?? 0)));
-
-  const next = mergeSpans([...found], runs, mergeSlots.value, {
-    rowOffset: rowWindow.offsetOf,
-    colOffset: (col) => dataOffsets.value[col] ?? 0,
-  });
-
-  return { spans: keepSpans(next.spans, previous?.spans), pieces: next.pieces };
-});
-
-const spansOf = (item: TableBodyRow): TableRowSpan | undefined =>
-  mergeLayout.value?.spans.get(item.index);
-
-const dataCellOf = (visual: NuiTableCellPosition): NuiTableCellPosition | undefined => {
-  const row = visual.row - pinnedCount.value;
-  const col = visual.col - dataOffset.value;
-
-  return row >= 0 && row < visibleRows.value && col >= 0 && col < dataKeys.value.length
-    ? { row, col }
-    : undefined;
-};
-
-const visualCellOf = (data: NuiTableCellPosition): NuiTableCellPosition => ({
-  row: data.row + pinnedCount.value,
-  col: data.col + dataOffset.value,
-});
-
-const edgeOfData = (
-  from: NuiTableCellPosition,
-  toward: NuiTableEdgeDirection,
-): NuiTableCellPosition | undefined =>
-  nextEdge === undefined
-    ? undefined
-    : clampPosition(nextEdge(from, toward), {
-        rows: visibleRows.value,
-        cols: dataKeys.value.length,
-      });
-
-const lastOfData = (): NuiTableCellPosition | undefined => {
-  const last = lastCell?.();
-
-  return last === undefined
-    ? undefined
-    : clampPosition(last, { rows: visibleRows.value, cols: dataKeys.value.length });
-};
-
-const activeMerge = computed(() => {
-  const data = mergeIndex.value.size === 0 ? undefined : dataCellOf(active.value);
-
-  return data === undefined ? undefined : mergeIndex.value.at(data.row, data.col);
-});
-
-const activeAnchor = computed((): NuiTableCellPosition | undefined => {
-  const merge = activeMerge.value;
-
-  return merge === undefined ? undefined : { row: merge.top, col: merge.start };
-});
-
-const allyOf = (item: TableBodyRow): NuiTableCellPosition | undefined => {
-  const merge = activeMerge.value;
-
-  return merge !== undefined && item.index >= merge.top && item.index <= merge.bottom
-    ? activeAnchor.value
-    : undefined;
-};
-
-const activeLead = computed((): NuiTableCellPosition => {
-  const current = active.value;
-  const merge = activeMerge.value;
-  const data = merge === undefined ? undefined : dataCellOf(current);
-
-  const piece =
-    merge === undefined || data === undefined
-      ? undefined
-      : pieceOf(mergeLayout.value?.pieces.get(merge), data);
-
-  return piece === undefined ? current : visualCellOf({ row: piece.top, col: piece.start });
-});
-
-const hostsCursor = (span: TableLeadSpan): boolean => {
-  const lead = activeLead.value;
-  const piece = visualCellOf({ row: span.row, col: span.col });
-
-  return lead.row === piece.row && lead.col === piece.col;
-};
-
-const settleFocus = (focused: NuiTableCellPosition): NuiTableCellPosition => {
-  const lead = activeLead.value;
-
-  return focused.row === lead.row && focused.col === lead.col ? active.value : focused;
-};
-
-const leaveFrom = (from: NuiTableCellPosition, key: string): NuiTableCellPosition => {
-  const data = mergeIndex.value.size === 0 ? undefined : dataCellOf(from);
-
-  return data === undefined
-    ? from
-    : visualCellOf(leaveMerge(mergeIndex.value, data, key, direction.isRtl()));
-};
-
-const cellOfTarget = (target: EventTarget | null): NuiTableCellPosition | undefined => {
-  const cell = rangeSelect.cellAt(target);
-
-  return cell === undefined ? undefined : anchorOf(mergeIndex.value, cell);
-};
-
-const activeData = (): NuiTableCellPosition | undefined => {
-  const body = bodyActive();
-  const col = body === undefined ? -1 : body.col - dataOffset.value;
-
-  return body !== undefined && col >= 0 && col < dataKeys.value.length
-    ? anchorOf(mergeIndex.value, { row: body.row, col })
-    : undefined;
-};
-
-const shownActive = computed<NuiTableCellPosition | undefined>((previous) => {
-  const next = activeData();
-
-  return sameSpot(next, previous) ? previous : next;
-});
-
-const rangeAnchor = (): NuiTableCellPosition | undefined =>
-  viewport.value?.contains(document.activeElement) === true ? activeData() : undefined;
-
 const revealed = createIntent<TableReveal>();
 
 const revealCorner = (corner: NuiTableCellPosition, axis: TableRevealAxis): void => {
@@ -1453,39 +1225,49 @@ const revealInFlow = ({ target, axis }: TableReveal): void => {
   }
 };
 
-const columnMarks = computed(() =>
-  rowHead.value === undefined ? undefined : columnSpansOf(ranges.value, dataOffset.value),
-);
-
-const rangeSelect = useTableRanges({
-  enabled: () => cellSelection && !loadingNow.value,
-  lines: () => rowHead.value !== undefined,
+const {
+  focus,
+  selection,
+  rangeSelect,
+  mergeIndex,
+  coveredAt,
+  wholeRange,
+  spansOf,
+  allyOf,
+  hostsCursor,
+  dataCellOf,
+  visualCellOf,
+  cellOfTarget,
+  activeData,
+  bodyActive,
+  activeRowHead,
+  columnMarks,
+  clampActive,
+  focusCellAt,
+  moveActiveCell,
+} = useFocusArea(table, {
+  root,
+  active,
+  activeCell,
   ranges,
-  viewport: () => viewport.value,
-  inside: (target) =>
-    root.value?.contains(target) === true ||
-    (target instanceof Element && keepEditing?.(target) === true),
-  bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
-  offset: () => dataOffset.value,
-  headRows: () => headRows.value,
-  pinnedRows: () => pinnedCount.value,
+  selected,
+  selectMode: () => selectable,
+  keyOf,
+  cellSelection: () => cellSelection,
+  keep: () => keepEditing,
+  rowHeads: () => rowHead.value !== undefined,
+  merges: () => merges,
+  hierarchical: () => hierarchical.value,
+  nextEdge: () => nextEdge,
+  lastCell: () => lastCell,
   footRows: () => footRows.value,
-  rowSize: () => rowSize.value,
+  windowed: () => windowed.value,
   pageRows,
-  isRtl: direction.isRtl,
-  anchor: rangeAnchor,
-  cursor: () => activeData(),
-  sorts: (col) => header.head(dataKeys.value[col] ?? '')?.sortable === true,
-  merges: () => mergeIndex.value,
-  edge: edgeOfData,
-  last: lastOfData,
-  focus: (position) => {
-    focus.focusCell(
-      { row: position.row + pinnedCount.value, col: position.col + dataOffset.value },
-      false,
-    );
-  },
+  dataOffsets: () => dataOffsets.value,
+  sortable: (key) => header.head(key)?.sortable === true,
   reveal: revealCorner,
+  editing: (): boolean => cellEditor.session.value !== undefined,
+  carry: (position): boolean => cellEditor.carry(position),
   resetOn: [
     sortNow,
     filtersNow,
@@ -1495,8 +1277,6 @@ const rangeSelect = useTableRanges({
     pageStart,
     () => dataKeys.value.join('\u0000'),
   ],
-  messages,
-  announce,
 });
 
 const rowAtPosition = (position: number): T | undefined => {
@@ -1648,16 +1428,6 @@ const onRowsClick = (event: MouseEvent): void => {
 
   emit('rowClick', row, event);
 };
-
-const bodyActive = (): NuiTableCellPosition | undefined => {
-  const row = active.value.row - pinnedCount.value;
-  return row >= 0 && row < visibleRows.value ? { row, col: active.value.col } : undefined;
-};
-
-const activeRowHead = (): number | undefined =>
-  layout.value.visual[active.value.col]?.kind === TablePlacementKind.Rowhead
-    ? bodyActive()?.row
-    : undefined;
 
 const onKeydown = (event: KeyboardEvent): void => {
   if (
@@ -1922,102 +1692,9 @@ const rearrange = (): void => {
   sync();
 };
 
-const clampActive = (): void => {
-  const rowsInFocus = visibleRows.value + footRows.value;
-  const lastRow = rowsInFocus > 0 ? rowsInFocus - 1 : -1;
-  const lastCol = Math.max(0, layout.value.visual.length - 1);
-  const row = Math.min(active.value.row, lastRow);
-  const col = Math.min(active.value.col, lastCol);
-
-  if (row === active.value.row && col === active.value.col) {
-    return;
-  }
-
-  active.value = { row, col };
-};
-
 watch(quick, () => {
   rowsIntent.set(true);
 });
-
-const inBody = (position: NuiTableCellPosition): boolean =>
-  position.row >= 0 &&
-  position.row < visibleRows.value &&
-  position.col >= 0 &&
-  position.col < dataKeys.value.length;
-
-const moveActiveTo = (position: NuiTableCellPosition): boolean => {
-  if (!inBody(position)) {
-    return false;
-  }
-  const target = visualCellOf(anchorOf(mergeIndex.value, position));
-
-  if (viewport.value?.contains(document.activeElement) === true) {
-    focus.focusCell(target);
-  } else {
-    active.value = target;
-
-    if (viewport.value !== null) {
-      focus.reveal(target);
-    }
-  }
-  return true;
-};
-
-const focusCellAt = (position: NuiTableCellPosition, scroll = true): boolean => {
-  if (!inBody(position)) {
-    return false;
-  }
-  focus.focusCell(visualCellOf(anchorOf(mergeIndex.value, position)), scroll);
-  return true;
-};
-
-const moveActiveCell = (position: NuiTableCellPosition): boolean => {
-  if (!inBody(position)) {
-    return false;
-  }
-  const target = visualCellOf(position);
-
-  if (cellEditor.session.value !== undefined) {
-    if (!cellEditor.carry(position)) {
-      return false;
-    }
-    active.value = target;
-    focus.reveal(target);
-    return true;
-  }
-  if (viewport.value?.contains(document.activeElement) === true) {
-    focus.focusCell(target, false);
-  } else {
-    active.value = target;
-  }
-  return true;
-};
-
-const shareActive = (next: NuiTableCellPosition | undefined): void => {
-  activeEchoes.sent(next);
-  activeCell.value = next;
-};
-
-watch(
-  activeCell,
-  (next) => {
-    if (
-      activeEchoes.echoed(next) ||
-      next === undefined ||
-      sameSpot(next, shownActive.value) ||
-      moveActiveTo(next)
-    ) {
-      return;
-    }
-    shareActive(shownActive.value);
-  },
-  { immediate: true },
-);
-
-watch(shownActive, shareActive, { immediate: true });
-
-watch(visibleRows, clampActive);
 
 watch(pageStart, () => {
   if (!windowed.value) {
@@ -2026,24 +1703,6 @@ watch(pageStart, () => {
 
   rowWindow.scrollTo(0, { align: 'start' });
 });
-
-watch(
-  layout,
-  (next, previous) => {
-    const key = previous.visual[active.value.col]?.key;
-    const index = key === undefined ? -1 : next.visual.findIndex((column) => column.key === key);
-
-    const col =
-      index >= 0 ? index : Math.min(active.value.col, Math.max(0, next.visual.length - 1));
-
-    if (col === active.value.col) {
-      return;
-    }
-
-    active.value = { ...active.value, col };
-  },
-  { flush: 'sync' },
-);
 
 watch(expandedNow, (ids) => {
   engine.value.setToggled(ids);
