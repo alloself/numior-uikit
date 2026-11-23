@@ -92,13 +92,64 @@ export class LabPane {
   }
 }
 
+export class YjsPane {
+  private readonly pane: Locator;
+
+  readonly editor: Locator;
+  readonly link: Locator;
+
+  constructor(
+    private readonly page: Page,
+    name: string,
+  ) {
+    this.pane = page.getByRole('region', { name });
+    this.editor = this.pane.locator('.nui-editor [contenteditable="true"]');
+    this.link = this.pane.getByRole('switch', { name: 'Связь' });
+  }
+
+  async typeAfter(line: string, text: string): Promise<void> {
+    await this.editor.getByText(line, { exact: true }).click();
+    await this.page.keyboard.press('End');
+    await this.page.keyboard.type(text);
+  }
+
+  async breakAfter(line: string, text: string): Promise<void> {
+    await this.typeAfter(line, '');
+    await this.page.keyboard.press('Enter');
+    await this.page.keyboard.type(text);
+  }
+
+  async undo(): Promise<void> {
+    await this.editor.focus();
+    await this.page.keyboard.press('ControlOrMeta+z');
+  }
+
+  async cutLink(): Promise<void> {
+    await this.link.click();
+    await expect(this.link).not.toBeChecked();
+  }
+
+  async restoreLink(): Promise<void> {
+    await this.link.click();
+    await expect(this.link).toBeChecked();
+  }
+
+  async text(): Promise<string> {
+    return this.editor.innerText();
+  }
+}
+
 export class CollabLab {
   readonly left: LabPane;
   readonly right: LabPane;
+  readonly yjsLeft: YjsPane;
+  readonly yjsRight: YjsPane;
 
   constructor(private readonly page: Page) {
     this.left = new LabPane(page, 'left', 'Анна');
     this.right = new LabPane(page, 'right', 'Борис');
+    this.yjsLeft = new YjsPane(page, 'Анна');
+    this.yjsRight = new YjsPane(page, 'Борис');
   }
 
   async open(): Promise<void> {
@@ -119,6 +170,12 @@ export class CollabLab {
     await this.page.getByRole('tab', { name: 'Книга' }).click();
     await this.left.grid.waitFor();
     await this.right.grid.waitFor();
+  }
+
+  async showYjs(): Promise<void> {
+    await this.page.getByRole('tab', { name: 'Yjs' }).click();
+    await this.yjsLeft.editor.waitFor();
+    await this.yjsRight.editor.waitFor();
   }
 
   async setTheme(theme: 'light' | 'dark'): Promise<void> {

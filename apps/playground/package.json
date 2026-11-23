@@ -25,7 +25,8 @@
     "@numior/vue": "workspace:*",
     "@vueuse/core": "15.0.0",
     "shiki": "4.4.3",
-    "vue": "3.5.43"
+    "vue": "3.5.43",
+    "yjs": "13.6.33"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",

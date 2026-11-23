@@ -106,3 +106,61 @@ test.describe('collaboration lab', () => {
     });
   }
 });
+
+test.describe('collaboration lab over Yjs', () => {
+  test.beforeEach(async ({ collabLab }) => {
+    await collabLab.open();
+    await collabLab.showYjs();
+  });
+
+  test('carries typing from one editor to the other over the shared channel', async ({
+    collabLab,
+  }) => {
+    await collabLab.yjsLeft.typeAfter('Сроки обсуждаем в пятницу.', ' Или в среду.');
+
+    await expect(collabLab.yjsRight.editor).toContainText('пятницу. Или в среду.');
+  });
+
+  test('keeps the lines both people break while the link is cut', async ({ collabLab }) => {
+    const { yjsLeft: anna, yjsRight: boris } = collabLab;
+
+    await anna.cutLink();
+    await anna.breakAfter('Выпускаем таблицу и редактор в одном релизе.', 'Пишет Анна');
+    await boris.breakAfter('Выпускаем таблицу и редактор в одном релизе.', 'Пишет Борис');
+    await expect(boris.editor).not.toContainText('Пишет Анна');
+
+    await anna.restoreLink();
+
+    await expect(boris.editor).toContainText('Пишет Анна');
+    await expect(anna.editor).toContainText('Пишет Борис');
+    await expect.poll(() => boris.text()).toBe(await anna.text());
+  });
+
+  test('undoes only its own edit once the edits of the other side arrive', async ({
+    collabLab,
+  }) => {
+    const { yjsLeft: anna, yjsRight: boris } = collabLab;
+
+    await boris.cutLink();
+    await boris.typeAfter('План релиза', ' 2.0');
+    await anna.typeAfter('Выпускаем таблицу и редактор в одном релизе.', ' Анна');
+    await anna.typeAfter('Сроки обсуждаем в пятницу.', ' Тоже Анна');
+    await boris.restoreLink();
+    await expect(boris.editor).toContainText('пятницу. Тоже Анна');
+
+    await boris.undo();
+
+    await expect(boris.editor).not.toContainText('План релиза 2.0');
+    await expect(anna.editor).not.toContainText('План релиза 2.0');
+    await expect(boris.editor).toContainText('релизе. Анна');
+    await expect(boris.editor).toContainText('пятницу. Тоже Анна');
+  });
+
+  for (const theme of THEMES) {
+    test(`stays accessible in the ${theme} theme`, async ({ collabLab, page }) => {
+      await collabLab.setTheme(theme);
+
+      expect(await wcagViolationsOf(page)).toEqual([]);
+    });
+  }
+});
