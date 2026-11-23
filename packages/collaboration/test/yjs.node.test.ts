@@ -29,6 +29,7 @@ import * as fc from 'fast-check';
 import { describe, expect, it, vi } from 'vite-plus/test';
 import {
   applyUpdate,
+  decodeUpdate,
   Doc as YDoc,
   encodeStateAsUpdate,
   encodeStateVector,
@@ -74,6 +75,10 @@ const WIDE_RUNS = 60;
 const WIDE_ROUNDS = 12;
 
 const WIDE_COUNT = 70;
+
+const HISTORY_EDITS = 400;
+
+const IDLE = { getState: () => undefined, dispatch: () => undefined };
 
 const MOVABLE = ['a', 'b', 'c', 'd'] as const;
 
@@ -1267,6 +1272,46 @@ describe('yjsBinding', () => {
     );
   });
 
+  it('opens a document written anew into an empty Y.Doc the same, smaller and ready for edits', () => {
+    const random = createRandom(7);
+    const [author] = pair(docOf(paragraph('a', 'Start')));
+
+    for (let edit = 0; edit < HISTORY_EDITS; edit += 1) {
+      lived(author, random);
+    }
+
+    const stored = encodeStateAsUpdate(author.ydoc);
+    const small = compacted(stored);
+
+    expect(storedDoc(small)?.root).toEqual(author.state().doc.root);
+    expect(small.length).toBeLessThan(stored.length / 2);
+
+    expect(decodeUpdate(small).structs.length).toBeLessThan(
+      decodeUpdate(stored).structs.length / 2,
+    );
+
+    const opened = storedDoc(small);
+
+    if (opened === undefined) {
+      throw new Error('The compacted document does not read');
+    }
+
+    const [left, right] = [clientOf(opened), clientOf(opened)];
+
+    applyUpdate(left.ydoc, small);
+    applyUpdate(right.ydoc, small);
+
+    left.insertAt(
+      opened.root.content[0]?.kind === 'element' ? opened.root.content[0].id : 'a',
+      'new ',
+    );
+
+    exchange(left, right);
+
+    expect(right.text()).toBe(left.text());
+    expect(left.text()).toMatch(/^new /u);
+  });
+
   it('keeps the caret of the receiver in place across a remote insert', () => {
     const [left, right] = pair(docOf(paragraph('a', 'Hello')));
 
@@ -1454,6 +1499,62 @@ const editedLine = (client: Client, random: Random, ids: readonly string[]): voi
     }
     return from.tr.insertText(random.pick(['a', 'bc', 'Ж', '😀']), at);
   });
+};
+
+const compacted = (stored: Uint8Array): Uint8Array => {
+  const old = new YDoc();
+
+  applyUpdate(old, stored);
+
+  const doc = yjsBinding(old, BLOCKS, { schema: fixtureSchema, ...IDLE }).read();
+
+  if (doc === undefined) {
+    return stored;
+  }
+
+  const fresh = new YDoc();
+
+  yjsBinding(fresh, BLOCKS, { schema: fixtureSchema, ...IDLE }).seed(doc);
+  return encodeStateAsUpdate(fresh);
+};
+
+const storedDoc = (bytes: Uint8Array): Doc | undefined => {
+  const ydoc = new YDoc();
+
+  applyUpdate(ydoc, bytes);
+  return yjsBinding(ydoc, BLOCKS, { schema: fixtureSchema, ...IDLE }).read();
+};
+
+const lived = (client: Client, random: Random): void => {
+  const blocks = client
+    .state()
+    .doc.root.content.flatMap((block) => (block.kind === 'element' ? [block.id] : []));
+
+  const id = blocks[random.int(0, blocks.length - 1)] ?? 'a';
+  const goal = blocks[random.int(0, blocks.length - 1)];
+  const roll = random.int(0, 9);
+
+  if (roll < 4) {
+    enterAfter(client, id, `line ${String(random.int(0, 999))}`);
+    return;
+  }
+  if (roll < 7) {
+    client.insertAt(id, 'typed ');
+    return;
+  }
+  if (roll < 9 && blocks.length > 8) {
+    client.apply((from) => {
+      const at = from.doc.positionOf(id) ?? 0;
+
+      return from.tr.delete(at, at + (from.doc.byId(id)?.size ?? 0));
+    });
+
+    return;
+  }
+  if (goal === id || goal === blocks[blocks.indexOf(id) + 1]) {
+    return;
+  }
+  carry(client, id, goal);
 };
 
 const paragraphIds = (node: ElementNode): readonly string[] =>

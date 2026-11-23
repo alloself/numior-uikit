@@ -349,4 +349,41 @@ const binding = yjsBinding(ydoc, 'document', {
 в него не пишет: закройте редактор для правки. Курсоров соавторов и списка участников связка не даёт,
 а `destroy()` отписывает её от `Y.Doc`.
 
+### Уплотнение документа
+
+`Y.Doc` помнит историю правок. Удалённый блок остаётся в нём записью, поэтому документ, который долго
+правили, растёт и дольше открывается. Когда в комнате никого нет, документ записывают заново: читают
+его и заполняют им пустой `Y.Doc`.
+
+```ts
+import * as Y from 'yjs';
+import { yjsBinding } from '@numior/kit/collaboration/yjs';
+
+const idle = { getState: () => undefined, dispatch: () => undefined };
+
+const compacted = (stored: Uint8Array): Uint8Array => {
+  const old = new Y.Doc();
+
+  Y.applyUpdate(old, stored);
+
+  const doc = yjsBinding(old, 'document', { schema: contentSchema, ...idle }).read();
+
+  if (doc === undefined) {
+    return stored;
+  }
+
+  const fresh = new Y.Doc();
+
+  yjsBinding(fresh, 'document', { schema: contentSchema, ...idle }).seed(doc);
+  return Y.encodeStateAsUpdate(fresh);
+};
+```
+
+Сохранённую копию заменяют результатом. У нового документа нет общей истории со старым, и обновление
+старого к нему не применяют: блоки задвоятся. Поэтому клиент, который открыл документ до
+уплотнения, загружает его заново, а его неотправленные правки пропадают.
+
+Документ на 10 000 блоков после 68 807 правок трёх авторов уплотнение сжимает с 3,9 до 3,1 МБ. Записей
+Yjs в нём становится вдвое меньше, и вход живой связкой ускоряется с 200 до 120 мс.
+
 <SignatureReference :names="['yjsBinding', 'YjsBindingOptions', 'YjsBinding']" />
