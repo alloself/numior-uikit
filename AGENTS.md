@@ -67,4 +67,4 @@ that its features are implemented. Component and test conventions live in the sk
 - Use Conventional Commits; release rules and activation are in docs/releases.md.
 - Run `pnpm release:check` for release changes. Never publish as part of local verification.
 
-Current implementation and commands: README.md. Future modules: packages/README.md.
+Commands and checks: CONTRIBUTING.md. Packages and future modules: packages/README.md.
