@@ -96,6 +96,7 @@ export type {
 export { parseContentExpression } from './schema/content-expression';
 export type { ContentExpr } from './schema/content-expression';
 export { createSchema } from './schema/schema';
+export { createTreeCheck } from './schema/tree-check';
 export type {
   AttrLimits,
   AttrSpec,
@@ -117,6 +118,7 @@ export type {
   Schema,
   SchemaLimits,
   SchemaSpec,
+  TreeCheck,
 } from './schema/schema.types';
 export { createMapping, createStepMap } from './transform/mapping';
 export { StepMapKind } from './transform/mapping.types';

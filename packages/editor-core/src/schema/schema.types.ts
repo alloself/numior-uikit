@@ -163,6 +163,8 @@ export type DocCheck =
   | { readonly ok: true }
   | { readonly ok: false; readonly issues: readonly DocIssue[] };
 
+export type TreeCheck = (root: ElementNode) => DocCheck;
+
 export interface Schema {
   readonly name: string;
   readonly version: number;

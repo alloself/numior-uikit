@@ -38,7 +38,7 @@ export const createCheckContext = (schema: SchemaShape): CheckContext => ({
   path: [],
 });
 
-const checkAttrs = (
+export const checkAttrs = (
   context: CheckContext,
   path: readonly number[],
   specs: AttrSpecs,
@@ -265,13 +265,14 @@ const checkOpen = (
 export const checkResult = (context: CheckContext): DocCheck =>
   context.issues.length === 0 ? { ok: true } : { ok: false, issues: context.issues };
 
-export const checkTree = (schema: SchemaShape, root: ElementNode): DocCheck => {
-  const context = createCheckContext(schema);
-
+export const checkTreeIn = (context: CheckContext, root: ElementNode): DocCheck => {
   checkTop(context, root);
   checkElement(context, root);
   return checkResult(context);
 };
+
+export const checkTree = (schema: SchemaShape, root: ElementNode): DocCheck =>
+  checkTreeIn(createCheckContext(schema), root);
 
 export const checkNodes = (schema: SchemaShape, nodes: readonly ElementNode[]): DocCheck => {
   const context = createCheckContext(schema);
