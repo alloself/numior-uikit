@@ -165,6 +165,7 @@ const withoutStyles = (root: HTMLElement): string => {
 const pageOf = (root: HTMLElement): string =>
   root.innerHTML
     .replaceAll(' style=""', '')
+    .replaceAll(' class=""', '')
     .replaceAll(ESTIMATED_SIZE, 'contain-intrinsic-block-size: auto;');
 
 const sights: SightCallback[] = [];
