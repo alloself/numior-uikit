@@ -2,19 +2,28 @@ import {
   createDoc,
   createState,
   history,
+  sameMarks,
   moveBlock,
   setBlockType,
   splitBlock,
   textSelection,
   toJSON,
   undo,
+  type ContentNode,
   type Doc,
   type EditorState,
   type ElementNode,
+  type Mark,
   type Plugin,
+  type TextNode,
   type Transaction,
 } from '@numior/editor-core';
-import { fixtureSchema } from '@numior/editor-core/fixtures';
+import {
+  createRandom,
+  fixtureSchema,
+  generateDoc,
+  type Random,
+} from '@numior/editor-core/fixtures';
 import * as fc from 'fast-check';
 import { describe, expect, it, vi } from 'vite-plus/test';
 import {
@@ -27,6 +36,7 @@ import {
   XmlText,
 } from 'yjs';
 import { yjsBinding, type YjsBinding } from '../src/yjs';
+import { applyDocChange } from '../src/yjs/doc-change';
 
 interface Client {
   readonly ydoc: YDoc;
@@ -36,7 +46,10 @@ interface Client {
   readonly insertAt: (id: string, text: string) => void;
   readonly undo: () => void;
   readonly text: () => string;
+  readonly received: () => readonly Transaction[];
 }
+
+type Flat = { readonly text: string; readonly marks: readonly Mark[] } | { readonly node: unknown };
 
 interface Turn {
   readonly who: number;
@@ -54,6 +67,18 @@ const LATENCY_BUDGET_MS = 100;
 const MOVABLE = ['a', 'b', 'c', 'd'] as const;
 
 const CARRIED = ['a', 'b', 'c', 'd', 'e', 'q', 'q2'] as const;
+
+const SPARE = 'spare-';
+
+const CHANGED = 0.4;
+
+const MARK_RANK = [...fixtureSchema.marks.keys()];
+
+const BOLD = fixtureSchema.mark('bold');
+
+const MENTIONED: ReadonlySet<string> = new Set(['paragraph', 'heading']);
+
+const RELABELLED = 'Renamed';
 
 const paragraph = (id: string, text: string): ElementNode =>
   fixtureSchema.element('paragraph', {
@@ -78,6 +103,7 @@ const clientOf = (
   extra: readonly Plugin[] = [],
 ): Client => {
   let state: EditorState | undefined;
+  const received: Transaction[] = [];
 
   const binding = yjsBinding(ydoc, BLOCKS, {
     schema: fixtureSchema,
@@ -88,6 +114,8 @@ const clientOf = (
       }
 
       const before = state;
+
+      received.push(tr);
 
       state = state.apply(tr);
       emit(binding.plugin, state, before);
@@ -128,6 +156,7 @@ const clientOf = (
       current()
         .doc.root.content.map((block) => textOf(block))
         .join('|'),
+    received: () => received,
   };
 };
 
@@ -157,9 +186,9 @@ const exchange = (left: Client, right: Client): void => {
   send(right, left);
 };
 
-const pair = (doc: Doc): readonly [Client, Client] => {
-  const left = clientOf(doc);
-  const right = clientOf(doc);
+const pair = (doc: Doc, extra: () => readonly Plugin[] = () => []): readonly [Client, Client] => {
+  const left = clientOf(doc, undefined, new YDoc(), extra());
+  const right = clientOf(doc, undefined, new YDoc(), extra());
 
   left.binding.seed(doc);
   exchange(left, right);
@@ -179,6 +208,185 @@ const carry = (client: Client, id: string, before: string | undefined): void => 
     });
   });
 };
+
+const boldOf = (node: ContentNode): string => {
+  if (node.kind === 'text') {
+    return node.marks.some((mark) => mark.type === 'bold') ? node.text : '';
+  }
+  return node.content.map(boldOf).join('');
+};
+
+const ranked = (marks: readonly Mark[]): readonly Mark[] =>
+  marks.toSorted((one, other) => MARK_RANK.indexOf(one.type) - MARK_RANK.indexOf(other.type));
+
+const renamed = (node: ElementNode): ElementNode =>
+  fixtureSchema.element(node.type, {
+    id: `${SPARE}${node.id}`,
+    attrs: node.attrs,
+    content: node.content.map((child) => (child.kind === 'element' ? renamed(child) : child)),
+  });
+
+const editedText = (node: TextNode, random: Random): TextNode => {
+  const at = random.int(0, node.text.length - 1);
+  const shorter = node.text.length > 1 && random.chance(0.5);
+
+  return fixtureSchema.text(
+    shorter
+      ? node.text.slice(0, at) + node.text.slice(at + 1)
+      : `${node.text.slice(0, at)}Z${node.text.slice(at)}`,
+    node.marks,
+  );
+};
+
+const toggledBold = (node: TextNode): TextNode =>
+  fixtureSchema.text(
+    node.text,
+    node.marks.some((mark) => mark.type === 'bold')
+      ? node.marks.filter((mark) => mark.type !== 'bold')
+      : ranked([...node.marks, BOLD]),
+  );
+
+const withMentions = (node: ElementNode): ElementNode =>
+  fixtureSchema.element(node.type, {
+    id: node.id,
+    attrs: node.attrs,
+    content: MENTIONED.has(node.type)
+      ? [
+          ...node.content,
+          fixtureSchema.element('mention', {
+            id: `m-${node.id}`,
+            attrs: { user: node.id, label: node.id },
+          }),
+        ]
+      : node.content.map((child) => (child.kind === 'element' ? withMentions(child) : child)),
+  });
+
+const relabelled = (node: ElementNode): ElementNode =>
+  fixtureSchema.element(node.type, {
+    id: node.id,
+    attrs: { ...node.attrs, label: RELABELLED },
+    content: node.content,
+  });
+
+const changedLine = (node: ElementNode, random: Random): readonly ContentNode[] => {
+  const bold = fixtureSchema.nodes.get(node.type)?.marks.has('bold') === true;
+
+  return node.content.map((child) => {
+    if (!random.chance(CHANGED)) {
+      return child;
+    }
+    if (child.kind === 'element') {
+      return relabelled(child);
+    }
+    return bold && random.chance(0.5) ? toggledBold(child) : editedText(child, random);
+  });
+};
+
+const changedNode = (node: ElementNode, random: Random): ElementNode => {
+  if (!random.chance(CHANGED)) {
+    return node;
+  }
+
+  const content =
+    fixtureSchema.nodes.get(node.type)?.inlineContent === true
+      ? changedLine(node, random)
+      : node.content.map((child) =>
+          child.kind === 'element' ? changedNode(child, random) : child,
+        );
+
+  return fixtureSchema.element(node.type, { id: node.id, attrs: node.attrs, content });
+};
+
+const swapped = (blocks: ContentNode[], random: Random): void => {
+  const one = random.int(0, blocks.length - 1);
+  const other = random.int(0, blocks.length - 1);
+  const first = blocks[one];
+  const second = blocks[other];
+
+  if (first === undefined || second === undefined) {
+    return;
+  }
+  blocks[one] = second;
+  blocks[other] = first;
+};
+
+const nestedInQuote = (blocks: ContentNode[], random: Random): void => {
+  const at = random.int(0, blocks.length - 1);
+
+  const into = blocks.findIndex(
+    (block, index) => index !== at && block.kind === 'element' && block.type === 'blockquote',
+  );
+
+  const moved = blocks[at];
+  const quote = blocks[into];
+
+  if (moved === undefined || quote?.kind !== 'element') {
+    return;
+  }
+
+  blocks[into] = fixtureSchema.element(quote.type, {
+    id: quote.id,
+    attrs: quote.attrs,
+    content: [...quote.content, moved],
+  });
+
+  blocks.splice(at, 1);
+};
+
+const changedRoot = (
+  root: ElementNode,
+  random: Random,
+  spares: readonly ContentNode[],
+): ElementNode => {
+  const blocks = root.content.map((child) =>
+    child.kind === 'element' ? changedNode(child, random) : child,
+  );
+
+  if (blocks.length > 1 && random.chance(0.3)) {
+    blocks.splice(random.int(0, blocks.length - 1), 1);
+  }
+  if (random.chance(0.3)) {
+    swapped(blocks, random);
+  }
+  if (random.chance(0.3)) {
+    nestedInQuote(blocks, random);
+  }
+  for (const spare of spares) {
+    if (!random.chance(0.3)) {
+      continue;
+    }
+    blocks.splice(random.int(0, blocks.length), 0, spare);
+  }
+  return fixtureSchema.element(root.type, { id: root.id, attrs: root.attrs, content: blocks });
+};
+
+const flatOf = (content: readonly ContentNode[]): readonly Flat[] =>
+  content.reduce<Flat[]>((flat, child) => {
+    const last = flat.at(-1);
+
+    if (
+      child.kind === 'text' &&
+      last !== undefined &&
+      'text' in last &&
+      sameMarks(last.marks, child.marks)
+    ) {
+      flat[flat.length - 1] = { text: last.text + child.text, marks: last.marks };
+      return flat;
+    }
+
+    flat.push(
+      child.kind === 'text' ? { text: child.text, marks: child.marks } : { node: canonical(child) },
+    );
+
+    return flat;
+  }, []);
+
+const canonical = (node: ElementNode): unknown => ({
+  id: node.id,
+  type: node.type,
+  attrs: node.attrs,
+  content: flatOf(node.content),
+});
 
 const numbered = (count: number): Doc =>
   docOf(
@@ -408,6 +616,100 @@ describe('yjsBinding', () => {
     }).toThrow('binding.ids');
 
     expect(encodeStateVector(ydoc)).toEqual(written);
+  });
+
+  it('reads one update with edits in two far blocks as two edits and keeps an edit between them undoable', () => {
+    const blocks = Array.from({ length: 10 }, (_unused, index) =>
+      paragraph(`p${String(index)}`, `Paragraph ${String(index)}`),
+    );
+
+    const [left, right] = pair(docOf(...blocks), () => [history()]);
+
+    left.insertAt('p4', 'mine');
+    send(left, right);
+    right.insertAt('p1', 'X');
+    right.insertAt('p8', 'Y');
+
+    send(right, left);
+
+    const steps = left.received().at(-1)?.steps ?? [];
+
+    expect(
+      steps.map((step) => (step.kind === 'replace' ? step.to - step.from : step.kind)),
+    ).toEqual([0, 0]);
+
+    left.undo();
+
+    expect(left.text().split('|')).toEqual(
+      blocks.map((block, index) => {
+        const texts: Readonly<Record<number, string>> = { 1: 'XParagraph 1', 8: 'YParagraph 8' };
+
+        return texts[index] ?? textOf(block);
+      }),
+    );
+  });
+
+  it('reads bold put on a word as a mark and leaves the caret in the word and the undo of typing in it alone', () => {
+    const [left, right] = pair(docOf(paragraph('a', 'hello world')), () => [history()]);
+    const word = 1 + 'hello '.length;
+
+    left.apply((from) => from.tr.insertText('X', word + 2));
+    send(left, right);
+    left.apply((from) => from.tr.setSelection(textSelection(word + 3)));
+    right.apply((from) => from.tr.addMark(word, word + 'woXrld'.length, BOLD));
+
+    send(right, left);
+
+    expect(
+      left
+        .received()
+        .at(-1)
+        ?.steps.map((step) => step.kind),
+    ).toEqual(['addMark']);
+
+    expect(left.state().selection).toMatchObject({ anchor: word + 3, head: word + 3 });
+
+    left.undo();
+
+    expect(left.text()).toBe('hello world');
+    expect(boldOf(left.state().doc.root)).toBe('world');
+  });
+
+  it('brings a document to any other that shares its blocks', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 2_147_483_647 }),
+        fc.integer({ min: 1, max: 14 }),
+        (seed, size) => {
+          const before = createDoc(
+            fixtureSchema,
+            withMentions(generateDoc(fixtureSchema, { blocks: size, seed }).root),
+          );
+
+          const spares = generateDoc(fixtureSchema, { blocks: 2, seed: seed + 1 }).root.content;
+
+          const after = changedRoot(
+            before.root,
+            createRandom(seed + 2),
+            spares.map((spare) =>
+              spare.kind === 'element' ? renamed(withMentions(spare)) : spare,
+            ),
+          );
+
+          fc.pre(fixtureSchema.check(after).ok);
+
+          const tr = applyDocChange(
+            createState({ doc: before }).tr,
+            before.root,
+            after,
+            fixtureSchema,
+          );
+
+          expect(canonical(tr.doc.root)).toEqual(canonical(after));
+        },
+      ),
+      { numRuns: 300 },
+    );
   });
 
   it('has nothing to read in an empty fragment', () => {

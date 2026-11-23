@@ -33,6 +33,3 @@ export const commonSpan = (
 
   return { head, tail };
 };
-
-export const commonText = (before: string, after: string): TextSpan =>
-  commonSpan(before, after, (left, right) => before[left] === after[right]);

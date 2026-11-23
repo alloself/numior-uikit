@@ -353,9 +353,7 @@ export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions)
 
     const carried = carryMoves(state.tr, root, moved);
 
-    const tr = applyDocChange(carried, carried.doc.root, root, (text, marks) =>
-      schema.text(text, marks),
-    ).setMeta(remoteChange, true);
+    const tr = applyDocChange(carried, carried.doc.root, root, schema).setMeta(remoteChange, true);
 
     if (tr.changed) {
       applying = true;
