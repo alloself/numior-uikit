@@ -6,12 +6,8 @@
 </div>
 
 <p align="center">
-  <a href="https://github.com/alloself/numior-uikit/actions/workflows/ci.yml">
-    <img src="https://github.com/alloself/numior-uikit/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI">
-  </a>
-  <a href="LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
-  </a>
+  <a href="https://github.com/alloself/numior-uikit/actions/workflows/ci.yml"><img src="https://github.com/alloself/numior-uikit/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/vue-3.5%2B-42b883.svg" alt="Vue 3.5+">
   <img src="https://img.shields.io/badge/tailwind-4-38bdf8.svg" alt="Tailwind 4">
 </p>
