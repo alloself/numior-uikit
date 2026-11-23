@@ -9,6 +9,7 @@ import type {
   NuiTableColumn,
   NuiTableEvents,
   NuiTableRanges,
+  TableRowCells,
 } from '../table.types';
 
 export type TableEmit<T> = EmitFn<ShortEmitsToObject<NuiTableEvents<T>>>;
@@ -33,6 +34,7 @@ export interface TableContext<T> {
   readonly columnAt: (key: string) => NuiTableColumn<T>;
   readonly dataKeys: () => readonly string[];
   readonly dataOffset: () => number;
+  readonly rowCells: () => TableRowCells;
   readonly textOf: (row: T, key: string) => string;
   readonly scopeOf: (row: T, position: number, key: string, pinned: boolean) => NuiTableCellSlot<T>;
   readonly headRows: () => number;
