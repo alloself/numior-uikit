@@ -244,18 +244,14 @@ import {
   useTemplateRef,
   watch,
 } from 'vue';
-import { clamp, useDevicePixelRatio, useResizeObserver } from '@vueuse/core';
+import { useDevicePixelRatio, useResizeObserver } from '@vueuse/core';
 import {
   createIntent,
   createVersion,
-  ReorderAxis,
   useControlId,
   useDirection,
   useLocale,
   useMessages,
-  useVirtualFrame,
-  useVirtualList,
-  type VirtualFrame,
 } from '@numior/primitives';
 import { NuiEmpty, NuiMenu, NuiPagination, NuiSkeleton, type NuiSkeletonProps } from '@numior/vue';
 import {
@@ -275,22 +271,10 @@ import { tableMessages } from './table.messages';
 import { anchorOf } from './table-merges';
 import { useTextMeasure } from './use-text-measure';
 import { forgetCellReads } from './table-cells';
-import { ownCellAt } from './table-dom';
 import { cellTextOf, cellValueOf, engineColumnOf } from './table-format';
 import { columnTreeOf, headerBandsOf } from './table-columns';
 import { orderLeaves } from './table-order';
-import {
-  centreIndexOf,
-  dataKeysOf,
-  pinsFit,
-  revealOffset,
-  rowCellsOf,
-  rowHeadWidth,
-  mergeIndices,
-  sameIndices,
-  tableLayout,
-  wrappedCentreOf,
-} from './table-layout';
+import { dataKeysOf, pinsFit, rowCellsOf, rowHeadWidth, tableLayout } from './table-layout';
 import { pageWindowOf, resolvePagination } from './table-pages';
 import NuiTableFilter from './NuiTableFilter.vue';
 import NuiTableFooterCell from './NuiTableFooterCell.vue';
@@ -306,9 +290,9 @@ import { useOverlayArea } from './areas/overlay-area';
 import { usePaintArea } from './areas/paint-area';
 import { useRowMovesArea } from './areas/row-moves-area';
 import { useViewsArea } from './areas/views-area';
+import { useWindowsArea } from './areas/windows-area';
 import type { TableContext } from './areas/table-context';
 import { boxOf } from './table-ranges';
-import { pageRowsOf, pageStepOf } from './table-keys';
 import type { TableFilterTarget } from './use-table-header';
 import { headFrameOf, headToolsOf, leastWidthOf } from './table-head-tools';
 import { useTableColumnOrder } from './use-table-column-order';
@@ -317,15 +301,11 @@ import { useTableWarmup } from './use-table-warmup';
 import { useTableResize } from './use-table-resize';
 import { provideTableHandles } from './table-handles';
 import { keepEqual } from './table-values';
-import { useTableRowSizes } from './use-table-row-sizes';
 import type { TableSelectionKey } from './use-table-selection';
 import {
   NuiTableRowHeight,
   NuiTableSize,
-  TablePaneName,
   TablePlacementKind,
-  TableRevealAxis,
-  TableRowMode,
   TableStatusSlot,
   type NuiTableCellSlot,
   type NuiTableColumn,
@@ -340,7 +320,6 @@ import {
   type NuiTablePins,
   type NuiTableProps,
   type NuiTableRanges,
-  type NuiTableScrollAnchor,
   type NuiTableRowHeaders,
   type NuiTableRowHeights,
   type NuiTableSlots,
@@ -348,18 +327,8 @@ import {
   type NuiTableUtilityCellProps,
   type NuiTableWidths,
   type NuiTableCellPosition,
-  type TableReveal,
 } from './table.types';
 
-const ROW_SIZES = { sm: 32, md: 40, lg: 48 } as const;
-const CANVAS_LIMIT = 15_000_000;
-const STILL_FRAME: VirtualFrame = { lead: 0, rest: 0, clampStart: 0, clampEnd: 0 };
-const NO_COLUMNS: readonly number[] = [];
-
-const INITIAL_ROWS = 30;
-const INITIAL_COLUMNS = 12;
-const ROW_OVERSCAN = 6;
-const COLUMN_OVERSCAN = 2;
 const NO_ROW_HEAD = {} as const;
 const NO_HEIGHTS: NuiTableRowHeights = {};
 const SKELETON_UTILITY: NuiTableUtilityCellProps = { control: 'skeleton' };
@@ -368,7 +337,6 @@ const TEXT_SKELETON: NuiSkeletonProps = { shape: 'text', width: '100%' };
 const NEST_DELAY = 600;
 const COPY_LIMIT = 200_000;
 const BLOCK_SIZE = 100;
-const SKELETON_ROWS = 5;
 const NAMED_ROWS = 10_000;
 
 const {
@@ -750,17 +718,6 @@ const columnByKey = computed(
   () => new Map(tree.value.leaves.map((column) => [column.key, column])),
 );
 
-const rowSize = computed(() => (typeof rowHeight === 'number' ? rowHeight : ROW_SIZES[size]));
-
-const rowMode = computed<TableRowMode>(() => {
-  if (height === undefined) {
-    return 'flow';
-  }
-  return rowHeight === NuiTableRowHeight.Auto ? TableRowMode.Fluid : TableRowMode.Fixed;
-});
-
-const windowed = computed(() => rowMode.value !== TableRowMode.Flow);
-const fluid = computed(() => rowMode.value === TableRowMode.Fluid);
 const labelText = computed(() => label ?? messages.value.label);
 const hasCaption = computed(() => caption !== undefined || slots.caption !== undefined);
 const captionId = computed(() => `${gridId.value}-caption`);
@@ -768,126 +725,46 @@ const selectText = computed(() => selectLabel ?? messages.value.select);
 const selectAllText = computed(() => selectAllLabel ?? messages.value.selectAll);
 const emptyText = computed(() => emptyLabel ?? messages.value.empty);
 const booleanTexts = computed(() => ({ yes: messages.value.yes, no: messages.value.no }));
-const centreWidths = computed(() => layout.value.centre.map((column) => column.width));
-
 const footRows = computed(() => (totals.enabled.value ? 1 : 0));
-
-const frozenCount = computed(() =>
-  windowed.value && !hierarchical.value && !loadingNow.value && source === undefined
-    ? clamp(Math.floor(frozenRows) || 0, 0, visibleRows.value)
-    : 0,
-);
 
 const gridRole = computed(() => (hierarchical.value ? 'treegrid' : 'grid'));
 
-const rowSizes = useTableRowSizes({
-  viewport,
-  engine,
-  mode: () => rowMode.value,
+const {
+  rowSize,
+  rowMode,
+  windowed,
+  fluid,
+  frozenCount,
+  rowSizes,
+  rowWindow,
+  columnWindow,
+  frozenSize,
+  shownCentre,
+  pageRows,
+  skeletonCount,
+  windowFrame,
+  scrollAnchor,
+  scrollToAnchor,
+  onViewportScroll,
+  revealCorner,
+} = useWindowsArea(table, {
+  size: () => size,
+  rowHeight: () => rowHeight,
+  height: () => height,
+  frozen: () => frozenRows,
+  sourced: () => source !== undefined,
+  hierarchical: () => hierarchical.value,
   measured: () => overlaid.value,
-  rowSize: () => rowSize.value,
-  count: () => visibleRows.value,
-  pageStart: () => pageStart.value,
-  leading: () => headRows.value + pinnedCount.value,
-  pinned: () => pinnedCount.value,
-  spots: () => detailSpots.value,
   heights: () => sizedHeights.value,
+  spots: () => detailSpots.value,
   arrangement,
-  rendered: () => [bodyRows.value, rowCells.value, pinnedRows],
-  resize: (sizes) => {
-    rowWindow.resize(sizes);
+  rendered: (): unknown => [bodyRows.value, rowCells.value, pinnedRows],
+  footRows: () => footRows.value,
+  loadingRows: () => loadingRows,
+  loadingSlot: () => slots.loading !== undefined,
+  revealCell: (target, axis): void => {
+    focus.reveal(target, axis);
   },
-});
-
-const activeRow = (): number | undefined => {
-  const body = active.value.row - pinnedCount.value;
-  return body >= 0 && body < visibleRows.value ? body : undefined;
-};
-
-const activeCentre = (): number | undefined => centreIndexOf(layout.value, active.value.col);
-
-const rowWindow = useVirtualList(viewport, {
-  enabled: windowed,
-  count: () => visibleRows.value,
-  itemSize: rowSizes.itemSize,
-  overscan: ROW_OVERSCAN,
-  initialCount: INITIAL_ROWS,
-  pinned: activeRow,
-  frozen: frozenCount,
-  maxSize: CANVAS_LIMIT,
-  inset: () => rowSize.value * (headRows.value + footRows.value) + rowSizes.pinnedSize.value,
-  listen: false,
-});
-
-const frozenSize = computed(() => rowWindow.offsetOf(frozenCount.value));
-
-const columnWindow = useVirtualList(viewport, {
-  enabled: windowed,
-  axis: ReorderAxis.X,
-  count: () => layout.value.centre.length,
-  itemSize: () => {
-    const sizes = centreWidths.value;
-    return (index: number) => sizes[index] ?? 0;
-  },
-  overscan: COLUMN_OVERSCAN,
-  initialCount: INITIAL_COLUMNS,
-  pinned: activeCentre,
-  inset: () => layout.value.startWidth + layout.value.endWidth,
-  listen: false,
-});
-
-const scrollAnchor = (): NuiTableScrollAnchor | undefined => {
-  if (!windowed.value) {
-    return undefined;
-  }
-
-  const top = rowWindow.anchor();
-  const start = columnWindow.anchor();
-  const centred = layout.value.centre.length > 0;
-
-  return {
-    row: top.index + pinnedCount.value,
-    rowOffset: top.within,
-    col: centred ? start.index + layout.value.start.length : undefined,
-    colOffset: centred ? start.within : 0,
-  };
-};
-
-const scrollToAnchor = (anchor: NuiTableScrollAnchor): void => {
-  if (!windowed.value) {
-    return;
-  }
-
-  const body = anchor.row - pinnedCount.value;
-  const centre = anchor.col === undefined ? undefined : centreIndexOf(layout.value, anchor.col);
-
-  if (body >= 0 && body < visibleRows.value) {
-    rowWindow.scrollToAnchor({ index: body, within: anchor.rowOffset });
-  }
-  if (centre === undefined) {
-    return;
-  }
-
-  columnWindow.scrollToAnchor({ index: centre, within: anchor.colOffset });
-};
-
-const onViewportScroll = (): void => {
-  if (!windowed.value) {
-    return;
-  }
-
-  rowWindow.measure();
-  columnWindow.measure();
-};
-
-const wrappedCentre = computed(() => (fluid.value ? wrappedCentreOf(layout.value) : NO_COLUMNS));
-
-const shownCentre = computed<readonly number[]>((previous) => {
-  const shown = columnWindow.items.value.map((item) => item.index);
-  const kept = wrappedCentre.value;
-  const next = kept.length === 0 ? shown : mergeIndices(shown, kept);
-
-  return previous !== undefined && sameIndices(previous, next) ? previous : next;
 });
 
 const rowCells = computed(() => rowCellsOf(layout.value, shownCentre.value));
@@ -918,49 +795,6 @@ watch(
   },
   { flush: 'post' },
 );
-
-const bodySpan = computed(() =>
-  Math.max(
-    0,
-    rowWindow.viewport.value -
-      rowSize.value * (headRows.value + footRows.value) -
-      rowSizes.pinnedSize.value -
-      frozenSize.value,
-  ),
-);
-
-const fittingRows = computed(() => Math.ceil(bodySpan.value / rowSize.value));
-
-const pagesByCount = (body: number): boolean =>
-  body < 0 ||
-  body >= visibleRows.value ||
-  !windowed.value ||
-  typeof rowSizes.itemSize.value === 'number';
-
-const pageRows = (body: number, forward: boolean): number =>
-  pagesByCount(body)
-    ? pageRowsOf(rowWindow.viewport.value > 0 ? bodySpan.value : undefined, rowSize.value)
-    : pageStepOf(
-        { span: bodySpan.value, offsetOf: rowWindow.offsetOf, indexAt: rowWindow.indexAt },
-        body,
-        forward,
-      );
-
-const skeletonCount = computed(() => {
-  if (!loadingNow.value || slots.loading !== undefined) {
-    return 0;
-  }
-  return (
-    loadingRows ?? (windowed.value ? Math.max(SKELETON_ROWS, fittingRows.value) : SKELETON_ROWS)
-  );
-});
-
-const windowFrame = useVirtualFrame(viewport, () => {
-  if (!windowed.value) {
-    return undefined;
-  }
-  return loadingNow.value ? STILL_FRAME : rowWindow.frame.value;
-});
 
 const rootClass = computed(() => [
   `nui-table--size-${size}`,
@@ -1169,56 +1003,6 @@ const dataOffsets = computed(() => {
   return offsets;
 });
 
-const revealed = createIntent<TableReveal>();
-
-const revealCorner = (corner: NuiTableCellPosition, axis: TableRevealAxis): void => {
-  const target = { row: corner.row + pinnedCount.value, col: corner.col + dataOffset.value };
-
-  if (windowed.value) {
-    focus.reveal(target, axis);
-  } else {
-    revealed.set({ target, axis });
-  }
-};
-
-const revealColumnInFlow = (visual: number): void => {
-  const element = viewport.value;
-  const placed = layout.value.visual[visual];
-
-  if (element === null || placed?.pane !== TablePaneName.Centre) {
-    return;
-  }
-  const span = element.clientWidth - layout.value.startWidth - layout.value.endWidth;
-  const current = Math.abs(element.scrollLeft);
-  const next = revealOffset(current, placed.offset, placed.width, span);
-
-  if (next === current) {
-    return;
-  }
-
-  element.scrollLeft = direction.isRtl() ? -next : next;
-};
-
-const revealInFlow = ({ target, axis }: TableReveal): void => {
-  const cell = viewport.value?.querySelector(
-    ownCellAt(target.row + headRows.value + 1, target.col + 1),
-  );
-
-  switch (axis) {
-    case TableRevealAxis.Both:
-      cell?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
-      break;
-    case TableRevealAxis.Row:
-      cell?.parentElement?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
-      break;
-    case TableRevealAxis.Col:
-      revealColumnInFlow(target.col);
-      break;
-    case TableRevealAxis.None:
-      break;
-  }
-};
-
 const {
   focus,
   selection,
@@ -1385,20 +1169,6 @@ const { onRowsClick, viewportEvents } = useKeysArea(table, {
   bodyActive,
   activeRowHead,
 });
-
-watch(
-  ranges,
-  () => {
-    const pending = revealed.take();
-
-    if (pending === undefined) {
-      return;
-    }
-
-    revealInFlow(pending);
-  },
-  { flush: 'post' },
-);
 
 const scopeOf = (row: T, position: number, key: string, pinned: boolean): NuiTableCellSlot<T> => {
   const column = columnAt(key);
