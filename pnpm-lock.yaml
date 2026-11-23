@@ -130,9 +130,6 @@ importers:
       '@numior/content':
         specifier: workspace:*
         version: link:../../packages/content
-      '@numior/editor-core':
-        specifier: workspace:*
-        version: link:../../packages/editor-core
       '@numior/editor-vue':
         specifier: workspace:*
         version: link:../../packages/editor-vue

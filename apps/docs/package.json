@@ -19,7 +19,6 @@
     "@numior/charts": "workspace:*",
     "@numior/collaboration": "workspace:*",
     "@numior/content": "workspace:*",
-    "@numior/editor-core": "workspace:*",
     "@numior/editor-vue": "workspace:*",
     "@numior/forms": "workspace:*",
     "@numior/kit": "workspace:*",

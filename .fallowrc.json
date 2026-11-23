@@ -428,6 +428,8 @@
     "virtual:nui-examples",
     "virtual:nui-reference",
     "#components",
-    "vite-plus"
+    "vite-plus",
+    "shiki",
+    "@vueuse/core"
   ]
 }
