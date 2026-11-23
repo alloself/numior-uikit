@@ -14,13 +14,20 @@
 
 ### 🖥️ Документация
 
-Документация на русском и английском запускается из репозитория командой `pnpm docs:dev`.
-Публичного сайта пока нет.
+Документация на русском и английском живёт на [ui.numior.ru](https://ui.numior.ru/), из
+репозитория её запускает команда `pnpm docs:dev`.
 
 ### ⚡ Быстрый старт
 
-До версии 1.0 пакеты не публикуются в npm, поэтому кит запускается из репозитория. Нужны Node
-из `.node-version` и pnpm через Corepack:
+До версии 1.0 пакеты выходят в npm как alpha с номерами `1.0.0-alpha.N`, и API между ними ещё
+меняется:
+
+```sh
+pnpm add @numior/kit
+```
+
+Плагин Vite и стили подключаются по [руководству](https://ui.numior.ru/guide/getting-started).
+Чтобы запустить кит из репозитория, нужны Node из `.node-version` и pnpm через Corepack:
 
 ```sh
 git clone https://github.com/alloself/numior-uikit.git
