@@ -98,8 +98,21 @@ const readBottomPixel = async (base64: string): Promise<Rgb> => {
   return [r, g, b];
 };
 
+const settledShotOf = async (locator: Locator): Promise<Buffer> => {
+  await locator.scrollIntoViewIfNeeded();
+
+  await locator.evaluate(
+    () =>
+      new Promise<void>((settled) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => settled()));
+      }),
+  );
+
+  return locator.screenshot({ animations: 'disabled' });
+};
+
 export const paintedRgb = async (locator: Locator): Promise<Rgb> => {
-  const png = await locator.screenshot({ animations: 'disabled' });
+  const png = await settledShotOf(locator);
   return locator.page().evaluate(readBottomPixel, png.toString('base64'));
 };
 
@@ -134,7 +147,7 @@ const readPixels = async ({
 };
 
 export const paintedRgbAt = async (locator: Locator, points: readonly Point[]): Promise<Rgb[]> => {
-  const png = await locator.screenshot({ animations: 'disabled' });
+  const png = await settledShotOf(locator);
   return locator.page().evaluate(readPixels, { base64: png.toString('base64'), points });
 };
 
@@ -180,7 +193,7 @@ export const paintedColumn = async (
   from: number,
   to: number,
 ): Promise<PaintedColumn> => {
-  const png = await locator.screenshot({ animations: 'disabled' });
+  const png = await settledShotOf(locator);
   return locator.page().evaluate(readColumn, { base64: png.toString('base64'), x, from, to });
 };
 
@@ -239,7 +252,7 @@ export const inkedPixels = async (
   locator: Locator,
   area: Omit<PaintedArea, 'delta'>,
 ): Promise<number> => {
-  const png = await locator.screenshot({ animations: 'disabled' });
+  const png = await settledShotOf(locator);
 
   return locator
     .page()
