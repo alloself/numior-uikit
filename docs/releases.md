@@ -47,10 +47,16 @@ prerelease-версия вроде `5.0.0-beta.1`. Dry-run и `pnpm release:chec
 
 ### npm
 
-1. Завести аккаунт npm с 2FA (лучше ключ безопасности) и бесплатную организацию `numior`.
+1. Завести аккаунт npm с 2FA и бесплатную организацию `numior`. Новую 2FA npm включает только
+   ключом безопасности (Windows Hello, passkey на телефоне, аппаратный ключ): TOTP-приложения
+   с 2026 года не принимаются.
 2. Создать granular access token: Packages and scopes → Read and write → организация `numior`,
    срок 7 дней, Bypass two-factor authentication. Положить его в секрет репозитория `NPM_TOKEN`
-   (Settings → Secrets and variables → Actions).
+   (Settings → Secrets and variables → Actions). Создание токена npm подтверждает 2FA. Прямую
+   публикацию такие токены теряют около января 2027 года
+   ([changelog](https://github.blog/changelog/2026-07-31-restricting-npm-bypass-2fa-granular-access-tokens/)):
+   после этого им остаётся только staged publish с подтверждением владельца, так что первую
+   alpha нужно выпустить раньше.
 3. Задать repository variable `NUMIOR_RELEASE_ENABLED=true`.
 4. Ветка `stable` создаётся от master один раз и защищается от push.
 5. Нажать Run workflow: выходят пятнадцать пакетов `1.0.0-alpha.1` с provenance и GitHub prerelease.
