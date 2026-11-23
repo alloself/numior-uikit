@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { delimiter, join } from 'node:path';
 import { PassThrough } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
@@ -46,7 +46,7 @@ const fixture = async (t, isPrivate, dependencies) => {
     env: { ...process.env, NUMIOR_RELEASE_ENABLED: 'false' },
     logger,
     options: { dryRun: false, repositoryUrl: 'https://github.com/example/numior-ui.git' },
-    nextRelease: { version: '1.0.0' },
+    nextRelease: { version: '1.0.0-alpha.1' },
   };
 };
 
@@ -94,14 +94,14 @@ await test('packing synchronizes versions and replaces workspace protocols witho
   });
 
   await prepare({}, context);
-  const tarball = join(context.cwd, '.release/numior-vue-1.0.0.tgz');
+  const tarball = join(context.cwd, '.release/numior-vue-1.0.0-alpha.1.tgz');
 
   const packed = JSON.parse(
     execFileSync('tar', ['-xOf', tarball, 'package/package.json'], { encoding: 'utf8' }),
   );
 
-  assert.equal(packed.version, '1.0.0');
-  assert.equal(packed.peerDependencies['@numior/tokens'], '1.0.0');
+  assert.equal(packed.version, '1.0.0-alpha.1');
+  assert.equal(packed.peerDependencies['@numior/tokens'], '1.0.0-alpha.1');
   assert.equal(packed.repository.url, 'https://github.com/example/numior-ui.git');
   assert.ok(!JSON.stringify(packed).includes('fixture-secret'));
   assert.equal(packed.repository.directory, 'packages/vue');
@@ -127,11 +127,14 @@ await test('a prerelease dependency blocks publication but not a dry run', async
   await verifyConditions({}, { ...context, options: { dryRun: true } });
 });
 
-await test('prerelease versions are rejected before changing package versions', async (t) => {
+await test('only 1.0.0 alphas reach the package versions', async (t) => {
   const context = await fixture(t, false, {});
   context.env.NUMIOR_RELEASE_ENABLED = 'true';
-  context.nextRelease.version = '1.0.0-beta.1';
-  await assert.rejects(prepare({}, context), /Only stable releases/);
+
+  for (const version of ['1.0.0', '1.0.0-beta.1', '2.0.0-alpha.1', '1.1.0-alpha.1']) {
+    context.nextRelease.version = version;
+    await assert.rejects(prepare({}, context), /Only 1\.0\.0-alpha prereleases/);
+  }
 
   assert.equal(
     JSON.parse(await readFile(join(context.cwd, 'packages/vue/package.json'), 'utf8')).version,
@@ -139,7 +142,31 @@ await test('prerelease versions are rejected before changing package versions', 
   );
 });
 
-await test('semantic-release calculates the first 1.0.0 in dry-run without tags or package mutations', async (t) => {
+await test('an npm without Trusted Publishing blocks the release', async (t) => {
+  const context = await fixture(t, false, {});
+  const bin = join(context.cwd, 'bin');
+  await mkdir(bin);
+  context.env.NUMIOR_RELEASE_ENABLED = 'true';
+  context.env.PATH = `${bin}${delimiter}${context.env.PATH}`;
+
+  for (const [version, accepted] of [
+    ['11.5.0', false],
+    ['10.9.2', false],
+    ['11.5.1', true],
+    ['11.10.0', true],
+    ['12.0.0', true],
+  ]) {
+    await writeFile(join(bin, 'npm'), `#!/bin/sh\necho ${version}\n`, { mode: 0o755 });
+
+    if (accepted) {
+      await verifyConditions({}, context);
+      continue;
+    }
+    await assert.rejects(verifyConditions({}, context), /Trusted Publishing/);
+  }
+});
+
+await test('semantic-release keeps every master release on 1.0.0 alphas in dry-run', async (t) => {
   const context = await fixture(t, true, {});
 
   const git = (...args) =>
@@ -156,26 +183,47 @@ await test('semantic-release calculates the first 1.0.0 in dry-run without tags 
   git('config', 'user.name', 'Release fixture');
   git('config', 'user.email', 'release@example.invalid');
   git('add', 'packages', 'package.json', 'pnpm-workspace.yaml');
-  git('commit', '-m', 'feat: initial foundation');
+  git('commit', '-m', 'chore: initial foundation');
   git('remote', 'add', 'origin', remote);
-  git('push', '-u', 'origin', 'master');
+  git('push', '-u', 'origin', 'master', 'master:stable');
+  git('commit', '--allow-empty', '-m', 'feat: first components');
+  git('push', 'origin', 'master');
   const before = await readFile(join(context.cwd, 'packages/vue/package.json'), 'utf8');
 
-  const result = await semanticRelease(
-    {
-      ...releaseConfig,
-      repositoryUrl: `file://${remote}`,
-      plugins: [
-        ...releaseConfig.plugins.slice(0, 2),
-        fileURLToPath(new URL('./workspace.mjs', import.meta.url)),
-      ],
-      dryRun: true,
-      ci: false,
-    },
-    { ...context, stdout: new PassThrough(), stderr: new PassThrough() },
-  );
+  const dryRun = async () => {
+    const result = await semanticRelease(
+      {
+        ...releaseConfig,
+        repositoryUrl: `file://${remote}`,
+        plugins: [
+          ...releaseConfig.plugins.slice(0, 2),
+          fileURLToPath(new URL('./workspace.mjs', import.meta.url)),
+        ],
+        dryRun: true,
+        ci: false,
+      },
+      { ...context, stdout: new PassThrough(), stderr: new PassThrough() },
+    );
 
-  assert.equal(result.nextRelease.version, '1.0.0');
+    return result.nextRelease.version;
+  };
+
+  assert.equal(await dryRun(), '1.0.0-alpha.1');
   assert.equal(git('tag', '--list'), '');
   assert.equal(await readFile(join(context.cwd, 'packages/vue/package.json'), 'utf8'), before);
+
+  git('tag', 'v1.0.0-alpha.1');
+  git('notes', '--ref', 'semantic-release-v1.0.0-alpha.1', 'add', '-m', '{"channels":["master"]}');
+  git('push', 'origin', 'v1.0.0-alpha.1', 'refs/notes/*');
+
+  for (const message of [
+    'fix(vue): prevent duplicate submission',
+    'feat(tokens): add semantic roles',
+    'feat(vue)!: replace button props',
+  ]) {
+    git('commit', '--allow-empty', '-m', message);
+    git('push', 'origin', 'master');
+
+    assert.equal(await dryRun(), '1.0.0-alpha.2');
+  }
 });

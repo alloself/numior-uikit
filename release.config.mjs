@@ -1,6 +1,6 @@
 export default {
   // The Conventional Commits preset is pinned to a writer-8-compatible version.
-  branches: ['master'],
+  branches: ['stable', { name: 'master', prerelease: 'alpha' }],
   tagFormat: 'v${version}',
   plugins: [
     ['@semantic-release/commit-analyzer', { preset: 'conventionalcommits' }],

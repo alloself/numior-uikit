@@ -30,6 +30,7 @@
     "release": "semantic-release",
     "release:dry-run": "semantic-release --dry-run",
     "release:check": "node --test scripts/release/*.test.mjs",
+    "release:trust": "node scripts/release/trust.mjs",
     "commitlint": "commitlint",
     "test:nuxt": "pnpm --filter @numior/kit exec vitest run --root ../.. --config packages/kit/vitest.config.ts",
     "parity:capture": "playwright test -c playwright.parity.config.ts",
