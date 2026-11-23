@@ -1,4 +1,5 @@
-import type { Locator } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
+import { probeOn, type Probe } from './layers';
 
 export interface KitButton {
   readonly name: string;
@@ -7,7 +8,7 @@ export interface KitButton {
   readonly height: number;
 }
 
-interface ButtonProbe {
+export interface ButtonProbe {
   readonly name: string;
   readonly width: number;
   readonly height: number;
@@ -64,34 +65,35 @@ const measurable = (probe: ButtonProbe, iconOnly: boolean): boolean => {
   return sized && (iconOnly || probe.control) && !probe.running && probe.visible;
 };
 
-const probesOf = (scope: Locator): Promise<ButtonProbe[]> =>
-  scope.evaluate(
-    (root, { buttons, controls, running }) =>
-      [...root.querySelectorAll<HTMLElement>(buttons)].map((element) => {
-        const style = getComputedStyle(element);
-        const holder = element.parentElement?.closest<HTMLElement>('[class*="nui-"]');
-        const own = [...element.classList].filter((name) => name.startsWith('nui-')).join('.');
+export const kitButtonsProbe = (page: Page): Promise<Probe<ButtonProbe[]>> =>
+  page.evaluateHandle(
+    ({ buttons, controls, running }) =>
+      (root: Element): ButtonProbe[] =>
+        [...root.querySelectorAll<HTMLElement>(buttons)].map((element) => {
+          const style = getComputedStyle(element);
+          const holder = element.parentElement?.closest<HTMLElement>('[class*="nui-"]');
+          const own = [...element.classList].filter((name) => name.startsWith('nui-')).join('.');
 
-        const icons = [...element.querySelectorAll('svg')].filter((icon) =>
-          icon.checkVisibility({ opacityProperty: true, visibilityProperty: true }),
-        );
+          const icons = [...element.querySelectorAll('svg')].filter((icon) =>
+            icon.checkVisibility({ opacityProperty: true, visibilityProperty: true }),
+          );
 
-        return {
-          name: `${holder?.classList[0] ?? 'page'} > ${own}`,
-          width: Number.parseFloat(style.width),
-          height: Number.parseFloat(style.height),
-          icons: icons.length,
-          text: element.innerText.trim(),
-          control: element.matches(controls),
-          running: element.closest(running) !== null,
-          visible: element.checkVisibility({ opacityProperty: true, visibilityProperty: true }),
-        };
-      }),
+          return {
+            name: `${holder?.classList[0] ?? 'page'} > ${own}`,
+            width: Number.parseFloat(style.width),
+            height: Number.parseFloat(style.height),
+            icons: icons.length,
+            text: element.innerText.trim(),
+            control: element.matches(controls),
+            running: element.closest(running) !== null,
+            visible: element.checkVisibility({ opacityProperty: true, visibilityProperty: true }),
+          };
+        }),
     { buttons: KIT_BUTTONS, controls: CONTROLS, running: RUNNING_TEXT },
   );
 
-export const kitButtonsOf = async (scope: Locator): Promise<KitButton[]> =>
-  (await probesOf(scope)).reduce<KitButton[]>((found, probe) => {
+export const toKitButtons = (probes: readonly ButtonProbe[]): KitButton[] =>
+  probes.reduce<KitButton[]>((found, probe) => {
     const iconOnly = probe.icons === 1 && probe.text === '';
 
     if (!measurable(probe, iconOnly)) {
@@ -102,3 +104,6 @@ export const kitButtonsOf = async (scope: Locator): Promise<KitButton[]> =>
 
     return found;
   }, []);
+
+export const kitButtonsOf = async (scope: Locator): Promise<KitButton[]> =>
+  toKitButtons(await probeOn(scope, await kitButtonsProbe(scope.page())));

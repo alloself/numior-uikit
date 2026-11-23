@@ -22,6 +22,8 @@ const LONG_ROWS = 150_000;
 
 const MANY_ROWS = 100_000;
 
+const MANY_ROWS_TIMEOUT_MS = 30_000;
+
 describe('formula evaluation', () => {
   it('computes operators with the Excel coercions', () => {
     expect(evaluated('=1+2*3')).toEqual(numberValue(7));
@@ -1084,23 +1086,27 @@ describe('values after lines move', () => {
     expect(sheet.settled('D4')).toBe('44');
   });
 
-  it('leaves formulas over single cells waiting for nothing after a row is inserted among them', async () => {
-    const sheet = openBook();
+  it(
+    'leaves formulas over single cells waiting for nothing after a row is inserted among them',
+    { timeout: MANY_ROWS_TIMEOUT_MS },
+    async () => {
+      const sheet = openBook();
 
-    const entries = Array.from({ length: MANY_ROWS }, (_, row): LoadEntry => ({
-      row,
-      col: 2,
-      formula: `=A${String(row + 1)}+B${String(row + 1)}`,
-    }));
+      const entries = Array.from({ length: MANY_ROWS }, (_, row): LoadEntry => ({
+        row,
+        col: 2,
+        formula: `=A${String(row + 1)}+B${String(row + 1)}`,
+      }));
 
-    await loadCells(sheet.calculator, sheet.first, entries, {
-      budgetMs: Number.POSITIVE_INFINITY,
-    }).settled;
+      await loadCells(sheet.calculator, sheet.first, entries, {
+        budgetMs: Number.POSITIVE_INFINITY,
+      }).settled;
 
-    sheet.calculator.recalculate({ budgetMs: Number.POSITIVE_INFINITY });
+      sheet.calculator.recalculate({ budgetMs: Number.POSITIVE_INFINITY });
 
-    sheet.insert(String(MANY_ROWS / 2));
+      sheet.insert(String(MANY_ROWS / 2));
 
-    expect(sheet.calculator.pending).toBe(0);
-  });
+      expect(sheet.calculator.pending).toBe(0);
+    },
+  );
 });

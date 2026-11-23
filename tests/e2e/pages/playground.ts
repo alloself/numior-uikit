@@ -1,16 +1,10 @@
 import type { Locator, Page } from '@playwright/test';
 import { sectionScope, wcagViolationsOf, type AxeViolations } from '../helpers/axe';
-import { kitButtonsOf, offGridButtons, type KitButton } from '../helpers/buttons';
-import { LAYER_INSET, PANEL_INSET, rowInsetFaultsOf } from '../helpers/insets';
+import { kitButtonsProbe, offGridButtons, toKitButtons } from '../helpers/buttons';
+import { LAYER_INSET, PANEL_INSET, rowInsetFaultsOf, rowInsetProbe } from '../helpers/insets';
+import { acrossLayers, probeOn } from '../helpers/layers';
 import { paintOfRow, rowNameOf, ROWS, rowsToHoverOf, rowTransitionFaultsOf } from '../helpers/rows';
-import {
-  hideLayer,
-  kitPixelsOf,
-  motionSettled,
-  offPixel,
-  showLayer,
-  type KitPixels,
-} from '../helpers/pixels';
+import { kitPixelsProbe, motionSettled, offPixel } from '../helpers/pixels';
 import { DataSection } from './data';
 import { DatesSection } from './dates';
 import { FeedbackSection } from './feedback';
@@ -382,17 +376,12 @@ export class PlaygroundPage {
   async offPixelParts(): Promise<string[]> {
     await motionSettled(this.page);
 
-    const measured: KitPixels[] = [await kitPixelsOf(this.page.locator('body'))];
+    const probe = await kitPixelsProbe(this.page);
 
-    for (const layer of await this.page.locator(LAYERS).all()) {
-      if (!(await showLayer(layer))) {
-        continue;
-      }
-
-      measured.push(await kitPixelsOf(layer));
-
-      await hideLayer(layer);
-    }
+    const measured = [
+      await probeOn(this.page.locator('body'), probe),
+      ...(await acrossLayers(this.page, LAYERS, probe)),
+    ];
 
     return offPixel({
       boxes: measured.flatMap((part) => part.boxes),
@@ -403,19 +392,14 @@ export class PlaygroundPage {
   async offGridButtons(): Promise<string[]> {
     await motionSettled(this.page);
 
-    const measured: KitButton[][] = [await kitButtonsOf(this.page.locator('body'))];
+    const probe = await kitButtonsProbe(this.page);
 
-    for (const layer of await this.page.locator(LAYERS).all()) {
-      if (!(await showLayer(layer))) {
-        continue;
-      }
+    const measured = [
+      await probeOn(this.page.locator('body'), probe),
+      ...(await acrossLayers(this.page, LAYERS, probe)),
+    ];
 
-      measured.push(await kitButtonsOf(layer));
-
-      await hideLayer(layer);
-    }
-
-    return offGridButtons(measured.flat());
+    return offGridButtons(toKitButtons(measured.flat()));
   }
 
   async rowInsetFaults(): Promise<string[]> {
@@ -436,19 +420,9 @@ export class PlaygroundPage {
   }
 
   private async rowInsetFaultsInLayers(selector: string, token: string): Promise<string[]> {
-    const found: string[] = [];
+    const faults = await acrossLayers(this.page, selector, await rowInsetProbe(this.page, token));
 
-    for (const layer of await this.page.locator(selector).all()) {
-      if (!(await showLayer(layer))) {
-        continue;
-      }
-
-      found.push(...(await rowInsetFaultsOf(layer, token)));
-
-      await hideLayer(layer);
-    }
-
-    return found;
+    return faults.flat();
   }
 
   rowTransitionFaults(): Promise<string[]> {

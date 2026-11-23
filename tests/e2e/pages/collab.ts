@@ -336,6 +336,23 @@ export class CollabClient {
     await this.page.keyboard.type(text, { delay: TYPING_PAUSE });
   }
 
+  async keepTypingUntil(key: string, done: Promise<void>): Promise<void> {
+    const stop = new AbortController();
+
+    const type = async (): Promise<void> => {
+      while (!stop.signal.aborted) {
+        await this.page.keyboard.type(key, { delay: TYPING_PAUSE });
+      }
+    };
+
+    await Promise.all([
+      done.finally(() => {
+        stop.abort();
+      }),
+      type(),
+    ]);
+  }
+
   async selectLine(index: number): Promise<void> {
     await this.paragraph(index).click();
     await this.selectCurrentLine();
@@ -427,6 +444,10 @@ export class CollabClient {
   async openMark(index: number): Promise<void> {
     await this.marks.nth(index).click();
     await this.threads.waitFor();
+  }
+
+  layoutWidth(): Promise<number> {
+    return this.page.evaluate(() => document.documentElement.clientWidth);
   }
 
   async openDiscussions(): Promise<void> {
