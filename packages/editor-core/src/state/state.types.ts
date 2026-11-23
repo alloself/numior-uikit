@@ -120,6 +120,7 @@ export interface EditorState {
   readonly selection: Selection;
   readonly storedMarks: readonly Mark[] | null;
   readonly plugins: readonly Plugin[];
+  readonly ids: IdSource;
   readonly tr: Transaction;
   apply(tr: Transaction): EditorState;
   applyTransaction(tr: Transaction): AppliedTransaction;

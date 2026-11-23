@@ -1,4 +1,12 @@
-import type { Dispatch, Doc, EditorState, ElementNode, Plugin, Schema } from '@numior/editor-core';
+import type {
+  Dispatch,
+  Doc,
+  EditorState,
+  ElementNode,
+  IdSource,
+  Plugin,
+  Schema,
+} from '@numior/editor-core';
 import type { Array as YArray, Map as YMap, XmlElement, XmlText } from 'yjs';
 
 export interface YjsBindingOptions {
@@ -10,6 +18,7 @@ export interface YjsBindingOptions {
 
 export interface YjsBinding {
   readonly plugin: Plugin;
+  readonly ids: IdSource;
   readonly read: () => Doc | undefined;
   readonly seed: (doc: Doc) => void;
   readonly destroy: () => void;

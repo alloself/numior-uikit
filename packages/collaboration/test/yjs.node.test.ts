@@ -4,7 +4,9 @@ import {
   history,
   moveBlock,
   setBlockType,
+  splitBlock,
   textSelection,
+  toJSON,
   undo,
   type Doc,
   type EditorState,
@@ -93,7 +95,7 @@ const clientOf = (
     onInvalid,
   });
 
-  state = createState({ doc, plugins: [binding.plugin, ...extra] });
+  state = createState({ doc, plugins: [binding.plugin, ...extra], ids: binding.ids });
 
   const current = (): EditorState => {
     if (state === undefined) {
@@ -127,6 +129,20 @@ const clientOf = (
         .doc.root.content.map((block) => textOf(block))
         .join('|'),
   };
+};
+
+const enterAfter = (client: Client, id: string, text: string): void => {
+  client.apply((from) => {
+    const at = (from.doc.positionOf(id) ?? 0) + (from.doc.byId(id)?.size ?? 2) - 1;
+
+    return from.tr.setSelection(textSelection(at));
+  });
+
+  splitBlock(client.state(), (tr) => {
+    client.apply(() => tr);
+  });
+
+  client.apply((from) => from.tr.insertText(text));
 };
 
 const textOf = (node: ElementNode['content'][number]): string =>
@@ -353,6 +369,45 @@ describe('yjsBinding', () => {
     expect(typeField(left, 'a')).toBeUndefined();
     expect(right.state().doc.root).toEqual(left.state().doc.root);
     expect(right.state().doc.root.content[0]).toMatchObject({ type: 'paragraph', id: 'a' });
+  });
+
+  it('gives the blocks two people make by pressing Enter at once ids of their own', () => {
+    const [left, right] = pair(docOf(paragraph('a', 'one'), paragraph('b', 'two')));
+
+    enterAfter(left, 'a', 'LEFT');
+    enterAfter(right, 'b', 'RIGHT');
+
+    exchange(left, right);
+
+    expect(left.text()).toBe('one|LEFT|two|RIGHT');
+    expect(right.text()).toBe('one|LEFT|two|RIGHT');
+    expect(toJSON(left.state().doc)).toEqual(toJSON(right.state().doc));
+  });
+
+  it('writes nothing into Yjs from an editor that makes block ids of its own', () => {
+    const ydoc = new YDoc();
+    let state: EditorState | undefined;
+
+    const binding = yjsBinding(ydoc, BLOCKS, {
+      schema: fixtureSchema,
+      getState: () => state,
+      dispatch: () => undefined,
+    });
+
+    const doc = docOf(paragraph('a', 'one'));
+
+    binding.seed(doc);
+    state = createState({ doc, plugins: [binding.plugin] });
+
+    const written = encodeStateVector(ydoc);
+    const before = state;
+    const next = before.apply(before.tr.insertText('x', 1));
+
+    expect(() => {
+      emit(binding.plugin, next, before);
+    }).toThrow('binding.ids');
+
+    expect(encodeStateVector(ydoc)).toEqual(written);
   });
 
   it('has nothing to read in an empty fragment', () => {

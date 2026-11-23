@@ -398,8 +398,17 @@ const binding = yjsBinding(shared, 'description', {
 });
 ```
 
-Give `binding.plugin` to the editor in `plugins`. `read()` returns the shared document once it has
-arrived, and `seed(doc)` fills an empty one. There is no presence: carets and avatars need a
+Give the editor `binding.plugin` in `plugins` and `binding.ids` in `ids`:
+
+```vue
+<NuiEditor ref="editor" :plugins="[binding.plugin]" :ids="binding.ids" />
+```
+
+Each binding has an id prefix of its own, so the paragraphs of two people who press Enter at the same
+moment get different ids. The binding writes nothing into Yjs from an editor that makes ids itself
+and throws an error instead.
+
+`read()` returns the shared document once it has arrived, and `seed(doc)` fills an empty one. There is no presence: carets and avatars need a
 channel of your own.
 
 The second argument names the document inside the `Y.Doc`. Blocks live in a `Y.Map` of that name,

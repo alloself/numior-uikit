@@ -314,9 +314,17 @@ const binding = yjsBinding(ydoc, 'document', {
 });
 ```
 
-Передайте `binding.plugin` в `plugins` редактора без `useCollabEditor`, а `api` получите через
-`useTemplateRef`, как при подключении документа. Пустой `Y.Doc` заполняет `seed(doc)`, а `read()`
-читает из него документ для редактора.
+Передайте редактору без `useCollabEditor` `binding.plugin` в `plugins` и `binding.ids` в `ids`, а `api`
+получите через `useTemplateRef`, как при подключении документа:
+
+```vue
+<NuiEditor ref="editor" :plugins="[binding.plugin]" :ids="binding.ids" />
+```
+
+У каждой связки свой префикс id, поэтому абзацы двух людей, нажавших Enter одновременно, получают
+разные id. Редактор, который создаёт id сам, связка в Yjs не пишет и бросает ошибку.
+
+Пустой `Y.Doc` заполняет `seed(doc)`, а `read()` читает из него документ для редактора.
 
 Второй аргумент — имя документа в `Y.Doc`. Блоки лежат в `Y.Map` с этим именем, каждый под своим id,
 а порядок блоков верхнего уровня — в `Y.Array` с именем `document:order`.

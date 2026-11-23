@@ -28,6 +28,7 @@ const buildState = (fields: StateFields, before?: EditorState, tr?: Transaction)
     selection: fields.selection,
     storedMarks: fields.storedMarks,
     plugins: fields.plugins,
+    ids: fields.ids,
     get tr() {
       return createTransaction(state, fields.ids);
     },

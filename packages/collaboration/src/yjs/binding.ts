@@ -1,5 +1,6 @@
 import {
   ContentNodeKind,
+  createIdSource,
   DocIssueKind,
   defaultTextblock,
   definePlugin,
@@ -33,6 +34,13 @@ import {
 } from './yjs.types';
 
 const NO_ROOT_ID = 'root';
+
+const PREFIX_LENGTH = 8;
+
+const PREFIX_BASE = 36;
+
+const FOREIGN_IDS =
+  'yjsBinding: the editor makes block ids of its own; give it binding.ids (the ids option of the state, the ids prop of NuiEditor)';
 
 const ORDER_SUFFIX = ':order';
 
@@ -156,6 +164,11 @@ const targetAt = (
   return found;
 };
 
+const prefixOf = (): string =>
+  Array.from(globalThis.crypto.getRandomValues(new Uint8Array(PREFIX_LENGTH)), (byte) =>
+    (byte % PREFIX_BASE).toString(PREFIX_BASE),
+  ).join('');
+
 const entryIds = (node: ElementNode): readonly string[] =>
   node.content.reduce<string[]>(
     (ids, child) => {
@@ -172,6 +185,7 @@ const entryIds = (node: ElementNode): readonly string[] =>
 export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions): YjsBinding => {
   const { schema, getState, dispatch, onInvalid } = options;
   const origin = Symbol('nui-yjs');
+  const idSource = createIdSource(`${prefixOf()}-`);
   const blocks = ydoc.getMap<unknown>(name);
   const order = ydoc.getArray<unknown>(`${name}${ORDER_SUFFIX}`);
 
@@ -387,11 +401,15 @@ export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions)
           if (state.doc === before.doc || applying || unread) {
             return;
           }
+          if (state.ids !== idSource) {
+            throw new Error(FOREIGN_IDS);
+          }
 
           write(state.doc.root);
         },
       },
     }),
+    ids: idSource,
     read: () => {
       if (blocks.size === 0 && order.length === 0) {
         return undefined;
