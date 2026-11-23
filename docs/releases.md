@@ -55,15 +55,18 @@ prerelease-версия вроде `5.0.0-beta.1`. Dry-run и `pnpm release:chec
 1. Завести аккаунт npm с 2FA и бесплатную организацию `numior`. Новую 2FA npm включает только
    ключом безопасности (Windows Hello, passkey на телефоне, аппаратный ключ): TOTP-приложения
    с 2026 года не принимаются.
-2. Создать granular access token: Packages and scopes → Read and write → организация `numior`,
-   срок 7 дней, Bypass two-factor authentication. Положить его в секрет репозитория `NPM_TOKEN`
-   (Settings → Secrets and variables → Actions). Создание токена npm подтверждает 2FA. Прямую
-   публикацию такие токены теряют около января 2027 года
+2. Создать granular access token: Packages and scopes → Read and write → организация `numior`, срок
+   7 дней и отмеченный Bypass two-factor authentication: по умолчанию галочка снята, и без неё
+   публикация падает с `EOTP — This operation requires a one-time password`. Положить токен в секрет
+   репозитория `NPM_TOKEN` (Settings → Secrets and variables → Actions → Secrets, не Variables).
+   Создание токена npm подтверждает 2FA. Прямую публикацию такие токены теряют около января 2027
+   года
    ([changelog](https://github.blog/changelog/2026-07-31-restricting-npm-bypass-2fa-granular-access-tokens/)):
-   после этого им остаётся только staged publish с подтверждением владельца, так что первую
-   alpha нужно выпустить раньше.
+   после этого им остаётся только staged publish с подтверждением владельца, так что первую alpha
+   нужно выпустить раньше.
 3. Задать repository variable `NUMIOR_RELEASE_ENABLED=true`.
-4. Ветка `stable` создаётся от master один раз и защищается от push.
+4. Ветка `stable` создаётся от master один раз и закрывается защитой с `lock_branch`: push в неё
+   не проходит ни у кого, включая администраторов.
 5. Нажать Run workflow: выходят пятнадцать пакетов `1.0.0-alpha.1` с provenance и GitHub prerelease.
 6. Удалить секрет `NPM_TOKEN` и отозвать токен на npmjs.com.
 7. Перед следующей alpha запустить `pnpm release:trust --dry-run`, затем `pnpm release:trust`
@@ -107,6 +110,11 @@ writer версии. Fallow имеет одно узкое исключение 
 semantic-release загружает preset динамически по короткому имени; интеграционный dry-run
 проверяет его загрузку.
 
+semantic-release ставит тег и git note до публикации пакетов. Если публикация упала на первом
+же пакете и в registry нет ни одного пакета этой версии, тег и note удаляются
+(`git push origin :refs/tags/<tag> :refs/notes/semantic-release-<tag>`), и кнопка выпускает ту же
+версию заново; иначе следующий запуск сочтёт версию выпущенной и ничего не опубликует.
+
 Публикация нескольких npm-пакетов не атомарна. При сбое часть пакетов и тег уже могут
 существовать. Workflow сохраняет tarballs даже при ошибке. Не удалять теги и не пытаться
 перезаписать опубликованную версию: сначала сверить registry, допубликовать только отсутствующие
@@ -120,6 +128,7 @@ git note канала, иначе следующая alpha посчитаетс�
 ## Переход на 1.0
 
 Когда выполнен полный план, одно изменение делает master stable-веткой в `release.config.mjs`,
-снимает ограничение `1.0.0-alpha.N` в plugin и удаляет ветку `stable`. Первый stable-релиз после
+снимает ограничение `1.0.0-alpha.N` в plugin и удаляет ветку `stable`; перед удалением с неё
+снимается защита (Settings → Branches). Первый stable-релиз после
 этого — `1.0.0`. Поддержка предыдущего major шесть месяцев остаётся обязательством из Archcore;
 maintenance-ветки добавляются при появлении второго major.
