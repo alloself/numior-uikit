@@ -1,6 +1,7 @@
 import {
   ContentNodeKind,
   createIdSource,
+  createTreeCheck,
   DocIssueKind,
   defaultTextblock,
   definePlugin,
@@ -20,7 +21,7 @@ import {
   type YEvent,
 } from 'yjs';
 import { applyDocChange } from './doc-change';
-import { isEntry, isLine, ROOT_PARENT } from './entries';
+import { holdsChildren, isEntry, isLine, ROOT_PARENT } from './entries';
 import { embedsOf } from './line';
 import { rootOf } from './read-tree';
 import { carryMoves } from './remote-moves';
@@ -171,6 +172,26 @@ const targetAt = (
   return found;
 };
 
+const adoptNode = (store: TreeStore, current: ElementNode, read: ElementNode): void => {
+  if (store.cache.get(read.id) !== read) {
+    return;
+  }
+  store.cache.set(read.id, current);
+
+  if (!holdsChildren(store.schema, read.type)) {
+    return;
+  }
+
+  current.content.forEach((child, index) => {
+    const other = read.content[index];
+
+    if (child.kind !== ContentNodeKind.Element || other?.kind !== ContentNodeKind.Element) {
+      return;
+    }
+    adoptNode(store, child, other);
+  });
+};
+
 const prefixOf = (): string =>
   Array.from(globalThis.crypto.getRandomValues(new Uint8Array(PREFIX_LENGTH)), (byte) =>
     (byte % PREFIX_BASE).toString(PREFIX_BASE),
@@ -193,6 +214,7 @@ export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions)
   const { schema, getState, dispatch, onInvalid } = options;
   const origin = Symbol('nui-yjs');
   const idSource = createIdSource(`${prefixOf()}-`);
+  const check = createTreeCheck(schema);
   const blocks = ydoc.getMap<unknown>(name);
   const order = ydoc.getArray<unknown>(`${name}${ORDER_SUFFIX}`);
   const meta = ydoc.getMap<unknown>(`${name}${META_SUFFIX}`);
@@ -209,6 +231,7 @@ export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions)
     loose: new Set(),
     shifted: new Set(),
     copies: new Set(),
+    places: new Map(),
   };
 
   const arrived = new Set<string>();
@@ -310,13 +333,13 @@ export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions)
   };
 
   const repaired = (root: ElementNode): boolean => {
-    const check = schema.check(root);
+    const result = check(root);
 
-    if (check.ok || !check.issues.every(isRepairable)) {
+    if (result.ok || !result.issues.every(isRepairable)) {
       return false;
     }
 
-    const targets = check.issues.map((issue) => targetAt(store, root, issue.path));
+    const targets = result.issues.map((issue) => targetAt(store, root, issue.path));
 
     ydoc.transact(() => {
       for (const target of targets) {
@@ -333,7 +356,7 @@ export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions)
   const validRoot = (shell: ElementNode, full: boolean): ElementNode | undefined => {
     let root = rootOf(store, shell, full);
 
-    while (root !== undefined && !schema.check(root).ok) {
+    while (root !== undefined && !check(root).ok) {
       root = repaired(root) ? rootOf(store, shell, true) : undefined;
     }
     return root;
@@ -350,7 +373,7 @@ export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions)
 
     const root = rootOf(store, shell, full);
 
-    return root !== undefined && schema.check(root).ok ? root : undefined;
+    return root !== undefined && check(root).ok ? root : undefined;
   };
 
   const stamp = (): void => {
@@ -364,7 +387,11 @@ export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions)
   const show = (state: EditorState, root: ElementNode, moved: ReadonlySet<string>): void => {
     const carried = carryMoves(state.tr, root, moved);
 
-    const tr = applyDocChange(carried, carried.doc.root, root, schema).setMeta(remoteChange, true);
+    const tr = applyDocChange(carried, carried.doc.root, root, schema, (current, read) => {
+      adoptNode(store, current, read);
+    }).setMeta(remoteChange, true);
+
+    store.cache.set(ROOT_PARENT, tr.doc.root);
 
     if (!tr.changed) {
       return;

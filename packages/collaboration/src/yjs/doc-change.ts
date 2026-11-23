@@ -13,6 +13,7 @@ import {
 } from '@numior/editor-core';
 import { commonRun, commonSpan } from './common-run';
 import { risingRun } from './rising-run';
+import type { Adopt } from './yjs.types';
 
 type Change =
   | { readonly kind: typeof ChangeKind.Attrs; readonly at: number; readonly attrs: Attrs }
@@ -48,6 +49,7 @@ interface Line {
 interface Collected {
   readonly schema: Schema;
   readonly changes: Change[];
+  readonly adopt: Adopt | undefined;
 }
 
 interface Region {
@@ -419,15 +421,37 @@ const gapChange = (
   return at + size;
 };
 
-const commonEnds = (before: readonly ContentNode[], after: readonly ContentNode[]): Ends => {
+const commonEnds = (
+  before: readonly ContentNode[],
+  after: readonly ContentNode[],
+  same: (left: ContentNode | undefined, right: ContentNode | undefined) => boolean = sameNode,
+): Ends => {
   const limit = Math.min(before.length, after.length);
-  const head = commonRun(limit, (index) => sameNode(before[index], after[index]));
+  const head = commonRun(limit, (index) => same(before[index], after[index]));
 
   const tail = commonRun(limit - head, (index) =>
-    sameNode(before[before.length - 1 - index], after[after.length - 1 - index]),
+    same(before[before.length - 1 - index], after[after.length - 1 - index]),
   );
 
   return { head, tail };
+};
+
+const matched = (
+  collected: Collected,
+  left: ContentNode | undefined,
+  right: ContentNode | undefined,
+): boolean => {
+  if (!sameNode(left, right)) {
+    return false;
+  }
+  if (
+    left !== right &&
+    left?.kind === ContentNodeKind.Element &&
+    right?.kind === ContentNodeKind.Element
+  ) {
+    collected.adopt?.(left, right);
+  }
+  return true;
 };
 
 const blockChanges = (
@@ -436,7 +460,7 @@ const blockChanges = (
   after: readonly ContentNode[],
   start: number,
 ): void => {
-  const { head, tail } = commonEnds(before, after);
+  const { head, tail } = commonEnds(before, after, (one, other) => matched(collected, one, other));
   const removed = before.slice(head, before.length - tail);
   const added = after.slice(head, after.length - tail);
   let at = start + sizeOf(before, 0, head);
@@ -487,13 +511,19 @@ const nodeChanges = (
   ) {
     return;
   }
-  if (!sameAttrs(before.attrs, after.attrs)) {
+  const sameAttributes = sameAttrs(before.attrs, after.attrs);
+
+  if (!sameAttributes) {
     collected.changes.push({ kind: ChangeKind.Attrs, at, attrs: after.attrs });
   }
-  if (sameContent(before.content, after.content)) {
+  if (!sameContent(before.content, after.content)) {
+    childrenChanges(collected, before, after, at + 1);
     return;
   }
-  childrenChanges(collected, before, after, at + 1);
+  if (!sameAttributes) {
+    return;
+  }
+  collected.adopt?.(before, after);
 };
 
 const isReplace = (change: Change): change is Replace => change.kind === ChangeKind.Replace;
@@ -605,8 +635,9 @@ export const applyDocChange = (
   before: ElementNode,
   after: ElementNode,
   schema: Schema,
+  adopt?: Adopt,
 ): Transaction => {
-  const collected: Collected = { schema, changes: [] };
+  const collected: Collected = { schema, changes: [], adopt };
 
   childrenChanges(collected, before, after, 0);
 

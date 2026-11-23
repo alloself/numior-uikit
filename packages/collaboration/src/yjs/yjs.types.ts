@@ -26,6 +26,8 @@ export interface YjsBinding {
 
 export type Fields = Readonly<Record<string, unknown>>;
 
+export type Adopt = (current: ElementNode, read: ElementNode) => void;
+
 export type ReadBlock = ElementNode | typeof Skipped | undefined;
 
 export type Known = WeakMap<XmlElement, ElementNode>;
@@ -47,6 +49,7 @@ export interface TreeStore extends ReadContext {
   readonly loose: Set<string>;
   readonly shifted: Set<string>;
   readonly copies: Set<string>;
+  readonly places: Map<string, number>;
 }
 
 export type RepairTarget =

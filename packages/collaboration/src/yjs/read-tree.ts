@@ -1,4 +1,11 @@
-import { ContentNodeKind, type ContentNode, type ElementNode } from '@numior/editor-core';
+import {
+  ContentNodeKind,
+  nodeSize,
+  sameAttrs,
+  type Attrs,
+  type ContentNode,
+  type ElementNode,
+} from '@numior/editor-core';
 import { Array as YArray } from 'yjs';
 import {
   entryType,
@@ -26,6 +33,7 @@ import {
 interface Reading {
   readonly store: TreeStore;
   readonly full: boolean;
+  readonly kids: ReadonlyMap<string, readonly string[]>;
 }
 
 interface Block {
@@ -34,6 +42,10 @@ interface Block {
   readonly type: string;
   readonly fields: Fields;
 }
+
+const WIDE = 64;
+
+const NEAR = 4;
 
 const sameChildren = (content: readonly ContentNode[], children: readonly ContentNode[]): boolean =>
   content.length === children.length && content.every((node, at) => node === children[at]);
@@ -119,6 +131,78 @@ const contentOf = (
   return childrenOf(reading, id, list instanceof YArray ? list : undefined, cached);
 };
 
+const idOf = (node: ContentNode | undefined): string | undefined =>
+  node?.kind === ContentNodeKind.Element ? node.id : undefined;
+
+const placeOf = (store: TreeStore, parent: string, cached: ElementNode, id: string): number => {
+  const hint = store.places.get(parent);
+
+  if (hint !== undefined && idOf(cached.content[hint]) === id) {
+    return hint;
+  }
+  return cached.content.findIndex((child) => idOf(child) === id);
+};
+
+const patchedNode = (
+  reading: Reading,
+  parent: string,
+  cached: ElementNode,
+): ElementNode | undefined => {
+  const kids = reading.kids.get(parent) ?? [];
+
+  if (cached.content.length < WIDE || kids.length === 0 || kids.length > NEAR) {
+    return undefined;
+  }
+
+  const content = cached.content.slice();
+  let size = cached.size;
+
+  for (const id of kids) {
+    const at = placeOf(reading.store, parent, cached, id);
+    const old = content[at];
+    const node = old === undefined ? undefined : readBlock(reading, id, parent);
+
+    if (old === undefined || node === undefined || node === Skipped) {
+      return undefined;
+    }
+    content[at] = node;
+    size += node.size - nodeSize(old);
+    reading.store.places.set(parent, at);
+  }
+  return { ...cached, content, size };
+};
+
+const patchedHolder = (
+  reading: Reading,
+  block: Block,
+  cached: ElementNode | undefined,
+  attrs: Attrs,
+): ElementNode | undefined =>
+  cached === undefined ||
+  reading.full ||
+  cached.type !== block.type ||
+  !sameAttrs(cached.attrs, attrs) ||
+  !holdsChildren(reading.store.schema, block.type)
+    ? undefined
+    : patchedNode(reading, block.id, cached);
+
+const kept = (store: TreeStore, id: string, node: ElementNode): ElementNode => {
+  store.cache.set(id, node);
+  store.stale.delete(id);
+  return node;
+};
+
+const blockOf = (store: TreeStore, id: string, entry: Entry): Block | undefined => {
+  const fields = fieldsOf(entry);
+  const type = entryType(store, entry, fields);
+
+  return typeof type === 'string' &&
+    store.schema.nodes.has(type) &&
+    fits(entry, kindOf(store.schema, type))
+    ? { id, entry, type, fields }
+    : undefined;
+};
+
 const nodeOf = (reading: Reading, id: string, entry: Entry): ElementNode | undefined => {
   const { store } = reading;
   const cached = store.cache.get(id);
@@ -128,32 +212,28 @@ const nodeOf = (reading: Reading, id: string, entry: Entry): ElementNode | undef
     return cached;
   }
 
-  const fields = fieldsOf(entry);
-  const type = entryType(store, entry, fields);
+  const block = blockOf(store, id, entry);
+  const attrs = block === undefined ? undefined : encodedAttrs(block.fields);
 
-  if (
-    typeof type !== 'string' ||
-    !store.schema.nodes.has(type) ||
-    !fits(entry, kindOf(store.schema, type))
-  ) {
+  if (block === undefined || attrs === undefined) {
     return undefined;
   }
 
-  const attrs = encodedAttrs(fields);
-  const content = contentOf(reading, { id, entry, type, fields }, cached);
+  const patched = patchedHolder(reading, block, cached, attrs);
 
-  if (attrs === undefined || content === undefined) {
+  if (patched !== undefined) {
+    return kept(store, id, patched);
+  }
+
+  const content = contentOf(reading, block, cached);
+
+  if (content === undefined) {
     return undefined;
   }
   if (fresh && sameChildren(cached.content, content)) {
     return cached;
   }
-
-  const node = store.schema.element(type, { id, attrs, content });
-
-  store.cache.set(id, node);
-  store.stale.delete(id);
-  return node;
+  return kept(store, id, store.schema.element(block.type, { id, attrs, content }));
 };
 
 const freshLeaf = (store: TreeStore, id: string): ElementNode | undefined => {
@@ -280,18 +360,57 @@ const rootContent = (reading: Reading): ElementNode[] | undefined => {
   return rescued(reading, content) ? content : undefined;
 };
 
+const kidsOf = (store: TreeStore): ReadonlyMap<string, readonly string[]> => {
+  const kids = new Map<string, string[]>();
+
+  for (const id of store.stale) {
+    if (id === ROOT_PARENT) {
+      continue;
+    }
+
+    const parent = store.parents.get(id) ?? ROOT_PARENT;
+    const listed = kids.get(parent);
+
+    if (listed === undefined) {
+      kids.set(parent, [id]);
+      continue;
+    }
+    listed.push(id);
+  }
+  return kids;
+};
+
+const cleared = (store: TreeStore): ReadonlyMap<string, readonly string[]> => {
+  store.parents.clear();
+  store.loose.clear();
+  store.shifted.clear();
+  store.copies.clear();
+  store.places.clear();
+  return new Map();
+};
+
+const patchedRoot = (reading: Reading, shell: ElementNode): ElementNode | undefined => {
+  const cached = reading.store.cache.get(ROOT_PARENT);
+
+  return reading.full ||
+    cached === undefined ||
+    cached.id !== shell.id ||
+    cached.type !== shell.type ||
+    !reading.store.stale.has(ROOT_PARENT)
+    ? undefined
+    : patchedNode(reading, ROOT_PARENT, cached);
+};
+
 export const rootOf = (
   store: TreeStore,
   shell: ElementNode,
   full: boolean,
 ): ElementNode | undefined => {
-  const reading: Reading = { store, full };
+  const reading: Reading = { store, full, kids: full ? cleared(store) : kidsOf(store) };
+  const patched = patchedRoot(reading, shell);
 
-  if (full) {
-    store.parents.clear();
-    store.loose.clear();
-    store.shifted.clear();
-    store.copies.clear();
+  if (patched !== undefined) {
+    return kept(store, ROOT_PARENT, patched);
   }
 
   const content = rootContent(reading);
@@ -310,7 +429,5 @@ export const rootOf = (
       ? cached
       : store.schema.element(shell.type, { id: shell.id, attrs: shell.attrs, content });
 
-  store.cache.set(ROOT_PARENT, root);
-  store.stale.delete(ROOT_PARENT);
-  return root;
+  return kept(store, ROOT_PARENT, root);
 };

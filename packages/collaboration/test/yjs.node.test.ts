@@ -65,6 +65,16 @@ const BLOCKS = 'document';
 
 const LATENCY_BUDGET_MS = 100;
 
+const KEYSTROKE_BUDGET_MS = 2;
+
+const KEYSTROKES = 20;
+
+const WIDE_RUNS = 60;
+
+const WIDE_ROUNDS = 12;
+
+const WIDE_COUNT = 70;
+
 const MOVABLE = ['a', 'b', 'c', 'd'] as const;
 
 const CARRIED = ['a', 'b', 'c', 'd', 'e', 'q', 'q2'] as const;
@@ -1209,6 +1219,54 @@ describe('yjsBinding', () => {
     },
   );
 
+  it(
+    'takes in a keystroke of someone else in a document of eighteen thousand blocks within two milliseconds',
+    { tags: ['budget'] },
+    () => {
+      const [left, right] = pair(numbered(18_000));
+      const times: number[] = [];
+
+      for (let stroke = 0; stroke < KEYSTROKES; stroke += 1) {
+        left.insertAt('p9000', 'x');
+
+        const update = encodeStateAsUpdate(left.ydoc, encodeStateVector(right.ydoc));
+        const started = performance.now();
+
+        applyUpdate(right.ydoc, update);
+        times.push(performance.now() - started);
+      }
+
+      expect(times.toSorted((one, other) => one - other)[KEYSTROKES / 2]).toBeLessThan(
+        KEYSTROKE_BUDGET_MS,
+      );
+
+      expect(right.text()).toBe(left.text());
+    },
+  );
+
+  it('carries several edits of one update in a document with wide lists to the other side', () => {
+    fc.assert(
+      fc.property(fc.integer({ min: 0, max: 2_147_483_647 }), (seed) => {
+        const random = createRandom(seed);
+        const [left, right] = pair(wideDoc());
+        const ids = paragraphIds(left.state().doc.root);
+
+        for (let round = 0; round < WIDE_ROUNDS; round += 1) {
+          const [writer, reader] = random.chance(0.5) ? [left, right] : [right, left];
+          const edits = random.int(1, 6);
+
+          for (let edit = 0; edit < edits; edit += 1) {
+            editedLine(writer, random, ids);
+          }
+          send(writer, reader);
+
+          expect(reader.state().doc.root).toEqual(writer.state().doc.root);
+        }
+      }),
+      { numRuns: WIDE_RUNS },
+    );
+  });
+
   it('keeps the caret of the receiver in place across a remote insert', () => {
     const [left, right] = pair(docOf(paragraph('a', 'Hello')));
 
@@ -1347,6 +1405,55 @@ const meshOf = (clients: readonly Client[]): void => {
       send(one, other);
     }
   }
+};
+
+const wideDoc = (): Doc =>
+  docOf(
+    ...Array.from({ length: WIDE_COUNT }, (_unused, index) =>
+      paragraph(`w${String(index)}`, `Top ${String(index)}`),
+    ),
+    fixtureSchema.element('ordered_list', {
+      id: 'list',
+      content: Array.from({ length: WIDE_COUNT }, (_unused, index) =>
+        fixtureSchema.element('list_item', {
+          id: `i${String(index)}`,
+          content: [paragraph(`ip${String(index)}`, `Item ${String(index)}`)],
+        }),
+      ),
+    }),
+    quote(
+      'wide-quote',
+      ...Array.from({ length: WIDE_COUNT }, (_unused, index) =>
+        paragraph(`q${String(index)}`, `Quoted ${String(index)}`),
+      ),
+    ),
+  );
+
+const HIGH_SURROGATES = /[\uD800-\uDBFF]/u;
+
+const wholeAt = (text: string, offset: number): number =>
+  HIGH_SURROGATES.test(text.charAt(offset - 1)) ? offset + 1 : offset;
+
+const editedLine = (client: Client, random: Random, ids: readonly string[]): void => {
+  const id = ids[random.int(0, ids.length - 1)] ?? 'w0';
+
+  client.apply((from) => {
+    const block = from.doc.byId(id);
+    const text = block === undefined ? '' : textOf(block);
+    const start = (from.doc.positionOf(id) ?? 0) + 1;
+    const at = start + wholeAt(text, random.int(0, text.length));
+
+    if (random.chance(0.1)) {
+      return from.tr.setNodeAttrs(from.doc.positionOf('list') ?? 0, { start: random.int(1, 9) });
+    }
+    if (random.chance(0.2) && text.length > 1) {
+      return from.tr.addMark(start, start + text.length, fixtureSchema.mark('bold'));
+    }
+    if (random.chance(0.3) && text.length > 0) {
+      return from.tr.delete(start, start + wholeAt(text, random.int(1, text.length)));
+    }
+    return from.tr.insertText(random.pick(['a', 'bc', 'Ж', '😀']), at);
+  });
 };
 
 const paragraphIds = (node: ElementNode): readonly string[] =>
