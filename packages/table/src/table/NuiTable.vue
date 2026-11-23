@@ -244,7 +244,6 @@ import {
   useTemplateRef,
   watch,
 } from 'vue';
-import { useDevicePixelRatio, useResizeObserver } from '@vueuse/core';
 import {
   createIntent,
   createVersion,
@@ -272,14 +271,14 @@ import { anchorOf } from './table-merges';
 import { useTextMeasure } from './use-text-measure';
 import { forgetCellReads } from './table-cells';
 import { cellTextOf, cellValueOf, engineColumnOf } from './table-format';
-import { columnTreeOf, headerBandsOf } from './table-columns';
+import { columnTreeOf } from './table-columns';
 import { orderLeaves } from './table-order';
-import { dataKeysOf, pinsFit, rowCellsOf, rowHeadWidth, tableLayout } from './table-layout';
 import { pageWindowOf, resolvePagination } from './table-pages';
 import NuiTableFilter from './NuiTableFilter.vue';
 import NuiTableFooterCell from './NuiTableFooterCell.vue';
 import NuiTableHeaderMarks from './NuiTableHeaderMarks.vue';
 import { useCellMenuArea } from './areas/cell-menu-area';
+import { useColumnsArea } from './areas/columns-area';
 import { useClipboardArea } from './areas/clipboard-area';
 import { useEditingArea } from './areas/editing-area';
 import { useFocusArea } from './areas/focus-area';
@@ -294,21 +293,16 @@ import { useWindowsArea } from './areas/windows-area';
 import type { TableContext } from './areas/table-context';
 import { boxOf } from './table-ranges';
 import type { TableFilterTarget } from './use-table-header';
-import { headFrameOf, headToolsOf, leastWidthOf } from './table-head-tools';
-import { useTableColumnOrder } from './use-table-column-order';
 import { useTableQuery } from './use-table-query';
 import { useTableWarmup } from './use-table-warmup';
-import { useTableResize } from './use-table-resize';
 import { provideTableHandles } from './table-handles';
 import { keepEqual } from './table-values';
 import type { TableSelectionKey } from './use-table-selection';
 import {
   NuiTableRowHeight,
   NuiTableSize,
-  TablePlacementKind,
   TableStatusSlot,
   type NuiTableCellSlot,
-  type NuiTableColumn,
   type NuiTableColumnOrder,
   type NuiTableDraft,
   type NuiTableEvents,
@@ -426,27 +420,6 @@ const tree = computed(() => columnTreeOf(columns));
 const orderedLeaves = computed(() => orderLeaves(tree.value.leaves, columnOrder.value));
 const filterTarget = shallowRef<TableFilterTarget | null>(null);
 const filterOpen = ref(false);
-
-const leastWidths = computed<Readonly<Record<string, number>>>((previous) => {
-  const headFrame = headFrameOf(size, gridlines);
-
-  const facts = {
-    sort: sortNow.value,
-    filters: filtersNow.value,
-    pins: pins.value,
-    menu: columnMenu !== false,
-    opened: filterOpen.value ? filterTarget.value?.key : undefined,
-  };
-
-  const next = Object.fromEntries(
-    orderedLeaves.value.map((column) => [
-      column.key,
-      leastWidthOf(headToolsOf(column, facts), headFrame),
-    ]),
-  );
-
-  return keepEqual(next, previous);
-});
 
 const gridId = useControlId(() => id);
 const resolvedLocale = useLocale(() => locale);
@@ -591,10 +564,6 @@ const rowHead = computed<NuiTableRowHeaders<T> | undefined>(() => {
   return rowHeaders === true ? NO_ROW_HEAD : rowHeaders;
 });
 
-const rowHeadSize = computed(() =>
-  rowHead.value === undefined ? 0 : rowHeadWidth(totalCount.value, rowHead.value.width),
-);
-
 const sizedHeights = computed(() => (source === undefined ? rowHeights.value : NO_HEIGHTS));
 
 const quickKeys = computed(() => {
@@ -663,60 +632,42 @@ const warming = useTableWarmup({
 
 const active = ref<NuiTableCellPosition>({ row: rowCount.value > 0 ? 0 : -1, col: 0 });
 
-const room = shallowRef(0);
-
-const measureRoom = (): void => {
-  room.value = viewport.value?.clientWidth ?? 0;
-};
-
-useResizeObserver(viewport, measureRoom);
-onMounted(measureRoom);
-const { pixelRatio } = useDevicePixelRatio();
-const scale = shallowRef(1);
-
-onMounted(() => {
-  watch(
-    pixelRatio,
-    (ratio) => {
-      scale.value = ratio;
-    },
-    { immediate: true },
-  );
+const {
+  layout,
+  headRows,
+  columnAt,
+  dataKeys,
+  dataOffset,
+  dataOffsets,
+  rowCells,
+  bands,
+  slack,
+  resize,
+  fitColumn,
+  order,
+} = useColumnsArea(table, {
+  root,
+  tree: () => tree.value,
+  ordered: () => orderedLeaves.value,
+  widths,
+  order: columnOrder,
+  pins,
+  hidden,
+  sorting: () => sortNow.value,
+  filters: () => filtersNow.value,
+  menu: () => columnMenu !== false,
+  opened: () => (filterOpen.value ? filterTarget.value?.key : undefined),
+  size: () => size,
+  gridlines: () => gridlines,
+  selectable: () => selectOn.value,
+  wrap: () => height === undefined || rowHeight === NuiTableRowHeight.Auto,
+  rowHead: () => rowHead.value,
+  totalCount: () => totalCount.value,
+  shown: (): readonly number[] => shownCentre.value,
+  focusHeader: (key): void => {
+    focus.focusHeader({ kind: 'column', key });
+  },
 });
-
-const flexing = computed(() =>
-  orderedLeaves.value.some((column) => (column.flex ?? 0) > 0 && !(column.key in widths.value)),
-);
-
-const layoutOptions = computed(() => ({
-  pins: pins.value,
-  hidden: hidden.value,
-  widths: widths.value,
-  least: leastWidths.value,
-  select: selectOn.value,
-  room: flexing.value ? room.value : 0,
-  wrap: height === undefined || rowHeight === NuiTableRowHeight.Auto,
-  rowHeader: rowHeadSize.value,
-  scale: scale.value,
-}));
-
-const pinnedLayout = computed(() =>
-  tableLayout(orderedLeaves.value, { ...layoutOptions.value, sticky: true }),
-);
-
-const sticky = computed(() => pinsFit(pinnedLayout.value, room.value));
-
-const layout = computed(() =>
-  sticky.value
-    ? pinnedLayout.value
-    : tableLayout(orderedLeaves.value, { ...layoutOptions.value, sticky: false }),
-);
-
-const headRows = computed(() => tree.value.depth + 1);
-
-const columnByKey = computed(
-  () => new Map(tree.value.leaves.map((column) => [column.key, column])),
-);
 
 const labelText = computed(() => label ?? messages.value.label);
 const hasCaption = computed(() => caption !== undefined || slots.caption !== undefined);
@@ -767,10 +718,6 @@ const {
   },
 });
 
-const rowCells = computed(() => rowCellsOf(layout.value, shownCentre.value));
-
-const bands = computed(() => headerBandsOf(layout.value, tree.value, rowCells.value));
-
 const rootStyle = computed(() => ({
   '--_row': `${rowSize.value}px`,
   '--_head-rows': String(headRows.value),
@@ -781,20 +728,6 @@ const rootStyle = computed(() => ({
   '--_end': `${layout.value.endWidth}px`,
   '--_canvas': `${layout.value.canvasWidth}px`,
 }));
-
-const slack = computed(() => room.value > layout.value.canvasWidth);
-
-watch(
-  room,
-  (width) => {
-    if (width > 0) {
-      root.value?.style.setProperty('--_room', `${width}px`);
-    } else {
-      root.value?.style.removeProperty('--_room');
-    }
-  },
-  { flush: 'post' },
-);
 
 const rootClass = computed(() => [
   `nui-table--size-${size}`,
@@ -830,15 +763,6 @@ const status = computed<TableStatusSlot | undefined>(() => {
   return rowCount.value === 0 ? TableStatusSlot.Empty : undefined;
 });
 
-const columnAt = (key: string): NuiTableColumn<T> => {
-  const column = columnByKey.value.get(key);
-
-  if (column === undefined) {
-    throw new Error(`NuiTable has no column "${key}"`);
-  }
-  return column;
-};
-
 const rowAt = (position: number): T => {
   const node = engine.value.nodeAt(pageStart.value + position);
 
@@ -847,56 +771,6 @@ const rowAt = (position: number): T => {
   }
   return node.row;
 };
-
-const resize = useTableResize<T>({
-  widths,
-  layout: () => layout.value,
-  room: () => room.value,
-  columnAt,
-  leastOf: (key) => leastWidths.value[key] ?? 0,
-  isRtl: direction.isRtl,
-  messages,
-  announce: (text) => {
-    announcement.value = text;
-  },
-  resized: (changes) => {
-    emit('columnResize', changes);
-  },
-});
-
-const fitColumn = (key: string): void => {
-  let taken = false;
-
-  emit('columnFit', {
-    key,
-    preventDefault: () => {
-      taken = true;
-    },
-  });
-
-  if (taken) {
-    return;
-  }
-
-  resize.reset(key);
-};
-
-const order = useTableColumnOrder<T>({
-  order: columnOrder,
-  leaves: () => tree.value.leaves,
-  layout: () => layout.value,
-  viewport: () => viewport.value,
-  frame: () => frame.value,
-  columnAt,
-  isRtl: direction.isRtl,
-  messages,
-  announce: (text) => {
-    announcement.value = text;
-  },
-  refocus: (key) => {
-    focus.focusHeader({ kind: 'column', key });
-  },
-});
 
 const { header, menu, menuAnchor, valueLabel, loadValues } = useHeaderArea(table, {
   sort,
@@ -979,28 +853,6 @@ const {
   focusCell: (visual) => {
     focus.focusCell(visual);
   },
-});
-
-const dataKeys = computed(() => dataKeysOf(layout.value));
-
-const dataOffset = computed(() =>
-  Math.max(
-    0,
-    layout.value.visual.findIndex((column) => column.kind === TablePlacementKind.Data),
-  ),
-);
-
-const dataOffsets = computed(() => {
-  const offsets = [0];
-
-  for (const column of layout.value.visual) {
-    if (column.kind !== TablePlacementKind.Data) {
-      continue;
-    }
-
-    offsets.push((offsets.at(-1) ?? 0) + column.width);
-  }
-  return offsets;
 });
 
 const {
