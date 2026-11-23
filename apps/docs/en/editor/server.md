@@ -411,6 +411,9 @@ and throws an error instead.
 `read()` returns the shared document once it has arrived, and `seed(doc)` fills an empty one. There is no presence: carets and avatars need a
 channel of your own.
 
+The `Y.Doc` stays out of reactive state: in a plain constant, a `shallowRef` or under `markRaw`.
+Behind a Vue proxy Yjs cannot find its own types and throws when it encodes an update.
+
 The second argument names the document inside the `Y.Doc`. Blocks live in a `Y.Map` of that name,
 each under its id. The order of top-level blocks lives in a `Y.Array` named `description:order`.
 
