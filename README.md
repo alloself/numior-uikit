@@ -16,31 +16,13 @@
 
 ### 🖥️ Документация
 
-Документация на русском и английском живёт на [ui.numior.ru](https://ui.numior.ru/), из
-репозитория её запускает команда `pnpm docs:dev`.
+Документация — на [ui.numior.ru](https://ui.numior.ru/).
 
 ### ⚡ Быстрый старт
-
-До версии 1.0 пакеты выходят в npm как alpha с номерами `1.0.0-alpha.N`, и API между ними ещё
-меняется:
 
 ```sh
 pnpm add @numior/kit
 ```
-
-Плагин Vite и стили подключаются по [руководству](https://ui.numior.ru/guide/getting-started).
-Чтобы запустить кит из репозитория, нужны Node из `.node-version` и pnpm через Corepack:
-
-```sh
-git clone https://github.com/alloself/numior-uikit.git
-cd numior-uikit
-nvm install $(cat .node-version)
-corepack enable
-pnpm install --frozen-lockfile
-pnpm dev
-```
-
-Playground откроется на `http://localhost:5173`.
 
 Приложение на Vite подключает кит плагином, стилями и плагином Vue:
 
@@ -70,6 +52,9 @@ createApp(App)
   .use(createNuiConfig({ locale: 'ru-RU' }))
   .mount('#app');
 ```
+
+Подробнее — в [руководстве по установке](https://ui.numior.ru/guide/getting-started). До 1.0
+пакеты выходят как alpha `1.0.0-alpha.N`, и API между ними ещё меняется.
 
 ### 🚀 Введение
 

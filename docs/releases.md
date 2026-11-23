@@ -14,10 +14,15 @@ playground всегда приватные. Независимость подк�
 Пакеты публикуются под npm-тегом `latest`: `pnpm add @numior/kit` ставит свежую alpha. На 1.0
 `latest` перейдёт на `1.0.0`.
 
-Релиз запускает кнопка **Actions → CI → Run workflow** на master. В том же запуске идут quality и
-browsers, затем job `release` (если `NUMIOR_RELEASE_ENABLED=true`) и job `docs`, который выкладывает
-сайт. Если с прошлой alpha были только `docs`, `test`, `chore`, `ci` или `refactor`, npm-шаг
-ничего не выпускает, а сайт обновляется. Push в master релиз не запускает.
+Релиз запускает кнопка **Actions → CI → Run workflow** на master. В том же запуске идёт quality
+(`pnpm check:ci`), затем job `release` (если `NUMIOR_RELEASE_ENABLED=true`) и job `docs`, который
+выкладывает сайт. Если с прошлой alpha были только `docs`, `test`, `chore`, `ci` или `refactor`,
+npm-шаг ничего не выпускает, а сайт обновляется. Push в master релиз не запускает.
+
+Бюджеты времени и браузерные сценарии CI не запускает: на стандартном раннере GitHub график
+строится за 113 мс при бюджете 100, а e2e идёт 2,5–3 часа. Поэтому перед кнопкой на свежем
+master локально проходят `pnpm check` (это `check:ci` и `test:budget`) и `pnpm test:e2e` в образе
+Playwright ([CONTRIBUTING.md](../CONTRIBUTING.md)).
 
 - `pnpm release:check` проверяет правила SemVer, блокировки, номера alpha, синхронные версии и
   реальные tarball с заменой `workspace:*`, не обращаясь к npm/GitHub для публикации.

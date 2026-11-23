@@ -51,7 +51,8 @@ pnpm dev
 
 | Команда                              | Проверка                                                                                                     |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| `pnpm check`                         | Формат, lint, типы, анализ, unit, build, artifacts, docs; шаги идут через `vp run --cache`                   |
+| `pnpm check`                         | `check:ci` и бюджеты времени (`test:budget`)                                                                 |
+| `pnpm check:ci`                      | Формат, lint, типы, анализ, unit, build, artifacts, docs; шаги идут через `vp run --cache`                   |
 | `pnpm lint`                          | `vp lint` (Oxlint) для JS/TS и eslint-plugin-vue для шаблонов                                                |
 | `pnpm format` / `pnpm format:check`  | `vp fmt` (Oxfmt): запись / проверка                                                                          |
 | `vp run typecheck`                   | vue-tsc: Vue SFC и TypeScript strict, декларации `.vue.d.ts` для type-aware `vp lint`                        |
@@ -77,12 +78,14 @@ pnpm dev
 `pnpm exec playwright install --with-deps`. Playwright 1.63 не поддерживает Ubuntu 20.04: там
 тесты идут в официальном образе `mcr.microsoft.com/playwright:v1.63.0-noble` с Node 24.21.0.
 
-CI ставит Node, pnpm и `vp` через `voidzero-dev/setup-vp`, хранит кеш Vite Task между запусками,
-запускает `pnpm check`, coverage и всю браузерную матрицу.
+CI ставит Node, pnpm и `vp` через `voidzero-dev/setup-vp`, хранит кеш Vite Task между запусками и
+запускает `pnpm check:ci`. Бюджеты времени и браузерная матрица идут локально: стандартный раннер
+GitHub не держит бюджеты, а e2e на нём занимает 2,5–3 часа.
 
 ## Релизы
 
-Conventional Commits, commitlint и semantic-release с общей версией пакетов настроены, но
-публикация выключена до 1.0. `pnpm release:check` входит в `pnpm check` и проверяет процесс без
-публикации. Включение, npm Trusted Publishing и восстановление описаны в
+Conventional Commits, commitlint и semantic-release с общей версией пакетов настроены; до 1.0
+библиотеки выходят как `1.0.0-alpha.N` по кнопке релиза. `pnpm release:check` входит в
+`pnpm check` и проверяет процесс без публикации. Кнопка, npm Trusted Publishing и восстановление
+описаны в
 [docs/releases.md](docs/releases.md).
