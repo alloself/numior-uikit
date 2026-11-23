@@ -207,6 +207,7 @@ export const yjsBinding = (ydoc: YDoc, name: string, options: YjsBindingOptions)
     stale: new Set(),
     parents: new Map(),
     loose: new Set(),
+    shifted: new Set(),
     copies: new Set(),
   };
 

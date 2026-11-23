@@ -21,6 +21,13 @@ interface Window {
   readonly end: number;
 }
 
+interface Span {
+  readonly content: readonly ContentNode[];
+  readonly head: number;
+  readonly tail: number;
+  readonly count: number;
+}
+
 interface Left {
   readonly node: ElementNode;
   readonly from: string;
@@ -128,6 +135,28 @@ const syncList = (
 
 const wholeList = (list: YArray<unknown>): Window => ({ start: 0, end: list.length });
 
+const idAt = (content: readonly ContentNode[], at: number): string | undefined => {
+  const node = content[at];
+
+  return node?.kind === ContentNodeKind.Element ? node.id : undefined;
+};
+
+const windowById = (list: YArray<unknown>, span: Span): Window => {
+  const items = list.toArray();
+  const before = idAt(span.content, span.head - 1);
+  const after = idAt(span.content, span.content.length - span.tail);
+  const start = before === undefined ? 0 : items.indexOf(before) + 1;
+  const end = after === undefined ? items.length : items.indexOf(after);
+  const lost = (before !== undefined && start === 0) || end < start;
+
+  return lost ? wholeList(list) : { start, end };
+};
+
+const windowOf = (store: TreeStore, list: YArray<unknown>, parent: string, span: Span): Window =>
+  store.shifted.has(parent)
+    ? windowById(list, span)
+    : { start: span.head, end: span.head + span.count };
+
 const syncContainer = (
   writing: Writing,
   parent: string,
@@ -161,7 +190,17 @@ const syncContainer = (
     store.loose.delete(parent);
     store.copies.delete(parent);
   } else if (list !== undefined && !sameIds(next, previous)) {
-    syncList(store, list, next, { start: head, end: head + previous.length });
+    syncList(
+      store,
+      list,
+      next,
+      windowOf(store, list, parent, {
+        content: previousContent,
+        head,
+        tail,
+        count: previous.length,
+      }),
+    );
   }
   for (const node of next) {
     store.parents.set(node.id, parent);

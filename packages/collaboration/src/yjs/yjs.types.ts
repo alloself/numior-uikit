@@ -45,6 +45,7 @@ export interface TreeStore extends ReadContext {
   readonly stale: Set<string>;
   readonly parents: Map<string, string>;
   readonly loose: Set<string>;
+  readonly shifted: Set<string>;
   readonly copies: Set<string>;
 }
 

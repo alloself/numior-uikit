@@ -164,6 +164,24 @@ const freshLeaf = (store: TreeStore, id: string): ElementNode | undefined => {
     : cached;
 };
 
+const skipped = (
+  store: TreeStore,
+  parent: string,
+  repeated: boolean,
+  id: string | undefined,
+): typeof Skipped => {
+  if (id !== undefined && !repeated) {
+    store.shifted.add(parent);
+    return Skipped;
+  }
+  store.loose.add(parent);
+
+  if (repeated) {
+    store.copies.add(parent);
+  }
+  return Skipped;
+};
+
 const readBlock = (reading: Reading, item: unknown, parent: string): ReadBlock => {
   const { store } = reading;
   const id = typeof item === 'string' ? item : undefined;
@@ -178,12 +196,7 @@ const readBlock = (reading: Reading, item: unknown, parent: string): ReadBlock =
   const entry = id === undefined || repeated ? undefined : store.blocks.get(id);
 
   if (id === undefined || entry === undefined) {
-    store.loose.add(parent);
-
-    if (repeated) {
-      store.copies.add(parent);
-    }
-    return Skipped;
+    return skipped(store, parent, repeated, id);
   }
   if (!isEntry(entry)) {
     return undefined;
@@ -277,6 +290,7 @@ export const rootOf = (
   if (full) {
     store.parents.clear();
     store.loose.clear();
+    store.shifted.clear();
     store.copies.clear();
   }
 

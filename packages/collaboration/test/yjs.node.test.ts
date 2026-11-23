@@ -758,6 +758,39 @@ describe('yjsBinding', () => {
     expect(left.binding.read()?.root.content).toEqual(left.state().doc.root.content);
   });
 
+  it('writes in the right place of a list that keeps the id of a block deleted while it moved', () => {
+    const [left, right] = pair(
+      docOf(
+        paragraph('a', 'A'),
+        paragraph('b', 'B'),
+        paragraph('c', 'C'),
+        paragraph('d', 'D'),
+        paragraph('e', 'E'),
+      ),
+    );
+
+    left.apply((from) => {
+      const at = from.doc.positionOf('b') ?? 0;
+
+      return from.tr.delete(at, at + (from.doc.byId('b')?.size ?? 0));
+    });
+
+    carry(right, 'b', 'd');
+    exchange(left, right);
+
+    left.apply((from) => from.tr.insert(from.doc.positionOf('e') ?? 0, [paragraph('n', 'N')]));
+    send(left, right);
+
+    expect(right.text()).toBe('A|C|D|N|E');
+
+    left.apply((from) => from.tr.delete(0, from.doc.byId('a')?.size ?? 0));
+    carry(left, 'e', 'd');
+    send(left, right);
+
+    expect(right.text()).toBe('C|E|D|N');
+    expect(right.binding.read()?.root.content).toEqual(left.state().doc.root.content);
+  });
+
   it('has nothing to read in an empty fragment', () => {
     expect(clientOf(docOf(paragraph('a', ''))).binding.read()).toBeUndefined();
   });
