@@ -85,10 +85,11 @@ scroll starts at the right edge.
 
 The sticky block works horizontally too: pass the axis as the third argument,
 `useVirtualFrame(container, frame, 'x')`, and the limits to `inset-inline-start` and
-`inset-inline-end`. When the container scrolls on both axes, split the axes between two elements:
-a wrapper sticks vertically and holds the width spacers, and the block inside it sticks
-horizontally. The Numior UI table works this way, so its cells stay on screen during fast
-scrolling in either direction.
+`inset-inline-end`.
+
+When the container scrolls on both axes, split the axes between two elements. A wrapper sticks
+vertically and holds the width spacers, and the block inside it sticks horizontally. The Numior UI
+table works this way, so its cells stay on screen during fast scrolling in either direction.
 
 `maxSize` keeps the list height below the browser limit. Then `canvasSize` is the height in the
 DOM and `scrollTop` the position in the full list. `items[].offset` is the position of a row in
