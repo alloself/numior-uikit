@@ -1,4 +1,5 @@
-import type { Locator, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import type { Probe } from './layers';
 
 export interface KitBox {
   readonly name: string;
@@ -27,10 +28,6 @@ const KIT_BOXES = `[class*="nui-"]:not(${THEME_SCOPES})`;
 const RUNNING_TEXT = '.nui-content, .nui-code, .nui-prose, .nui-chart, [contenteditable], svg';
 
 const SETTLE_MS = 1200;
-
-const OPEN_FRAMES = 3;
-
-const CLOSE_FRAMES = 2;
 
 const TOLERANCE = 0.02;
 
@@ -73,12 +70,10 @@ export const offPixel = (pixels: KitPixels): string[] => {
   return [...found].toSorted();
 };
 
-const kitBoxesOf = (scope: Locator): Promise<KitBox[]> =>
-  scope.evaluate(
-    (root, { kit, running }) => {
-      const boxes: KitBox[] = [];
-
-      const holderOf = (element: HTMLElement): HTMLElement | null => {
+export const kitPixelsProbe = (page: Page): Promise<Probe<KitPixels>> =>
+  page.evaluateHandle(
+    ({ kit, running }) => {
+      const boxHolderOf = (element: HTMLElement): HTMLElement | null => {
         let outer = element.parentElement?.closest<HTMLElement>(kit) ?? null;
 
         while (outer !== null && outer.getBoundingClientRect().height === 0) {
@@ -102,7 +97,7 @@ const kitBoxesOf = (scope: Locator): Promise<KitBox[]> =>
 
       const boxOf = (element: HTMLElement): KitBox | undefined => {
         const style = getComputedStyle(element);
-        const outer = holderOf(element);
+        const outer = boxHolderOf(element);
 
         if (outer === null || !measurable(element, style)) {
           return undefined;
@@ -125,28 +120,7 @@ const kitBoxesOf = (scope: Locator): Promise<KitBox[]> =>
         };
       };
 
-      root.querySelectorAll<HTMLElement>(kit).forEach((element) => {
-        const box = boxOf(element);
-
-        if (box === undefined) {
-          return;
-        }
-
-        boxes.push(box);
-      });
-
-      return boxes;
-    },
-    { kit: KIT_BOXES, running: RUNNING_TEXT },
-  );
-
-const kitLinesOf = (scope: Locator): Promise<KitLine[]> =>
-  scope.evaluate(
-    (root, { kit, running }) => {
-      const lines: KitLine[] = [];
-      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-
-      const holderOf = (parent: HTMLElement): HTMLElement | undefined => {
+      const lineHolderOf = (parent: HTMLElement): HTMLElement | undefined => {
         const holder = parent.closest<HTMLElement>(kit);
 
         if (
@@ -163,7 +137,7 @@ const kitLinesOf = (scope: Locator): Promise<KitLine[]> =>
 
       const lineOf = (node: Node): KitLine | undefined => {
         const parent = node.parentElement;
-        const holder = parent === null ? undefined : holderOf(parent);
+        const holder = parent === null ? undefined : lineHolderOf(parent);
         const range = document.createRange();
 
         range.selectNodeContents(node);
@@ -188,26 +162,36 @@ const kitLinesOf = (scope: Locator): Promise<KitLine[]> =>
         };
       };
 
-      while (walker.nextNode() !== null) {
-        const line = lineOf(walker.currentNode);
+      return (root: Element): KitPixels => {
+        const boxes: KitBox[] = [];
+        const lines: KitLine[] = [];
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
 
-        if (line === undefined) {
-          continue;
+        root.querySelectorAll<HTMLElement>(kit).forEach((element) => {
+          const box = boxOf(element);
+
+          if (box === undefined) {
+            return;
+          }
+
+          boxes.push(box);
+        });
+
+        while (walker.nextNode() !== null) {
+          const line = lineOf(walker.currentNode);
+
+          if (line === undefined) {
+            continue;
+          }
+
+          lines.push(line);
         }
 
-        lines.push(line);
-      }
-
-      return lines;
+        return { boxes, lines };
+      };
     },
     { kit: KIT_BOXES, running: RUNNING_TEXT },
   );
-
-export const kitPixelsOf = async (scope: Locator): Promise<KitPixels> => {
-  const [boxes, lines] = await Promise.all([kitBoxesOf(scope), kitLinesOf(scope)]);
-
-  return { boxes, lines };
-};
 
 export const motionSettled = (page: Page): Promise<void> =>
   page.evaluate(async (settle) => {
@@ -231,58 +215,3 @@ export const motionSettled = (page: Page): Promise<void> =>
       }),
     ]);
   }, SETTLE_MS);
-
-const finishedHeightOf = (layer: Locator, frames: number): Promise<number> =>
-  layer.evaluate(async (element, count) => {
-    for (let frame = 0; frame < count; frame += 1) {
-      await new Promise<void>((resolve) => {
-        requestAnimationFrame(() => {
-          resolve();
-        });
-      });
-
-      for (const item of element.getAnimations({ subtree: true })) {
-        if (!Number.isFinite(item.effect?.getComputedTiming().endTime)) {
-          continue;
-        }
-
-        item.finish();
-      }
-    }
-
-    return element.getBoundingClientRect().height;
-  }, frames);
-
-export const showLayer = async (layer: Locator): Promise<boolean> => {
-  const opened = await layer.evaluate((element) => {
-    try {
-      if (element instanceof HTMLDialogElement) {
-        element.showModal();
-      } else if (element instanceof HTMLElement) {
-        element.showPopover();
-      }
-    } catch {
-      return false;
-    }
-
-    return true;
-  });
-
-  if (!opened) {
-    return false;
-  }
-
-  return (await finishedHeightOf(layer, OPEN_FRAMES)) > 0;
-};
-
-export const hideLayer = async (layer: Locator): Promise<void> => {
-  await layer.evaluate((element) => {
-    if (element instanceof HTMLDialogElement) {
-      element.close();
-    } else if (element instanceof HTMLElement) {
-      element.hidePopover();
-    }
-  });
-
-  await finishedHeightOf(layer, CLOSE_FRAMES);
-};
