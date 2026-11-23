@@ -1,4 +1,5 @@
 import type { App, Component } from 'vue';
+import { inBrowser } from 'vitepress';
 import type { Theme } from 'vitepress';
 import * as vue from '@numior/vue';
 import * as forms from '@numior/forms';
@@ -22,6 +23,7 @@ import DocsIcons from './parts/DocsIcons.vue';
 import DocsKeyboard from './parts/DocsKeyboard.vue';
 import DocsSignature from './parts/DocsSignature.vue';
 import DocsTokens from './parts/DocsTokens.vue';
+import { trackPageViews } from './metrika';
 
 const isComponent = (value: unknown): value is Component =>
   typeof value === 'object' && value !== null && ('setup' in value || 'render' in value);
@@ -45,6 +47,10 @@ export default {
         colorScheme: { storageKey: 'nui-theme' },
       }),
     );
+
+    if (inBrowser) {
+      trackPageViews(router, window);
+    }
 
     registerKit(app, vue);
     registerKit(app, forms);

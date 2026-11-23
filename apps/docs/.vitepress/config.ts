@@ -23,6 +23,7 @@ import { apiSearchText } from './reference/search-text';
 import type { DocsSearchOptions } from './theme/theme.types';
 import { ACCENT_STORAGE_KEY, accentScript } from './theme/composables/use-accent';
 import { topWindowOnly } from './theme/frame-theme';
+import { METRIKA_COUNTER, metrikaHead } from './theme/metrika';
 import { searchFields } from './theme/search-index';
 import { absoluteUrl, site } from './theme/site';
 import { en, ru } from './theme/texts';
@@ -64,6 +65,7 @@ export default defineConfigWithTheme<DocsThemeConfig>({
     ['link', { rel: 'manifest', href: '/site.webmanifest' }],
     ['script', {}, topWindowOnly(colorSchemeScript('nui-theme'))],
     ['script', {}, topWindowOnly(accentScript(ACCENT_STORAGE_KEY))],
+    ...metrikaHead(site, METRIKA_COUNTER),
   ],
   ...(origin === undefined
     ? {}
