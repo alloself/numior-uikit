@@ -739,6 +739,12 @@ export class BookSection extends SheetKeys {
       .evaluate((scroller, top) => scroller.scrollTo({ top }), pixels);
   }
 
+  async scrollSideways(pixels: number): Promise<void> {
+    await this.sheet
+      .locator('.nui-table__viewport')
+      .evaluate((scroller, left) => scroller.scrollTo({ left }), pixels);
+  }
+
   chartRowGaps(row: string, steps: number, stride: number): Promise<number[]> {
     return this.sheet.evaluate(
       async (root, { label, count, step }) => {

@@ -22,6 +22,8 @@ const COVERED = 0.9;
 
 const FAR_RIGHT = 200_000;
 
+const FAR_DOWN = 200_000;
+
 const citiesBlock = (count: number): string =>
   [
     'Город\tСумма',
@@ -69,6 +71,55 @@ test.describe('book', () => {
     expect(back.head).toBeGreaterThan(COVERED);
     expect(back.body).toBeGreaterThan(COVERED);
     await expect(book.columnHeader('A')).toBeVisible();
+  });
+
+  test('brings back a cell scrolled out of view when typing starts in it', async ({
+    playground,
+    book,
+  }) => {
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.cell('6', 1).click();
+
+    await book.scrollSideways(FAR_RIGHT);
+    await expect(book.columnHeader('B')).not.toBeInViewport();
+
+    await book.typeAtCaret('7');
+    await expect(book.editor).toBeInViewport();
+    await expect(book.columnHeader('B')).toBeInViewport();
+
+    await book.pressEscape();
+    await book.scrollBody(FAR_DOWN);
+    await expect(book.rowHeader('6')).not.toBeInViewport();
+
+    await book.typeAtCaret('8');
+    await expect(book.editor).toBeInViewport();
+    await expect(book.rowHeader('6')).toBeInViewport();
+  });
+
+  test('keeps typing in an open cell after the view moved away from it', async ({
+    playground,
+    book,
+  }) => {
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.startEdit('6', 1);
+    await book.typeAtCaret('12');
+
+    await book.scrollSideways(FAR_RIGHT);
+    await expect(book.columnHeader('B')).not.toBeInViewport();
+
+    await book.typeAtCaret('3');
+    await expect(book.editor).toBeInViewport();
+    await expect(book.columnHeader('B')).toBeInViewport();
+
+    await book.scrollBody(FAR_DOWN);
+    await expect(book.rowHeader('6')).not.toBeInViewport();
+
+    await book.typeAtCaret('4');
+    await expect(book.editor).toBeInViewport();
+    await expect(book.rowHeader('6')).toBeInViewport();
+    await expect(book.editor).toHaveValue(/1234$/u);
   });
 
   test('paints conditional formats and repaints them after an edit', async ({

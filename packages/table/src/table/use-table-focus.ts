@@ -35,7 +35,7 @@ export interface TableFocusOptions {
 
 export interface TableFocus {
   activeIn(position: number): number;
-  reveal(target: NuiTableCellPosition, axis?: TableRevealAxis): void;
+  reveal(target: NuiTableCellPosition, axis?: TableRevealAxis): boolean;
   focusCell(target: NuiTableCellPosition, scroll?: boolean): void;
   focusHeader(target: TableHeaderTarget): void;
   notePress(target: EventTarget | null): void;
@@ -100,18 +100,17 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     options.columns.scrollTo(centre, { align: 'auto' });
   };
 
-  const reveal = (target: NuiTableCellPosition, axis: TableRevealAxis = 'both'): void => {
+  const reveal = (target: NuiTableCellPosition, axis: TableRevealAxis = 'both'): boolean => {
     if (!options.windowed()) {
-      return;
+      return false;
     }
     if (axis === TableRevealAxis.Both || axis === TableRevealAxis.Row) {
       revealRow(target.row);
     }
-    if (axis !== TableRevealAxis.Both && axis !== TableRevealAxis.Col) {
-      return;
+    if (axis === TableRevealAxis.Both || axis === TableRevealAxis.Col) {
+      revealColumn(target.col);
     }
-
-    revealColumn(target.col);
+    return true;
   };
 
   const focusCell = (target: NuiTableCellPosition, scroll = true): void => {
@@ -183,7 +182,7 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
   });
 
   onMounted(() => {
-    let owned = false;
+    let owned: HTMLElement | undefined;
 
     watch(
       [options.active, requests],
@@ -204,7 +203,12 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     watch(
       [options.rows.range, options.merges],
       () => {
-        owned = options.viewport.value?.contains(document.activeElement) ?? false;
+        const focused = document.activeElement;
+
+        owned =
+          focused instanceof HTMLElement && options.viewport.value?.contains(focused) === true
+            ? focused
+            : undefined;
       },
       { flush: 'pre' },
     );
@@ -213,8 +217,16 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
       [options.rows.range, options.merges],
       () => {
         const viewport = options.viewport.value;
+        const held = owned;
 
-        if (!owned || viewport === null || viewport.contains(document.activeElement)) {
+        if (held === undefined || viewport === null || viewport.contains(document.activeElement)) {
+          return;
+        }
+
+        if (viewport.contains(held)) {
+          held.focus({ preventScroll: true });
+        }
+        if (viewport.contains(document.activeElement)) {
           return;
         }
 

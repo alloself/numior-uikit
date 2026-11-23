@@ -120,6 +120,39 @@ describe('NuiTable cell editing', () => {
     expect(grid.edits).toHaveLength(2);
   });
 
+  it('brings a cell scrolled out of view back when typing starts in it or goes on in it', async () => {
+    const grid = mountStaff({ rows: staff(400) });
+    await grid.focusCell(3, 2);
+
+    await grid.scroll({ top: 8000 });
+    await grid.press('Т');
+    expect(grid.editing).toEqual({ row: 3, col: 2 });
+    expect(grid.scrollTop).toBe(120);
+
+    await grid.scroll({ top: 8000 });
+    await grid.press('Shift');
+    expect(grid.scrollTop).toBe(8000);
+
+    await grid.press('у');
+    expect(grid.scrollTop).toBe(120);
+    expect(grid.editing).toEqual({ row: 3, col: 2 });
+    expect(grid.editorFocused).toBe(true);
+  });
+
+  it('keeps an open editor and its focus while the window of rows moves past its row', async () => {
+    const grid = mountStaff({ rows: staff(400) });
+    await grid.focusCell(3, 2);
+    await grid.press('F2');
+    await grid.typeInEditor('Тула');
+
+    await grid.scroll({ top: 8000 });
+    await grid.scroll({ top: 0 });
+    expect(grid.editing).toEqual({ row: 3, col: 2 });
+    expect(grid.editorFocused).toBe(true);
+    expect(grid.editorValue).toBe('Тула');
+    expect(grid.edits).toHaveLength(0);
+  });
+
   it('keeps a value that breaks a rule in the editor with its error and discards it on blur', async () => {
     const grid = mountStaff({ columns: withRequiredCity });
     await grid.focusCell(1, 2);

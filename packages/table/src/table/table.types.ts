@@ -549,6 +549,7 @@ export interface NuiTableCellEditorProps {
   commit: (move: NuiTableEditMove) => boolean;
   cancel: () => void;
   composed: () => void;
+  reveal: () => boolean;
 }
 
 export interface TableSpan {

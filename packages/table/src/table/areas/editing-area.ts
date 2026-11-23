@@ -56,7 +56,7 @@ export interface EditingAreaOptions<T> {
   readonly whole: (range: NuiTableRange) => NuiTableRange;
   readonly locate: (target: EventTarget | null) => NuiTableCellPosition | undefined;
   readonly focusData: (position: NuiTableCellPosition) => void;
-  readonly reveal: (position: NuiTableCellPosition) => void;
+  readonly reveal: (position: NuiTableCellPosition) => boolean;
   readonly move: (position: NuiTableCellPosition) => boolean;
   readonly select: (ranges: NuiTableRanges) => void;
   readonly applied: (keys: readonly string[], changed?: readonly T[]) => void;
@@ -213,6 +213,7 @@ export const useEditingArea = <T>(
     locate: own.locate,
     leave: (from, move) => leaveMergeBy(own.merges(), from, move),
     focus: own.focusData,
+    reveal: own.reveal,
     resetOn: own.resetOn,
     messages: table.messages,
     announce: table.announce,
@@ -257,6 +258,8 @@ export const useEditingArea = <T>(
     cellEditor.composed();
   };
 
+  const revealEdited = (): boolean => cellEditor.reveal();
+
   const editorProps = computed((): NuiTableCellEditorProps | undefined => {
     const current = cellEditor.session.value;
 
@@ -278,6 +281,7 @@ export const useEditingArea = <T>(
           commit,
           cancel,
           composed,
+          reveal: revealEdited,
         };
   });
 

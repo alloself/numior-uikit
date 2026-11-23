@@ -45,6 +45,15 @@ import type {
   TableEditorLeave,
 } from './table.types';
 
+interface CellSight {
+  readonly cell: HTMLElement;
+  readonly rect: DOMRect;
+  readonly left: number;
+  readonly right: number;
+  readonly top: number;
+  readonly bottom: number;
+}
+
 const FOCUSABLE = 'input, textarea, select, button, [tabindex]';
 const SIZE = '--_size';
 const LIFT = '--_lift';
@@ -54,6 +63,7 @@ const ALIGNED_END = '.nui-table__cell--align-end';
 const CARET = 4;
 const PINNED = '.nui-table__cell--pin-start, .nui-table__cell--pin-end';
 const ERROR = '.nui-table__error';
+const MODIFIER_KEYS: ReadonlySet<string> = new Set(['Shift', 'Control', 'Alt', 'AltGraph', 'Meta']);
 
 const {
   spec,
@@ -71,6 +81,7 @@ const {
   commit,
   cancel,
   composed,
+  reveal,
 } = defineProps<NuiTableCellEditorProps>();
 
 const emit = defineEmits<{ update: [value: unknown] }>();
@@ -146,11 +157,19 @@ const onKeydown = (event: KeyboardEvent): void => {
   if (move !== undefined) {
     event.preventDefault();
     finish(move);
-  } else if (event.key === Key.Escape) {
+    return;
+  }
+  if (event.key === Key.Escape) {
     event.preventDefault();
     settled = true;
     cancel();
+    return;
   }
+  if (MODIFIER_KEYS.has(event.key)) {
+    return;
+  }
+
+  bringIntoSight();
 };
 
 const onFocusout = (event: FocusEvent): void => {
@@ -346,7 +365,7 @@ const fit = (hold: boolean): void => {
   unhold = holdScrollAfterResize(editor);
 };
 
-const reveal = (): void => {
+const sightOf = (): CellSight | undefined => {
   const cell = root.value?.closest('.nui-table__cell');
   const viewport = cell?.closest('.nui-table__viewport');
 
@@ -355,24 +374,44 @@ const reveal = (): void => {
     !(viewport instanceof HTMLElement) ||
     cell.matches(PINNED)
   ) {
-    return;
+    return undefined;
   }
   const style = getComputedStyle(viewport);
   const rtl = style.direction === Direction.Rtl;
   const start = paddingOf(style.scrollPaddingInlineStart);
   const end = paddingOf(style.scrollPaddingInlineEnd);
-  const inner = viewport.getBoundingClientRect().left + viewport.clientLeft;
-  const left = inner + (rtl ? end : start);
-  const right = inner + viewport.clientWidth - (rtl ? start : end);
+  const box = viewport.getBoundingClientRect();
+  const inner = box.left + viewport.clientLeft;
+  const top = box.top + viewport.clientTop + paddingOf(style.scrollPaddingBlockStart);
+  const bottom = box.top + viewport.clientTop + viewport.clientHeight;
   const rect = cell.getBoundingClientRect();
 
-  if (rect.left >= left && rect.right <= right) {
+  return {
+    cell,
+    rect,
+    left: inner + (rtl ? end : start),
+    right: inner + viewport.clientWidth - (rtl ? start : end),
+    top,
+    bottom: bottom - paddingOf(style.scrollPaddingBlockEnd),
+  };
+};
+
+const across = (sight: CellSight): boolean =>
+  sight.rect.left >= sight.left && sight.rect.right <= sight.right;
+
+const inSight = (sight: CellSight): boolean =>
+  across(sight) && sight.rect.bottom > sight.top && sight.rect.top < sight.bottom;
+
+const bringIntoSight = (): void => {
+  const sight = sightOf();
+
+  if (sight === undefined || inSight(sight) || reveal() || across(sight)) {
     return;
   }
 
-  cell.scrollIntoView?.({
+  sight.cell.scrollIntoView?.({
     block: 'nearest',
-    inline: rect.width <= right - left ? 'nearest' : 'start',
+    inline: sight.rect.width <= sight.right - sight.left ? 'nearest' : 'start',
   });
 };
 
@@ -409,7 +448,7 @@ onMounted(() => {
 
   if (passive) {
     fit(false);
-    reveal();
+    bringIntoSight();
     return;
   }
   control.value?.focus?.();
@@ -417,7 +456,7 @@ onMounted(() => {
   if (root.value?.contains(document.activeElement) !== true) {
     root.value?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
   }
-  reveal();
+  bringIntoSight();
   unfold();
 
   const field = fieldOf();

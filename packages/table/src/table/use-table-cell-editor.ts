@@ -47,6 +47,7 @@ export interface TableCellEditorOptions<T> {
   readonly bounds: () => RangeBounds;
   readonly locate: (target: EventTarget | null) => NuiTableCellPosition | undefined;
   readonly focus: (position: NuiTableCellPosition) => void;
+  readonly reveal: (position: NuiTableCellPosition) => boolean;
   readonly resetOn: WatchSource[];
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly announce: (text: string) => void;
@@ -66,6 +67,7 @@ export interface TableCellEditor<T> {
   cancel(): void;
   reset(): void;
   composed(): void;
+  reveal(): boolean;
   onKeydown(event: KeyboardEvent): boolean;
   onFocusin(event: FocusEvent): void;
   onClick(event: MouseEvent): void;
@@ -318,6 +320,12 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     return true;
   };
 
+  const reveal = (): boolean => {
+    const current = session.value;
+
+    return current !== undefined && options.reveal(current.position);
+  };
+
   const composed = (): void => {
     const next = waiting;
 
@@ -514,6 +522,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     cancel,
     reset,
     composed,
+    reveal,
     onKeydown,
     onFocusin,
     onClick,

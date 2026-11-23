@@ -827,9 +827,7 @@ const { canEdit, editing, cellEditor, picker, rowPlaces, editorProps, onEditorUp
 
       focus.focusCell(stays ? active.value : visualCellOf(position));
     },
-    reveal: (position) => {
-      focus.reveal(visualCellOf(position));
-    },
+    reveal: (position) => focus.reveal(visualCellOf(position)),
     move: (position) => moveActiveCell(position),
     select: (next) => {
       ranges.value = next;
