@@ -1,7 +1,7 @@
 {
   "name": "@numior/mcp",
   "version": "0.0.0",
-  "private": true,
+  "private": false,
   "license": "MIT",
   "bin": {
     "numior-mcp": "./dist/main.js"
