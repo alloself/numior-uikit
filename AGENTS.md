@@ -56,6 +56,8 @@ that its features are implemented. Component and test conventions live in the sk
 - The toolchain is Vite+ (`vp`): one root `vite.config.ts` holds fmt, lint (Oxlint), test (Vitest,
   imports from `vite-plus/test`) and run tasks; ESLint covers Vue templates and vue-tsc the types.
 - Run `pnpm check` (its steps run through `vp run --cache`) and, for browser behavior, `pnpm test:e2e`.
+  CI runs only `pnpm check:ci` (no time budgets, no e2e), so both stay local before review and
+  before the release button.
 - `pnpm arch:check` checks Archcore when its CLI is available.
 - Do not disable checks globally to hide findings or use `passWithNoTests`.
 - Until the complete 1.0 release criteria are met, packages ship only as `1.0.0-alpha.N` from the

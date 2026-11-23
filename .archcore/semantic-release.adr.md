@@ -19,10 +19,13 @@ minor, !/BREAKING CHANGE → major. До 1.0 все релизы — `1.0.0-alph
 созданная от master и не используемая до 1.0. На 1.0 одно изменение делает master stable-веткой,
 `stable` удаляется.
 
-Релиз запускается кнопкой: `workflow_dispatch` workflow `ci.yml` на master. В том же запуске идут
-quality и browsers, после них job `release`, если repository variable
-`NUMIOR_RELEASE_ENABLED=true`. Push в master релиз не запускает. Та же кнопка выкладывает
-документацию (`docs-site.adr.md`); без release-worthy коммитов npm-шаг ничего не выпускает.
+Релиз запускается кнопкой: `workflow_dispatch` workflow `ci.yml` на master. В том же запуске идёт
+quality (`pnpm check:ci`), после него job `release`, если repository variable
+`NUMIOR_RELEASE_ENABLED=true`. Бюджеты времени (`test:budget`) и e2e в CI не идут: стандартный
+раннер GitHub не держит бюджеты в 100 мс и проходит e2e за 2,5–3 часа. Владелец решил 2026-11-23,
+что перед кнопкой они проходят локально: `pnpm check` и `pnpm test:e2e`. Push в master релиз не
+запускает. Та же кнопка выкладывает документацию (`docs-site.adr.md`); без release-worthy коммитов
+npm-шаг ничего не выпускает.
 
 @release.config.mjs задаёт semantic-release, commit analyzer, release notes generator, собственный
 monorepo plugin и GitHub release с tarballs (prerelease). Root и приложения остаются private,
