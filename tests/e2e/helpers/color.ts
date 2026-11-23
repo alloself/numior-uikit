@@ -237,31 +237,42 @@ const countPixels = async ({
   }
   context.drawImage(image, 0, 0);
 
-  const { data } =
-    area === undefined
-      ? context.getImageData(0, 0, canvas.width, canvas.height)
-      : context.getImageData(
-          Math.round(area.x * devicePixelRatio),
-          Math.round(area.y * devicePixelRatio),
-          Math.max(Math.round(area.width * devicePixelRatio), 1),
-          Math.max(Math.round(area.height * devicePixelRatio), 1),
-        );
+  const scale = devicePixelRatio;
 
-  const paper = [data[0] ?? 0, data[1] ?? 0, data[2] ?? 0];
-  const delta = area?.delta ?? 0;
+  const box = area ?? {
+    x: 0,
+    y: 0,
+    width: canvas.width / scale,
+    height: canvas.height / scale,
+    delta: 0,
+  };
+
+  const { data } = context.getImageData(
+    Math.round(box.x * scale),
+    Math.round(box.y * scale),
+    Math.max(Math.round(box.width * scale), 1),
+    Math.max(Math.round(box.height * scale), 1),
+  );
+
+  const channel = (offset: number): number => data[offset] ?? 0;
+  const paperRed = channel(0);
+  const paperGreen = channel(1);
+  const paperBlue = channel(2);
   let ink = 0;
   let tinted = 0;
 
   for (let offset = 0; offset < data.length; offset += 4) {
-    const red = data[offset] ?? 0;
-    const green = data[offset + 1] ?? 0;
-    const blue = data[offset + 2] ?? 0;
+    const red = channel(offset);
+    const green = channel(offset + 1);
+    const blue = channel(offset + 2);
 
-    const unlike = [red, green, blue].some(
-      (channel, index) => Math.abs(channel - (paper[index] ?? 0)) > delta,
+    const unlike = Math.max(
+      Math.abs(red - paperRed),
+      Math.abs(green - paperGreen),
+      Math.abs(blue - paperBlue),
     );
 
-    ink += Number(unlike);
+    ink += Number(unlike > box.delta);
     tinted += Number(Math.max(red, green, blue) - Math.min(red, green, blue) > spread);
   }
   return { ink, tinted };
