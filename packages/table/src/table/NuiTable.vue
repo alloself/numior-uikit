@@ -258,32 +258,21 @@ import {
   useVirtualList,
   type VirtualFrame,
 } from '@numior/primitives';
-import {
-  NuiCheckState,
-  NuiEmpty,
-  NuiMenu,
-  NuiPagination,
-  NuiSkeleton,
-  type NuiSkeletonProps,
-} from '@numior/vue';
+import { NuiEmpty, NuiMenu, NuiPagination, NuiSkeleton, type NuiSkeletonProps } from '@numior/vue';
 import {
   createSourceEngine,
   createTableEngine,
   TableNodeKind,
   type TableEngine,
   type TableFilter,
-  type TableNode,
-  type TableNodeId,
   type TableQuery,
 } from '../engine';
 import NuiTableDragLayer from './NuiTableDragLayer.vue';
-import { keptRows, keptViews } from './kept-rows';
 import NuiTableBodyRow from './NuiTableBodyRow.vue';
 import NuiTableRow from './NuiTableRow.vue';
 import NuiTableTracks from './NuiTableTracks.vue';
 import NuiTableUtilityCell from './NuiTableUtilityCell.vue';
 import { tableMessages } from './table.messages';
-import { countBelow, detailsBefore } from './table-detail';
 import {
   anchorOf,
   consecutiveRuns,
@@ -305,11 +294,8 @@ import {
   dataKeysOf,
   pinsFit,
   revealOffset,
-  ROW_HEAD_KEY,
   rowCellsOf,
   rowHeadWidth,
-  SELECT_KEY,
-  sizedRowStyle,
   mergeIndices,
   sameIndices,
   tableLayout,
@@ -328,6 +314,7 @@ import { useHeaderArea } from './areas/header-area';
 import { useOverlayArea } from './areas/overlay-area';
 import { usePaintArea } from './areas/paint-area';
 import { useRowMovesArea } from './areas/row-moves-area';
+import { useViewsArea } from './areas/views-area';
 import type { TableContext } from './areas/table-context';
 import { createEchoes } from './table-echoes';
 import { boxOf, clampPosition, columnSpansOf, sameSpot, type RangeBox } from './table-ranges';
@@ -344,10 +331,8 @@ import { keepEqual } from './table-values';
 import { useTableRowSizes } from './use-table-row-sizes';
 import { useTableSelection, type TableSelectionKey } from './use-table-selection';
 import {
-  NuiTableColumnType,
   NuiTableRowHeight,
   NuiTableSize,
-  TableBodyPart,
   TablePaneName,
   TablePlacementKind,
   TableRevealAxis,
@@ -371,38 +356,23 @@ import {
   type NuiTableScrollAnchor,
   type NuiTableRowHeaders,
   type NuiTableRowHeights,
-  type NuiTableRowProps,
   type NuiTableSlots,
   type NuiTableSort,
   type NuiTableUtilityCellProps,
   type NuiTableWidths,
   type TableBodyRow,
-  type TableBodyRowContext,
-  type TableBodyRowView,
-  type TableCellContent,
-  type TableCellLead,
   type NuiTableCellPosition,
-  type TableCellView,
   type TableLeadSpan,
   type TableMergeLayout,
   type TableMergeSlot,
-  type TablePinnedRow,
   type TableReveal,
-  type TableRowRanges,
   type TableRowSpan,
-  type TableSkeletonRow,
 } from './table.types';
 
 const ROW_SIZES = { sm: 32, md: 40, lg: 48 } as const;
 const CANVAS_LIMIT = 15_000_000;
 const STILL_FRAME: VirtualFrame = { lead: 0, rest: 0, clampStart: 0, clampEnd: 0 };
 const NO_COLUMNS: readonly number[] = [];
-
-const awaited = (
-  node: TableNode<unknown> | undefined,
-  pending: ReadonlySet<TableNodeId>,
-): boolean =>
-  node !== undefined && (pending.has(node.id) || (node.kind === TableNodeKind.Row && node.loading));
 
 const INITIAL_ROWS = 30;
 const INITIAL_COLUMNS = 12;
@@ -411,7 +381,6 @@ const COLUMN_OVERSCAN = 2;
 const NO_ROW_HEAD = {} as const;
 const NO_HEIGHTS: NuiTableRowHeights = {};
 const NO_MERGE_INDEX = createMergeIndex([], { rows: 0, cols: 0 });
-const NO_UTILITY: NuiTableUtilityCellProps = { control: 'none' };
 const SKELETON_UTILITY: NuiTableUtilityCellProps = { control: 'skeleton' };
 const TEXT_SKELETON: NuiSkeletonProps = { shape: 'text', width: '100%' };
 
@@ -608,6 +577,7 @@ const table: TableContext<T> = {
   pageStart: () => pageStart.value,
   bodyRows: () => visibleRows.value,
   rowAtPosition: (position) => rowAtPosition(position),
+  rowAt: (position) => rowAt(position),
   rowFor: (visual) => rowFor(visual),
   active: () => active.value,
   ranges: () => ranges.value,
@@ -682,13 +652,6 @@ const rowHeadSize = computed(() =>
 );
 
 const sizedHeights = computed(() => (source === undefined ? rowHeights.value : NO_HEIGHTS));
-
-const ordinalBase = computed(() =>
-  remote ? (Math.max(1, page.value) - 1) * pageSize.value : pageStart.value,
-);
-
-const ordinalOf = (position: number): number =>
-  ordinalBase.value + position + 1 - countBelow(detailPositions.value, pageStart.value + position);
 
 const quickKeys = computed(() => {
   if (hidden.value.length === 0) {
@@ -1206,104 +1169,6 @@ const gridAria = computed(() => {
   };
 });
 
-const headUtility = (column: string): NuiTableUtilityCellProps => {
-  if (column === ROW_HEAD_KEY) {
-    return { control: 'corner', label: messages.value.rowHeaders };
-  }
-  return column === SELECT_KEY && selection.multiple.value
-    ? {
-        control: 'checkbox',
-        checked: selection.headerState.value === NuiCheckState.Checked,
-        indeterminate: selection.headerState.value === NuiCheckState.Indeterminate,
-        disabled: selection.headerDisabled.value,
-        label: selectAllText.value,
-      }
-    : NO_UTILITY;
-};
-
-const labelOf = (row: T): string => {
-  const keys = dataKeysOf(layout.value);
-  const first = keys.find((key) => columnAt(key).type === NuiTableColumnType.Text) ?? keys[0];
-
-  return rowLabel?.(row) ?? (first === undefined ? '' : textOf(row, first));
-};
-
-const rowHeadText = (item: TableBodyRow): string => {
-  const labelOfRow = rowHead.value?.label;
-  const row = item.pending ? undefined : rowAtPosition(item.index);
-
-  if (labelOfRow === undefined) {
-    return item.group === undefined ? String(ordinalOf(item.index)) : '';
-  }
-  return row === undefined ? '' : labelOfRow(row, item.index);
-};
-
-const rowUtility = (item: TableBodyRow, column: string): NuiTableUtilityCellProps => {
-  if (column === ROW_HEAD_KEY) {
-    return { control: 'label', text: rowHeadText(item) };
-  }
-  return item.selected === undefined
-    ? NO_UTILITY
-    : { control: 'checkbox', checked: item.selected, label: selectText.value };
-};
-
-const gripLabel = (item: TableBodyRow): string =>
-  dragLabel?.(rowAt(item.index)) ?? messages.value.dragRow({ row: labelOf(rowAt(item.index)) });
-
-const selectedOf = (node: TableNode<T> | undefined): boolean | undefined =>
-  selectOn.value && node?.kind === TableNodeKind.Row ? selection.has(node.row) : undefined;
-
-const sizedOf = (node: TableNode<T> | undefined): Readonly<Record<string, string>> | undefined => {
-  const pixels = node?.kind === TableNodeKind.Row ? sizedHeights.value[String(node.id)] : undefined;
-
-  return pixels === undefined ? undefined : sizedRowStyle(pixels, rowMode.value);
-};
-
-const skeletonRows = computed((): TableSkeletonRow[] =>
-  Array.from({ length: skeletonCount.value }, (_, index) => ({
-    index,
-    key: `skeleton-${index}`,
-  })),
-);
-
-const bodyRows = computed((previous?: readonly TableBodyRow[]): readonly TableBodyRow[] => {
-  const current = revision.stamp;
-
-  if (loadingNow.value) {
-    return [];
-  }
-  const pending = expansion.loading.value;
-  const spots = detailSpots.value;
-  const frozen = frozenCount.value;
-
-  const fresh = rowWindow.items.value.map((item): TableBodyRow => {
-    const node = engine.value.nodeAt(pageStart.value + item.index);
-    const level = levelOf(node);
-    const unloaded = engine.value.pendingAt(pageStart.value + item.index);
-    const detail = node?.kind === TableNodeKind.Detail;
-
-    return {
-      index: item.index,
-      key: detail ? `detail-${node.id}` : item.slot,
-      node: node?.id,
-      part: detail ? 'detail' : 'body',
-      revision: current,
-      sized: sizedOf(node),
-      frozen: item.index < frozen ? rowWindow.offsetOf(item.index) : undefined,
-      level,
-      treeLevel: Math.max(0, (level ?? 1) - 1),
-      group: expansion.rowAt(item.index),
-      expanded: expandedOf(node),
-      loading: unloaded || awaited(node, pending),
-      pending: unloaded,
-      selected: selectedOf(node),
-      stripe: striped && !detail && (item.index - detailsBefore(spots, item.index)) % 2 === 1,
-    };
-  });
-
-  return keptRows(fresh, previous);
-});
-
 const bodyPosition = (row: number): number | undefined => {
   const body = row - pinnedCount.value;
   return body >= 0 && body < visibleRows.value ? pageStart.value + body : undefined;
@@ -1317,22 +1182,6 @@ const rowFor = (visual: number): T | undefined => {
   const node = position === undefined ? undefined : engine.value.nodeAt(position);
 
   return node?.kind === TableNodeKind.Row ? node.row : undefined;
-};
-
-const pinnedItems = computed((): TablePinnedRow<T>[] =>
-  pinnedRows.map((row, index) => ({
-    row,
-    index,
-    key: getKey === undefined ? index : getKey(row),
-    selected: selectOn.value ? selection.has(row) : undefined,
-  })),
-);
-
-const rowLabelAt = (position: number): string => {
-  const row = rowAtPosition(position);
-  const custom = row === undefined ? undefined : rowHead.value?.label?.(row, position);
-
-  return custom ?? String(ordinalOf(position));
 };
 
 const {
@@ -1358,8 +1207,8 @@ const {
     getChildren !== undefined && (getChildren(row) !== undefined || hasChildren?.(row) !== true),
   childCount: (row) => getChildren?.(row)?.length ?? 0,
   keyOf,
-  labelOf,
-  labelAt: rowLabelAt,
+  labelOf: (row): string => labelOf(row),
+  labelAt: (position): string => rowLabelAt(position),
   selectRow: (position) => {
     rangeSelect.selectRow(position);
   },
@@ -1367,15 +1216,6 @@ const {
     focus.focusCell(visual);
   },
 });
-
-const pinnedUtility = (item: TablePinnedRow<T>, column: string): NuiTableUtilityCellProps =>
-  item.selected === undefined || column === ROW_HEAD_KEY
-    ? NO_UTILITY
-    : { control: 'checkbox', checked: item.selected, label: selectText.value };
-
-const gripKey = computed(() =>
-  rowDragOn ? (treeKey.value ?? dataKeysOf(layout.value)[0]) : undefined,
-);
 
 const dataKeys = computed(() => dataKeysOf(layout.value));
 
@@ -1659,11 +1499,6 @@ const rangeSelect = useTableRanges({
   announce,
 });
 
-const rangedAt = computed(() => (mergeIndex.value.size === 0 ? undefined : rangeSelect.segmentsOf));
-
-const rangedOf = (item: TableBodyRow): TableRowRanges | undefined =>
-  item.group === undefined ? rangeSelect.segmentsOf(item.index) : undefined;
-
 const rowAtPosition = (position: number): T | undefined => {
   const node = engine.value.nodeAt(pageStart.value + position);
   return node?.kind === TableNodeKind.Row ? node.row : undefined;
@@ -1673,17 +1508,9 @@ const { bodyPaint, pinnedPaint } = usePaintArea(table, {
   cellStyle: () => cellStyle,
   pinned: () => pinnedRows,
   merges: () => mergeIndex.value,
-  plainText: (row, position, key) => plainText(row, position, key),
+  plainText: (row, position, key): string | undefined => plainText(row, position, key),
   measure: textMeasure,
 });
-
-const plainText = (row: T, position: number, key: string): string | undefined => {
-  const session = cellEditor.session.value;
-  const edited = session?.position.row === position && session.key === key;
-  const custom = edited || key === treeKey.value || key === gripKey.value;
-
-  return custom || rawSlots[`cell-${key}`] !== undefined ? undefined : textOf(row, key);
-};
 
 const { clipboard, exporter } = useClipboardArea(table, {
   position: activeData,
@@ -1931,195 +1758,66 @@ const scopeOf = (row: T, position: number, key: string, pinned: boolean): NuiTab
 const textOf = (row: T, key: string): string =>
   cellTextOf(columnAt(key), row, resolvedLocale.value, booleanTexts.value);
 
-const treeLevelOf = (item: TableBodyRow): number => (treeOn.value ? item.treeLevel : 0);
-
-const hasTreeToggle = (item: TableBodyRow): boolean =>
-  item.expanded !== undefined || item.loading || treeLevelOf(item) > 0;
-
-const contentOf = (
-  item: TableBodyRow,
-  column: string,
-  merge: TableLeadSpan | undefined,
-): TableCellContent<T> => {
-  const key = merge === undefined ? undefined : dataKeys.value[merge.anchor.col];
-  const row = merge === undefined ? undefined : rowAtPosition(merge.anchor.row);
-
-  return merge === undefined || key === undefined || row === undefined
-    ? { position: item.index, key: column, row: rowAt(item.index) }
-    : { position: merge.anchor.row, key, row };
-};
-
-const editsCell = (cell: TableCellContent<T>, merge: TableLeadSpan | undefined): boolean => {
-  const current = cellEditor.session.value;
-
-  return (
-    current?.position.row === cell.position &&
-    current.key === cell.key &&
-    (merge === undefined || hostsCursor(merge))
-  );
-};
-
-const leadsOf = (item: TableBodyRow, column: string): TableCellLead[] => {
-  const grip: TableCellLead[] =
-    column === gripKey.value
-      ? [
-          {
-            kind: 'grip',
-            label: gripLabel(item),
-            disabled: !dragEnabled.value,
-            active: rowDrag.dragging.value === item.index,
-          },
-        ]
-      : [];
-
-  return column === treeKey.value && hasTreeToggle(item)
-    ? [
-        ...grip,
-        {
-          kind: 'toggle',
-          node: item.node,
-          level: treeLevelOf(item),
-          expandable: item.expanded !== undefined,
-          loading: item.loading,
-        },
-      ]
-    : grip;
-};
-
-const cellViewOf = (
-  item: TableBodyRow,
-  column: string,
-  merge: TableLeadSpan | undefined,
-): TableCellView<T> => {
-  if (merge === undefined && item.pending) {
-    return { kind: 'skeleton' };
-  }
-  if (merge === undefined && item.group !== undefined) {
-    return { kind: 'group', cell: item.group.cells[column] };
-  }
-  const cell = contentOf(item, column, merge);
-
-  return {
-    kind: 'data',
-    leads: merge === undefined ? leadsOf(item, column) : [],
-    editing: editsCell(cell, merge),
-    scope: scopeOf(cell.row, cell.position, cell.key, false),
-  };
-};
-
-const cellViewAt = (
-  item: TableBodyRow | undefined,
-  column: string,
-  merge: TableLeadSpan | undefined,
-): TableCellView<T> =>
-  item === undefined ? { kind: 'skeleton' } : cellViewOf(item, column, merge);
-
-const utilityAt = (item: TableBodyRow | undefined, column: string): NuiTableUtilityCellProps =>
-  item === undefined ? NO_UTILITY : rowUtility(item, column);
-
-const selectAt = (position: number | undefined): void => {
-  if (position === undefined) {
-    return;
-  }
-
-  selection.toggle(rowAt(position));
-};
-
-const expandAt = (position: number | undefined): void => {
-  if (position === undefined) {
-    return;
-  }
-
-  expansion.toggle(position);
-};
-
-const isCellSlot = (name: string): name is `cell-${string}` => name.startsWith('cell-');
-
-const cellSlotNames = (): Array<`cell-${string}`> => Object.keys(rawSlots).filter(isCellSlot);
-
-const cellSlots = shallowRef(cellSlotNames());
-
-const cellSlotted = computed(() => cellSlots.value.length > 0);
-
 onBeforeUpdate(() => {
-  const names = cellSlotNames();
-
   overlaid.value = rawSlots.overlay !== undefined;
-
-  if (names.join() === cellSlots.value.join()) {
-    return;
-  }
-
-  cellSlots.value = names;
-  sync();
 });
 
-const bodyRowView = (item: TableBodyRow): TableBodyRowView<T> =>
-  item.part === TableBodyPart.Detail
-    ? {
-        kind: 'detail',
-        item,
-        props: {
-          rowIndex: item.index + pinnedCount.value + headRows.value + 1,
-          span: layout.value.visual.length,
-          colspan: rowCells.value.tracks.length,
-          level: item.level,
-          active: focus.activeIn(item.index + pinnedCount.value) > 0,
-        },
-        scope: detailScope(item.index),
-      }
-    : { kind: 'row', item, props: bodyRowProps(item) };
-
-const bodyViews = computed((previous: readonly TableBodyRowView<T>[] | undefined) =>
-  keptViews(bodyRows.value.map(bodyRowView), previous),
-);
-
-const plainTextAt = (position: number, key: string): string | undefined => {
-  const at = pageStart.value + position;
-  const node = engine.value.nodeAt(at);
-
-  return node?.kind !== TableNodeKind.Row || engine.value.pendingAt(at)
-    ? undefined
-    : plainText(node.row, position, key);
-};
-
-const bodyRowProps = (item: TableBodyRow): NuiTableRowProps => ({
-  cells: rowCells.value,
-  rowIndex: item.index + pinnedCount.value + headRows.value + 1,
-  position: item.index,
-  paint: bodyPaint.value,
-  active: focus.activeIn(item.index + pinnedCount.value),
-  revision: item.revision,
-  revisionOf,
-  level: item.level,
-  group: item.group,
-  expanded: item.expanded,
-  loading: item.loading,
-  selected: item.selected,
-  stripe: item.stripe,
-  dragging: rowDrag.dragging.value === item.index,
-  ranged: rangedOf(item),
-  rangedAt: rangedAt.value,
-  spans: spansOf(item),
-  ally: allyOf(item),
-  sized: item.sized,
-  frozen: item.frozen,
-  sizable: sizableOf(item),
-  sizing: rowResize.active.value === item.index,
-  plainText: plainTextAt,
-});
-
-const bodyContext: TableBodyRowContext<T> = {
-  utilityAt,
-  cellViewAt,
+const {
+  skeletonRows,
+  bodyRows,
+  bodyViews,
+  pinnedItems,
+  pinnedUtility,
+  headUtility,
+  bodyContext,
+  cellSlots,
+  cellSlotted,
+  labelOf,
+  rowLabelAt,
+  plainText,
+} = useViewsArea(table, {
+  slots: rawSlots,
+  rowHead: () => rowHead.value,
+  rowLabel: () => rowLabel,
+  dragLabel: () => dragLabel,
+  striped: () => striped,
+  grips: () => rowDragOn,
+  selectable: () => selectOn.value,
+  pinned: () => pinnedRows,
+  getKey: () => getKey,
+  heights: () => sizedHeights.value,
+  rowMode: () => rowMode.value,
+  skeletons: () => skeletonCount.value,
+  firstOrdinal: () => (remote ? (Math.max(1, page.value) - 1) * pageSize.value : pageStart.value),
+  selectText: () => selectText.value,
+  selectAllText: () => selectAllText.value,
+  selection,
+  groups: {
+    treeOn,
+    treeKey,
+    detailPositions,
+    detailSpots,
+    detailScope,
+    expansion,
+    levelOf,
+    expandedOf,
+  },
+  moves: { dragEnabled, rowDrag, rowResize, sizableOf, grabAt, onRowResize, onRowResetSize },
+  editingCell: () => cellEditor.session.value,
   editor: () => editorProps.value,
-  selectAt,
-  expandAt,
-  grabAt,
-  resize: onRowResize,
-  resetSize: onRowResetSize,
   update: onEditorUpdate,
-};
+  paint: () => bodyPaint.value,
+  activeIn: (position) => focus.activeIn(position),
+  revisionOf: (position) => revisionOf(position),
+  segmentsOf: (row) => rangeSelect.segmentsOf(row),
+  merged: () => mergeIndex.value.size > 0,
+  spans: spansOf,
+  ally: allyOf,
+  hostsCursor,
+  sync: () => {
+    sync();
+  },
+});
 
 const neededRange = computed(() => {
   if (paginationProps.value !== undefined) {

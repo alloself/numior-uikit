@@ -27,6 +27,7 @@ export interface TableContext<T> {
   readonly pageStart: () => number;
   readonly bodyRows: () => number;
   readonly rowAtPosition: (position: number) => T | undefined;
+  readonly rowAt: (position: number) => T;
   readonly rowFor: (visual: number) => T | undefined;
   readonly active: () => NuiTableCellPosition;
   readonly ranges: () => NuiTableRanges;
