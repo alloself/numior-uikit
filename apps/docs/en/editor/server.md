@@ -376,7 +376,7 @@ bun add yjs
 ```ts
 import { computed, useTemplateRef } from 'vue';
 import { Doc } from 'yjs';
-import { yjsBinding } from '@numior/kit/collaboration/yjs';
+import { editorLink, yjsBinding } from '@numior/kit/collaboration/yjs';
 import { contentSchema } from '@numior/kit/content';
 import type { NuiEditorApi } from '@numior/kit/editor';
 
@@ -388,15 +388,12 @@ const shared = new Doc();
 
 const binding = yjsBinding(shared, 'description', {
   schema: contentSchema,
-  getState: () => api.value?.state(),
-  dispatch: (tr) => {
-    api.value?.run((_state, apply) => {
-      apply?.(tr);
-      return true;
-    });
-  },
+  ...editorLink(() => api.value),
 });
 ```
+
+`editorLink` takes the state and the sending of edits from the editor handle. A setup without an
+editor passes `getState` and `dispatch` itself.
 
 Give the editor `binding.plugin` in `plugins` and `binding.ids` in `ids`:
 
@@ -472,4 +469,6 @@ document before compaction loads it again, and its unsent edits are lost.
 Compaction takes a document of 10,000 blocks after 68,807 edits by three authors from 3.9 to 3.1 MB.
 It halves the Yjs records, and a live binding opens it in 120 ms, down from 200.
 
-<SignatureReference :names="['yjsBinding', 'YjsBindingOptions', 'YjsBinding']" />
+<SignatureReference
+  :names="['yjsBinding', 'YjsBindingOptions', 'YjsBinding', 'editorLink', 'YjsEditor', 'YjsEditorLink']"
+/>

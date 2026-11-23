@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { yjsBinding } from '@numior/collaboration/yjs';
+import { editorLink, yjsBinding } from '@numior/collaboration/yjs';
 import { contentSchema } from '@numior/content';
 import { toJSON, type DocJSON } from '@numior/editor-core';
 import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
@@ -29,13 +29,7 @@ const api = computed(() => editor.value?.editor);
 
 const binding = yjsBinding(ydoc, 'document', {
   schema: contentSchema,
-  getState: () => api.value?.state(),
-  dispatch: (tr) => {
-    api.value?.run((_state, apply) => {
-      apply?.(tr);
-      return true;
-    });
-  },
+  ...editorLink(() => api.value),
 });
 
 const plugins = [binding.plugin];

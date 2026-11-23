@@ -298,21 +298,18 @@ bun add yjs
 
 ```ts
 import * as Y from 'yjs';
-import { yjsBinding } from '@numior/kit/collaboration/yjs';
+import { editorLink, yjsBinding } from '@numior/kit/collaboration/yjs';
 
 const ydoc = new Y.Doc();
 
 const binding = yjsBinding(ydoc, 'document', {
   schema: contentSchema,
-  getState: () => api.value?.state(),
-  dispatch: (tr) => {
-    api.value?.run((_state, apply) => {
-      apply?.(tr);
-      return true;
-    });
-  },
+  ...editorLink(() => api.value),
 });
 ```
+
+`editorLink` берёт у ручки редактора состояние и отправку правок. Стенд без редактора передаёт `getState` и
+`dispatch` сам.
 
 Передайте редактору без `useCollabEditor` `binding.plugin` в `plugins` и `binding.ids` в `ids`, а `api`
 получите через `useTemplateRef`, как при подключении документа:
@@ -386,4 +383,6 @@ const compacted = (stored: Uint8Array): Uint8Array => {
 Документ на 10 000 блоков после 68 807 правок трёх авторов уплотнение сжимает с 3,9 до 3,1 МБ. Записей
 Yjs в нём становится вдвое меньше, и вход живой связкой ускоряется с 200 до 120 мс.
 
-<SignatureReference :names="['yjsBinding', 'YjsBindingOptions', 'YjsBinding']" />
+<SignatureReference
+  :names="['yjsBinding', 'YjsBindingOptions', 'YjsBinding', 'editorLink', 'YjsEditor', 'YjsEditorLink']"
+/>

@@ -17,7 +17,7 @@ import { fixtureSchema } from '@numior/editor-core/fixtures';
 import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
 import { computed, onScopeDispose, ref, useTemplateRef } from 'vue';
 import type { Doc as YDoc } from 'yjs';
-import { yjsBinding } from '../../src/yjs';
+import { editorLink, yjsBinding } from '../../src/yjs';
 
 const LABEL = 'Document';
 
@@ -31,13 +31,7 @@ const api = computed(() => editor.value?.editor);
 
 const binding = yjsBinding(ydoc, 'document', {
   schema: fixtureSchema,
-  getState: () => api.value?.state(),
-  dispatch: (tr) => {
-    api.value?.run((_state, apply) => {
-      apply?.(tr);
-      return true;
-    });
-  },
+  ...editorLink(() => api.value),
 });
 
 const plugins = [binding.plugin];

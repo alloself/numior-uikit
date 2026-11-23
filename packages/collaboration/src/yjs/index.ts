@@ -1,2 +1,3 @@
 export { yjsBinding } from './binding';
-export type { YjsBinding, YjsBindingOptions } from './yjs.types';
+export { editorLink } from './editor-link';
+export type { YjsBinding, YjsBindingOptions, YjsEditor, YjsEditorLink } from './yjs.types';

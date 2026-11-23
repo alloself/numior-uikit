@@ -1,4 +1,5 @@
 import type {
+  Command,
   Dispatch,
   Doc,
   EditorState,
@@ -15,6 +16,13 @@ export interface YjsBindingOptions {
   readonly dispatch: Dispatch;
   readonly onInvalid?: (() => void) | undefined;
 }
+
+export interface YjsEditor {
+  readonly state: () => EditorState | undefined;
+  readonly run: (command: Command) => boolean;
+}
+
+export type YjsEditorLink = Pick<YjsBindingOptions, 'getState' | 'dispatch'>;
 
 export interface YjsBinding {
   readonly plugin: Plugin;
