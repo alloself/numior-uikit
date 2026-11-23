@@ -107,6 +107,25 @@ describe('useVirtualList', () => {
     list.unmount();
   });
 
+  it('keeps listed indices rendered next to the window and counts them in its frame', async () => {
+    const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2 });
+
+    await list.settle();
+    await list.keep([500, 3, 9000, -1]);
+    await list.pin(500);
+    expect(list.renderedIndices).toEqual([...range(0, 13), 500]);
+    expect(list.frame).toEqual({ lead: 0, rest: 19_720, clampStart: -60, clampEnd: -80 });
+
+    await list.scroll(5000);
+    expect(list.renderedIndices).toEqual([3, ...range(248, 263), 500]);
+    expect(list.frame).toEqual({ lead: 4940, rest: 14_720, clampStart: -120, clampEnd: -120 });
+
+    await list.keep([]);
+    expect(list.renderedIndices).toEqual([...range(248, 263), 500]);
+
+    list.unmount();
+  });
+
   it('keeps frozen rows rendered and windows the rest below them', async () => {
     const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2, frozen: 2 });
 

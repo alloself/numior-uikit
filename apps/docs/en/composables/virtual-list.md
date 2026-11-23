@@ -34,6 +34,10 @@ On the server the first `initialCount` rows render, 20 by default. `overscan` ad
 the edges of the visible area, 4 by default. `pinned` keeps a row in place when the data changes,
 and `scrollTo(index)` scrolls to a row.
 
+`kept` lists rows that always render, even far from the visible area. The table keeps its
+wrapping columns this way, because it measures row heights by them. Such rows sit right past the
+edge of the window, and `frame` counts their size.
+
 Every visible row has a `slot`, a small number that stays with the row while it is rendered. When
 the row leaves the visible area, its slot passes to a new one. Use `slot` as the `key`, and Vue
 updates the same elements instead of creating new ones on every scroll.
@@ -78,6 +82,13 @@ container, call `measure()` on each from one listener. The rows then update once
 
 `axis: 'x'` counts the visible columns horizontally, from `scrollLeft` and the width. In RTL the
 scroll starts at the right edge.
+
+The sticky block works horizontally too: pass the axis as the third argument,
+`useVirtualFrame(container, frame, 'x')`, and the limits to `inset-inline-start` and
+`inset-inline-end`. When the container scrolls on both axes, split the axes between two elements:
+a wrapper sticks vertically and holds the width spacers, and the block inside it sticks
+horizontally. The Numior UI table works this way, so its cells stay on screen during fast
+scrolling in either direction.
 
 `maxSize` keeps the list height below the browser limit. Then `canvasSize` is the height in the
 DOM and `scrollTop` the position in the full list. `items[].offset` is the position of a row in

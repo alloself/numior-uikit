@@ -1,4 +1,5 @@
 import { clamp, useEventListener, useResizeObserver } from '@vueuse/core';
+import { sortedUniq } from 'lodash-es';
 import {
   computed,
   onMounted,
@@ -43,6 +44,7 @@ export interface VirtualListOptions {
   readonly initialCount?: MaybeRefOrGetter<number | undefined>;
   readonly enabled?: MaybeRefOrGetter<boolean | undefined>;
   readonly pinned?: MaybeRefOrGetter<number | undefined>;
+  readonly kept?: MaybeRefOrGetter<readonly number[] | undefined>;
   readonly frozen?: MaybeRefOrGetter<number | undefined>;
   readonly maxSize?: MaybeRefOrGetter<number | undefined>;
   readonly inset?: MaybeRefOrGetter<number | undefined>;
@@ -89,18 +91,49 @@ export interface VirtualList {
   measure(): void;
 }
 
+interface OutsideIndices {
+  readonly before: number[];
+  readonly after: number[];
+}
+
 const DEFAULT_OVERSCAN = 4;
 const DEFAULT_INITIAL = 20;
 const JUMP_VIEWPORTS = 2;
 
-const indicesOf = (range: VirtualRange, frozen: number, pinned: number | undefined): number[] => {
+const indicesOf = (range: VirtualRange, frozen: number, extra: readonly number[]): number[] => {
   const held = Array.from({ length: frozen }, (_, index) => index);
   const list = Array.from({ length: range.end - range.start }, (_, offset) => range.start + offset);
 
-  if (pinned === undefined || pinned < frozen || (pinned >= range.start && pinned < range.end)) {
-    return [...held, ...list];
-  }
-  return pinned < range.start ? [...held, pinned, ...list] : [...held, ...list, pinned];
+  const outside = extra.reduce<OutsideIndices>(
+    (found, index) => {
+      if (index < frozen || (index >= range.start && index < range.end)) {
+        return found;
+      }
+      (index < range.start ? found.before : found.after).push(index);
+      return found;
+    },
+    { before: [], after: [] },
+  );
+
+  return [...held, ...outside.before, ...list, ...outside.after];
+};
+
+const extraOf = (
+  pinned: number | undefined,
+  kept: readonly number[] | undefined,
+  count: number,
+): number[] => {
+  const asked = pinned === undefined ? (kept ?? []) : [...(kept ?? []), pinned];
+
+  const valid = asked.reduce<number[]>((found, index) => {
+    if (index < 0 || index >= count) {
+      return found;
+    }
+    found.push(index);
+    return found;
+  }, []);
+
+  return sortedUniq(valid.toSorted((a, b) => a - b));
 };
 
 const slotsOf = (items: readonly VirtualItem[] = []): SlotMap =>
@@ -174,9 +207,8 @@ export const useVirtualList = (
   };
 
   const items = computed<readonly VirtualItem[]>((previous) => {
-    const pinned = toValue(options.pinned);
-    const valid = pinned !== undefined && pinned >= 0 && pinned < countOf(model.value);
-    const indices = indicesOf(range.value, frozen.value, valid ? pinned : undefined);
+    const extra = extraOf(toValue(options.pinned), toValue(options.kept), countOf(model.value));
+    const indices = indicesOf(range.value, frozen.value, extra);
     const slots = assignSlots(slotsOf(previous), indices);
 
     return indices.map((index) => itemAt(index, slots.get(index) ?? 0));

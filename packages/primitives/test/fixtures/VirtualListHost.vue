@@ -33,6 +33,7 @@ const {
   initialCount,
   enabled = undefined,
   pinned,
+  kept,
   frozen,
   maxSize,
   inset,
@@ -46,6 +47,7 @@ const {
   initialCount?: number | undefined;
   enabled?: boolean | undefined;
   pinned?: number | undefined;
+  kept?: readonly number[] | undefined;
   frozen?: number | undefined;
   maxSize?: number | undefined;
   inset?: number | undefined;
@@ -69,6 +71,7 @@ const virtual = useVirtualList(container, {
   initialCount: () => initialCount,
   enabled: () => enabled,
   pinned: () => pinned,
+  kept: () => kept,
   frozen: () => frozen,
   maxSize: () => maxSize,
   inset: () => inset,

@@ -246,6 +246,10 @@ export class VirtualHarness {
     await this.wrapper.setProps({ itemSize: size });
   }
 
+  async keep(indices: readonly number[]): Promise<void> {
+    await this.wrapper.setProps({ kept: indices });
+  }
+
   async pin(index: number | undefined): Promise<void> {
     await this.wrapper.setProps({ pinned: index });
   }
