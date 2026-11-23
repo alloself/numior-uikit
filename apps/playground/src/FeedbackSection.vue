@@ -29,7 +29,7 @@
     >
       <p>Нажмите кнопку: уведомление появится над этим диалогом.</p>
       <template #footer>
-        <NuiButton data-testid="toast-from-dialog" @click="notify">Показать</NuiButton>
+        <NuiButton data-testid="toast-from-dialog" @click="notifyFromDialog">Показать</NuiButton>
       </template>
     </NuiDialog>
     <NuiToaster :placement="placement" data-testid="toaster" />
@@ -110,9 +110,17 @@ const progressInput = ref('40');
 const sequence = ref(0);
 const progressValue = computed(() => Math.min(100, Math.max(0, Number(progressInput.value) || 0)));
 
-const notify = (): void => {
+const announce = (duration: number | undefined): void => {
   sequence.value += 1;
-  toast.info(`Уведомление №${sequence.value}`, { description: 'Обычное уведомление' });
+  toast.info(`Уведомление №${sequence.value}`, { description: 'Обычное уведомление', duration });
+};
+
+const notify = (): void => {
+  announce(undefined);
+};
+
+const notifyFromDialog = (): void => {
+  announce(0);
 };
 
 const quick = (): void => {
