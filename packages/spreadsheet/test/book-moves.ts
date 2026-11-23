@@ -61,6 +61,17 @@ export type BookMove =
 
 type BookMoveKind = (typeof BookMoveKind)[keyof typeof BookMoveKind];
 
+type BookMoveOf<K extends BookMoveKind> = Extract<BookMove, { readonly kind: K }>;
+
+type SheetsMove = BookMoveOf<
+  | typeof BookMoveKind.Rename
+  | typeof BookMoveKind.Add
+  | typeof BookMoveKind.Remove
+  | typeof BookMoveKind.Name
+  | typeof BookMoveKind.Table
+  | typeof BookMoveKind.Merge
+>;
+
 export interface BookDesk {
   readonly book: Workbook;
   readonly calculator: Calculator;
@@ -341,34 +352,31 @@ const cellStep = (desk: BookDesk, place: Place, value: number | undefined): Work
   ],
 });
 
-const stepOf = (desk: BookDesk, move: BookMove): WorkbookStep | undefined => {
+const linesStep = (desk: BookDesk, move: BookMoveOf<typeof BookMoveKind.Lines>): WorkbookStep => ({
+  kind: move.insert ? 'insertLines' : 'deleteLines',
+  sheet: sheetAt(desk, move.sheet).name,
+  axis: move.axis,
+  at: move.at,
+  count: move.count,
+});
+
+const formatStep = (
+  desk: BookDesk,
+  move: BookMoveOf<typeof BookMoveKind.Format>,
+): WorkbookStep => ({
+  kind: 'setFormat',
+  sheet: sheetAt(desk, move.sheet).name,
+  range: {
+    top: move.row,
+    left: move.col,
+    bottom: move.row + move.height,
+    right: move.col + move.width,
+  },
+  format: move.format,
+});
+
+const sheetsStep = (desk: BookDesk, move: SheetsMove): WorkbookStep | undefined => {
   switch (move.kind) {
-    case BookMoveKind.Value:
-      return cellStep(desk, move, move.value);
-    case BookMoveKind.Clear:
-      return cellStep(desk, move, undefined);
-    case BookMoveKind.Formula:
-      return formulaStep(desk, move);
-    case BookMoveKind.Lines:
-      return {
-        kind: move.insert ? 'insertLines' : 'deleteLines',
-        sheet: sheetAt(desk, move.sheet).name,
-        axis: move.axis,
-        at: move.at,
-        count: move.count,
-      };
-    case BookMoveKind.Format:
-      return {
-        kind: 'setFormat',
-        sheet: sheetAt(desk, move.sheet).name,
-        range: {
-          top: move.row,
-          left: move.col,
-          bottom: move.row + move.height,
-          right: move.col + move.width,
-        },
-        format: move.format,
-      };
     case BookMoveKind.Rename:
       desk.added += 1;
       return {
@@ -393,6 +401,23 @@ const stepOf = (desk: BookDesk, move: BookMove): WorkbookStep | undefined => {
       return tableStep(desk, move);
     default:
       return mergeStep(desk, move);
+  }
+};
+
+const stepOf = (desk: BookDesk, move: BookMove): WorkbookStep | undefined => {
+  switch (move.kind) {
+    case BookMoveKind.Value:
+      return cellStep(desk, move, move.value);
+    case BookMoveKind.Clear:
+      return cellStep(desk, move, undefined);
+    case BookMoveKind.Formula:
+      return formulaStep(desk, move);
+    case BookMoveKind.Lines:
+      return linesStep(desk, move);
+    case BookMoveKind.Format:
+      return formatStep(desk, move);
+    default:
+      return sheetsStep(desk, move);
   }
 };
 

@@ -162,31 +162,46 @@ const mergeStep = (client: BookClient, move: NetMove): WorkbookStep | undefined 
   };
 };
 
-const sheetStep = (desk: Desk, client: BookClient, move: NetMove): WorkbookStep | undefined => {
-  const sheet = sheetNameOf(client, move.sheet);
+const addedStep = (desk: Desk, client: BookClient, move: NetMove): WorkbookStep => {
   const count = client.book.sheets.length;
 
+  return {
+    kind: 'addSheet',
+    name: desk.shared ? `Sheet${String(count + 1)}` : `${tokenOf(desk, move.who)}S`,
+    index: move.pick % (count + 1),
+  };
+};
+
+const renamedStep = (desk: Desk, client: BookClient, move: NetMove): WorkbookStep => ({
+  kind: 'renameSheet',
+  from: sheetNameOf(client, move.sheet),
+  to: desk.shared ? `Tab${String(1 + (move.pick % 4))}` : `${tokenOf(desk, move.who)} T`,
+});
+
+const namedStep = (desk: Desk, client: BookClient, move: NetMove): WorkbookStep => ({
+  kind: 'setName',
+  name: desk.shared ? 'Total' : `${PEOPLE[move.who] ?? 'who'}Name`,
+  ast: parsed(
+    `=${quoted(sheetNameOf(client, move.sheet))}$A$1:$B$${String(2 + (move.pick % 5))}`,
+    ORIGIN,
+  ),
+});
+
+const droppedStep = (client: BookClient, move: NetMove): WorkbookStep | undefined =>
+  client.book.sheets.length < 2
+    ? undefined
+    : { kind: 'removeSheet', name: sheetNameOf(client, move.sheet) };
+
+const sheetStep = (desk: Desk, client: BookClient, move: NetMove): WorkbookStep | undefined => {
   switch (move.action) {
     case NetAction.Add:
-      return {
-        kind: 'addSheet',
-        name: desk.shared ? `Sheet${String(count + 1)}` : `${tokenOf(desk, move.who)}S`,
-        index: move.pick % (count + 1),
-      };
+      return addedStep(desk, client, move);
     case NetAction.Rename:
-      return {
-        kind: 'renameSheet',
-        from: sheet,
-        to: desk.shared ? `Tab${String(1 + (move.pick % 4))}` : `${tokenOf(desk, move.who)} T`,
-      };
+      return renamedStep(desk, client, move);
     case NetAction.Remove:
-      return count < 2 ? undefined : { kind: 'removeSheet', name: sheet };
+      return droppedStep(client, move);
     case NetAction.Name:
-      return {
-        kind: 'setName',
-        name: desk.shared ? 'Total' : `${PEOPLE[move.who] ?? 'who'}Name`,
-        ast: parsed(`=${quoted(sheet)}$A$1:$B$${String(2 + (move.pick % 5))}`, ORIGIN),
-      };
+      return namedStep(desk, client, move);
     default:
       return mergeStep(client, move);
   }

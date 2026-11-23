@@ -346,25 +346,28 @@ const rotated = (rows: readonly Sale[], by: number, reverse: boolean): Sale[] =>
   return reverse ? turned.toReversed() : turned;
 };
 
+const pickOf = <V>(values: readonly V[], pick: number): V | null =>
+  values[pick % values.length] ?? null;
+
 const edited = (row: Sale, field: Field, pick: number): void => {
   switch (field) {
     case 'name':
-      row.name = VALUES.name[pick % VALUES.name.length] ?? null;
+      row.name = pickOf(VALUES.name, pick);
       return;
     case 'city':
-      row.city = VALUES.city[pick % VALUES.city.length] ?? null;
+      row.city = pickOf(VALUES.city, pick);
       return;
     case 'amount':
-      row.amount = VALUES.amount[pick % VALUES.amount.length] ?? null;
+      row.amount = pickOf(VALUES.amount, pick);
       return;
     case 'qty':
-      row.qty = VALUES.qty[pick % VALUES.qty.length] ?? null;
+      row.qty = pickOf(VALUES.qty, pick);
       return;
     case 'flag':
-      row.flag = VALUES.flag[pick % VALUES.flag.length] ?? null;
+      row.flag = pickOf(VALUES.flag, pick);
       return;
     default:
-      row.when = VALUES.when[pick % VALUES.when.length] ?? null;
+      row.when = pickOf(VALUES.when, pick);
   }
 };
 
