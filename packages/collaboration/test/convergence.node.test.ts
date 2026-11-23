@@ -214,14 +214,6 @@ const moving =
 
 const lettersOf = (doc: Doc): number => doc.textBetween(0, doc.size, '').length;
 
-const typed = (client: NetworkClient, change: Change): number => {
-  const before = lettersOf(client.state().doc);
-
-  change(client);
-
-  return lettersOf(client.state().doc) - before;
-};
-
 const sending: Change = (client) => {
   client.toServer();
 };
@@ -240,6 +232,27 @@ const relinking: Change = (client) => {
 
 const lagging: Change = (client) => {
   client.late();
+};
+
+const LINK_CHANGES: ReadonlySet<Change> = new Set([
+  sending,
+  receiving,
+  cutting,
+  relinking,
+  lagging,
+]);
+
+const typed = (client: NetworkClient, change: Change): number => {
+  if (LINK_CHANGES.has(change)) {
+    change(client);
+    return 0;
+  }
+
+  const before = lettersOf(client.state().doc);
+
+  change(client);
+
+  return lettersOf(client.state().doc) - before;
 };
 
 const linkArbitrary = fc.constantFrom(cutting, relinking, lagging);
