@@ -59,6 +59,11 @@ that its features are implemented. Component and test conventions live in the sk
 - `pnpm arch:check` checks Archcore when its CLI is available.
 - Do not disable checks globally to hide findings or use `passWithNoTests`.
 - Keep packages private until the complete 1.0 release criteria are met.
+- One task at a time in the main checkout, through a merge request: never a git worktree or another
+  working copy (`git worktree add`, `EnterWorktree`, a clone, `isolation` on agents and
+  workflows). A task is one branch from fresh `master`; the owner reviews and merges it, the agent
+  never commits, merges or pushes onto `master`, and the next branch starts only after the previous
+  one is merged (`.archcore/development-flow.rule.md`, hook `.claude/hooks/git-guard.mjs`).
 - Use Conventional Commits; release rules and activation are in docs/releases.md.
 - Run `pnpm release:check` for release changes. Never publish as part of local verification.
 

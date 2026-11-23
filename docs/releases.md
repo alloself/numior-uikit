@@ -33,9 +33,10 @@ prerelease-версия вроде `5.0.0-beta.1`: пакет на бете вн
 Первый релиз при наличии release-worthy изменений — `1.0.0`. Публичные alpha/beta
 не настроены. `pnpm commitlint` принимает сообщение через stdin; PR workflow
 проверяет заголовок. Для GitHub следует включить squash merge с заголовком PR в
-качестве сообщения squash-коммита. Прямые коммиты в master также должны соблюдать
-Conventional Commits. Branch protection и merge settings на сервере пока не
-настраивались: remote отсутствует.
+качестве сообщения squash-коммита. Прямых коммитов в master нет: каждое изменение
+приходит веткой через MR (`.archcore/development-flow.rule.md`). Remote — приватный
+репозиторий GitHub `alloself/numior-uikit`; branch protection и merge settings на нём пока не
+настраивались.
 
 ## Включение публикации после выполнения полного плана
 

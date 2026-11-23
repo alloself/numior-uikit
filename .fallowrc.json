@@ -79,7 +79,8 @@
     ".release/**",
     "apps/docs/test/fixtures/**",
     "**/.nuxt/**",
-    "**/.output/**"
+    "**/.output/**",
+    ".claude/**"
   ],
   "rules": {
     "unused-files": "error",

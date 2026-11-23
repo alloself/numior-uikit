@@ -286,6 +286,21 @@
       "source": "mcp.adr.md",
       "target": "nuxt-module.adr.md",
       "type": "related"
+    },
+    {
+      "source": "development-flow.rule.md",
+      "target": "engineering-quality.rule.md",
+      "type": "related"
+    },
+    {
+      "source": "development-flow.rule.md",
+      "target": "workspace-development.guide.md",
+      "type": "related"
+    },
+    {
+      "source": "development-flow.rule.md",
+      "target": "semantic-release.adr.md",
+      "type": "related"
     }
   ]
 }
