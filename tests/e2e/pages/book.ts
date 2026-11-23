@@ -1,7 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
-import { paintedRgbAt, rgbDelta, type Rgb } from '../helpers/color';
+import { paintedRgbAt, rgbDelta, tintedPixels, type Rgb } from '../helpers/color';
+import { coverAfterJump, type ColumnCover } from '../helpers/column-window';
 import {
   boxOf,
   dragAcross,
@@ -69,6 +70,14 @@ export class BookSection extends SheetKeys {
     this.signature = this.hint.locator('.nui-row__title');
     this.summary = this.hint.locator('.nui-row__description');
     this.currentArgument = this.hint.locator('.nui-spreadsheet__hint-part--current');
+  }
+
+  tintedTextIn(row: string, col: number): Promise<number> {
+    return tintedPixels(this.cell(row, col));
+  }
+
+  coverAfterJump(left: number): Promise<ColumnCover> {
+    return coverAfterJump(this.sheet.locator('.nui-table__viewport').first(), left);
   }
 
   get grid(): Locator {

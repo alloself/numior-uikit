@@ -40,7 +40,7 @@ export class TableCellsSection extends SheetKeys {
     this.toggle = page.getByTestId(`${id}-toggle`);
     this.root = page.getByTestId(id);
     this.viewport = this.root.locator(':scope > .nui-table__frame > .nui-table__viewport');
-    this.grid = this.viewport.locator(':scope > .nui-table__grid');
+    this.grid = this.viewport.locator(':scope > .nui-table__lane > .nui-table__grid');
     this.output = page.getByTestId(`${id}-output`);
     this.recalc = page.getByTestId(`${id}-recalc`);
   }

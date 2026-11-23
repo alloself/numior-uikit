@@ -9,6 +9,7 @@ import {
   type PaintedColumn,
   type Rgb,
 } from '../helpers/color';
+import { coverAfterJump, type ColumnCover } from '../helpers/column-window';
 import { boxOf, dragAcross, renderedWidth, type Box, type Point } from '../helpers/geometry';
 import { sectionScope } from '../helpers/axe';
 import { ARROWS, type ArrowDirection } from '../helpers/keyboard';
@@ -1227,6 +1228,10 @@ export class TableSection extends GridKeys {
     await this.viewport.evaluate((element) => {
       element.scrollTop = element.scrollHeight;
     });
+  }
+
+  coverAfterJump(left: number): Promise<ColumnCover> {
+    return coverAfterJump(this.viewport, left);
   }
 
   jumpBeforeRender(top: number): Promise<TableJump> {

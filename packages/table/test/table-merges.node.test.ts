@@ -26,7 +26,6 @@ const SLOTS: readonly TableMergeSlot[] = [
   { key: 'a', pane: 'start', col: 0 },
   { key: 'b', pane: 'start', col: 1, edge: true },
   { key: 'c', pane: 'centre', col: 2 },
-  { key: 'gap', pane: 'centre', col: undefined },
   { key: 'f', pane: 'centre', col: 5 },
   { key: 'g', pane: 'centre', col: 6, tail: true },
   { key: 'trail', pane: 'centre', col: undefined },
@@ -102,7 +101,7 @@ describe('table merges', () => {
     expect(leaveMergeBy(index, { row: 3, col: 2 }, 'stay')).toEqual({ row: 3, col: 2 });
   });
 
-  it('splits a merge into one piece per pane and covers the cells and gaps behind it', () => {
+  it('splits a merge into one piece per pane and per run of neighbouring columns', () => {
     const index = createMergeIndex(MERGES, BOUNDS);
     const merges = index.within(0, 9);
     const { spans, pieces } = mergeSpans(merges, [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], SLOTS, geometry);
@@ -143,7 +142,7 @@ describe('table merges', () => {
     expect(spans.get(2)?.get('b')).toEqual({ kind: 'covered' });
     expect(spans.get(3)?.get('c')).toEqual({ kind: 'covered' });
     expect(spans.get(1)?.get('a')).toBeUndefined();
-    expect([...(spans.get(5)?.keys() ?? [])]).toEqual(['a', 'b', 'c', 'gap', 'f', 'g', 'h']);
+    expect([...(spans.get(5)?.keys() ?? [])]).toEqual(['a', 'b', 'c', 'f', 'g', 'h']);
 
     expect(spans.get(5)?.get('a')).toMatchObject({
       kind: 'lead',
@@ -154,17 +153,36 @@ describe('table merges', () => {
 
     expect(spans.get(5)?.get('c')).toMatchObject({
       kind: 'lead',
-      colspan: 4,
-      span: 5,
+      colspan: 1,
+      span: 1,
       edge: false,
-      tail: true,
+      tail: false,
       x: 200,
       width: 800,
     });
 
-    expect(spans.get(5)?.get('gap')).toEqual({ kind: 'covered' });
+    expect(spans.get(5)?.get('f')).toMatchObject({
+      kind: 'lead',
+      colspan: 2,
+      span: 2,
+      edge: false,
+      tail: true,
+      x: 500,
+      width: 800,
+    });
+
+    expect(spans.get(5)?.get('g')).toEqual({ kind: 'covered' });
     expect(spans.get(5)?.get('trail')).toBeUndefined();
     expect(spans.get(5)?.get('h')).toMatchObject({ kind: 'lead', colspan: 1, x: 700 });
+
+    const across = index.at(5, 0);
+
+    expect(across === undefined ? undefined : pieces.get(across)).toEqual([
+      { top: 5, bottom: 5, start: 0, end: 1 },
+      { top: 5, bottom: 5, start: 2, end: 2 },
+      { top: 5, bottom: 5, start: 5, end: 6 },
+      { top: 5, bottom: 5, start: 7, end: 7 },
+    ]);
 
     const square = index.at(2, 2);
     const parts = square === undefined ? undefined : pieces.get(square);
@@ -180,7 +198,8 @@ describe('table merges', () => {
 
   it('continues a tall merge from the first row of the window and from a row held outside it', () => {
     const index = createMergeIndex(MERGES, BOUNDS);
-    const slots = SLOTS.map((slot) => (slot.key === 'gap' ? { ...slot, key: 'd', col: 3 } : slot));
+    const held: TableMergeSlot = { key: 'd', pane: 'centre', col: 3 };
+    const slots = [...SLOTS.slice(0, 3), held, ...SLOTS.slice(3)];
     const { spans } = mergeSpans(index.within(60, 70), [[45], [60, 61, 62]], slots, geometry);
 
     expect(spans.get(45)?.get('d')).toMatchObject({

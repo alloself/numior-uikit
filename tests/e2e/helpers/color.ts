@@ -18,6 +18,11 @@ export interface PaintedArea {
   readonly delta: number;
 }
 
+interface PixelCounts {
+  readonly ink: number;
+  readonly tinted: number;
+}
+
 export const rgbOf = (locator: Locator, property: string): Promise<Rgb> => {
   return locator.evaluate((element, prop) => {
     const value = getComputedStyle(element).getPropertyValue(prop);
@@ -209,13 +214,17 @@ export const paintedViewColumn = async (
 
 const INK_DELTA = 24;
 
-const countInk = async ({
+const TINT_SPREAD = 40;
+
+const countPixels = async ({
   base64,
   area,
+  spread,
 }: {
   base64: string;
-  area: PaintedArea;
-}): Promise<number> => {
+  area: PaintedArea | undefined;
+  spread: number;
+}): Promise<PixelCounts> => {
   const image = new Image();
   image.src = `data:image/png;base64,${base64}`;
   await image.decode();
@@ -228,24 +237,46 @@ const countInk = async ({
   }
   context.drawImage(image, 0, 0);
 
-  const { data } = context.getImageData(
-    Math.round(area.x * devicePixelRatio),
-    Math.round(area.y * devicePixelRatio),
-    Math.max(Math.round(area.width * devicePixelRatio), 1),
-    Math.max(Math.round(area.height * devicePixelRatio), 1),
-  );
+  const { data } =
+    area === undefined
+      ? context.getImageData(0, 0, canvas.width, canvas.height)
+      : context.getImageData(
+          Math.round(area.x * devicePixelRatio),
+          Math.round(area.y * devicePixelRatio),
+          Math.max(Math.round(area.width * devicePixelRatio), 1),
+          Math.max(Math.round(area.height * devicePixelRatio), 1),
+        );
 
   const paper = [data[0] ?? 0, data[1] ?? 0, data[2] ?? 0];
+  const delta = area?.delta ?? 0;
   let ink = 0;
+  let tinted = 0;
 
   for (let offset = 0; offset < data.length; offset += 4) {
-    const unlike = paper.some(
-      (channel, index) => Math.abs((data[offset + index] ?? 0) - channel) > area.delta,
+    const red = data[offset] ?? 0;
+    const green = data[offset + 1] ?? 0;
+    const blue = data[offset + 2] ?? 0;
+
+    const unlike = [red, green, blue].some(
+      (channel, index) => Math.abs(channel - (paper[index] ?? 0)) > delta,
     );
 
     ink += Number(unlike);
+    tinted += Number(Math.max(red, green, blue) - Math.min(red, green, blue) > spread);
   }
-  return ink;
+  return { ink, tinted };
+};
+
+export const tintedPixels = async (locator: Locator): Promise<number> => {
+  const png = await settledShotOf(locator);
+
+  const counts = await locator.page().evaluate(countPixels, {
+    base64: png.toString('base64'),
+    area: undefined,
+    spread: TINT_SPREAD,
+  });
+
+  return counts.tinted;
 };
 
 export const inkedPixels = async (
@@ -254,9 +285,13 @@ export const inkedPixels = async (
 ): Promise<number> => {
   const png = await settledShotOf(locator);
 
-  return locator
-    .page()
-    .evaluate(countInk, { base64: png.toString('base64'), area: { ...area, delta: INK_DELTA } });
+  const counts = await locator.page().evaluate(countPixels, {
+    base64: png.toString('base64'),
+    area: { ...area, delta: INK_DELTA },
+    spread: TINT_SPREAD,
+  });
+
+  return counts.ink;
 };
 
 const countUnlike = async ({

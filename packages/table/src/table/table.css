@@ -4,7 +4,6 @@
     --_row: 40px;
     --_start: 0px;
     --_end: 0px;
-    --_canvas: 0px;
     --_pad-x: --spacing(3);
     --_resize-inset: 3px;
     --_resize-line: 2px;
@@ -126,7 +125,8 @@
     overscroll-behavior: var(--_overscroll);
   }
   .nui-table__viewport:has(
-    > .nui-table__grid
+    > .nui-table__lane
+      > .nui-table__grid
       > *
       > :is(
         .nui-table__row--head,
@@ -138,9 +138,12 @@
   ) {
     @apply scroll-py-0;
   }
+  .nui-table__lane {
+    @apply flex items-start inline-max min-inline-full mbs-[calc(-1_*_var(--_head-lap))];
+  }
   .nui-table__grid {
-    @apply relative table-fixed border-separate inline-(--_canvas) min-inline-full bg-surface;
-    @apply border-spacing-0 mbs-[calc(-1_*_var(--_head-lap))];
+    @apply relative table-fixed border-separate inline-(--_tracks) grow shrink-0 bg-surface;
+    @apply border-spacing-0;
   }
   .nui-table__row {
     --_snap: calc(1px - mod(var(--_row), 2px));
@@ -151,12 +154,8 @@
     @apply content-[''] block;
     block-size: var(--_window-lead);
   }
-  .nui-table__header,
-  .nui-table__pinned,
-  .nui-table__body,
-  .nui-table__status,
-  .nui-table__footer {
-    --_canvas: initial;
+  .nui-table__grid > * {
+    --_tracks: initial;
   }
   .nui-table__pinned,
   .nui-table__body,
@@ -169,7 +168,7 @@
     @apply content-[''] block;
     block-size: var(--_window-rest);
   }
-  .nui-table:not(.nui-table--auto) > .nui-table__frame > .nui-table__viewport > .nui-table__grid {
+  .nui-table:not(.nui-table--auto) > .nui-table__frame > .nui-table__viewport > .nui-table__lane {
     --_window-lead: initial;
     --_window-rest: initial;
 
@@ -179,10 +178,38 @@
   .nui-table:not(.nui-table--auto)
     > .nui-table__frame
     > .nui-table__viewport
-    > .nui-table__grid
-    > * {
+    > .nui-table__lane::before {
+    @apply content-[''] flex-none;
+    inline-size: var(--_window-inline-lead);
+  }
+  .nui-table:not(.nui-table--auto)
+    > .nui-table__frame
+    > .nui-table__viewport
+    > .nui-table__lane::after {
+    @apply content-[''] flex-none;
+    inline-size: var(--_window-inline-rest);
+  }
+  .nui-table:not(.nui-table--auto)
+    > .nui-table__frame
+    > .nui-table__viewport
+    > .nui-table__lane
+    > .nui-table__grid {
     --_window-clamp-start: initial;
     --_window-clamp-end: initial;
+    --_window-inline-lead: initial;
+    --_window-inline-rest: initial;
+
+    position: sticky;
+    inset-inline: var(--_window-inline-clamp-start) var(--_window-inline-clamp-end);
+  }
+  .nui-table:not(.nui-table--auto)
+    > .nui-table__frame
+    > .nui-table__viewport
+    > .nui-table__lane
+    > .nui-table__grid
+    > * {
+    --_window-inline-clamp-start: initial;
+    --_window-inline-clamp-end: initial;
   }
   .nui-table__body
     > .nui-table__row
@@ -310,6 +337,7 @@
   .nui-table--cell-selection:not(.nui-table--ranged, .nui-table--deselected)
     > .nui-table__frame
     > .nui-table__viewport
+    > .nui-table__lane
     > .nui-table__grid
     > .nui-table__body
     > .nui-table__row--body:not(.nui-table__row--group)
@@ -317,6 +345,7 @@
   .nui-table--cell-selection:not(.nui-table--ranged, .nui-table--deselected)
     > .nui-table__frame
     > .nui-table__viewport
+    > .nui-table__lane
     > .nui-table__grid
     > .nui-table__body:has(
       > .nui-table__row > .nui-table__cell--active:is(:focus, .nui-table--cell-menu *)
@@ -335,6 +364,7 @@
   .nui-table--cell-selection:not(.nui-table--ranged, .nui-table--deselected)
     > .nui-table__frame
     > .nui-table__viewport
+    > .nui-table__lane
     > .nui-table__grid
     > .nui-table__body:has(
       > .nui-table__row > .nui-table__cell--active:is(:focus, .nui-table--cell-menu *)
@@ -344,6 +374,7 @@
   .nui-table--cell-selection:not(.nui-table--ranged, .nui-table--deselected)
     > .nui-table__frame
     > .nui-table__viewport
+    > .nui-table__lane
     > .nui-table__grid
     > .nui-table__body
     > .nui-table__row--body:not(.nui-table__row--group)
@@ -378,6 +409,7 @@
   .nui-table--cell-selection:not(.nui-table--ranged, .nui-table--deselected)
     > .nui-table__frame
     > .nui-table__viewport
+    > .nui-table__lane
     > .nui-table__grid
     > .nui-table__body
     > .nui-table__row--body:not(.nui-table__row--group)
@@ -401,6 +433,7 @@
   .nui-table--ranged
     > .nui-table__frame
     > .nui-table__viewport
+    > .nui-table__lane
     > .nui-table__grid
     > .nui-table__body
     > .nui-table__row
@@ -1066,12 +1099,13 @@
   }
   .nui-table__overlay {
     --_plane-lead: 0px;
+    --_plane-inline: 0px;
     --_pane-lead: 0px;
     --_pane-start: 0px;
     --_pane-end: 0px;
     --_pane-end-at: 0px;
 
-    @apply absolute inset-bs-0 inset-s-0 grid inline-full block-full p-0 text-start;
+    @apply absolute inset-bs-0 inset-s-0 grid inline-full block-full p-0 text-start overflow-clip;
     @apply pointer-events-none grid-rows-[100%] grid-cols-[100%];
   }
   .nui-table__pane {
@@ -1098,7 +1132,7 @@
     @apply z-55 block-(--_frozen);
   }
   .nui-table__plane {
-    @apply absolute inset-s-0 inline-0 block-0;
+    @apply absolute inset-s-[calc(-1_*_var(--_plane-inline))] inline-0 block-0;
     @apply inset-bs-[calc(var(--_head-lap)_-_var(--_plane-lead))];
   }
   .nui-table__pane--frozen > .nui-table__plane {
@@ -1109,6 +1143,14 @@
   }
   .nui-table__pane--cols-end > .nui-table__plane {
     @apply inset-s-[calc(-1_*_var(--_pane-end-at))];
+  }
+  .nui-table__plane > * {
+    --_plane-lead: initial;
+    --_plane-inline: initial;
+    --_pane-lead: initial;
+    --_pane-start: initial;
+    --_pane-end: initial;
+    --_pane-end-at: initial;
   }
   .nui-table__busy {
     --_flow: 1;

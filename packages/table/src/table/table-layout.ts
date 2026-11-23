@@ -346,23 +346,6 @@ export const revealOffset = (
 export const sameIndices = (a: readonly number[], b: readonly number[]): boolean =>
   a.length === b.length && a.every((index, at) => index === b[at]);
 
-export const mergeIndices = (shown: readonly number[], kept: readonly number[]): number[] => {
-  const merged: number[] = [];
-  let next = 0;
-
-  for (const index of shown) {
-    for (let held = kept[next]; held !== undefined && held < index; held = kept[next]) {
-      merged.push(held);
-      next += 1;
-    }
-    if (kept[next] === index) {
-      next += 1;
-    }
-    merged.push(index);
-  }
-  return [...merged, ...kept.slice(next)];
-};
-
 const gapCell = (key: string): TableGapCell => ({
   kind: 'gap',
   key,
@@ -377,7 +360,6 @@ const trackOf = (column: PlacedColumn): TableTrack => ({ key: column.key, width:
 export const rowCellsOf = (layout: TableLayout, centre: readonly number[]): TableRowCells => {
   const cells: TableCellLayout[] = layout.start.map((column) => column.cell);
   const tracks: TableTrack[] = layout.start.map(trackOf);
-  let cursor = 0;
 
   for (const index of centre) {
     const column = layout.centre[index];
@@ -386,15 +368,8 @@ export const rowCellsOf = (layout: TableLayout, centre: readonly number[]): Tabl
       continue;
     }
 
-    if (column.offset > cursor) {
-      const key = `__gap-${column.visual}`;
-
-      cells.push(gapCell(key));
-      tracks.push({ key, width: column.offset - cursor });
-    }
     cells.push(column.cell);
     tracks.push(trackOf(column));
-    cursor = column.offset + column.width;
   }
   cells.push(gapCell(TRAIL_KEY));
   tracks.push({ key: TRAIL_KEY, width: undefined });

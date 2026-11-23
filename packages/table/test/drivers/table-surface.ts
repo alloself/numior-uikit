@@ -11,7 +11,7 @@ export interface KeyOptions {
   readonly alt?: boolean;
 }
 
-const OWN_GRID = ':scope > .nui-table__grid';
+const OWN_GRID = ':scope > .nui-table__lane > .nui-table__grid';
 const SURFACE_POINTER = 6;
 
 export const numberAttribute = (element: Element | null | undefined, name: string): number =>

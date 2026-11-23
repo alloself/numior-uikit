@@ -242,19 +242,27 @@ const rowSegments = (merge: RangeBox, runs: readonly (readonly number[])[]): Seg
   });
 };
 
-const slotSegments = (merge: RangeBox, slots: readonly TableMergeSlot[]): Segment[] => {
-  const segments = new Map<string, Segment>();
+const followsSlot = (previous: TableMergeSlot | undefined, slot: TableMergeSlot): boolean =>
+  previous !== undefined &&
+  previous.pane === slot.pane &&
+  previous.col !== undefined &&
+  slot.col !== undefined &&
+  previous.col + 1 === slot.col;
 
-  slots.forEach((slot, at) => {
+const slotSegments = (merge: RangeBox, slots: readonly TableMergeSlot[]): Segment[] =>
+  slots.reduce<Segment[]>((segments, slot, at) => {
     if (slot.col === undefined || slot.col < merge.start || slot.col > merge.end) {
-      return;
+      return segments;
     }
+    const open = segments.at(-1);
 
-    segments.set(slot.pane, { first: segments.get(slot.pane)?.first ?? at, last: at });
-  });
-
-  return [...segments.values()];
-};
+    if (open !== undefined && open.last === at - 1 && followsSlot(slots[at - 1], slot)) {
+      segments[segments.length - 1] = { first: open.first, last: at };
+      return segments;
+    }
+    segments.push({ first: at, last: at });
+    return segments;
+  }, []);
 
 const COVERED: TableCellSpan = { kind: 'covered' };
 

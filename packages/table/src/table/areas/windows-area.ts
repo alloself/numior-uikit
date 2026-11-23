@@ -5,20 +5,15 @@ import {
   ReorderAxis,
   useVirtualFrame,
   useVirtualList,
+  VirtualAxis,
   type VersionRead,
   type VirtualFrame,
-  type VirtualFrameStyles,
+  type VirtualFrameStyle,
   type VirtualList,
 } from '@numior/primitives';
 import { ownCellAt } from '../table-dom';
 import { pageRowsOf, pageStepOf } from '../table-keys';
-import {
-  centreIndexOf,
-  mergeIndices,
-  revealOffset,
-  sameIndices,
-  wrappedCentreOf,
-} from '../table-layout';
+import { centreIndexOf, revealOffset, sameIndices, wrappedCentreOf } from '../table-layout';
 import { useTableRowSizes, type TableRowSizes } from '../use-table-row-sizes';
 import {
   NuiTableRowHeight,
@@ -65,7 +60,10 @@ export interface WindowsArea {
   readonly shownCentre: ComputedRef<readonly number[]>;
   readonly pageRows: (body: number, forward: boolean) => number;
   readonly skeletonCount: ComputedRef<number>;
-  readonly windowFrame: VirtualFrameStyles;
+  readonly viewportStyle: ComputedRef<VirtualFrameStyle | undefined>;
+  readonly laneStyle: ComputedRef<VirtualFrameStyle | undefined>;
+  readonly gridStyle: ComputedRef<VirtualFrameStyle>;
+  readonly columnLead: ComputedRef<number>;
   readonly scrollAnchor: () => NuiTableScrollAnchor | undefined;
   readonly scrollToAnchor: (anchor: NuiTableScrollAnchor) => void;
   readonly onViewportScroll: () => void;
@@ -148,6 +146,10 @@ export const useWindowsArea = <T>(table: TableContext<T>, own: WindowsAreaOption
 
   const centreWidths = computed(() => table.layout().centre.map((column) => column.width));
 
+  const wrappedCentre = computed(() =>
+    fluid.value ? wrappedCentreOf(table.layout()) : NO_COLUMNS,
+  );
+
   const columnWindow = useVirtualList(table.viewport, {
     enabled: windowed,
     axis: ReorderAxis.X,
@@ -159,6 +161,7 @@ export const useWindowsArea = <T>(table: TableContext<T>, own: WindowsAreaOption
     overscan: COLUMN_OVERSCAN,
     initialCount: INITIAL_COLUMNS,
     pinned: activeCentre,
+    kept: () => wrappedCentre.value,
     inset: () => table.layout().startWidth + table.layout().endWidth,
     listen: false,
   });
@@ -208,14 +211,8 @@ export const useWindowsArea = <T>(table: TableContext<T>, own: WindowsAreaOption
     columnWindow.measure();
   };
 
-  const wrappedCentre = computed(() =>
-    fluid.value ? wrappedCentreOf(table.layout()) : NO_COLUMNS,
-  );
-
   const shownCentre = computed<readonly number[]>((previous) => {
-    const shown = columnWindow.items.value.map((item) => item.index);
-    const kept = wrappedCentre.value;
-    const next = kept.length === 0 ? shown : mergeIndices(shown, kept);
+    const next = columnWindow.items.value.map((item) => item.index);
 
     return previous !== undefined && sameIndices(previous, next) ? previous : next;
   });
@@ -257,12 +254,41 @@ export const useWindowsArea = <T>(table: TableContext<T>, own: WindowsAreaOption
     );
   });
 
-  const windowFrame = useVirtualFrame(table.viewport, () => {
+  const rowFrame = useVirtualFrame(table.viewport, () => {
     if (!windowed.value) {
       return undefined;
     }
     return table.loading() ? STILL_FRAME : rowWindow.frame.value;
   });
+
+  const inlineFrame = useVirtualFrame(
+    table.viewport,
+    () => (windowed.value ? columnWindow.frame.value : undefined),
+    VirtualAxis.X,
+  );
+
+  const viewportStyle = computed(() =>
+    windowed.value
+      ? { ...rowFrame.canvasStyle.value, ...inlineFrame.canvasStyle.value }
+      : undefined,
+  );
+
+  const shownWidth = computed(() => {
+    const widths = centreWidths.value;
+    const layout = table.layout();
+
+    return shownCentre.value.reduce(
+      (width, index) => width + (widths[index] ?? 0),
+      layout.startWidth + layout.endWidth,
+    );
+  });
+
+  const gridStyle = computed(() => ({
+    ...inlineFrame.windowStyle.value,
+    '--_tracks': `${shownWidth.value}px`,
+  }));
+
+  const columnLead = computed(() => (windowed.value ? columnWindow.frame.value.lead : 0));
 
   const revealed = createIntent<TableReveal>();
 
@@ -345,7 +371,10 @@ export const useWindowsArea = <T>(table: TableContext<T>, own: WindowsAreaOption
     shownCentre,
     pageRows,
     skeletonCount,
-    windowFrame,
+    viewportStyle,
+    laneStyle: rowFrame.windowStyle,
+    gridStyle,
+    columnLead,
     scrollAnchor,
     scrollToAnchor,
     onViewportScroll,

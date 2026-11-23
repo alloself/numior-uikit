@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import type { NuiTableColumn, NuiTablePin } from '../src';
 import {
-  mergeIndices,
   pinsFit,
   revealOffset,
   ROW_HEAD_KEY,
@@ -214,7 +213,7 @@ describe('tableLayout', () => {
     );
   });
 
-  it('adds the wrapping columns to the columns of the window in their order', () => {
+  it('finds the wrapping columns of the centre in their order', () => {
     const layout = tableLayout(
       [
         column('id', 80, 'start'),
@@ -239,11 +238,6 @@ describe('tableLayout', () => {
     const wrapped = wrappedCentreOf(layout);
 
     expect(wrapped).toEqual([1, 3]);
-    expect(mergeIndices([2], wrapped)).toEqual([1, 2, 3]);
-    expect(mergeIndices([0, 1], wrapped)).toEqual([0, 1, 3]);
-    expect(mergeIndices([], wrapped)).toEqual([1, 3]);
-    expect(mergeIndices([0, 2, 3, 4], wrapped)).toEqual([0, 1, 2, 3, 4]);
-    expect(mergeIndices([3], [])).toEqual([3]);
   });
 
   it('puts the row headers before the checkboxes in the start pane and sizes them by the row count', () => {

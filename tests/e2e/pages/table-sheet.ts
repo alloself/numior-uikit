@@ -114,7 +114,7 @@ export class TableSheetSection extends GridKeys {
     this.toggle = page.getByTestId('table-sheet-toggle');
     this.root = page.getByTestId('table-sheet');
     this.viewport = this.root.locator(':scope > .nui-table__frame > .nui-table__viewport');
-    this.grid = this.viewport.locator(':scope > .nui-table__grid');
+    this.grid = this.viewport.locator(':scope > .nui-table__lane > .nui-table__grid');
 
     this.gridlinesSwitch = page.getByTestId('table-sheet-gridlines');
     this.heatSwitch = page.getByTestId('table-sheet-heat');
@@ -480,7 +480,7 @@ export class TableSheetSection extends GridKeys {
     return this.viewport.evaluate(
       (element, { target, rows }) => {
         const base = element.getBoundingClientRect().top;
-        const grid = element.querySelector(':scope > .nui-table__grid');
+        const grid = element.querySelector(':scope > .nui-table__lane > .nui-table__grid');
         const all = [...(grid?.querySelectorAll(rows) ?? [])];
         const frozen = all.filter((row) => row.classList.contains('nui-table__row--frozen'));
         const moving = all.filter((row) => !row.classList.contains('nui-table__row--frozen'));

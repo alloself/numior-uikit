@@ -1,4 +1,4 @@
-const OWN_GRID = ':scope > .nui-table__grid';
+const OWN_GRID = ':scope > .nui-table__lane > .nui-table__grid';
 
 const INTERACTIVE =
   'button, a[href], input, select, textarea, label, [contenteditable="true"], .nui-table__toggle, .nui-table__editor';
@@ -26,6 +26,8 @@ export const OWN_SPANNING_CELLS = `${OWN_DATA_ROWS} > [rowspan]`;
 export const OWN_DETAIL_ROWS = `${OWN_GRID} > .nui-table__body > .nui-table__row--detail`;
 
 export const OWN_HEAD_CELLS = `${OWN_GRID} > .nui-table__header > .nui-table__row--head > [role="columnheader"][aria-colindex]`;
+
+export const OWN_FOOTER = `${OWN_GRID} > .nui-table__footer`;
 
 export const OWN_ACTIVE_CELL = `${OWN_GRID} > * > .nui-table__row > .nui-table__cell--active`;
 

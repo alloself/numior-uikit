@@ -31,6 +31,9 @@ const isDetailOutput = shapeOf({
 const HEAD_ROWS = 1;
 const BODY_ROWS = ':scope > .nui-table__body > [role="row"]';
 
+const HEAD_CELLS =
+  ':scope > .nui-table__lane > .nui-table__grid > .nui-table__header [role="columnheader"]';
+
 const LATE_LAYOUT_MS = 200;
 
 export class TableDetailSection {
@@ -49,7 +52,7 @@ export class TableDetailSection {
   constructor(private readonly page: Page) {
     this.root = page.getByTestId('table-detail');
     this.viewport = this.root.locator(':scope > .nui-table__frame > .nui-table__viewport');
-    this.grid = this.viewport.locator(':scope > .nui-table__grid');
+    this.grid = this.viewport.locator(':scope > .nui-table__lane > .nui-table__grid');
     this.windowSwitch = page.getByTestId('table-detail-window');
     this.fluidSwitch = page.getByTestId('table-detail-fluid');
     this.stripedSwitch = page.getByTestId('table-detail-striped');
@@ -145,12 +148,33 @@ export class TableDetailSection {
   }
 
   scrollPastColumns(): Promise<number> {
-    return this.viewport.evaluate((element) => {
-      const grid = element.querySelector('.nui-table__grid');
-      const columns = grid?.getBoundingClientRect().width ?? 0;
+    return this.viewport.evaluate(async (element, selector) => {
+      const rtl = getComputedStyle(element).direction === 'rtl';
 
-      return Math.round(element.scrollWidth - Math.max(columns, element.clientWidth));
-    });
+      element.scrollLeft = (rtl ? -1 : 1) * element.scrollWidth;
+
+      await new Promise((settled) => {
+        requestAnimationFrame(() => requestAnimationFrame(settled));
+      });
+
+      if (element.scrollWidth <= element.clientWidth) {
+        return 0;
+      }
+
+      const box = element.getBoundingClientRect();
+      const start = box.left + element.clientLeft;
+      const end = start + element.clientWidth;
+
+      const reach = [...element.querySelectorAll(selector)].reduce(
+        (edge, cell) => {
+          const rect = cell.getBoundingClientRect();
+          return rtl ? Math.min(edge, rect.left) : Math.max(edge, rect.right);
+        },
+        rtl ? end : start,
+      );
+
+      return Math.round(rtl ? reach - start : end - reach) || 0;
+    }, HEAD_CELLS);
   }
 
   largestRowGap(): Promise<number> {
@@ -168,7 +192,7 @@ export class TableDetailSection {
   bodyEdges(): Promise<TableDetailEdges> {
     return this.viewport.evaluate((viewport) => {
       const header = viewport.querySelector(
-        ':scope > .nui-table__grid > .nui-table__header [role="columnheader"]',
+        ':scope > .nui-table__lane > .nui-table__grid > .nui-table__header [role="columnheader"]',
       );
 
       return {

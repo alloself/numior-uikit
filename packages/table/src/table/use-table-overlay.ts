@@ -1,6 +1,6 @@
 import { computed, onMounted, watch, type ComputedRef, type ShallowRef } from 'vue';
 import { Direction, useEdgeScroll, type VirtualList } from '@numior/primitives';
-import { ariaIndex, rowPositionOf } from './table-dom';
+import { ariaIndex, OWN_FOOTER, rowPositionOf } from './table-dom';
 import { boxOf } from './table-ranges';
 import type { PlacedColumn, TableLayout } from './table-layout';
 import {
@@ -18,6 +18,7 @@ export interface TableOverlayOptions {
   readonly viewport: Readonly<ShallowRef<HTMLElement | null>>;
   readonly rows: VirtualList;
   readonly columns: VirtualList;
+  readonly columnLead: () => number;
   readonly layout: () => TableLayout;
   readonly dataKeys: () => readonly string[];
   readonly rowCount: () => number;
@@ -254,9 +255,7 @@ export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
       bottom:
         top +
         viewport.clientHeight -
-        (viewport
-          .querySelector(':scope > .nui-table__grid > .nui-table__footer')
-          ?.getBoundingClientRect().height ?? 0),
+        (viewport.querySelector(OWN_FOOTER)?.getBoundingClientRect().height ?? 0),
     };
   };
 
@@ -329,6 +328,7 @@ export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
 
     return {
       '--_plane-lead': `${options.rows.windowOrigin.value - planeBase.value}px`,
+      '--_plane-inline': `${options.columnLead()}px`,
       '--_pane-lead': `${lead}px`,
       '--_pane-start': `${layout.startWidth - lead}px`,
       '--_pane-end': `${layout.endWidth}px`,

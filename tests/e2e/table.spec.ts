@@ -5,6 +5,10 @@ import type { TableSection } from './pages/table';
 const TREE_HEAD_ROWS = 1;
 const PIXEL_RATIOS = [0.9, 1.1, 1.25, 1.33, 1.5, 1.75];
 
+const COVERED = 0.9;
+
+const FAR_RIGHT = 1_000_000;
+
 const SEAM_SCROLLS = [{ top: 3340 }, { top: 20_007 }, { top: 3340, left: 120 }];
 const SEAM_SCROLLS_RTL = [{ top: 3340 }, { top: 20_007 }, { top: 3340, left: -120 }];
 
@@ -36,6 +40,26 @@ test.describe('table', () => {
 
     expect(back.rows).toBeGreaterThan(5);
     expect(back.headerGap).toBeLessThan(1);
+    await expect(table.cell(0, 1)).toBeVisible();
+  });
+
+  test('windowed table keeps its columns on screen before the scroll event catches up', async ({
+    playground,
+    table,
+  }) => {
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+    await expect(table.cell(0, 1)).toBeVisible();
+
+    const ahead = await table.coverAfterJump(FAR_RIGHT);
+
+    expect(ahead.head).toBeGreaterThan(COVERED);
+    expect(ahead.body).toBeGreaterThan(COVERED);
+
+    const back = await table.coverAfterJump(0);
+
+    expect(back.head).toBeGreaterThan(COVERED);
+    expect(back.body).toBeGreaterThan(COVERED);
     await expect(table.cell(0, 1)).toBeVisible();
   });
 

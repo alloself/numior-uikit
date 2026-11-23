@@ -18,6 +18,10 @@ const LONG_FIELD = 300;
 
 const LISTED_ITEMS = 100;
 
+const COVERED = 0.9;
+
+const FAR_RIGHT = 200_000;
+
 const citiesBlock = (count: number): string =>
   [
     'Город\tСумма',
@@ -45,6 +49,26 @@ test.describe('book', () => {
     await expect(book.cell('2', 0)).toBeInViewport();
     await expect(book.cell('3', 0)).not.toBeInViewport();
     expect(await book.gridlines()).toBe(true);
+  });
+
+  test('keeps the columns of the sheet on screen before the scroll event catches up', async ({
+    playground,
+    book,
+  }) => {
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await expect(book.columnHeader('A')).toBeVisible();
+
+    const ahead = await book.coverAfterJump(FAR_RIGHT);
+
+    expect(ahead.head).toBeGreaterThan(COVERED);
+    expect(ahead.body).toBeGreaterThan(COVERED);
+
+    const back = await book.coverAfterJump(0);
+
+    expect(back.head).toBeGreaterThan(COVERED);
+    expect(back.body).toBeGreaterThan(COVERED);
+    await expect(book.columnHeader('A')).toBeVisible();
   });
 
   test('paints conditional formats and repaints them after an edit', async ({
@@ -1441,5 +1465,23 @@ test.describe('book', () => {
       await playground.setTheme(theme);
       expect(await playground.wcagViolations('section[aria-labelledby="book-title"]')).toEqual([]);
     }
+  });
+});
+
+test.describe('book at a pixel ratio of 1.5', () => {
+  test.use({ deviceScaleFactor: 1.5 });
+
+  test('keeps the subpixel text of its cells next to a chart that hangs below the drawn rows', async ({
+    playground,
+    book,
+    browserName,
+    isMobile,
+  }) => {
+    test.skip(browserName !== 'chromium' || isMobile, 'subpixel text of desktop Chromium');
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await expect(book.cell('3', 0)).toHaveText('Выручка');
+
+    expect(await book.tintedTextIn('3', 0)).toBeGreaterThan(0);
   });
 });

@@ -7,176 +7,184 @@
       <div
         ref="viewport"
         class="nui-table__viewport"
-        :style="windowFrame.canvasStyle.value"
+        :style="viewportStyle"
         @scroll.passive="onViewportScroll"
         @pointerdown.capture="handles.onPointerdown"
         v-on="viewportEvents"
       >
-        <table
-          :id="gridId"
-          class="nui-table__grid"
-          :role="gridRole"
-          :style="windowFrame.windowStyle.value"
-          v-bind="gridAria"
-        >
-          <caption
-            v-if="slots.overlay"
-            class="nui-table__overlay"
-            :style="overlay.style.value"
-            aria-hidden="true"
+        <div class="nui-table__lane" :style="laneStyle">
+          <table
+            :id="gridId"
+            class="nui-table__grid"
+            :role="gridRole"
+            :style="gridStyle"
+            v-bind="gridAria"
           >
-            <div
-              v-for="pane in overlay.panes.value"
-              :key="pane.name"
-              class="nui-table__pane"
-              :class="pane.classes"
+            <caption
+              v-if="slots.overlay"
+              class="nui-table__overlay"
+              :style="overlay.style.value"
+              aria-hidden="true"
             >
-              <div :key="overlay.planeBase.value" class="nui-table__plane">
-                <slot name="overlay" v-bind="pane.scope" />
-              </div>
-            </div>
-          </caption>
-          <NuiTableTracks :tracks="rowCells.tracks" />
-          <thead class="nui-table__header" @click="header.onClick">
-            <NuiTableRow
-              v-for="(band, level) in bands.rows"
-              :key="level"
-              :cells="band"
-              :row-index="level + 1"
-              part="band"
-              :head="header.head"
-              @resize="resize.start"
-              @reset-size="fitColumn"
-            >
-              <template #default="{ column }">
-                <span class="nui-table__text">{{ bands.labels.get(column) }}</span>
-              </template>
-            </NuiTableRow>
-            <NuiTableRow
-              :cells="rowCells"
-              :row-index="headRows"
-              part="head"
-              :active="focus.activeIn(-1)"
-              :marks="columnMarks"
-              :head="header.head"
-              @resize="resize.start"
-              @reset-size="fitColumn"
-            >
-              <template #utility="{ column }">
-                <NuiTableUtilityCell v-bind="headUtility(column)" @toggle="selection.toggleAll()" />
-              </template>
-              <template #default="{ column }">
-                <slot :name="`header-${column}`" v-bind="header.scope(column)">
-                  <span class="nui-table__text">{{ columnAt(column).label }}</span>
-                </slot>
-                <NuiTableHeaderMarks
-                  :state="header.head(column)"
-                  :hint="header.sortHint(column)"
-                  :filter-label="messages.filterColumn({ column: columnAt(column).label })"
-                  :expanded="header.expanded(column)"
-                  :menu-label="menu.labelOf(column)"
-                  :menu-expanded="menu.expanded(column)"
-                  :grip="order.gripOf(column)"
-                  @filter="header.openFilter(column, $event)"
-                  @menu="header.openMenu(column, $event)"
-                  @grab="order.grab(column, $event)"
-                />
-              </template>
-            </NuiTableRow>
-          </thead>
-          <tbody class="nui-table__pinned" @click="onRowsClick">
-            <NuiTableRow
-              v-for="item in pinnedItems"
-              :key="item.key"
-              :cells="rowCells"
-              :row-index="item.index + headRows + 1"
-              part="pinned"
-              :position="item.index"
-              :wraps="!windowed"
-              :paint="pinnedPaint"
-              :active="focus.activeIn(item.index)"
-              :revision="revision.stamp"
-              :selected="item.selected"
-            >
-              <template #utility="{ column }">
-                <NuiTableUtilityCell
-                  v-bind="pinnedUtility(item, column)"
-                  @toggle="selection.toggle(item.row)"
-                />
-              </template>
-              <template #default="{ column }">
-                <slot :name="`cell-${column}`" v-bind="scopeOf(item.row, item.index, column, true)">
-                  <span class="nui-table__text">{{ textOf(item.row, column) }}</span>
-                </slot>
-              </template>
-            </NuiTableRow>
-          </tbody>
-          <tbody class="nui-table__body" @click="onRowsClick">
-            <NuiTableRow
-              v-for="item in skeletonRows"
-              :key="item.key"
-              :cells="rowCells"
-              :row-index="item.index + pinnedCount + headRows + 1"
-              part="skeleton"
-            >
-              <template #utility>
-                <NuiTableUtilityCell v-bind="SKELETON_UTILITY" />
-              </template>
-              <template #default>
-                <NuiSkeleton v-bind="TEXT_SKELETON" />
-              </template>
-            </NuiTableRow>
-            <NuiTableBodyRow
-              v-for="view in bodyViews"
-              :key="view.item.key"
-              :view="view"
-              :slotted="cellSlotted"
-              :context="bodyContext"
-            >
-              <template #detail="scope">
-                <slot name="detail" v-bind="scope" />
-              </template>
-              <template v-for="name in cellSlots" :key="name" #[name]="scope">
-                <slot :name="name" v-bind="scope" />
-              </template>
-            </NuiTableBodyRow>
-          </tbody>
-          <tbody v-if="status" class="nui-table__status">
-            <tr class="nui-table__empty" role="row" :aria-rowindex="headRows + 1">
-              <td
-                class="nui-table__empty-cell"
-                role="gridcell"
-                :aria-colspan="layout.visual.length"
-                :colspan="rowCells.tracks.length"
+              <div
+                v-for="pane in overlay.panes.value"
+                :key="pane.name"
+                class="nui-table__pane"
+                :class="pane.classes"
               >
-                <div class="nui-table__empty-body">
-                  <slot :name="status">
-                    <NuiEmpty :title="emptyText" size="sm" />
-                  </slot>
+                <div :key="overlay.planeBase.value" class="nui-table__plane">
+                  <slot name="overlay" v-bind="pane.scope" />
                 </div>
-              </td>
-            </tr>
-          </tbody>
-          <tfoot v-if="footRows" class="nui-table__footer">
-            <NuiTableRow
-              :cells="rowCells"
-              :row-index="pinnedCount + visibleRows + headRows + 1"
-              part="foot"
-              :wraps="!windowed"
-              :active="focus.activeIn(pinnedCount + visibleRows)"
-              :revision="revision.stamp"
-            >
-              <template #default="{ column }">
-                <slot :name="`footer-${column}`" v-bind="totals.scope(column)">
-                  <NuiTableFooterCell
-                    :text="totals.scope(column).text"
-                    :count-text="totals.countText(totals.scope(column).count)"
+              </div>
+            </caption>
+            <NuiTableTracks :tracks="rowCells.tracks" />
+            <thead class="nui-table__header" @click="header.onClick">
+              <NuiTableRow
+                v-for="(band, level) in bands.rows"
+                :key="level"
+                :cells="band"
+                :row-index="level + 1"
+                part="band"
+                :head="header.head"
+                @resize="resize.start"
+                @reset-size="fitColumn"
+              >
+                <template #default="{ column }">
+                  <span class="nui-table__text">{{ bands.labels.get(column) }}</span>
+                </template>
+              </NuiTableRow>
+              <NuiTableRow
+                :cells="rowCells"
+                :row-index="headRows"
+                part="head"
+                :active="focus.activeIn(-1)"
+                :marks="columnMarks"
+                :head="header.head"
+                @resize="resize.start"
+                @reset-size="fitColumn"
+              >
+                <template #utility="{ column }">
+                  <NuiTableUtilityCell
+                    v-bind="headUtility(column)"
+                    @toggle="selection.toggleAll()"
                   />
-                </slot>
-              </template>
-            </NuiTableRow>
-          </tfoot>
-        </table>
+                </template>
+                <template #default="{ column }">
+                  <slot :name="`header-${column}`" v-bind="header.scope(column)">
+                    <span class="nui-table__text">{{ columnAt(column).label }}</span>
+                  </slot>
+                  <NuiTableHeaderMarks
+                    :state="header.head(column)"
+                    :hint="header.sortHint(column)"
+                    :filter-label="messages.filterColumn({ column: columnAt(column).label })"
+                    :expanded="header.expanded(column)"
+                    :menu-label="menu.labelOf(column)"
+                    :menu-expanded="menu.expanded(column)"
+                    :grip="order.gripOf(column)"
+                    @filter="header.openFilter(column, $event)"
+                    @menu="header.openMenu(column, $event)"
+                    @grab="order.grab(column, $event)"
+                  />
+                </template>
+              </NuiTableRow>
+            </thead>
+            <tbody class="nui-table__pinned" @click="onRowsClick">
+              <NuiTableRow
+                v-for="item in pinnedItems"
+                :key="item.key"
+                :cells="rowCells"
+                :row-index="item.index + headRows + 1"
+                part="pinned"
+                :position="item.index"
+                :wraps="!windowed"
+                :paint="pinnedPaint"
+                :active="focus.activeIn(item.index)"
+                :revision="revision.stamp"
+                :selected="item.selected"
+              >
+                <template #utility="{ column }">
+                  <NuiTableUtilityCell
+                    v-bind="pinnedUtility(item, column)"
+                    @toggle="selection.toggle(item.row)"
+                  />
+                </template>
+                <template #default="{ column }">
+                  <slot
+                    :name="`cell-${column}`"
+                    v-bind="scopeOf(item.row, item.index, column, true)"
+                  >
+                    <span class="nui-table__text">{{ textOf(item.row, column) }}</span>
+                  </slot>
+                </template>
+              </NuiTableRow>
+            </tbody>
+            <tbody class="nui-table__body" @click="onRowsClick">
+              <NuiTableRow
+                v-for="item in skeletonRows"
+                :key="item.key"
+                :cells="rowCells"
+                :row-index="item.index + pinnedCount + headRows + 1"
+                part="skeleton"
+              >
+                <template #utility>
+                  <NuiTableUtilityCell v-bind="SKELETON_UTILITY" />
+                </template>
+                <template #default>
+                  <NuiSkeleton v-bind="TEXT_SKELETON" />
+                </template>
+              </NuiTableRow>
+              <NuiTableBodyRow
+                v-for="view in bodyViews"
+                :key="view.item.key"
+                :view="view"
+                :slotted="cellSlotted"
+                :context="bodyContext"
+              >
+                <template #detail="scope">
+                  <slot name="detail" v-bind="scope" />
+                </template>
+                <template v-for="name in cellSlots" :key="name" #[name]="scope">
+                  <slot :name="name" v-bind="scope" />
+                </template>
+              </NuiTableBodyRow>
+            </tbody>
+            <tbody v-if="status" class="nui-table__status">
+              <tr class="nui-table__empty" role="row" :aria-rowindex="headRows + 1">
+                <td
+                  class="nui-table__empty-cell"
+                  role="gridcell"
+                  :aria-colspan="layout.visual.length"
+                  :colspan="rowCells.tracks.length"
+                >
+                  <div class="nui-table__empty-body">
+                    <slot :name="status">
+                      <NuiEmpty :title="emptyText" size="sm" />
+                    </slot>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot v-if="footRows" class="nui-table__footer">
+              <NuiTableRow
+                :cells="rowCells"
+                :row-index="pinnedCount + visibleRows + headRows + 1"
+                part="foot"
+                :wraps="!windowed"
+                :active="focus.activeIn(pinnedCount + visibleRows)"
+                :revision="revision.stamp"
+              >
+                <template #default="{ column }">
+                  <slot :name="`footer-${column}`" v-bind="totals.scope(column)">
+                    <NuiTableFooterCell
+                      :text="totals.scope(column).text"
+                      :count-text="totals.countText(totals.scope(column).count)"
+                    />
+                  </slot>
+                </template>
+              </NuiTableRow>
+            </tfoot>
+          </table>
+        </div>
       </div>
       <NuiTableDragLayer :drop="order.drop.value" :ghost="order.ghost.value" />
       <NuiTableDragLayer axis="y" :drop="rowDrag.drop.value" :ghost="rowDrag.ghost.value" />
@@ -579,7 +587,10 @@ const {
   shownCentre,
   pageRows,
   skeletonCount,
-  windowFrame,
+  viewportStyle,
+  laneStyle,
+  gridStyle,
+  columnLead,
   scrollAnchor,
   scrollToAnchor,
   onViewportScroll,
@@ -612,7 +623,6 @@ const rootStyle = computed(() => ({
   '--_height': height,
   '--_start': `${layout.value.startWidth}px`,
   '--_end': `${layout.value.endWidth}px`,
-  '--_canvas': `${layout.value.canvasWidth}px`,
 }));
 
 const rootClass = computed(() => [
@@ -960,6 +970,7 @@ watchSources();
 
 const { overlay, cellKeyOf, cellPositionOf } = useOverlayArea(table, {
   headSize: () => rowSize.value * headRows.value + rowSizes.pinnedSize.value,
+  columnLead: () => columnLead.value,
   expand: wholeRange,
 });
 

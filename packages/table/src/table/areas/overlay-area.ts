@@ -5,6 +5,7 @@ import type { TableContext } from './table-context';
 
 export interface OverlayAreaOptions {
   readonly headSize: () => number;
+  readonly columnLead: () => number;
   readonly expand: (range: NuiTableRange) => NuiTableRange;
 }
 
@@ -19,6 +20,7 @@ export const useOverlayArea = <T>(table: TableContext<T>, own: OverlayAreaOption
     viewport: table.viewport,
     rows: table.rowWindow(),
     columns: table.columnWindow(),
+    columnLead: own.columnLead,
     layout: table.layout,
     dataKeys: table.dataKeys,
     rowCount: table.bodyRows,

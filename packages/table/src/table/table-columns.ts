@@ -156,6 +156,20 @@ const groupOf = <T>(
 ): NuiTableColumnGroup<T> | undefined =>
   cell.kind === TablePlacementKind.Data ? tree.ancestors.get(cell.key)?.[level] : undefined;
 
+const followsCell = (previous: TableCellLayout, cell: TableCellLayout): boolean =>
+  previous.kind !== TablePlacementKind.Gap &&
+  cell.kind !== TablePlacementKind.Gap &&
+  previous.colIndex + 1 === cell.colIndex;
+
+const joinsBand = <T>(
+  open: OpenBand<T>,
+  group: NuiTableColumnGroup<T> | undefined,
+  cell: TableCellLayout,
+): boolean =>
+  open.group === group &&
+  open.first.pin === cell.pin &&
+  (group === undefined || followsCell(open.last, cell));
+
 const bandRowOf = <T>(
   layout: TableLayout,
   placed: ReadonlyMap<string, PlacedColumn>,
@@ -170,7 +184,7 @@ const bandRowOf = <T>(
     const group = groupOf(tree, cell, level);
     const open = bands.at(-1);
 
-    if (open !== undefined && open.group === group && open.first.pin === cell.pin) {
+    if (open !== undefined && joinsBand(open, group, cell)) {
       open.last = cell;
       open.colspan += 1;
       open.span += cell.kind === TablePlacementKind.Data ? 1 : 0;

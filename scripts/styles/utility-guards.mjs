@@ -84,7 +84,11 @@ const WHOLE_VARIABLE_SHORTHANDS = new Set(['translate', 'grid-area', 'outline', 
 
 const ENGINE_GEOMETRY = [
   [/\.nui-table__viewport::(?:before|after)/u, /^block-size$/u],
-  [/\.nui-table__viewport > \.nui-table__grid(?![\w-])/u, /^(?:position|inset(?:-.*)?)$/u],
+  [/\.nui-table__viewport > \.nui-table__lane::(?:before|after)/u, /^inline-size$/u],
+  [
+    /\.nui-table__viewport > \.nui-table__lane(?: > \.nui-table__grid)?(?![\w:-])/u,
+    /^(?:position|inset(?:-.*)?)$/u,
+  ],
   [
     /\.nui-spreadsheet__(?:ref|fill|fill-preview|fill-clear|drawing|drawing-frame|anchor|lit|editor)(?![\w-])/u,
     /^(?:position|inset(?:-.*)?|inline-size|block-size|translate)$/u,
