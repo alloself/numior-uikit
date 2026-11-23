@@ -3,11 +3,6 @@
 Собственный модульный UI kit для Vue 3.5+. Сейчас реализовано основание разработки;
 пакеты приватные, полноценный 1.0 ещё предстоит. Клиентский код — MIT.
 
-Принятый [план](.archcore/numior-ui.plan.md),
-[архитектура](.archcore/modular-foundation.adr.md) и
-[правила](.archcore/engineering-quality.rule.md) хранятся в Archcore.
-Данные локальные, без cloud sync. `archcore status` проверяет документы и связи.
-
 ## Запуск
 
 Тулчейн — [Vite+](https://viteplus.dev) (`vite-plus` в devDependencies, команда `vp`):
