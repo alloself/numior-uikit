@@ -235,7 +235,6 @@
 <script setup lang="ts" generic="T">
 import {
   computed,
-  onBeforeUnmount,
   onBeforeUpdate,
   onMounted,
   ref,
@@ -245,7 +244,7 @@ import {
   useTemplateRef,
   watch,
 } from 'vue';
-import { clamp, onLongPress, useDevicePixelRatio, useResizeObserver } from '@vueuse/core';
+import { clamp, useDevicePixelRatio, useResizeObserver } from '@vueuse/core';
 import {
   createIntent,
   createVersion,
@@ -276,7 +275,7 @@ import { tableMessages } from './table.messages';
 import { anchorOf } from './table-merges';
 import { useTextMeasure } from './use-text-measure';
 import { forgetCellReads } from './table-cells';
-import { ownCellAt, ownDetailOf, rowPositionOf } from './table-dom';
+import { ownCellAt } from './table-dom';
 import { cellTextOf, cellValueOf, engineColumnOf } from './table-format';
 import { columnTreeOf, headerBandsOf } from './table-columns';
 import { orderLeaves } from './table-order';
@@ -302,6 +301,7 @@ import { useEditingArea } from './areas/editing-area';
 import { useFocusArea } from './areas/focus-area';
 import { useGroupsArea } from './areas/groups-area';
 import { useHeaderArea } from './areas/header-area';
+import { useKeysArea } from './areas/keys-area';
 import { useOverlayArea } from './areas/overlay-area';
 import { usePaintArea } from './areas/paint-area';
 import { useRowMovesArea } from './areas/row-moves-area';
@@ -365,15 +365,11 @@ const NO_HEIGHTS: NuiTableRowHeights = {};
 const SKELETON_UTILITY: NuiTableUtilityCellProps = { control: 'skeleton' };
 const TEXT_SKELETON: NuiSkeletonProps = { shape: 'text', width: '100%' };
 
-const CLICK_GUARD =
-  '.nui-table__cell--select, .nui-table__cell--rowhead, .nui-table__row-grip, .nui-table__toggle, .nui-table__group, .nui-table__editor';
-
 const NEST_DELAY = 600;
 const COPY_LIMIT = 200_000;
 const BLOCK_SIZE = 100;
 const SKELETON_ROWS = 5;
 const NAMED_ROWS = 10_000;
-const LONG_PRESS = 500;
 
 const {
   columns,
@@ -1018,8 +1014,6 @@ const rowAt = (position: number): T => {
   return node.row;
 };
 
-const inDetail = (event: Event): boolean => ownDetailOf(event.target, viewport.value) !== null;
-
 const resize = useTableResize<T>({
   widths,
   layout: () => layout.value,
@@ -1374,23 +1368,23 @@ const refocusActive = (): void => {
   focus.focusCell(active.value);
 };
 
-let unmounted = false;
-
-onBeforeUnmount(() => {
-  unmounted = true;
+const { onRowsClick, viewportEvents } = useKeysArea(table, {
+  cellSelection: () => cellSelection,
+  cellMenu,
+  clipboard,
+  cellEditor,
+  editing,
+  picker,
+  ranges: rangeSelect,
+  rowResize,
+  rowDrag,
+  selection,
+  header,
+  expansion,
+  focus,
+  bodyActive,
+  activeRowHead,
 });
-
-onLongPress(
-  viewport,
-  (event) => {
-    if (unmounted || inDetail(event) || !cellMenu.onLongPress(event)) {
-      return;
-    }
-
-    rangeSelect.swallowClick();
-  },
-  { delay: LONG_PRESS },
-);
 
 watch(
   ranges,
@@ -1405,112 +1399,6 @@ watch(
   },
   { flush: 'post' },
 );
-
-const onRowsClick = (event: MouseEvent): void => {
-  const target = event.target;
-
-  if (
-    rangeSelect.takeClick() ||
-    !(target instanceof Element) ||
-    inDetail(event) ||
-    target.closest(CLICK_GUARD) !== null
-  ) {
-    return;
-  }
-
-  const visual = rowPositionOf(target.closest('[role="row"]'), headRows.value);
-
-  const row = Number.isInteger(visual) ? rowFor(visual) : undefined;
-
-  if (row === undefined) {
-    return;
-  }
-
-  emit('rowClick', row, event);
-};
-
-const onKeydown = (event: KeyboardEvent): void => {
-  if (
-    cellMenu.onKeydown(event) ||
-    clipboard.onKeydown(event) ||
-    cellEditor.onKeydown(event) ||
-    editing.onKeydown(event) ||
-    rangeSelect.onKeydown(event)
-  ) {
-    return;
-  }
-  if (rowResize.onKeydown(event, activeRowHead()) || rowDrag.onKeydown(event, bodyActive())) {
-    return;
-  }
-  if (selection.onKeydown(event, active.value, rowFor(active.value.row))) {
-    return;
-  }
-  const body = bodyActive();
-
-  if (header.onKeydown(event) || (body !== undefined && expansion.onKeydown(event, body))) {
-    return;
-  }
-
-  focus.onKeydown(event);
-};
-
-const outsideDetail =
-  <E extends Event>(handler: (event: E) => void) =>
-  (event: E): void => {
-    if (inDetail(event)) {
-      return;
-    }
-
-    handler(event);
-  };
-
-const viewportEvents = {
-  keydown: outsideDetail(onKeydown),
-  focusin: (event: FocusEvent): void => {
-    cellEditor.onFocusin(event);
-    focus.onFocusin(ownDetailOf(event.target, viewport.value)?.parentElement ?? event.target);
-  },
-  pointerdown: outsideDetail((event: PointerEvent) => {
-    focus.notePress(event.target);
-
-    if (picker.onPointerdown(event)) {
-      return;
-    }
-
-    rangeSelect.onPointerdown(event);
-  }),
-  mousedown: outsideDetail((event: MouseEvent) => {
-    if (picker.onMousedown(event)) {
-      return;
-    }
-
-    rangeSelect.onMousedown(event);
-  }),
-  contextmenu: outsideDetail(cellMenu.onContextmenu),
-  paste: outsideDetail(editing.onPaste),
-  click: outsideDetail((event: MouseEvent) => {
-    if (picker.onClick(event)) {
-      return;
-    }
-
-    rangeSelect.onClick(event);
-    cellEditor.onClick(event);
-
-    if (!cellSelection) {
-      return;
-    }
-
-    focus.reclaim();
-  }),
-  dblclick: outsideDetail((event: MouseEvent) => {
-    if (cellEditor.onDblclick(event)) {
-      return;
-    }
-
-    rangeSelect.onDblclick(event);
-  }),
-  pointerup: outsideDetail(cellEditor.onPointerup),
-};
 
 const scopeOf = (row: T, position: number, key: string, pinned: boolean): NuiTableCellSlot<T> => {
   const column = columnAt(key);
