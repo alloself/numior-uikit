@@ -48,6 +48,22 @@ interface Mapping {
   readonly source: SourceMap;
 }
 
+type StepOf<K extends WorkbookStep['kind']> = Extract<WorkbookStep, { readonly kind: K }>;
+
+interface Direction {
+  readonly sheet: (scope: Scope) => SheetMap;
+  readonly scoped: (sheet: string, mapped: string) => string;
+  readonly formula: (scope: Scope) => SheetMap;
+  readonly source: (scope: Scope, formula: SheetMap) => SourceMap;
+}
+
+interface Pass {
+  readonly scope: Scope;
+  readonly sheet: SheetMap;
+  readonly scoped: (sheet: string, mapped: string) => string;
+  readonly mapping: Mapping;
+}
+
 const ABSENT = ':';
 
 const LOST_SOURCE: PivotSource = { kind: PivotSourceKind.Lost };
@@ -180,8 +196,13 @@ const pivotMapped = <P extends PivotSpec>(pivot: P, source: SourceMap): P => ({
   definition: { ...pivot.definition, source: source(pivot.definition.source) },
 });
 
+const optional = <A, B>(value: A | undefined, map: (value: A) => B): B | undefined =>
+  value === undefined ? undefined : map(value);
+
 const sheetBody = (step: SheetStep, sheet: string, mapping: Mapping): WorkbookStep => {
   const { formula, source } = mapping;
+  const mappedLayout = (each: SheetLayout): SheetLayout => layoutMapped(each, formula);
+  const mappedPivot = <P extends PivotSpec>(each: P): P => pivotMapped(each, source);
 
   switch (step.kind) {
     case StepKind.SetCells:
@@ -196,29 +217,25 @@ const sheetBody = (step: SheetStep, sheet: string, mapping: Mapping): WorkbookSt
         ...step,
         sheet,
         formats: formatsMapped(step.formats, formula),
-        base: step.base === undefined ? undefined : formatsMapped(step.base, formula),
+        base: optional(step.base, (base) => formatsMapped(base, formula)),
       };
     case StepKind.SetLayout:
       return {
         ...step,
         sheet,
-        layout: layoutMapped(step.layout, formula),
-        base: step.base === undefined ? undefined : layoutMapped(step.base, formula),
+        layout: mappedLayout(step.layout),
+        base: optional(step.base, mappedLayout),
       };
     case StepKind.SetPivot:
-      return {
-        ...step,
-        sheet,
-        pivot: step.pivot === undefined ? undefined : pivotMapped(step.pivot, source),
-      };
+      return { ...step, sheet, pivot: optional(step.pivot, mappedPivot) };
     case StepKind.PutPivot:
       return {
         ...step,
         sheet,
-        pivot: step.pivot === undefined ? undefined : pivotMapped(step.pivot, source),
-        cells: step.cells === undefined ? undefined : cellsMapped(step.cells, formula),
-        layout: step.layout === undefined ? undefined : layoutMapped(step.layout, formula),
-        base: step.base === undefined ? undefined : layoutMapped(step.base, formula),
+        pivot: optional(step.pivot, mappedPivot),
+        cells: optional(step.cells, (cells) => cellsMapped(cells, formula)),
+        layout: optional(step.layout, mappedLayout),
+        base: optional(step.base, mappedLayout),
       };
   }
 };
@@ -248,8 +265,34 @@ const localSource =
     return sheet === undefined ? LOST_SOURCE : { ...source, sheet };
   };
 
+const KEYED: Direction = {
+  sheet: (scope) => scope.keyOf,
+  scoped: (_sheet, mapped) => mapped,
+  formula: (scope) => (name) => scope.keyOf(name) ?? `${ABSENT}${name}`,
+  source: (scope) => keyedSource(scope),
+};
+
+const LOCAL: Direction = {
+  sheet: (scope) => scope.nameOf,
+  scoped: (sheet) => sheet,
+  formula: (scope) => (sheet) =>
+    sheet.startsWith(ABSENT) ? sheet.slice(ABSENT.length) : scope.nameOf(sheet),
+  source: (_scope, formula) => localSource(formula),
+};
+
+const passOf = (direction: Direction, scope: Scope): Pass => {
+  const formula = direction.formula(scope);
+
+  return {
+    scope,
+    sheet: direction.sheet(scope),
+    scoped: direction.scoped,
+    mapping: { formula, source: direction.source(scope, formula) },
+  };
+};
+
 const batchMapped = (
-  step: Extract<WorkbookStep, { readonly kind: typeof StepKind.Batch }>,
+  step: StepOf<typeof StepKind.Batch>,
   part: (step: WorkbookStep) => WorkbookStep | undefined,
 ): WorkbookStep | undefined => {
   const steps = step.steps.reduce<WorkbookStep[]>((kept, each) => {
@@ -264,156 +307,119 @@ const batchMapped = (
   return steps.length === 0 ? undefined : { ...step, steps };
 };
 
-const keyedPart = (step: WorkbookStep, scope: Scope): WorkbookStep | undefined => {
-  const formula: SheetMap = (name) => scope.keyOf(name) ?? `${ABSENT}${name}`;
-
-  switch (step.kind) {
-    case StepKind.AddSheet: {
-      if (step.key === undefined) {
-        return undefined;
-      }
-      scope.add(step.name, step.key);
-      return step;
-    }
-    case StepKind.RemoveSheet: {
-      const key = scope.keyOf(step.name);
-
-      if (key === undefined) {
-        return undefined;
-      }
-      scope.remove(key);
-      return { ...step, name: key };
-    }
-    case StepKind.RenameSheet: {
-      const key = scope.keyOf(step.from);
-
-      if (key === undefined) {
-        return undefined;
-      }
-      scope.rename(key, step.to);
-      return { ...step, from: key };
-    }
-    case StepKind.SetName: {
-      const home = step.scope === undefined ? undefined : scope.keyOf(step.scope);
-
-      if (step.scope !== undefined && home === undefined) {
-        return undefined;
-      }
-      return {
-        ...step,
-        scope: home,
-        ast: step.ast === undefined ? undefined : sheetsMapped(step.ast, formula),
-      };
-    }
-    case StepKind.AddTable: {
-      const table = tableMapped(step.table, scope.keyOf);
-
-      return table === undefined ? undefined : { ...step, table };
-    }
-    case StepKind.SetTable: {
-      const table = step.table === undefined ? undefined : tableMapped(step.table, scope.keyOf);
-
-      return step.table !== undefined && table === undefined ? undefined : { ...step, table };
-    }
-    case StepKind.RenameTable:
-      return step;
-    case StepKind.Batch:
-      return batchMapped(step, (part) => keyedPart(part, scope));
-    default: {
-      const key = scope.keyOf(step.sheet);
-
-      return key === undefined
-        ? undefined
-        : sheetBody(step, key, { formula, source: keyedSource(scope) });
-    }
+const sheetAdded = (
+  step: StepOf<typeof StepKind.AddSheet>,
+  pass: Pass,
+): WorkbookStep | undefined => {
+  if (step.key === undefined) {
+    return undefined;
   }
+  pass.scope.add(step.name, step.key);
+  return step;
 };
 
-const localPart = (step: WorkbookStep, scope: Scope): WorkbookStep | undefined => {
-  const formula: SheetMap = (sheet) =>
-    sheet.startsWith(ABSENT) ? sheet.slice(ABSENT.length) : scope.nameOf(sheet);
+const sheetRemoved = (
+  step: StepOf<typeof StepKind.RemoveSheet>,
+  pass: Pass,
+): WorkbookStep | undefined => {
+  const mapped = pass.sheet(step.name);
 
+  if (mapped === undefined) {
+    return undefined;
+  }
+  pass.scope.remove(pass.scoped(step.name, mapped));
+  return { ...step, name: mapped };
+};
+
+const sheetRenamed = (
+  step: StepOf<typeof StepKind.RenameSheet>,
+  pass: Pass,
+): WorkbookStep | undefined => {
+  const mapped = pass.sheet(step.from);
+
+  if (mapped === undefined) {
+    return undefined;
+  }
+  pass.scope.rename(pass.scoped(step.from, mapped), step.to);
+  return { ...step, from: mapped };
+};
+
+const nameSet = (step: StepOf<typeof StepKind.SetName>, pass: Pass): WorkbookStep | undefined => {
+  const home = optional(step.scope, pass.sheet);
+
+  if (step.scope !== undefined && home === undefined) {
+    return undefined;
+  }
+  return {
+    ...step,
+    scope: home,
+    ast: optional(step.ast, (ast) => sheetsMapped(ast, pass.mapping.formula)),
+  };
+};
+
+const tableAdded = (
+  step: StepOf<typeof StepKind.AddTable>,
+  pass: Pass,
+): WorkbookStep | undefined => {
+  const table = tableMapped(step.table, pass.sheet);
+
+  return table === undefined ? undefined : { ...step, table };
+};
+
+const tableSet = (step: StepOf<typeof StepKind.SetTable>, pass: Pass): WorkbookStep | undefined => {
+  const table = optional(step.table, (each) => tableMapped(each, pass.sheet));
+
+  return step.table !== undefined && table === undefined ? undefined : { ...step, table };
+};
+
+const sheetPart = (step: SheetStep, pass: Pass): WorkbookStep | undefined => {
+  const sheet = pass.sheet(step.sheet);
+
+  return sheet === undefined ? undefined : sheetBody(step, sheet, pass.mapping);
+};
+
+const partOf = (step: WorkbookStep, pass: Pass): WorkbookStep | undefined => {
   switch (step.kind) {
-    case StepKind.AddSheet: {
-      if (step.key === undefined) {
-        return undefined;
-      }
-      scope.add(step.name, step.key);
-      return step;
-    }
-    case StepKind.RemoveSheet: {
-      const name = scope.nameOf(step.name);
-
-      if (name === undefined) {
-        return undefined;
-      }
-      scope.remove(step.name);
-      return { ...step, name };
-    }
-    case StepKind.RenameSheet: {
-      const name = scope.nameOf(step.from);
-
-      if (name === undefined) {
-        return undefined;
-      }
-      scope.rename(step.from, step.to);
-      return { ...step, from: name };
-    }
-    case StepKind.SetName: {
-      const home = step.scope === undefined ? undefined : scope.nameOf(step.scope);
-
-      if (step.scope !== undefined && home === undefined) {
-        return undefined;
-      }
-      return {
-        ...step,
-        scope: home,
-        ast: step.ast === undefined ? undefined : sheetsMapped(step.ast, formula),
-      };
-    }
-    case StepKind.AddTable: {
-      const table = tableMapped(step.table, scope.nameOf);
-
-      return table === undefined ? undefined : { ...step, table };
-    }
-    case StepKind.SetTable: {
-      const table = step.table === undefined ? undefined : tableMapped(step.table, scope.nameOf);
-
-      return step.table !== undefined && table === undefined ? undefined : { ...step, table };
-    }
+    case StepKind.AddSheet:
+      return sheetAdded(step, pass);
+    case StepKind.RemoveSheet:
+      return sheetRemoved(step, pass);
+    case StepKind.RenameSheet:
+      return sheetRenamed(step, pass);
+    case StepKind.SetName:
+      return nameSet(step, pass);
+    case StepKind.AddTable:
+      return tableAdded(step, pass);
+    case StepKind.SetTable:
+      return tableSet(step, pass);
     case StepKind.RenameTable:
       return step;
     case StepKind.Batch:
-      return batchMapped(step, (part) => localPart(part, scope));
-    default: {
-      const name = scope.nameOf(step.sheet);
-
-      return name === undefined
-        ? undefined
-        : sheetBody(step, name, { formula, source: localSource(formula) });
-    }
+      return batchMapped(step, (part) => partOf(part, pass));
+    default:
+      return sheetPart(step, pass);
   }
 };
 
 export const keyedStep = (step: WorkbookStep, names: SheetNames): WorkbookStep | undefined =>
-  keyedPart(step, scopeOver(names));
+  partOf(step, passOf(KEYED, scopeOver(names)));
 
 export const localStep = (step: WorkbookStep, names: SheetNames): WorkbookStep | undefined =>
-  localPart(step, scopeOver(names));
+  partOf(step, passOf(LOCAL, scopeOver(names)));
 
 export const keyedLayout = (layout: SheetLayout, names: SheetNames): SheetLayout =>
   layoutMapped(layout, (name) => names.keyOf(name) ?? `${ABSENT}${name}`);
 
-const keyedChangesOf = (part: WorkbookStep, scope: Scope): readonly RemoteChange[] => {
+const keyedChangesOf = (part: WorkbookStep, pass: Pass): readonly RemoteChange[] => {
   switch (part.kind) {
     case StepKind.AddSheet:
     case StepKind.RemoveSheet:
     case StepKind.RenameSheet:
-      keyedPart(part, scope);
+      partOf(part, pass);
       return [];
     case StepKind.InsertLines:
     case StepKind.DeleteLines: {
-      const sheet = scope.keyOf(part.sheet);
+      const sheet = pass.sheet(part.sheet);
 
       return sheet === undefined ? [] : changesOf({ ...part, sheet });
     }
@@ -425,11 +431,11 @@ const keyedChangesOf = (part: WorkbookStep, scope: Scope): readonly RemoteChange
 };
 
 export const keyedChanges = (step: WorkbookStep, names: SheetNames): readonly RemoteChange[] => {
-  const scope = scopeOver(names);
+  const pass = passOf(KEYED, scopeOver(names));
   const changes: RemoteChange[] = [];
 
   for (const part of flattened(step)) {
-    for (const change of keyedChangesOf(part, scope)) {
+    for (const change of keyedChangesOf(part, pass)) {
       changes.push(change);
     }
   }

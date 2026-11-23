@@ -1286,6 +1286,52 @@ export const createCalculator = (
     }
   };
 
+  const settleShifted = (
+    record: FormulaRecord,
+    sheet: Sheet,
+    change: LineChange,
+    touched: boolean,
+  ): void => {
+    const settles =
+      readsAcross(record.precedents, sheet.id, change) ||
+      (record.dynamic && readsFrom(graph.precedentsOf(record.id), sheet.id, change)) ||
+      (record.placed && touched);
+
+    if (!settles) {
+      return;
+    }
+    markStale(record.id);
+
+    if (!record.dynamic) {
+      return;
+    }
+    graph.set(record.id, record.precedents);
+  };
+
+  const rewriteOf = (
+    draft: ShiftPlan,
+    change: LineChange,
+    onSheet: boolean,
+    shifted: ShiftedFormulaCell[],
+  ): ShiftPlan => {
+    const { record } = draft;
+    const semantic = changesMeaning(record.cell.ast, change, onSheet, record);
+    const relink = semantic || record.dynamic;
+
+    if (semantic) {
+      shifted.push({
+        sheet: record.sheet,
+        row: record.row,
+        col: record.col,
+        before: record.cell.ast,
+      });
+    }
+    if (relink) {
+      graph.remove(record.id);
+    }
+    return { ...draft, relink };
+  };
+
   const shiftLines = (sheet: Sheet, change: LineChange): ShiftedFormulaCell[] => {
     interrupt();
     releaseCrossing(sheet, change);
@@ -1307,44 +1353,21 @@ export const createCalculator = (
 
       const ast = shiftFormula(record.cell.ast, change, onSheet, record);
       const moved = line !== before;
+      const rewrote = ast !== record.cell.ast;
 
-      const settles =
-        readsAcross(record.precedents, sheet.id, change) ||
-        (record.dynamic && readsFrom(graph.precedentsOf(record.id), sheet.id, change)) ||
-        (record.placed && (moved || ast !== record.cell.ast));
+      settleShifted(record, sheet, change, moved || rewrote);
 
-      if (settles) {
-        markStale(record.id);
-      }
-      if (settles && record.dynamic) {
-        graph.set(record.id, record.precedents);
-      }
       if (record.anchored && moved) {
         relocated.add(record.id);
       }
-
-      if (ast === record.cell.ast) {
-        if (moved) {
-          applyShift({ record, line, ast, relink: false }, change.axis);
-        }
+      if (rewrote) {
+        rewritten.push(rewriteOf({ record, line, ast, relink: false }, change, onSheet, shifted));
         return;
       }
-
-      const semantic = changesMeaning(record.cell.ast, change, onSheet, record);
-      const relink = semantic || record.dynamic;
-
-      if (semantic) {
-        shifted.push({
-          sheet: record.sheet,
-          row: record.row,
-          col: record.col,
-          before: record.cell.ast,
-        });
+      if (!moved) {
+        return;
       }
-      if (relink) {
-        graph.remove(record.id);
-      }
-      rewritten.push({ record, line, ast, relink });
+      applyShift({ record, line, ast, relink: false }, change.axis);
     });
 
     graph.shift(sheet.id, change);
