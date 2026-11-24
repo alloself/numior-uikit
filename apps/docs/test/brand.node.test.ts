@@ -9,6 +9,7 @@ import {
   MARK_BLOCK,
   MARK_MODULE,
 } from '../.vitepress/theme/brand';
+import { coverFile } from '../.vitepress/meta';
 
 const publicDirectory = fileURLToPath(new URL('../public/', import.meta.url));
 
@@ -26,10 +27,11 @@ describe('brand files of the docs site', () => {
     expect(digests).toEqual(BRAND_FILES);
   });
 
-  it('lists every brandbook image that the public folder holds', () => {
+  it('holds only the brandbook images and the preview covers of both languages', () => {
     const images = readdirSync(publicDirectory).filter((name) => /\.(?:svg|png|ico)$/u.test(name));
+    const covers = [coverFile('ru'), coverFile('en')];
 
-    expect(images.toSorted()).toEqual(Object.keys(BRAND_FILES).toSorted());
+    expect(images.toSorted()).toEqual([...Object.keys(BRAND_FILES), ...covers].toSorted());
   });
 
   it('draws the header mark with the contours of the brandbook mark', () => {

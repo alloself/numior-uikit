@@ -101,8 +101,10 @@ const addressHead = (site: DocsSite, meta: PageMeta): HeadConfig[] => {
   ];
 };
 
+export const coverFile = (locale: ExampleLocale): string => `og-cover-${locale}.png`;
+
 const coverHead = (site: DocsSite, locale: ExampleLocale): HeadConfig[] => {
-  const image = absoluteUrl(site, `og-cover-${locale}.png`);
+  const image = absoluteUrl(site, coverFile(locale));
 
   if (image === undefined) {
     return [['meta', { name: 'twitter:card', content: 'summary' }]];
@@ -134,7 +136,7 @@ const structuredHead = (site: DocsSite, meta: PageMeta, title: string): HeadConf
     home,
     title,
     description: meta.description,
-    image: absoluteUrl(site, `og-cover-${locale}.png`),
+    image: absoluteUrl(site, coverFile(locale)),
   });
 };
 
