@@ -2,7 +2,25 @@
   "name": "@numior/forms",
   "version": "0.0.0",
   "private": false,
+  "description": "Vue 3 forms with built-in and async rules, server errors and Standard Schema validators such as Zod, Valibot and ArkType.",
+  "keywords": [
+    "arktype",
+    "forms",
+    "numior",
+    "numior-ui",
+    "standard-schema",
+    "valibot",
+    "validation",
+    "vue",
+    "vue3",
+    "zod"
+  ],
+  "homepage": "https://ui.numior.ru/en/components/form",
+  "bugs": {
+    "url": "https://github.com/alloself/numior-uikit/issues"
+  },
   "license": "MIT",
+  "author": "Numior",
   "files": [
     "dist"
   ],

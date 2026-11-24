@@ -2,7 +2,24 @@
   "name": "@numior/primitives",
   "version": "0.0.0",
   "private": false,
+  "description": "Unstyled behavior for Vue 3: layers, lists, fields, file upload, dates, numbers and the color scheme.",
+  "keywords": [
+    "accessibility",
+    "composables",
+    "floating",
+    "headless",
+    "numior",
+    "numior-ui",
+    "virtual-list",
+    "vue",
+    "vue3"
+  ],
+  "homepage": "https://ui.numior.ru/en/",
+  "bugs": {
+    "url": "https://github.com/alloself/numior-uikit/issues"
+  },
   "license": "MIT",
+  "author": "Numior",
   "files": [
     "dist"
   ],

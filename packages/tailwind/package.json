@@ -2,7 +2,22 @@
   "name": "@numior/tailwind",
   "version": "0.0.0",
   "private": false,
+  "description": "Tailwind CSS 4 preset on the Numior UI tokens.",
+  "keywords": [
+    "design-tokens",
+    "numior",
+    "numior-ui",
+    "tailwind-preset",
+    "tailwindcss",
+    "vue",
+    "vue3"
+  ],
+  "homepage": "https://ui.numior.ru/en/guide/tailwind",
+  "bugs": {
+    "url": "https://github.com/alloself/numior-uikit/issues"
+  },
   "license": "MIT",
+  "author": "Numior",
   "files": [
     "dist"
   ],

@@ -2,7 +2,24 @@
   "name": "@numior/editor-vue",
   "version": "0.0.0",
   "private": false,
+  "description": "Block editor for Vue 3 with history, Markdown shortcuts, an HTML or JSON v-model and SSR.",
+  "keywords": [
+    "block-editor",
+    "editor",
+    "markdown",
+    "numior",
+    "numior-ui",
+    "rich-text",
+    "vue",
+    "vue3",
+    "wysiwyg"
+  ],
+  "homepage": "https://ui.numior.ru/en/editor/",
+  "bugs": {
+    "url": "https://github.com/alloself/numior-uikit/issues"
+  },
   "license": "MIT",
+  "author": "Numior",
   "files": [
     "dist"
   ],

@@ -2,7 +2,24 @@
   "name": "@numior/mcp",
   "version": "0.0.0",
   "private": false,
+  "description": "MCP server with the Numior UI reference for AI assistants: components, docs pages, examples, tokens and icons.",
+  "keywords": [
+    "ai",
+    "claude",
+    "llm",
+    "mcp",
+    "model-context-protocol",
+    "numior",
+    "numior-ui",
+    "vue",
+    "vue3"
+  ],
+  "homepage": "https://ui.numior.ru/en/guide/ai",
+  "bugs": {
+    "url": "https://github.com/alloself/numior-uikit/issues"
+  },
   "license": "MIT",
+  "author": "Numior",
   "bin": {
     "numior-mcp": "./dist/main.js"
   },
