@@ -834,11 +834,16 @@ RU/EN каждого нового пропа/слота/события в `apps/
   все адреса.
 - Мета страницы (`.vitepress/meta.ts`, `transformPageData`): описание берётся из лида, без
   лида — из описания локали; в `head` идут `og:*` и `twitter:card`. `canonical`, `og:url`,
-  `hreflang` (обе локали и `x-default` на RU) и `sitemap.xml` появляются только при заданном
-  `siteUrl`, ссылка «Изменить страницу» и GitHub в подвале — при заданном `repository`
-  (`theme/site.ts`). `og:image` нет: готовой картинки для соцсетей в брендбуке нет.
-  `check:dist` проверяет на сборке описание и заголовок превью каждой страницы и то, что
-  адреса соответствуют конфигу.
+  `hreflang` (обе локали и `x-default` на RU), `sitemap.xml` и `robots.txt` (ссылки на sitemap и
+  `llms.txt`) появляются только при заданном `siteUrl`, ссылка «Изменить страницу» и GitHub в
+  подвале — при заданном `repository` (`theme/site.ts`). При заданном `siteUrl` у страницы есть
+  обложка превью 1200×630 на языке страницы (`public/og-cover-ru.png`, `og-cover-en.png`:
+  Obsidian, белый лок-ап, Manrope, квадрат Ember и уголки видоискателя из брендбука) с
+  `twitter:card=summary_large_image` и JSON-LD schema.org (`.vitepress/structured-data.ts`):
+  главная — `WebSite`, `Organization` (студия) и `SoftwareSourceCode` (кит, репозиторий, MIT),
+  остальные страницы — `TechArticle` и `BreadcrumbList` до главной своей локали.
+  `check:dist` проверяет на сборке описание, заголовок и обложку превью каждой страницы, разбор
+  JSON-LD, `robots.txt` и то, что адреса соответствуют конфигу.
 - Модули получают разделы: таблица, книга, редактор с выводом контента, совместная правка с
   offline, графики.
 - Разделы «Таблица» и «Книга» (решение владельца 2026-11-14). «Таблица» (`/table/`, EN «Table»)
