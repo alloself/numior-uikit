@@ -1,6 +1,7 @@
 import type { HeadConfig } from 'vitepress';
 import { leadTextOf } from './content/page-guards.ts';
 import type { ExampleLocale } from './examples/example.types.ts';
+import { structuredDataOf } from './structured-data.ts';
 import { absoluteUrl } from './theme/site.ts';
 import type { DocsSite } from './theme/theme.types.ts';
 
@@ -31,6 +32,13 @@ const SITE_NAME = 'Numior UI';
 const EN_PREFIX = 'en/';
 const DEFAULT_LOCALE: ExampleLocale = 'ru';
 const OG_LOCALES = { ru: 'ru_RU', en: 'en_US' } as const;
+const COVER = { width: '1200', height: '630', type: 'image/png' } as const;
+
+const COVER_ALT = {
+  ru: 'Numior UI — UI-кит для Vue 3',
+  en: 'Numior UI, a UI kit for Vue 3',
+} as const;
+
 const LINK_RE = /\[([^\]]*)\]\([^)]*\)/g;
 const MARKUP_RE = /<[^>]+>|[`*_]/g;
 
@@ -93,6 +101,45 @@ const addressHead = (site: DocsSite, meta: PageMeta): HeadConfig[] => {
   ];
 };
 
+export const coverFile = (locale: ExampleLocale): string => `og-cover-${locale}.png`;
+
+const coverHead = (site: DocsSite, locale: ExampleLocale): HeadConfig[] => {
+  const image = absoluteUrl(site, coverFile(locale));
+
+  if (image === undefined) {
+    return [['meta', { name: 'twitter:card', content: 'summary' }]];
+  }
+
+  return [
+    ['meta', { property: 'og:image', content: image }],
+    ['meta', { property: 'og:image:width', content: COVER.width }],
+    ['meta', { property: 'og:image:height', content: COVER.height }],
+    ['meta', { property: 'og:image:type', content: COVER.type }],
+    ['meta', { property: 'og:image:alt', content: COVER_ALT[locale] }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:image', content: image }],
+  ];
+};
+
+const structuredHead = (site: DocsSite, meta: PageMeta, title: string): HeadConfig[] => {
+  const locale = localeOfPage(meta.relativePath);
+  const url = absoluteUrl(site, routeOf(meta.relativePath));
+  const home = absoluteUrl(site, routeOf(pageOf('index.md', locale)));
+
+  if (url === undefined || home === undefined) {
+    return [];
+  }
+
+  return structuredDataOf(site, {
+    locale,
+    url,
+    home,
+    title,
+    description: meta.description,
+    image: absoluteUrl(site, coverFile(locale)),
+  });
+};
+
 const twinHead = (meta: PageMeta): HeadConfig[] =>
   meta.twin === undefined
     ? []
@@ -114,9 +161,10 @@ export const pageHead = (site: DocsSite, meta: PageMeta): HeadConfig[] => {
         'meta',
         { property: 'og:locale:alternate', content: OG_LOCALES[other] },
       ]),
-    ['meta', { name: 'twitter:card', content: 'summary' }],
+    ...coverHead(site, locale),
     ...twinHead(meta),
     ...addressHead(site, meta),
+    ...structuredHead(site, meta, title),
   ];
 };
 

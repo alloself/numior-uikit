@@ -14,6 +14,8 @@ const HEAD = [
 ].join('');
 
 const CANONICAL = '<link rel="canonical" href="https://ui.example.org/components/button">';
+const COVER = '<meta property="og:image" content="https://ui.example.org/og-cover-ru.png">';
+const STRUCTURED = '<script type="application/ld+json">{"@context":"https://schema.org"}</script>';
 const EDIT = '<a href="https://github.com/example/numior-ui/edit/main/apps/docs/a.md">Edit</a>';
 const FOOTER = '<footer><a href="https://github.com/example/numior-ui">GitHub</a></footer>';
 
@@ -45,10 +47,25 @@ describe('built page check', () => {
     ).toEqual(['has an address although the site address is not set']);
   });
 
-  it('requires the canonical address once the site address is set', () => {
-    expect(pageDistProblems('index.html', HEAD + CANONICAL + EDIT + FOOTER, published)).toEqual([]);
+  it('requires the canonical address, the cover and structured data once the site address is set', () => {
+    const page = HEAD + CANONICAL + COVER + STRUCTURED + EDIT + FOOTER;
 
-    expect(pageDistProblems('index.html', HEAD, published)).toEqual(['has no canonical address']);
+    expect(pageDistProblems('index.html', page, published)).toEqual([]);
+
+    expect(pageDistProblems('index.html', HEAD, published)).toEqual([
+      'has no canonical address',
+      'has no image for link previews',
+      'has no structured data',
+    ]);
+
     expect(pageDistProblems('404.html', '<title>404</title>', published)).toEqual([]);
+  });
+
+  it('reports structured data that a search engine cannot read', () => {
+    const broken = '<script type="application/ld+json">{"@context":</script>';
+
+    expect(pageDistProblems('index.html', HEAD + CANONICAL + COVER + broken, published)).toEqual([
+      'has structured data that is not JSON',
+    ]);
   });
 });

@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { llmsPaths } from '../llms/paths.ts';
+import { ROBOTS } from '../robots.ts';
 import { lintProse } from './prose-lint.ts';
 import { PENDING_PAGES } from './pending.ts';
 import type { DocsSite } from '../theme/theme.types.ts';
@@ -88,6 +89,8 @@ const DESCRIPTION_RE = /<meta name="description" content="[^"]+">/;
 const PREVIEW_TITLE_RE = /<meta property="og:title" content="[^"]+">/;
 const ADDRESS_RE = /rel="canonical"|property="og:url"|hreflang="/;
 const CANONICAL_RE = /rel="canonical"/;
+const COVER_RE = /<meta property="og:image" content="https:\/\/[^"]+">/;
+const STRUCTURED_RE = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/;
 const EDIT_LINK_RE = /href="[^"]*\/edit\/[^"]*\/apps\/docs\//;
 const FOOTER_RE = /<footer[\s\S]*?<\/footer>/;
 const REPOSITORY_LINK_RE = /GitHub/;
@@ -102,6 +105,37 @@ const addressProblems = (page: string, html: string, site: DocsSite): string[] =
     return ADDRESS_RE.test(html) ? ['has an address although the site address is not set'] : [];
   }
   return page === NOT_FOUND_PAGE || CANONICAL_RE.test(html) ? [] : ['has no canonical address'];
+};
+
+const parsesAsJson = (text: string): boolean => {
+  try {
+    JSON.parse(text);
+  } catch {
+    return false;
+  }
+
+  return true;
+};
+
+const structuredProblems = (html: string): string[] => {
+  const structured = STRUCTURED_RE.exec(html)?.[1];
+
+  if (structured === undefined) {
+    return ['has no structured data'];
+  }
+
+  return parsesAsJson(structured) ? [] : ['has structured data that is not JSON'];
+};
+
+const previewProblems = (page: string, html: string, site: DocsSite): string[] => {
+  if (site.siteUrl.trim() === '' || page === NOT_FOUND_PAGE) {
+    return [];
+  }
+
+  return [
+    ...(COVER_RE.test(html) ? [] : ['has no image for link previews']),
+    ...structuredProblems(html),
+  ];
 };
 
 const repositoryProblems = (html: string, site: DocsSite): string[] => {
@@ -120,20 +154,21 @@ export const pageDistProblems = (page: string, html: string, site: DocsSite): st
   ...(UNRESOLVED_RE.test(html) ? ['has an unresolved component tag'] : []),
   ...(page === NOT_FOUND_PAGE ? [] : metaProblems(html)),
   ...addressProblems(page, html, site),
+  ...previewProblems(page, html, site),
   ...repositoryProblems(html, site),
 ];
 
-const sitemapProblems = (dist: string, site: DocsSite): string[] => {
+export const addressFileProblems = (dist: string, site: DocsSite, file: string): string[] => {
   const published = site.siteUrl.trim() !== '';
-  const written = existsSync(join(dist, SITEMAP));
+  const written = existsSync(join(dist, file));
 
   if (published === written) {
     return [];
   }
   return [
     published
-      ? `${SITEMAP}: is missing although the site address is set`
-      : `${SITEMAP}: is written although the site address is not set`,
+      ? `${file}: is missing although the site address is set`
+      : `${file}: is written although the site address is not set`,
   ];
 };
 
@@ -159,5 +194,9 @@ export const checkDist = (dist: string, site: DocsSite): string[] =>
       }
       return found;
     },
-    [...sitemapProblems(dist, site), ...llmsDistProblems(dist, llmsPaths())],
+    [
+      ...addressFileProblems(dist, site, SITEMAP),
+      ...addressFileProblems(dist, site, ROBOTS),
+      ...llmsDistProblems(dist, llmsPaths()),
+    ],
   );

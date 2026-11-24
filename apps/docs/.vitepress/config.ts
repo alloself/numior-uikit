@@ -15,6 +15,7 @@ import { twinPaths } from './llms/paths';
 import { docsLlms } from './llms/plugin';
 import { isEnglishPage } from './markdown/env';
 import { describePage } from './meta';
+import { writeRobots } from './robots';
 import { navOf, sidebarOf } from './navigation';
 import { parseBundle } from './reference/bundle';
 import { docsReference } from './reference/plugin';
@@ -99,6 +100,7 @@ export default defineConfigWithTheme<DocsThemeConfig>({
   },
   buildEnd: (siteConfig) => {
     writeLlms(siteConfig.outDir, { srcDir: siteConfig.srcDir, examplesRoot, bundle, site });
+    writeRobots(siteConfig.outDir, site);
   },
   markdown: {
     headers: { level: [2, 3] },
