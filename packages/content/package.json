@@ -2,7 +2,24 @@
   "name": "@numior/content",
   "version": "0.0.0",
   "private": false,
+  "description": "Renders Numior editor documents in Vue or to an HTML string without the editor runtime.",
+  "keywords": [
+    "editor",
+    "html",
+    "numior",
+    "numior-ui",
+    "renderer",
+    "rich-text",
+    "ssr",
+    "vue",
+    "vue3"
+  ],
+  "homepage": "https://ui.numior.ru/en/editor/content",
+  "bugs": {
+    "url": "https://github.com/alloself/numior-uikit/issues"
+  },
   "license": "MIT",
+  "author": "Numior",
   "files": [
     "dist"
   ],

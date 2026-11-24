@@ -2,7 +2,24 @@
   "name": "@numior/tokens",
   "version": "0.0.0",
   "private": false,
+  "description": "CSS tokens of Numior UI: light, dark and system themes, accents and density.",
+  "keywords": [
+    "css",
+    "dark-mode",
+    "design-tokens",
+    "numior",
+    "numior-ui",
+    "tailwindcss",
+    "theme",
+    "vue",
+    "vue3"
+  ],
+  "homepage": "https://ui.numior.ru/en/theme/tokens",
+  "bugs": {
+    "url": "https://github.com/alloself/numior-uikit/issues"
+  },
   "license": "MIT",
+  "author": "Numior",
   "files": [
     "dist"
   ],

@@ -2,7 +2,24 @@
   "name": "@numior/spreadsheet",
   "version": "0.0.0",
   "private": false,
+  "description": "Spreadsheet for Vue 3 with Excel formulas, XLSX open and save, conditional formats, pivot tables and charts.",
+  "keywords": [
+    "excel",
+    "formulas",
+    "numior",
+    "numior-ui",
+    "spreadsheet",
+    "vue",
+    "vue3",
+    "workbook",
+    "xlsx"
+  ],
+  "homepage": "https://ui.numior.ru/en/components/spreadsheet",
+  "bugs": {
+    "url": "https://github.com/alloself/numior-uikit/issues"
+  },
   "license": "MIT",
+  "author": "Numior",
   "files": [
     "dist"
   ],

@@ -2,7 +2,24 @@
   "name": "@numior/collaboration",
   "version": "0.0.0",
   "private": false,
+  "description": "Co-editing for the Numior editor and spreadsheet: step protocol, presence, comments, version history and Yjs binding.",
+  "keywords": [
+    "collaboration",
+    "multiplayer",
+    "numior",
+    "numior-ui",
+    "real-time",
+    "vue",
+    "vue3",
+    "websocket",
+    "yjs"
+  ],
+  "homepage": "https://ui.numior.ru/en/editor/collaboration",
+  "bugs": {
+    "url": "https://github.com/alloself/numior-uikit/issues"
+  },
   "license": "MIT",
+  "author": "Numior",
   "files": [
     "dist"
   ],

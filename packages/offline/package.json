@@ -2,7 +2,23 @@
   "name": "@numior/offline",
   "version": "0.0.0",
   "private": false,
+  "description": "Offline storage for Numior documents: snapshots, a step log and an unsent queue in IndexedDB.",
+  "keywords": [
+    "indexeddb",
+    "local-first",
+    "numior",
+    "numior-ui",
+    "offline",
+    "sync",
+    "vue",
+    "vue3"
+  ],
+  "homepage": "https://ui.numior.ru/en/editor/offline",
+  "bugs": {
+    "url": "https://github.com/alloself/numior-uikit/issues"
+  },
   "license": "MIT",
+  "author": "Numior",
   "files": [
     "dist"
   ],

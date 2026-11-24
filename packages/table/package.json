@@ -2,7 +2,25 @@
   "name": "@numior/table",
   "version": "0.0.0",
   "private": false,
+  "description": "Vue 3 data table with sorting, filters, groups, tree rows, cell editing and virtual scrolling; its engine runs without Vue.",
+  "keywords": [
+    "data-grid",
+    "datagrid",
+    "filtering",
+    "numior",
+    "numior-ui",
+    "sorting",
+    "table",
+    "virtual-scroll",
+    "vue",
+    "vue3"
+  ],
+  "homepage": "https://ui.numior.ru/en/components/table/",
+  "bugs": {
+    "url": "https://github.com/alloself/numior-uikit/issues"
+  },
   "license": "MIT",
+  "author": "Numior",
   "files": [
     "dist"
   ],

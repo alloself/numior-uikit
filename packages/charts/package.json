@@ -2,7 +2,23 @@
   "name": "@numior/charts",
   "version": "0.0.0",
   "private": false,
+  "description": "SVG charts for Vue 3 that you explore with the keyboard, with a data table for screen readers.",
+  "keywords": [
+    "accessibility",
+    "charts",
+    "data-visualization",
+    "numior",
+    "numior-ui",
+    "svg",
+    "vue",
+    "vue3"
+  ],
+  "homepage": "https://ui.numior.ru/en/components/charts",
+  "bugs": {
+    "url": "https://github.com/alloself/numior-uikit/issues"
+  },
   "license": "MIT",
+  "author": "Numior",
   "files": [
     "dist"
   ],

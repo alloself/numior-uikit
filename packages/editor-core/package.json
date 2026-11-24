@@ -2,7 +2,24 @@
   "name": "@numior/editor-core",
   "version": "0.0.0",
   "private": false,
+  "description": "Core of the Numior block editor without Vue: schema, steps, state, commands and a contenteditable view.",
+  "keywords": [
+    "block-editor",
+    "contenteditable",
+    "editor",
+    "numior",
+    "numior-ui",
+    "rich-text",
+    "vue",
+    "vue3",
+    "wysiwyg"
+  ],
+  "homepage": "https://ui.numior.ru/en/editor/",
+  "bugs": {
+    "url": "https://github.com/alloself/numior-uikit/issues"
+  },
   "license": "MIT",
+  "author": "Numior",
   "files": [
     "dist"
   ],

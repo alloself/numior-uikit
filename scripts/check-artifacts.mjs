@@ -23,6 +23,29 @@ const artifactPaths = async (root, target) => {
   return names.map((name) => `${dir}${name}`);
 };
 
+const DOCS_SITE = 'https://ui.numior.ru/';
+
+const assertPackagePage = async (name, root, manifest) => {
+  if (manifest.private) {
+    return;
+  }
+
+  assert.ok(manifest.description?.trim(), `${name} must describe itself on its npm page`);
+  assert.ok(manifest.keywords?.length > 0, `${name} must list keywords for npm search`);
+
+  assert.ok(
+    manifest.homepage?.startsWith(DOCS_SITE),
+    `${name} must point its homepage at its page on ${DOCS_SITE}`,
+  );
+
+  assert.ok(existsSync(`${root}/README.md`), `${name} must ship a README for its npm page`);
+
+  const readme = await readFile(`${root}/README.md`, 'utf8');
+
+  assert.ok(readme.startsWith(`# ${manifest.name}\n`), `${name}/README.md must open with its name`);
+  assert.ok(readme.includes(manifest.homepage), `${name}/README.md must link its docs page`);
+};
+
 for (const name of await readdir('packages')) {
   if (name === 'README.md') {
     continue;
@@ -35,6 +58,8 @@ for (const name of await readdir('packages')) {
     'boolean',
     `${name} must explicitly declare publication status`,
   );
+
+  await assertPackagePage(name, root, manifest);
 
   assert.equal(await readFile(`${root}/dist/LICENSE`, 'utf8'), await readFile('LICENSE', 'utf8'));
   for (const [key, entry] of Object.entries(manifest.exports)) {

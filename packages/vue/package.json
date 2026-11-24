@@ -2,7 +2,25 @@
   "name": "@numior/vue",
   "version": "0.0.0",
   "private": false,
+  "description": "Vue 3 components of Numior UI: fields, lists, overlays, navigation and feedback, styled with Tailwind CSS 4.",
+  "keywords": [
+    "accessibility",
+    "components",
+    "numior",
+    "numior-ui",
+    "rtl",
+    "ssr",
+    "tailwindcss",
+    "ui-kit",
+    "vue",
+    "vue3"
+  ],
+  "homepage": "https://ui.numior.ru/en/",
+  "bugs": {
+    "url": "https://github.com/alloself/numior-uikit/issues"
+  },
   "license": "MIT",
+  "author": "Numior",
   "files": [
     "dist"
   ],

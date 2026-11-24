@@ -32,6 +32,12 @@ monorepo plugin и GitHub release с tarballs (prerelease). Root и прилож
 библиотеки — `private: false`. Версии меняются в release workspace без обратного коммита; Git-теги
 и их git notes (`{"channels":["master"]}`) — источник опубликованной версии.
 
+Страница пакета в npm собирается из его `package.json` и `README.md`: у каждой библиотеки есть
+`description` и `keywords` для поиска npm, `homepage` на её страницу ui.numior.ru, `bugs` на Issues и
+README на английском (назначение, установка, ссылки на доку RU и EN; у `@numior/kit` — быстрый
+старт, у `@numior/mcp` — команда подключения). `pnpm pack` кладёт README в tarball сам,
+`check-artifacts` не пропускает публикуемый пакет без этих полей и README.
+
 @scripts/release/workspace.mjs проверяет gate, `private: false` всех библиотек, отсутствие внешних
 prerelease-зависимостей и npm не старше 11.5.1 (Trusted Publishing). `prepare` пропускает только
 `1.0.0-alpha.N`, выставляет общую версию, `pnpm pack` заменяет `workspace:*` точными версиями.

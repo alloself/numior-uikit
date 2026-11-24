@@ -2,7 +2,25 @@
   "name": "@numior/kit",
   "version": "0.0.0",
   "private": false,
+  "description": "Numior UI in one package: Vue 3 components, forms, table, spreadsheet, editor and charts, with a Vite plugin and a Nuxt module.",
+  "keywords": [
+    "components",
+    "design-system",
+    "numior",
+    "numior-ui",
+    "nuxt",
+    "ssr",
+    "tailwindcss",
+    "ui-kit",
+    "vue",
+    "vue3"
+  ],
+  "homepage": "https://ui.numior.ru/en/guide/getting-started",
+  "bugs": {
+    "url": "https://github.com/alloself/numior-uikit/issues"
+  },
   "license": "MIT",
+  "author": "Numior",
   "files": [
     "dist"
   ],
