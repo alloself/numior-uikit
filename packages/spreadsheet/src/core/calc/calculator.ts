@@ -64,7 +64,7 @@ import {
   type RecalcPlanner,
 } from './graph';
 import { signaturesOf } from './excel-signatures';
-import { dependentsWithin, reachOf } from './reach';
+import { dependentsWithin, reachOf, type DependentsOf } from './reach';
 import { createFunctionRegistry } from './registry';
 import { createTreeSharing } from './shared-trees';
 import { nextTask } from './tasks';
@@ -738,6 +738,32 @@ export const createCalculator = (
     });
   };
 
+  const hold = (key: number): void => {
+    const area = spills.reachOf(key);
+
+    release(key);
+    if (area === undefined) {
+      return;
+    }
+
+    spills.hold(key, area);
+  };
+
+  const throughSpills: DependentsOf = {
+    forEachDependent: (sheet, row, col, visit) => {
+      graph.forEachDependent(sheet, row, col, visit);
+
+      const id = idAt(sheet, row, col);
+      const area = id === undefined ? undefined : spills.reachOf(id);
+
+      if (area === undefined) {
+        return;
+      }
+
+      graph.forEachDependentIn(sheet, area.range, visit);
+    },
+  };
+
   const occupied = (area: SpillArea): boolean => {
     let taken = false;
 
@@ -777,6 +803,7 @@ export const createCalculator = (
       return;
     }
     if (readsOwnArea(key, area)) {
+      spills.hold(key, area);
       writeAnchor(record, numberValue(0), true);
       return;
     }
@@ -847,7 +874,7 @@ export const createCalculator = (
       return;
     }
     if (cycles.has(key)) {
-      release(key);
+      hold(key);
       writeAnchor(record, numberValue(0), true);
       return;
     }
@@ -970,8 +997,12 @@ export const createCalculator = (
     const reached = reachOfRun(run);
 
     return reached === undefined
-      ? createPlanner(run.reaching === undefined ? pending : [], graph, locate)
-      : createPlanner(pendingIn(reached), dependentsWithin(graph, reached, markStale), locate);
+      ? createPlanner(run.reaching === undefined ? pending : [], throughSpills, locate)
+      : createPlanner(
+          pendingIn(reached),
+          dependentsWithin(throughSpills, reached, markStale),
+          locate,
+        );
   };
 
   const plan = (run: Run) => {
