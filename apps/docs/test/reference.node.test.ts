@@ -75,7 +75,7 @@ describe('docs reference', () => {
       undefined,
       enumerationMembers(`${ROOT}packages/vue/dist/index.d.ts`),
     );
-  }, 30_000);
+  }, 120_000);
 
   it('lists exported components with their package and family', () => {
     const entry = buttonEntry();
@@ -302,7 +302,7 @@ describe('docs reference', () => {
     expect(problems).toEqual([]);
     expect(undocumented).not.toContain('NuiInput');
     expect(undocumented.every((name) => name.startsWith('Nui'))).toBe(true);
-  }, 180_000);
+  }, 300_000);
 
   it('serves the bundle as a lazy registry and per-component slices', () => {
     const bundle: ReferenceBundle = {

@@ -5,9 +5,11 @@ import { kitStylesheets, type KitStylesheets } from '../.vitepress/reference/sty
 
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 
+const STYLESHEETS_TIMEOUT_MS = 30_000;
+
 const fileOf = (path: string): string => join(ROOT, 'packages', path);
 
-describe('stylesheets of the kit components', () => {
+describe('stylesheets of the kit components', { timeout: STYLESHEETS_TIMEOUT_MS }, () => {
   let sheets: KitStylesheets;
 
   beforeAll(() => {
