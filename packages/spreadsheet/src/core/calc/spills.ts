@@ -16,9 +16,11 @@ export interface SpillCell {
 
 export interface Spills {
   areaOf(anchor: number): SpillArea | undefined;
+  reachOf(anchor: number): SpillArea | undefined;
   occupy(anchor: number, area: SpillArea): void;
   release(anchor: number, clear: (cell: SpillCell) => void): void;
   block(anchor: number, area: SpillArea): void;
+  hold(anchor: number, area: SpillArea): void;
   claim(cell: number): number | undefined;
   owns(cell: number): boolean;
   waiting(sheet: Sheet, row: number, col: number, visit: (anchor: number) => void): void;
@@ -46,11 +48,14 @@ export const createSpills = (): Spills => {
   const areas = new Map<number, SpillArea>();
   const owners = new Map<number, number>();
   const blocked = new Map<number, SpillArea>();
+  const held = new Map<number, SpillArea>();
 
   return {
     areaOf: (anchor) => areas.get(anchor),
+    reachOf: (anchor) => areas.get(anchor) ?? held.get(anchor),
     occupy: (anchor, area) => {
       blocked.delete(anchor);
+      held.delete(anchor);
       areas.set(anchor, area);
 
       forEachSpillCell(area, (_cell, key) => {
@@ -61,6 +66,7 @@ export const createSpills = (): Spills => {
       const area = areas.get(anchor);
 
       blocked.delete(anchor);
+      held.delete(anchor);
       areas.delete(anchor);
       if (area === undefined) {
         return;
@@ -78,6 +84,9 @@ export const createSpills = (): Spills => {
     block: (anchor, area) => {
       blocked.set(anchor, area);
     },
+    hold: (anchor, area) => {
+      held.set(anchor, area);
+    },
     claim: (cell) => {
       const owner = owners.get(cell);
 
@@ -86,7 +95,7 @@ export const createSpills = (): Spills => {
     },
     owns: (cell) => owners.has(cell),
     forEachArea: (visit) => {
-      [...areas, ...blocked].forEach(([anchor, area]) => {
+      [...areas, ...blocked, ...held].forEach(([anchor, area]) => {
         visit(anchor, area);
       });
     },

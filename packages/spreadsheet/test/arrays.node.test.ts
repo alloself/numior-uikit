@@ -166,6 +166,70 @@ describe('dynamic arrays', () => {
     expect(sheet.state('B1')).toBe('cycle');
     expect(sheet.grid('B1:B3')).toEqual([[0], [null], [null]]);
   });
+
+  it.each([
+    ['a cell', 'C1', '=A1:A3', 'A2', '=C3+1'],
+    ['a range', 'C1', '=A1:A3', 'A2', '=SUM(C2:C3)'],
+    ['a range beside a wide spill', 'B5', '=SEQUENCE(1, 1100)*A4', 'A4', '=SUM(C5:D5)'],
+  ])(
+    'treats a spill that comes back to its formula through %s as a circular reference',
+    (_case, anchor, spilled, reader, reading) => {
+      const sheet = numbers();
+
+      sheet.enter(anchor, spilled);
+      sheet.enter(reader, reading);
+      sheet.recalc();
+
+      expect(sheet.state(anchor)).toBe('cycle');
+      expect(sheet.state(reader)).toBe('cycle');
+      expect(sheet.value(anchor)).toEqual(numberValue(0));
+      expect(sheet.value(reader)).toEqual(numberValue(0));
+      expect(sheet.spill(anchor)).toBeUndefined();
+    },
+  );
+
+  it('finds a circular reference through a spill among formulas that read single cells', () => {
+    const sheet = numbers();
+
+    sheet.enter('E1', '=A1');
+    sheet.enter('E2', '=A3');
+    sheet.enter('E3', '=B9');
+    sheet.enter('C1', '=A1:A3');
+    sheet.enter('A2', '=C3+1');
+    sheet.recalc();
+
+    expect(sheet.state('C1')).toBe('cycle');
+
+    expect(sheet.grid('A2:E3')).toEqual([
+      [0, null, null, null, 3],
+      [3, null, null, null, 0],
+    ]);
+  });
+
+  it('computes the spill again once the formula that closed the circle is gone', () => {
+    const sheet = numbers();
+
+    sheet.enter('C1', '=A1:A3');
+    sheet.enter('A2', '=C3+1');
+    sheet.recalc();
+    sheet.enter('A2', 2);
+    sheet.recalc();
+
+    expect(sheet.state('C1')).toBe('fresh');
+    expect(sheet.spill('C1')).toBe('C1:C3');
+    expect(sheet.grid('C1:C3')).toEqual([[1], [2], [3]]);
+  });
+
+  it('keeps a spill read by a formula outside its sources out of the circular references', () => {
+    const sheet = numbers();
+
+    sheet.enter('C1', '=A1:A3*2');
+    sheet.enter('D1', '=SUM(C2:C3)');
+    sheet.recalc();
+
+    expect(sheet.state('C1')).toBe('fresh');
+    expect(sheet.value('D1')).toEqual(numberValue(10));
+  });
 });
 
 describe('volatile functions', () => {

@@ -13,6 +13,7 @@ export interface DependencyGraph {
   remove(key: number): void;
   precedentsOf(key: number): readonly Precedent[];
   forEachDependent(sheet: number, row: number, col: number, visit: (key: number) => void): void;
+  forEachDependentIn(sheet: number, range: CellRange, visit: (key: number) => void): void;
   shift(sheet: number, change: LineMove): void;
 }
 
@@ -67,8 +68,7 @@ export const formulaKey = (sheet: number, row: number, col: number): number =>
 const bandKey = (sheet: number, rowBand: number, colBand: number): number =>
   (sheet * ROW_BANDS + rowBand) * COL_BANDS + colBand;
 
-const bandsOf = (entry: RangeEntry): number[] | undefined => {
-  const { range } = entry;
+const bandsOf = ({ sheet, range }: Pick<RangeEntry, 'sheet' | 'range'>): number[] | undefined => {
   const top = Math.floor(range.top / BAND_ROWS);
   const bottom = Math.floor(range.bottom / BAND_ROWS);
   const left = Math.floor(range.left / BAND_COLS);
@@ -81,7 +81,7 @@ const bandsOf = (entry: RangeEntry): number[] | undefined => {
 
   for (let row = top; row <= bottom; row += 1) {
     for (let col = left; col <= right; col += 1) {
-      keys.push(bandKey(entry.sheet, row, col));
+      keys.push(bandKey(sheet, row, col));
     }
   }
   return keys;
@@ -92,6 +92,15 @@ const rangeId = ({ sheet, range }: Precedent): string =>
 
 const single = (range: CellRange): boolean =>
   range.top === range.bottom && range.left === range.right;
+
+const areaOf = (range: CellRange): number =>
+  (range.bottom - range.top + 1) * (range.right - range.left + 1);
+
+const overlaps = (left: CellRange, right: CellRange): boolean =>
+  left.top <= right.bottom &&
+  right.top <= left.bottom &&
+  left.left <= right.right &&
+  right.left <= left.right;
 
 const addTo = <K, V>(map: Map<K, Set<V>>, key: K, value: V): void => {
   const known = map.get(key);
@@ -184,6 +193,48 @@ const visitDependents = (known: Dependents | undefined, visit: (key: number) => 
     visit(known);
   } else {
     known?.forEach(visit);
+  }
+};
+
+const visitSinglesIn = (
+  cells: ReadonlyMap<number, Dependents> | undefined,
+  range: CellRange,
+  visit: (key: number) => void,
+): void => {
+  if (cells === undefined) {
+    return;
+  }
+  if (areaOf(range) > cells.size) {
+    cells.forEach((known, cell) => {
+      if (!containsCell(range, Math.floor(cell / MAX_COLS), cell % MAX_COLS)) {
+        return;
+      }
+
+      visitDependents(known, visit);
+    });
+
+    return;
+  }
+
+  for (let row = range.top; row <= range.bottom; row += 1) {
+    for (let col = range.left; col <= range.right; col += 1) {
+      visitDependents(cells.get(cellIndex(row, col)), visit);
+    }
+  }
+};
+
+const visitOverlapping = (
+  entries: Iterable<RangeEntry> | undefined,
+  sheet: number,
+  range: CellRange,
+  visit: (key: number) => void,
+): void => {
+  for (const entry of entries ?? []) {
+    if (entry.sheet !== sheet || !overlaps(entry.range, range)) {
+      continue;
+    }
+
+    entry.dependents.forEach(visit);
   }
 };
 
@@ -401,6 +452,22 @@ export const createDependencyGraph = (): DependencyGraph => {
       );
 
       visitEntries(wide.get(sheet), row, col, visit);
+    },
+    forEachDependentIn: (sheet, range, visit) => {
+      visitSinglesIn(singles.get(sheet), range, visit);
+
+      const keys = bandsOf({ sheet, range });
+
+      if (keys === undefined) {
+        visitOverlapping(ranges.values(), sheet, range, visit);
+        return;
+      }
+
+      keys.forEach((key) => {
+        visitOverlapping(bands.get(key), sheet, range, visit);
+      });
+
+      visitOverlapping(wide.get(sheet), sheet, range, visit);
     },
   };
 };
